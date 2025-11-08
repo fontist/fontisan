@@ -1,0 +1,42 @@
+# OpenType script tags and descriptions
+# Reference: OpenType specification
+arab: Arabic
+armn: Armenian
+beng: Bengali
+bopo: Bopomofo
+brai: Braille
+byzm: Byzantine Musical Symbols
+cans: Canadian Aboriginal Syllabics
+cher: Cherokee
+cyrl: Cyrillic
+DFLT: Default
+deva: Devanagari
+ethi: Ethiopic
+geor: Georgian
+goth: Gothic
+grek: Greek
+gujr: Gujarati
+guru: Gurmukhi
+hang: Hangul
+hani: Han Ideographs
+hebr: Hebrew
+hira: Hiragana
+kana: Katakana
+khmr: Khmer
+knda: Kannada
+lao: Lao
+latn: Latin
+math: Mathematical Alphanumeric Symbols
+mlym: Malayalam
+mong: Mongolian
+mymr: Myanmar
+ogam: Ogham
+orya: Oriya
+runr: Runic
+sinh: Sinhala
+syrc: Syriac
+taml: Tamil
+telu: Telugu
+thaa: Thaana
+thai: Thai
+tibt: Tibetan

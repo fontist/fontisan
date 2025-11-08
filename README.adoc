@@ -1,0 +1,984 @@
+= Fontisan
+
+image:https://img.shields.io/gem/v/fontisan.svg[RubyGems Version, link=https://rubygems.org/gems/fontisan]
+image:https://img.shields.io/github/license/fontist/fontisan.svg[License]
+image:https://github.com/fontist/fontisan/actions/workflows/test.yml/badge.svg[Build Status, link=https://github.com/fontist/fontisan/actions/workflows/test.yml]
+
+== Purpose
+
+Fontisan is a Ruby gem providing font analysis tools and utilities for OpenType fonts. It is designed as a pure Ruby implementation with full object-oriented architecture, supporting extraction of information from OpenType fonts (OTF, TTF, TTC).
+
+The gem provides both a Ruby library API and a command-line interface, with structured output formats (YAML, JSON, text) via lutaml-model. It achieves complete otfinfo parity, supporting all font analysis features needed for font inspection and validation.
+
+== Installation
+
+Add this line to your application's Gemfile:
+
+[source,ruby]
+----
+gem "fontisan"
+----
+
+And then execute:
+
+[source,shell]
+----
+bundle install
+----
+
+Or install it yourself as:
+
+[source,shell]
+----
+gem install fontisan
+----
+
+== Features
+
+* Extract comprehensive font metadata (name, version, designer, license, etc.)
+* List OpenType tables with checksums and offsets
+* Extract glyph names from post table
+* Display Unicode codepoint to glyph index mappings
+* Analyze variable font axes and named instances
+* Display optical size information
+* List supported scripts from GSUB/GPOS tables
+* List OpenType features (ligatures, kerning, etc.) by script
+* Dump raw binary table data for analysis
+* Support for OTF, TTF, and TTC font formats
+* Command-line interface with full otfinfo parity
+* Ruby library API for programmatic access
+* Structured output in YAML, JSON, and text formats
+
+== Usage
+
+=== Command-line interface
+
+==== Font information
+
+Extract comprehensive metadata from font files. This includes font names,
+version information, designer credits, vendor details, licensing information,
+and font metrics.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan info FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.Font information for Libertinus Serif Regular
+[example]
+====
+[source,shell]
+----
+$ fontisan info spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+
+Font type:                TrueType
+Family:                   Libertinus Serif
+Subfamily:                Regular
+Full name:                Libertinus Serif Regular
+PostScript name:          LibertinusSerif-Regular
+Version:                  Version 7.051;RELEASE
+Unique ID:                5.000;QUE ;LibertinusSerif-Regular
+Designer:                 Philipp H. Poll, Khaled Hosny
+Manufacturer:             Caleb Maclennan
+Vendor URL:               https://github.com/alerque/libertinus
+Vendor ID:                QUE
+License Description:      This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+License URL:              https://openfontlicense.org
+Font revision:            7.05099
+Permissions:              Installable
+Units per em:             1000
+----
+====
+
+
+.Output in structured YAML format
+[example]
+====
+[source,shell]
+----
+$ fontisan info spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf --format yaml
+----
+
+[source,yaml]
+----
+font_format: truetype
+is_variable: false
+family_name: Libertinus Serif
+subfamily_name: Regular
+full_name: Libertinus Serif Regular
+postscript_name: LibertinusSerif-Regular
+version: Version 7.051;RELEASE
+unique_id: 5.000;QUE ;LibertinusSerif-Regular
+designer: Philipp H. Poll, Khaled Hosny
+manufacturer: Caleb Maclennan
+vendor_url: https://github.com/alerque/libertinus
+vendor_id: QUE
+license_description: 'This Font Software is licensed under the SIL Open Font License,
+  Version 1.1. This license is available with a FAQ at: https://openfontlicense.org'
+license_url: https://openfontlicense.org
+font_revision: 7.050994873046875
+permissions: Installable
+units_per_em: 1000
+----
+====
+
+
+==== List OpenType tables
+
+Display the font's table directory, showing all OpenType tables with their
+sizes, offsets, and checksums. Useful for understanding font structure and
+verifying table integrity.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan tables FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+.List of OpenType tables in Libertinus Serif Regular
+[example]
+====
+[source,shell]
+----
+$ fontisan tables spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+----
+
+[source,text]
+----
+SFNT Version: TrueType (0x00010000)
+Number of tables: 16
+
+Tables:
+  GDEF         834 bytes  (offset: 542156, checksum: 0x429C5C0C)
+  GPOS       17870 bytes  (offset: 542992, checksum: 0x29CE4200)
+  OS/2          96 bytes  (offset: 392, checksum: 0x4830F1C3)
+  cmap        3620 bytes  (offset: 11412, checksum: 0x03AD3899)
+  cvt          248 bytes  (offset: 18868, checksum: 0x3098127E)
+  fpgm        3596 bytes  (offset: 15032, checksum: 0x622F0781)
+  gasp           8 bytes  (offset: 542148, checksum: 0x00000010)
+  glyf      484900 bytes  (offset: 30044, checksum: 0x0FF34594)
+  head          54 bytes  (offset: 268, checksum: 0x18F5BDD0)
+  hhea          36 bytes  (offset: 324, checksum: 0x191E2264)
+  hmtx       10924 bytes  (offset: 488, checksum: 0x1F9D892B)
+  loca       10928 bytes  (offset: 19116, checksum: 0x230B1A58)
+  maxp          32 bytes  (offset: 360, checksum: 0x0EF919E7)
+  name         894 bytes  (offset: 514944, checksum: 0x4E9173E6)
+  post       26308 bytes  (offset: 515840, checksum: 0xE3D70231)
+  prep         239 bytes  (offset: 18628, checksum: 0x8B4AB356)
+----
+====
+
+.Output in structured YAML format
+[example]
+====
+[source,shell]
+----
+$ fontisan tables spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf --format yaml
+----
+
+[source,yaml]
+----
+---
+sfnt_version: TrueType (0x00010000)
+num_tables: 16
+tables:
+- tag: GDEF
+  length: 834
+  offset: 542156
+  checksum: 1117543436
+- tag: GPOS
+  length: 17870
+  offset: 542992
+  checksum: 701383168
+- tag: OS/2
+  length: 96
+  offset: 392
+  checksum: 1211167171
+- tag: cmap
+  length: 3620
+  offset: 11412
+  checksum: 61683865
+- tag: 'cvt '
+  length: 248
+  offset: 18868
+  checksum: 815272574
+- tag: fpgm
+  length: 3596
+  offset: 15032
+  checksum: 1647249281
+----
+====
+
+==== List glyph names
+
+Show all glyph names defined in the font's post table. Each glyph is listed with
+its index and name, useful for understanding the font's character coverage.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan glyphs FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.List of glyph names in Libertinus Serif Regular
+[example]
+====
+[source,shell]
+----
+$ fontisan glyphs spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+----
+
+[source,text]
+----
+Glyph count: 2731
+Source: post_2.0
+
+Glyph names:
+      0  .notdef
+      1  space
+      2  exclam
+      3  quotedbl
+      4  numbersign
+      5  dollar
+      6  percent
+      7  ampersand
+      8  quotesingle
+      9  parenleft
+     10  parenright
+     11  asterisk
+     12  plus
+     13  comma
+     14  hyphen
+     15  period
+     16  slash
+     17  zero
+     18  one
+     19  two
+     20  three
+     ...
+----
+====
+
+==== Show Unicode mappings
+
+Display Unicode codepoint to glyph index mappings from the cmap table. Shows
+which glyphs are assigned to which Unicode characters.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan unicode FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.Unicode to glyph mappings in Libertinus Serif Regular
+[example]
+====
+[source,shell]
+----
+$ fontisan unicode spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+----
+
+[source,text]
+----
+Unicode mappings: 2382
+
+U+0020  glyph 1  space
+U+0021  glyph 2  exclam
+U+0022  glyph 3  quotedbl
+U+0023  glyph 4  numbersign
+U+0024  glyph 5  dollar
+U+0025  glyph 6  percent
+U+0026  glyph 7  ampersand
+U+0027  glyph 8  quotesingle
+U+0028  glyph 9  parenleft
+U+0029  glyph 10  parenright
+U+002A  glyph 11  asterisk
+U+002B  glyph 12  plus
+U+002C  glyph 13  comma
+U+002D  glyph 14  hyphen
+U+002E  glyph 15  period
+U+002F  glyph 16  slash
+U+0030  glyph 17  zero
+U+0031  glyph 18  one
+...
+----
+====
+
+==== Variable font information
+
+Display variation axes and named instances for variable fonts. Shows the design
+space and predefined styles available in the font.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan variable FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the variable font file
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.Variable font axes and instances in Mona Sans
+[example]
+====
+[source,shell]
+----
+$ fontisan variable spec/fixtures/fonts/MonaSans/variable/MonaSans[wdth,wght].ttf
+----
+
+[source,text]
+----
+Axis 0:                 wdth
+Axis 0 name:            Width
+Axis 0 range:           75 125
+Axis 0 default:         100
+Axis 1:                 wght
+Axis 1 name:            Weight
+Axis 1 range:           200 900
+Axis 1 default:         400
+Instance 0 name:        Mona Sans Narrow Thin
+Instance 0 position:    75 200
+Instance 1 name:        Mona Sans Narrow ExtraLight
+Instance 1 position:    75 250
+Instance 2 name:        Mona Sans Narrow Light
+Instance 2 position:    75 300
+...
+----
+====
+
+==== Optical size information
+
+Display optical size range from the OS/2 table for fonts designed for specific
+point sizes.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan optical-size FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file with optical sizing
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.Optical size information in Libertinus Serif Display
+[example]
+====
+[source,shell]
+----
+$ fontisan optical-size spec/fixtures/fonts/libertinus/ttf/LibertinusSerifDisplay-Regular.ttf
+----
+
+[source,text]
+----
+Size range: [18, 72) pt  (source: OS/2_usLowerOpticalPointSize)
+----
+====
+
+==== List supported scripts
+
+Show all scripts (writing systems) supported by the font, extracted from GSUB
+and GPOS tables. Useful for understanding language coverage.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan scripts FONT_FILE [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.Supported scripts in Libertinus Serif Regular
+[example]
+====
+[source,shell]
+----
+$ fontisan scripts spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+----
+
+[source,text]
+----
+Script count: 5
+
+DFLT  Default
+cyrl  Cyrillic
+grek  Greek
+hebr  Hebrew
+latn  Latin
+----
+====
+
+==== List OpenType features
+
+Show OpenType layout features (typography features like ligatures, kerning,
+small capitals) available for specific scripts or all scripts.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan features FONT_FILE [--script SCRIPT] [--format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`SCRIPT`:: Optional 4-character script tag (e.g., `latn`, `cyrl`, `arab`). If not specified, shows features for all scripts
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+
+.OpenType features for Latin script
+[example]
+====
+[source,shell]
+----
+$ fontisan features spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf --script latn
+----
+
+[source,text]
+----
+Script: latn
+Feature count: 4
+
+cpsp  Capital Spacing
+kern  Kerning
+mark  Mark Positioning
+mkmk  Mark to Mark Positioning
+----
+====
+
+
+.OpenType features for all scripts
+[example]
+====
+[source,shell]
+----
+$ fontisan features spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
+----
+
+[source,text]
+----
+Script: DFLT
+Feature count: 4
+
+  cpsp  Capital Spacing
+  kern  Kerning
+  mark  Mark Positioning
+  mkmk  Mark to Mark Positioning
+
+Script: cyrl
+Feature count: 4
+
+  cpsp  Capital Spacing
+  kern  Kerning
+  mark  Mark Positioning
+  mkmk  Mark to Mark Positioning
+
+Script: grek
+Feature count: 4
+
+  cpsp  Capital Spacing
+  kern  Kerning
+  mark  Mark Positioning
+  mkmk  Mark to Mark Positioning
+
+Script: hebr
+Feature count: 2
+
+  mark  Mark Positioning
+  mkmk  Mark to Mark Positioning
+
+Script: latn
+Feature count: 4
+
+  cpsp  Capital Spacing
+  kern  Kerning
+  mark  Mark Positioning
+  mkmk  Mark to Mark Positioning
+----
+====
+
+==== Dump raw table data
+
+Extract raw binary data from a specific OpenType table. Useful for detailed
+analysis or debugging font issues.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan dump-table FONT_FILE TABLE_TAG
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`TABLE_TAG`:: Four-character table tag (e.g., `name`, `head`, `GSUB`, `GPOS`)
+
+
+.Dump raw table data to files
+[example]
+====
+[source,shell]
+----
+$ fontisan dump-table spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf name > name_table.bin
+$ fontisan dump-table spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf GPOS > gpos_table.bin
+$ fontisan dump-table spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf head > head_table.bin
+----
+
+The output is binary data written directly to stdout, which can be redirected to a file for further analysis.
+====
+
+==== General options
+
+All commands support these options:
+
+`--format FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+`--font-index INDEX`:: Font index for TTC files (default: 0)
+
+`--verbose`:: Enable verbose output
+
+`--quiet`:: Suppress non-error output
+
+==== Version information
+
+Display the Fontisan version:
+
+[source,shell]
+----
+fontisan version
+----
+
+=== Ruby API
+
+==== General
+
+Fontisan provides a comprehensive Ruby API for programmatic font analysis.
+
+All functionality available via the CLI is accessible through the library.
+
+==== Loading fonts
+
+Load TrueType and OpenType fonts:
+
+.Loading a TrueType font
+[example]
+====
+[source,ruby]
+----
+require "fontisan"
+
+# Load a TrueType font (.ttf)
+font = Fontisan::TrueTypeFont.from_file("path/to/font.ttf")
+
+# Load an OpenType font (.otf with CFF outlines)
+font = Fontisan::OpenTypeFont.from_file("path/to/font.otf")
+----
+====
+
+.Loading fonts from TrueType Collections
+[example]
+====
+[source,ruby]
+----
+# Load a specific font from a TTC file
+ttc = Fontisan::TrueTypeCollection.from_file("path/to/fonts.ttc")
+font = ttc.font_at_index(0)  # Get first font
+
+# Or use FontLoader to auto-detect format
+font = Fontisan::FontLoader.load_file("path/to/any-font-file.ttf", font_index: 0)
+----
+====
+
+==== Accessing font tables
+
+Access and parse OpenType tables:
+
+.Working with the name table
+[example]
+====
+[source,ruby]
+----
+name_table = font.table("name")
+
+# Get standard name entries
+family = name_table.english_name(Fontisan::Tables::Name::FAMILY)
+subfamily = name_table.english_name(Fontisan::Tables::Name::SUBFAMILY)
+full_name = name_table.english_name(Fontisan::Tables::Name::FULL_NAME)
+postscript_name = name_table.english_name(Fontisan::Tables::Name::POSTSCRIPT)
+
+# Get all available names
+name_table.name_records.each do |record|
+  puts "#{record.name_id}: #{record.string}"
+end
+----
+====
+
+.Working with the head table
+[example]
+====
+[source,ruby]
+----
+head_table = font.table("head")
+
+# Get font revision
+revision = head_table.font_revision  # => 7.050994873046875
+
+# Get units per em
+units_per_em = head_table.units_per_em  # => 1000
+
+# Get created/modified timestamps
+created = head_table.created
+modified = head_table.modified
+----
+====
+
+.Working with the OS/2 table
+[example]
+====
+[source,ruby]
+----
+os2_table = font.table("OS/2")
+
+# Get vendor ID
+vendor_id = os2_table.ach_vend_id  # => "QUE "
+
+# Check optical size
+if os2_table.version >= 5
+  lower_size = os2_table.us_lower_optical_point_size  # => 18
+  upper_size = os2_table.us_upper_optical_point_size  # => 72
+end
+
+# Get weight class
+weight = os2_table.us_weight_class  # => 400 (Regular)
+----
+====
+
+.Working with the post table
+[example]
+====
+[source,ruby]
+----
+post_table = font.table("post")
+
+# Get all glyph names
+glyph_names = post_table.glyph_names  # => [".notdef", "space", "exclam", ...]
+
+# Check post table version
+version = post_table.version  # => 2.0
+----
+====
+
+==== Working with cmap (Unicode mappings)
+
+Access Unicode to glyph mappings:
+
+.Getting Unicode mappings
+[example]
+====
+[source,ruby]
+----
+cmap_table = font.table("cmap")
+
+# Get all Unicode to glyph index mappings
+mappings = cmap_table.unicode_mappings
+# => { 0x0020 => 1, 0x0021 => 2, 0x0022 => 3, ... }
+
+# Look up specific  Unicode codepoint
+glyph_index = mappings[0x0041]  # => glyph index for 'A'
+
+# Get subtables
+subtables = cmap_table.subtables
+subtables.each do |subtable|
+  puts "Platform #{subtable.platform_id}, Encoding #{subtable.encoding_id}"
+end
+----
+====
+
+==== Working with GSUB/GPOS (scripts and features)
+
+Extract OpenType layout information:
+
+.Getting supported scripts
+[example]
+====
+[source,ruby]
+----
+# Get scripts from GSUB table
+gsub = font.table("GSUB")
+scripts = gsub.scripts  # => ["DFLT", "latn", "cyrl", "grek", "hebr"]
+
+# Get scripts from GPOS table
+gpos = font.table("GPOS")
+scripts = gpos.scripts  # => ["DFLT", "latn", "cyrl", "grek", "hebr"]
+
+# Combine scripts from both tables
+all_scripts = (gsub.scripts + gpos.scripts).uniq.sort
+----
+====
+
+.Getting OpenType features
+[example]
+====
+[source,ruby]
+----
+gsub = font.table("GSUB")
+
+# Get features for a specific script
+latin_features = gsub.features(script_tag: "latn")
+# => ["cpsp", "kern", "mark", "mkmk"]
+
+# Get features for all scripts
+scripts = gsub.scripts
+features_by_script = scripts.each_with_object({}) do |script, hash|
+  hash[script] = gsub.features(script_tag: script)
+end
+# => {"DFLT"=>["cpsp", "kern", ...], "latn"=>["cpsp", "kern", ...], ...}
+
+# Combine GSUB and GPOS features
+gpos = font.table("GPOS")
+all_features = (gsub.features(script_tag: "latn") + gpos.features(script_tag: "latn")).uniq
+----
+====
+
+==== Working with variable fonts
+
+Access variation axes and instances:
+
+.Analyzing variable fonts
+[example]
+====
+[source,ruby]
+----
+fvar_table = font.table("fvar")
+
+# Check if font is variable
+is_variable = !fvar_table.nil?
+
+# Get variation axes
+axes = fvar_table.axes
+axes.each do |axis|
+  puts "Axis: #{axis.axis_tag}"
+  puts "  Name: #{axis.axis_name_id}"
+  puts "  Range: #{axis.min_value} to #{axis.max_value}"
+  puts "  Default: #{axis.default_value}"
+end
+
+# Get named instances
+instances = fvar_table.instances
+instances.each do |instance|
+  puts "Instance: #{instance.subfamily_name_id}"
+  puts "  Coordinates: #{instance.coordinates.inspect}"
+end
+----
+====
+
+==== Font inspection utilities
+
+Check table presence and extract basic info:
+
+.Font inspection
+[example]
+====
+[source,ruby]
+----
+# Ch eck if font has specific tables
+has_gsub = font.has_table?("GSUB")  # => true
+has_gpos = font.has_table?("GPOS")  # => true
+has_fvar = font.has_table?("fvar")  # => false (not a variable font)
+
+# Get list of all table tags
+table_names = font.table_names
+# => ["GDEF", "GPOS", "OS/2", "cmap", "cvt ", ...]
+
+# Get font format
+font_format = font.header.sfnt_version == 0x00010000 ? "TrueType" : "OpenType"
+
+# Get number of glyphs
+post = font.table("post")
+glyph_count = post.glyph_names.length  # => 2731
+----
+====
+
+==== Using commands programmatically
+
+Use command classes for structured output:
+
+.Getting structured font information
+[example]
+====
+[source,ruby]
+----
+# Use InfoCommand to get structured info
+cmd = Fontisan::Commands::InfoCommand.new("font.ttf", {})
+info = cmd.run  # Returns Fontisan::Models::FontInfo
+
+# Access structured data
+puts info.family_name      # => "Libertinus Serif"
+puts info.designer         # => "Philipp H. Poll, Khaled Hosny"
+puts info.font_format      # => "truetype"
+
+# Serialize to formats
+json_output = info.to_json
+yaml_output = info.to_yaml
+----
+====
+
+.Getting scripts and features programmatically
+[example]
+====
+[source,ruby]
+----
+# Get scripts
+scripts_cmd = Fontisan::Commands::ScriptsCommand.new("font.ttf", {})
+scripts_info = scripts_cmd.run  # Returns Fontisan::Models::ScriptsInfo
+
+scripts_info.scripts.each do |script|
+  puts "#{script.tag}: #{script.description}"
+end
+
+# Get features for a script
+features_cmd = Fontisan::Commands::FeaturesCommand.new(
+  "font.ttf",
+  { script: "latn" }
+)
+features_info = features_cmd.run  # Returns Fontisan::Models::FeaturesInfo
+
+features_info.features.each do |feature|
+  puts "#{feature.tag}: #{feature.description}"
+end
+----
+====
+
+== Development
+
+After checking out the repo, run `bundle install` to install dependencies.
+
+=== Running tests
+
+[source,shell]
+----
+bundle exec rake spec
+----
+
+=== Code style
+
+Check code style with RuboCop:
+
+[source,shell]
+----
+bundle exec rake rubocop
+----
+
+=== Test fixtures
+
+The test suite uses real font files for testing.
+
+Rake tasks are provided to download fonts from GitHub releases for testing.
+
+==== Download test fixtures
+
+Download font fixtures automatically (only downloads if files don't already
+exist):
+
+[source,shell]
+----
+bundle exec rake fixtures:download
+----
+
+This downloads four font collections:
+
+* **Libertinus 7.051** - Serif, Sans, and Mono families with extensive OpenType
+features (included in repository)
+
+* **Mona Sans v2.0** - Variable TTF with width and weight axes for testing
+variable fonts (downloaded via Rake, not in repository)
+
+* **Noto Serif CJK 2.003 (Static)** - Large CJK TTC for testing static font
+collections (downloaded via Rake, not in repository)
+
+* **Noto Serif CJK 2.003 (Variable)** - Variable OTF/OTC for testing variable
+OpenType collections (downloaded via Rake, not in repository)
+
+The Rake task uses file dependencies, so running it multiple times won't
+re-download existing files. This makes it safe and efficient to run repeatedly
+during development.
+
+NOTE: Noto CJK and Mona Sans fonts are excluded from the repository (see
+`.gitignore`) due to their size. They are automatically downloaded when running
+`rake fixtures:download`.
+
+==== Clean test fixtures
+
+Remove all downloaded fixture files:
+
+[source,shell]
+----
+bundle exec rake fixtures:clean
+----
+
+==== Built-in fixtures
+
+The repository includes pre-installed Libertinus fixtures in
+`spec/fixtures/fonts/libertinus/` which are sufficient for basic testing.
+
+Large font collections (Noto CJK, Mona Sans) are **not committed** to the
+repository due to their size. Use `rake fixtures:download` to obtain them for
+comprehensive testing of:
+
+* Variable fonts (MonaSans variable TTF)
+* Large static font collections (NotoSerifCJK TTC)
+* Variable OpenType collections (NotoSerifCJK-VF OTC)
+
+== Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/fontist/fontisan.
+
+== License
+
+The gem is available as open source under the terms of the BSD-2-Clause license.
+
+== Copyright
+
+Copyright https://www.ribose.com[Ribose].
