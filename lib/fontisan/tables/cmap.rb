@@ -236,7 +236,8 @@ module Fontisan
         header = parse_format_12_header(data)
         return unless header
 
-        parse_format_12_groups(data, header[:num_groups], header[:length], mappings)
+        parse_format_12_groups(data, header[:num_groups], header[:length],
+                               mappings)
       end
 
       # Parse Format 12 header
@@ -264,7 +265,8 @@ module Fontisan
           end_char_code = data[offset + 4, 4].unpack1("N")
           start_glyph_id = data[offset + 8, 4].unpack1("N")
 
-          map_character_range(start_char_code, end_char_code, start_glyph_id, mappings)
+          map_character_range(start_char_code, end_char_code, start_glyph_id,
+                              mappings)
 
           offset += 12
         end

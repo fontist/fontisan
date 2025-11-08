@@ -65,7 +65,8 @@ RSpec.describe Fontisan::Commands::BaseCommand do
         font = command.send(:font)
 
         expect(font).not_to be_nil
-        expect([Fontisan::TrueTypeFont, Fontisan::OpenTypeFont]).to include(font.class)
+        expect([Fontisan::TrueTypeFont,
+                Fontisan::OpenTypeFont]).to include(font.class)
       end
 
       it "uses custom font_index from options" do
@@ -75,12 +76,15 @@ RSpec.describe Fontisan::Commands::BaseCommand do
         font = command.send(:font)
 
         expect(font).not_to be_nil
-        expect([Fontisan::TrueTypeFont, Fontisan::OpenTypeFont]).to include(font.class)
+        expect([Fontisan::TrueTypeFont,
+                Fontisan::OpenTypeFont]).to include(font.class)
       end
     end
 
     context "with an OTC file" do
-      let(:otc_file) { "spec/fixtures/fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc" }
+      let(:otc_file) do
+        "spec/fixtures/fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc"
+      end
 
       it "detects OTC files and loads OpenType fonts" do
         skip "OTC fixture not downloaded" unless File.exist?(otc_file)
