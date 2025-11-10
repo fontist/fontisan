@@ -1,4 +1,4 @@
-= Fontisan
+= Fontisan: Font analysis tools and utilities
 
 image:https://img.shields.io/gem/v/fontisan.svg[RubyGems Version, link=https://rubygems.org/gems/fontisan]
 image:https://img.shields.io/github/license/fontist/fontisan.svg[License]
@@ -6,9 +6,24 @@ image:https://github.com/fontist/fontisan/actions/workflows/test.yml/badge.svg[B
 
 == Purpose
 
-Fontisan is a Ruby gem providing font analysis tools and utilities for OpenType fonts. It is designed as a pure Ruby implementation with full object-oriented architecture, supporting extraction of information from OpenType fonts (OTF, TTF, TTC).
+Fontisan is a Ruby gem providing font analysis tools and utilities.
 
-The gem provides both a Ruby library API and a command-line interface, with structured output formats (YAML, JSON, text) via lutaml-model. It achieves complete otfinfo parity, supporting all font analysis features needed for font inspection and validation.
+It is designed as a pure Ruby implementation with full object-oriented
+architecture, supporting extraction of information from OpenType and TrueType
+fonts (OTF, TTF, TTC).
+
+The gem provides both a Ruby library API and a command-line interface, with
+structured output formats (YAML, JSON, text) via lutaml-model.
+
+Fontisan is designed to replace the following tools:
+
+* `otfinfo` from http://www.lcdf.org/type/[LCDF Typetools]. Fontisan supports
+all features provided by `otfinfo`, including extraction of font metadata,
+OpenType tables, glyph names, Unicode mappings, variable font axes, optical size
+information, supported scripts, OpenType features, and raw table dumps.
+
+
+
 
 == Installation
 
