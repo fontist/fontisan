@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "bindata"
+require "stringio"
 
 module Fontisan
   module Binary
@@ -25,7 +26,27 @@ module Fontisan
       def self.read(io)
         return new if io.nil? || (io.respond_to?(:empty?) && io.empty?)
 
-        super
+        # Store the original data for later parsing
+        # Convert IO to string if needed
+        if io.is_a?(String)
+          data = io
+          instance = super(StringIO.new(data))
+        else
+          # For IO objects, read to string first
+          data = io.read
+          io.rewind if io.respond_to?(:rewind)
+          instance = super(io)
+        end
+
+        instance.instance_variable_set(:@raw_data, data)
+        instance
+      end
+
+      # Get the raw binary data that was read
+      #
+      # @return [String] Raw binary data
+      def raw_data
+        @raw_data || to_binary_s
       end
 
       # Check if the record is valid

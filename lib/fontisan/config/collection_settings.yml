@@ -1,0 +1,56 @@
+# Collection Creation Settings
+# Configuration for TTC/OTC (TrueType/OpenType Collection) creation
+
+# Table sharing strategy determines how aggressive the deduplication is
+# Options:
+#   - conservative: Only share tables with exact checksum match (safest)
+#   - aggressive: Consider sharing even with minor differences (not implemented yet)
+table_sharing_strategy: conservative
+
+# Alignment requirement for tables in bytes
+# Must be 4 for TrueType/OpenType compliance
+alignment: 4
+
+# Optimize table order for better performance
+# When true, tables are ordered according to recommended order
+optimize_table_order: true
+
+# Verify checksums after writing
+# When true, verifies all checksums match expected values
+verify_checksums: true
+
+# Priority tables for sharing
+# These tables are commonly identical across font families
+# and should be prioritized for sharing to maximize space savings
+priority_tables:
+  - head  # Font header
+  - hhea  # Horizontal header
+  - maxp  # Maximum profile
+  - OS/2  # OS/2 and Windows metrics
+  - name  # Naming table
+  - post  # PostScript information
+  - cvt   # Control value table
+  - fpgm  # Font program
+  - prep  # Control value program
+
+# Tables that should typically not be shared
+# These tables often differ between fonts in a family
+unique_tables:
+  - cmap  # Character to glyph mapping (can vary)
+  - glyf  # Glyph data (usually unique per font)
+  - loca  # Index to location (tied to glyf)
+  - hmtx  # Horizontal metrics (varies by font)
+  - GSUB  # Glyph substitution (may vary)
+  - GPOS  # Glyph positioning (may vary)
+
+# Minimum space savings threshold (in bytes)
+# If potential savings are below this, a warning is issued
+min_savings_threshold: 1024
+
+# Maximum collection size (in bytes)
+# Collections larger than this will trigger a warning
+# Set to 0 to disable
+max_collection_size: 104857600  # 100 MB
+
+# Enable verbose logging during collection creation
+verbose: false

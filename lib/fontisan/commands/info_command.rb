@@ -2,9 +2,14 @@
 
 module Fontisan
   module Commands
-    # Command to extract font metadata information.
+    # Command to extract font or collection metadata information.
     #
-    # This command extracts comprehensive font information from various tables:
+    # This command auto-detects whether the input is a collection (TTC/OTC)
+    # or individual font (TTF/OTF) and returns the appropriate model:
+    # - CollectionInfo for TTC/OTC files
+    # - FontInfo for TTF/OTF files
+    #
+    # For individual fonts, extracts comprehensive information from various tables:
     # - name table: family names, version, copyright, etc.
     # - OS/2 table: vendor ID, embedding permissions
     # - head table: font revision, units per em
@@ -13,11 +18,42 @@ module Fontisan
     #   command = InfoCommand.new("path/to/font.ttf")
     #   info = command.run
     #   puts info.family_name
+    #
+    # @example Extract collection information
+    #   command = InfoCommand.new("path/to/fonts.ttc")
+    #   info = command.run
+    #   puts "Collection has #{info.num_fonts} fonts"
     class InfoCommand < BaseCommand
-      # Extract font information from all available tables.
+      # Extract information from font or collection.
       #
-      # @return [Models::FontInfo] Font metadata information
+      # Auto-detects file type and returns appropriate model.
+      #
+      # @return [Models::FontInfo, Models::CollectionInfo] Metadata information
       def run
+        if FontLoader.collection?(@font_path)
+          collection_info
+        else
+          font_info
+        end
+      end
+
+      private
+
+      # Get collection information
+      #
+      # @return [Models::CollectionInfo] Collection metadata
+      def collection_info
+        collection = FontLoader.load_collection(@font_path)
+
+        File.open(@font_path, "rb") do |io|
+          collection.collection_info(io, @font_path)
+        end
+      end
+
+      # Get individual font information
+      #
+      # @return [Models::FontInfo] Font metadata
+      def font_info
         info = Models::FontInfo.new
         populate_font_format(info)
         populate_from_name_table(info) if font.has_table?(Constants::NAME_TAG)
@@ -25,8 +61,6 @@ module Fontisan
         populate_from_head_table(info) if font.has_table?(Constants::HEAD_TAG)
         info
       end
-
-      private
 
       # Populate font format and variable status based on font class and table presence.
       #

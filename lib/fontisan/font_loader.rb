@@ -5,6 +5,8 @@ require_relative "true_type_font"
 require_relative "open_type_font"
 require_relative "true_type_collection"
 require_relative "open_type_collection"
+require_relative "woff_font"
+require_relative "woff2_font"
 require_relative "error"
 
 module Fontisan
@@ -24,9 +26,9 @@ module Fontisan
     #
     # @param path [String] Path to the font file
     # @param font_index [Integer] Index of font in collection (0-based, default: 0)
-    # @return [TrueTypeFont, OpenTypeFont] The loaded font object
+    # @return [TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font] The loaded font object
     # @raise [Errno::ENOENT] if file does not exist
-    # @raise [UnsupportedFormatError] for WOFF/WOFF2 or other unsupported formats
+    # @raise [UnsupportedFormatError] for unsupported formats
     # @raise [InvalidFontError] for corrupted or unknown formats
     def self.load(path, font_index: 0)
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
@@ -44,13 +46,77 @@ module Fontisan
           OpenTypeFont.from_file(path)
         when "wOFF"
           raise UnsupportedFormatError,
-                "Unsupported font format: WOFF. Fontisan currently supports TTF, OTF, TTC, and OTC files."
+                "Unsupported font format: WOFF. Please convert to TTF/OTF first."
         when "wOF2"
           raise UnsupportedFormatError,
-                "Unsupported font format: WOFF2. Fontisan currently supports TTF, OTF, TTC, and OTC files."
+                "Unsupported font format: WOFF2. Please convert to TTF/OTF first."
         else
           raise InvalidFontError,
                 "Unknown font format. Expected TTF, OTF, TTC, or OTC file."
+        end
+      end
+    end
+
+    # Check if a file is a collection (TTC or OTC)
+    #
+    # @param path [String] Path to the font file
+    # @return [Boolean] true if file is a TTC/OTC collection
+    # @raise [Errno::ENOENT] if file does not exist
+    #
+    # @example Check if file is collection
+    #   FontLoader.collection?("fonts.ttc") # => true
+    #   FontLoader.collection?("font.ttf")  # => false
+    def self.collection?(path)
+      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+
+      File.open(path, "rb") do |io|
+        signature = io.read(4)
+        signature == Constants::TTC_TAG
+      end
+    end
+
+    # Load a collection object without extracting fonts
+    #
+    # Returns the collection object (TrueTypeCollection or OpenTypeCollection)
+    # without extracting individual fonts. Useful for inspecting collection
+    # metadata and structure.
+    #
+    # @param path [String] Path to the collection file
+    # @return [TrueTypeCollection, OpenTypeCollection] The collection object
+    # @raise [Errno::ENOENT] if file does not exist
+    # @raise [InvalidFontError] if file is not a collection or type cannot be determined
+    #
+    # @example Load collection for inspection
+    #   collection = FontLoader.load_collection("fonts.ttc")
+    #   puts "Collection has #{collection.num_fonts} fonts"
+    def self.load_collection(path)
+      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+
+      File.open(path, "rb") do |io|
+        signature = io.read(4)
+
+        unless signature == Constants::TTC_TAG
+          raise InvalidFontError,
+                "File is not a collection (TTC/OTC). Use FontLoader.load instead."
+        end
+
+        # Read first font offset to detect collection type
+        io.seek(12) # Skip tag (4) + versions (4) + num_fonts (4)
+        first_offset = io.read(4).unpack1("N")
+
+        # Peek at first font's sfnt_version
+        io.seek(first_offset)
+        sfnt_version = io.read(4).unpack1("N")
+        io.rewind
+
+        case sfnt_version
+        when Constants::SFNT_VERSION_TRUETYPE
+          TrueTypeCollection.from_file(path)
+        when Constants::SFNT_VERSION_OTTO
+          OpenTypeCollection.from_file(path)
+        else
+          raise InvalidFontError,
+                "Unknown font type in collection (sfnt version: 0x#{sfnt_version.to_s(16)})"
         end
       end
     end

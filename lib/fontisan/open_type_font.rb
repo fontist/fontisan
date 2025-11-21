@@ -202,6 +202,9 @@ module Fontisan
     def table_class_for(tag)
       {
         Constants::HEAD_TAG => Tables::Head,
+        Constants::HHEA_TAG => Tables::Hhea,
+        Constants::HMTX_TAG => Tables::Hmtx,
+        Constants::MAXP_TAG => Tables::Maxp,
         Constants::NAME_TAG => Tables::Name,
         Constants::OS2_TAG => Tables::Os2,
         Constants::POST_TAG => Tables::Post,
@@ -209,6 +212,8 @@ module Fontisan
         Constants::FVAR_TAG => Tables::Fvar,
         Constants::GSUB_TAG => Tables::Gsub,
         Constants::GPOS_TAG => Tables::Gpos,
+        Constants::GLYF_TAG => Tables::Glyf,
+        Constants::LOCA_TAG => Tables::Loca,
       }[tag]
     end
 

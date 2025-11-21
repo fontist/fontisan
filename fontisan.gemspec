@@ -39,6 +39,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "bindata", "~> 2.5"
+  spec.add_dependency "brotli", "~> 0.5"
   spec.add_dependency "lutaml-model", "~> 0.7"
-  spec.add_dependency "thor", "~> 1.4"
+  spec.add_dependency "nokogiri", "~> 1.16"
+  spec.add_dependency "thor", "~> 1.3"
 end

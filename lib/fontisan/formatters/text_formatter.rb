@@ -36,6 +36,12 @@ module Fontisan
           format_all_scripts_features_info(model)
         when Models::FeaturesInfo
           format_features_info(model)
+        when Models::CollectionListInfo
+          format_collection_list_info(model)
+        when Models::FontSummary
+          format_font_summary(model)
+        when Models::CollectionInfo
+          format_collection_info(model)
         else
           model.to_s
         end
@@ -308,6 +314,102 @@ module Fontisan
 
         type += " (Variable)" if is_variable
         type
+      end
+
+      # Format CollectionListInfo as human-readable text.
+      #
+      # @param info [Models::CollectionListInfo] Collection list information to format
+      # @return [String] Formatted text with fonts in collection
+      def format_collection_list_info(info)
+        lines = []
+
+        lines << "Collection: #{info.collection_path}"
+        lines << "Fonts: #{info.num_fonts}"
+        lines << ""
+
+        info.fonts.each do |font|
+          lines << "#{font.index}. #{font.family_name} #{font.subfamily_name}"
+          lines << "   PostScript: #{font.postscript_name}"
+          lines << "   Format: #{font.font_format}"
+          lines << "   Glyphs: #{font.num_glyphs}, Tables: #{font.num_tables}"
+          lines << "" unless font.index == info.num_fonts - 1
+        end
+
+        lines.join("\n")
+      end
+
+      # Format FontSummary as human-readable text.
+      #
+      # @param summary [Models::FontSummary] Font summary to format
+      # @return [String] Formatted text with font summary
+      def format_font_summary(summary)
+        lines = []
+
+        lines << "Font: #{summary.font_path}"
+        lines << "Family: #{summary.family_name} #{summary.subfamily_name}"
+        lines << "Format: #{summary.font_format}"
+        lines << "Glyphs: #{summary.num_glyphs}"
+        lines << "Tables: #{summary.num_tables}"
+
+        lines.join("\n")
+      end
+
+      # Format CollectionInfo as human-readable text.
+      #
+      # @param info [Models::CollectionInfo] Collection information to format
+      # @return [String] Formatted text with collection metadata
+      def format_collection_info(info)
+        lines = []
+
+        # Header section
+        lines << "=== Collection Information ==="
+        lines << ""
+        lines << "File: #{info.collection_path}"
+        lines << "Format: #{info.collection_format}"
+        lines << "Size: #{format_bytes(info.file_size_bytes)}"
+        lines << ""
+
+        # Header details
+        lines << "=== Header ==="
+        lines << "Tag: #{info.ttc_tag}"
+        lines << "Version: #{info.version_string} (#{info.version_hex})"
+        lines << "Number of fonts: #{info.num_fonts}"
+        lines << ""
+
+        # Font offsets
+        lines << "=== Font Offsets ==="
+        info.font_offsets.each_with_index do |offset, index|
+          lines << Kernel.format("  %d. Offset: %8d (0x%08X)",
+                                 index, offset, offset)
+        end
+        lines << ""
+
+        # Table sharing statistics
+        if info.table_sharing
+          lines << "=== Table Sharing ==="
+          lines << "Shared tables: #{info.table_sharing.shared_tables}"
+          lines << "Unique tables: #{info.table_sharing.unique_tables}"
+          lines << "Sharing: #{format_float(info.table_sharing.sharing_percentage)}%"
+          lines << "Space saved: #{format_bytes(info.table_sharing.space_saved_bytes)}"
+        end
+
+        lines.join("\n")
+      end
+
+      # Format bytes for human-readable display.
+      #
+      # @param bytes [Integer] Number of bytes
+      # @return [String] Formatted byte size
+      def format_bytes(bytes)
+        return "0 B" if bytes.nil? || bytes.zero?
+
+        if bytes < 1024
+          "#{bytes} B"
+        elsif bytes < 1024 * 1024
+          "#{(bytes / 1024.0).round(2)} KB"
+        else
+          "#{(bytes / (1024.0 * 1024)).round(2)} MB"
+        end
       end
     end
   end
