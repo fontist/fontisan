@@ -38,6 +38,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "base64"
   spec.add_dependency "bindata", "~> 2.5"
   spec.add_dependency "brotli", "~> 0.5"
   spec.add_dependency "lutaml-model", "~> 0.7"
