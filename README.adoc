@@ -22,7 +22,13 @@ all features provided by `otfinfo`, including extraction of font metadata,
 OpenType tables, glyph names, Unicode mappings, variable font axes, optical size
 information, supported scripts, OpenType features, and raw table dumps.
 
-
+* `extract_ttc` from https://github.com/fontist/extract_ttc[ExtractTTC].
+Fontisan fully supersedes extract_ttc with Docker-like commands (`ls`, `info`,
+`unpack`) that work on both collections and individual fonts. Fontisan provides
+all `extract_ttc` functionality plus comprehensive font analysis, subsetting,
+validation, format conversion, and collection creation. See
+link:docs/EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide] for detailed
+command mappings and usage examples.
 
 
 == Installation
@@ -63,6 +69,7 @@ gem install fontisan
 * Command-line interface with full otfinfo parity
 * Ruby library API for programmatic access
 * Structured output in YAML, JSON, and text formats
+
 
 == Usage
 
@@ -105,7 +112,9 @@ Designer:                 Philipp H. Poll, Khaled Hosny
 Manufacturer:             Caleb Maclennan
 Vendor URL:               https://github.com/alerque/libertinus
 Vendor ID:                QUE
-License Description:      This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+License Description:      This Font Software is licensed under the SIL Open Font
+                          License, Version 1.1. This license is available with a
+                          FAQ at: https://openfontlicense.org
 License URL:              https://openfontlicense.org
 Font revision:            7.05099
 Permissions:              Installable
@@ -605,395 +614,343 @@ Display the Fontisan version:
 fontisan version
 ----
 
-=== Ruby API
 
-==== General
+==== Font collections
 
-Fontisan provides a comprehensive Ruby API for programmatic font analysis.
+===== List fonts
 
-All functionality available via the CLI is accessible through the library.
-
-==== Loading fonts
-
-Load TrueType and OpenType fonts:
-
-.Loading a TrueType font
-[example]
-====
-[source,ruby]
-----
-require "fontisan"
-
-# Load a TrueType font (.ttf)
-font = Fontisan::TrueTypeFont.from_file("path/to/font.ttf")
-
-# Load an OpenType font (.otf with CFF outlines)
-font = Fontisan::OpenTypeFont.from_file("path/to/font.otf")
-----
-====
-
-.Loading fonts from TrueType Collections
-[example]
-====
-[source,ruby]
-----
-# Load a specific font from a TTC file
-ttc = Fontisan::TrueTypeCollection.from_file("path/to/fonts.ttc")
-font = ttc.font_at_index(0)  # Get first font
-
-# Or use FontLoader to auto-detect format
-font = Fontisan::FontLoader.load_file("path/to/any-font-file.ttf", font_index: 0)
-----
-====
-
-==== Accessing font tables
-
-Access and parse OpenType tables:
-
-.Working with the name table
-[example]
-====
-[source,ruby]
-----
-name_table = font.table("name")
-
-# Get standard name entries
-family = name_table.english_name(Fontisan::Tables::Name::FAMILY)
-subfamily = name_table.english_name(Fontisan::Tables::Name::SUBFAMILY)
-full_name = name_table.english_name(Fontisan::Tables::Name::FULL_NAME)
-postscript_name = name_table.english_name(Fontisan::Tables::Name::POSTSCRIPT)
-
-# Get all available names
-name_table.name_records.each do |record|
-  puts "#{record.name_id}: #{record.string}"
-end
-----
-====
-
-.Working with the head table
-[example]
-====
-[source,ruby]
-----
-head_table = font.table("head")
-
-# Get font revision
-revision = head_table.font_revision  # => 7.050994873046875
-
-# Get units per em
-units_per_em = head_table.units_per_em  # => 1000
-
-# Get created/modified timestamps
-created = head_table.created
-modified = head_table.modified
-----
-====
-
-.Working with the OS/2 table
-[example]
-====
-[source,ruby]
-----
-os2_table = font.table("OS/2")
-
-# Get vendor ID
-vendor_id = os2_table.ach_vend_id  # => "QUE "
-
-# Check optical size
-if os2_table.version >= 5
-  lower_size = os2_table.us_lower_optical_point_size  # => 18
-  upper_size = os2_table.us_upper_optical_point_size  # => 72
-end
-
-# Get weight class
-weight = os2_table.us_weight_class  # => 400 (Regular)
-----
-====
-
-.Working with the post table
-[example]
-====
-[source,ruby]
-----
-post_table = font.table("post")
-
-# Get all glyph names
-glyph_names = post_table.glyph_names  # => [".notdef", "space", "exclam", ...]
-
-# Check post table version
-version = post_table.version  # => 2.0
-----
-====
-
-==== Working with cmap (Unicode mappings)
-
-Access Unicode to glyph mappings:
-
-.Getting Unicode mappings
-[example]
-====
-[source,ruby]
-----
-cmap_table = font.table("cmap")
-
-# Get all Unicode to glyph index mappings
-mappings = cmap_table.unicode_mappings
-# => { 0x0020 => 1, 0x0021 => 2, 0x0022 => 3, ... }
-
-# Look up specific  Unicode codepoint
-glyph_index = mappings[0x0041]  # => glyph index for 'A'
-
-# Get subtables
-subtables = cmap_table.subtables
-subtables.each do |subtable|
-  puts "Platform #{subtable.platform_id}, Encoding #{subtable.encoding_id}"
-end
-----
-====
-
-==== Working with GSUB/GPOS (scripts and features)
-
-Extract OpenType layout information:
-
-.Getting supported scripts
-[example]
-====
-[source,ruby]
-----
-# Get scripts from GSUB table
-gsub = font.table("GSUB")
-scripts = gsub.scripts  # => ["DFLT", "latn", "cyrl", "grek", "hebr"]
-
-# Get scripts from GPOS table
-gpos = font.table("GPOS")
-scripts = gpos.scripts  # => ["DFLT", "latn", "cyrl", "grek", "hebr"]
-
-# Combine scripts from both tables
-all_scripts = (gsub.scripts + gpos.scripts).uniq.sort
-----
-====
-
-.Getting OpenType features
-[example]
-====
-[source,ruby]
-----
-gsub = font.table("GSUB")
-
-# Get features for a specific script
-latin_features = gsub.features(script_tag: "latn")
-# => ["cpsp", "kern", "mark", "mkmk"]
-
-# Get features for all scripts
-scripts = gsub.scripts
-features_by_script = scripts.each_with_object({}) do |script, hash|
-  hash[script] = gsub.features(script_tag: script)
-end
-# => {"DFLT"=>["cpsp", "kern", ...], "latn"=>["cpsp", "kern", ...], ...}
-
-# Combine GSUB and GPOS features
-gpos = font.table("GPOS")
-all_features = (gsub.features(script_tag: "latn") + gpos.features(script_tag: "latn")).uniq
-----
-====
-
-==== Working with variable fonts
-
-Access variation axes and instances:
-
-.Analyzing variable fonts
-[example]
-====
-[source,ruby]
-----
-fvar_table = font.table("fvar")
-
-# Check if font is variable
-is_variable = !fvar_table.nil?
-
-# Get variation axes
-axes = fvar_table.axes
-axes.each do |axis|
-  puts "Axis: #{axis.axis_tag}"
-  puts "  Name: #{axis.axis_name_id}"
-  puts "  Range: #{axis.min_value} to #{axis.max_value}"
-  puts "  Default: #{axis.default_value}"
-end
-
-# Get named instances
-instances = fvar_table.instances
-instances.each do |instance|
-  puts "Instance: #{instance.subfamily_name_id}"
-  puts "  Coordinates: #{instance.coordinates.inspect}"
-end
-----
-====
-
-==== Font inspection utilities
-
-Check table presence and extract basic info:
-
-.Font inspection
-[example]
-====
-[source,ruby]
-----
-# Ch eck if font has specific tables
-has_gsub = font.has_table?("GSUB")  # => true
-has_gpos = font.has_table?("GPOS")  # => true
-has_fvar = font.has_table?("fvar")  # => false (not a variable font)
-
-# Get list of all table tags
-table_names = font.table_names
-# => ["GDEF", "GPOS", "OS/2", "cmap", "cvt ", ...]
-
-# Get font format
-font_format = font.header.sfnt_version == 0x00010000 ? "TrueType" : "OpenType"
-
-# Get number of glyphs
-post = font.table("post")
-glyph_count = post.glyph_names.length  # => 2731
-----
-====
-
-==== Using commands programmatically
-
-Use command classes for structured output:
-
-.Getting structured font information
-[example]
-====
-[source,ruby]
-----
-# Use InfoCommand to get structured info
-cmd = Fontisan::Commands::InfoCommand.new("font.ttf", {})
-info = cmd.run  # Returns Fontisan::Models::FontInfo
-
-# Access structured data
-puts info.family_name      # => "Libertinus Serif"
-puts info.designer         # => "Philipp H. Poll, Khaled Hosny"
-puts info.font_format      # => "truetype"
-
-# Serialize to formats
-json_output = info.to_json
-yaml_output = info.to_yaml
-----
-====
-
-.Getting scripts and features programmatically
-[example]
-====
-[source,ruby]
-----
-# Get scripts
-scripts_cmd = Fontisan::Commands::ScriptsCommand.new("font.ttf", {})
-scripts_info = scripts_cmd.run  # Returns Fontisan::Models::ScriptsInfo
-
-scripts_info.scripts.each do |script|
-  puts "#{script.tag}: #{script.description}"
-end
-
-# Get features for a script
-features_cmd = Fontisan::Commands::FeaturesCommand.new(
-  "font.ttf",
-  { script: "latn" }
-)
-features_info = features_cmd.run  # Returns Fontisan::Models::FeaturesInfo
-
-features_info.features.each do |feature|
-  puts "#{feature.tag}: #{feature.description}"
-end
-----
-====
-
-== Development
-
-After checking out the repo, run `bundle install` to install dependencies.
-
-=== Running tests
+List all fonts in a TrueType Collection (TTC) or OpenType Collection (OTC), with
+their index, family name, and style.
 
 [source,shell]
 ----
-bundle exec rake spec
+$ fontisan ls FONT.{ttc,otc}
 ----
 
-=== Code style
+NOTE: In `extract_ttc`, this was done with `extract_ttc --list FONT.ttc`.
 
-Check code style with RuboCop:
+
+.List collection contents
+[example]
+====
+[source,shell]
+----
+# List all fonts in a TTC with detailed info
+$ fontisan ls spec/fixtures/fonts/NotoSerifCJK/NotoSerifCJK.ttc
+
+Font 0: Noto Serif CJK JP
+  Family: Noto Serif CJK JP
+  Subfamily: Regular
+  PostScript: NotoSerifCJKJP-Regular
+
+Font 1: Noto Serif CJK KR
+  Family: Noto Serif CJK KR
+  Subfamily: Regular
+  PostScript: NotoSerifCJKKR-Regular
+
+Font 2: Noto Serif CJK SC
+  Family: Noto Serif CJK SC
+  Subfamily: Regular
+  PostScript: NotoSerifCJKSC-Regular
+
+Font 3: Noto Serif CJK TC
+  Family: Noto Serif CJK TC
+  Subfamily: Regular
+  PostScript: NotoSerifCJKTC-Regular
+----
+====
+
+
+===== Show collection info
+
+Show detailed information about a TrueType Collection (TTC), OpenType Collection
+(OTC), including the number of fonts and metadata for each font.
 
 [source,shell]
 ----
-bundle exec rake rubocop
+$ fontisan info FONT.{ttc,otc}
 ----
 
-=== Test fixtures
+NOTE: In `extract_ttc`, this was done with `extract_ttc --info FONT.ttc`.
 
-The test suite uses real font files for testing.
+.Get collection information
+[example]
+====
+[source,shell]
+----
+# Detailed collection analysis
+$ fontisan info spec/fixtures/fonts/NotoSerifCJK/NotoSerifCJK.ttc --format yaml
 
-Rake tasks are provided to download fonts from GitHub releases for testing.
+---
+collection_type: ttc
+font_count: 4
+fonts:
+- index: 0
+  family_name: Noto Serif CJK JP
+  subfamily_name: Regular
+  postscript_name: NotoSerifCJKJP-Regular
+  font_format: opentype
+- index: 1
+  family_name: Noto Serif CJK KR
+  subfamily_name: Regular
+  postscript_name: NotoSerifCJKKR-Regular
+  font_format: opentype
+- index: 2
+  family_name: Noto Serif CJK SC
+  subfamily_name: Regular
+  postscript_name: NotoSerifCJKSC-Regular
+  font_format: opentype
+- index: 3
+  family_name: Noto Serif CJK TC
+  subfamily_name: Regular
+  postscript_name: NotoSerifCJKTC-Regular
+  font_format: opentype
+----
+====
 
-==== Download test fixtures
+===== Unpack fonts
 
-Download font fixtures automatically (only downloads if files don't already
-exist):
+Extract all fonts from a TrueType Collection (TTC) or OpenType Collection (OTC)
+to a specified output directory.
 
 [source,shell]
 ----
-bundle exec rake fixtures:download
+$ fontisan unpack FONT.{ttc,otc} OUTPUT_DIR
 ----
 
-This downloads four font collections:
+NOTE: In `extract_ttc`, this was done with `extract_ttc --unpack FONT.ttc OUTPUT_DIR`.
 
-* **Libertinus 7.051** - Serif, Sans, and Mono families with extensive OpenType
-features (included in repository)
+===== Extract specific font
 
-* **Mona Sans v2.0** - Variable TTF with width and weight axes for testing
-variable fonts (downloaded via Rake, not in repository)
-
-* **Noto Serif CJK 2.003 (Static)** - Large CJK TTC for testing static font
-collections (downloaded via Rake, not in repository)
-
-* **Noto Serif CJK 2.003 (Variable)** - Variable OTF/OTC for testing variable
-OpenType collections (downloaded via Rake, not in repository)
-
-The Rake task uses file dependencies, so running it multiple times won't
-re-download existing files. This makes it safe and efficient to run repeatedly
-during development.
-
-NOTE: Noto CJK and Mona Sans fonts are excluded from the repository (see
-`.gitignore`) due to their size. They are automatically downloaded when running
-`rake fixtures:download`.
-
-==== Clean test fixtures
-
-Remove all downloaded fixture files:
+Extract a specific font from a TrueType Collection (TTC) or OpenType Collection (OTC) by its index.
 
 [source,shell]
 ----
-bundle exec rake fixtures:clean
+$ fontisan unpack FONT.{ttc,otc} --font-index INDEX OUTPUT.{ttf,otf}
 ----
 
-==== Built-in fixtures
+NOTE: In `extract_ttc`, this was done with `extract_ttc --font-index INDEX FONT.ttc OUTPUT.ttf`.
 
-The repository includes pre-installed Libertinus fixtures in
-`spec/fixtures/fonts/libertinus/` which are sufficient for basic testing.
+.Extract with validation
+[example]
+====
+[source,shell]
+----
+# Extract and validate simultaneously
+$ fontisan unpack spec/fixtures/fonts/NotoSerifCJK/NotoSerifCJK.ttc extracted_fonts/ --validate
 
-Large font collections (Noto CJK, Mona Sans) are **not committed** to the
-repository due to their size. Use `rake fixtures:download` to obtain them for
-comprehensive testing of:
+Extracting font 0: Noto Serif CJK JP → extracted_fonts/NotoSerifCJKJP-Regular.ttf
+Extracting font 1: Noto Serif CJK KR → extracted_fonts/NotoSerifCJKKR-Regular.ttf
+Extracting font 2: Noto Serif CJK SC → extracted_fonts/NotoSerifCJKSC-Regular.ttf
+Extracting font 3: Noto Serif CJK TC → extracted_fonts/NotoSerifCJKTC-Regular.ttf
 
-* Variable fonts (MonaSans variable TTF)
-* Large static font collections (NotoSerifCJK TTC)
-* Variable OpenType collections (NotoSerifCJK-VF OTC)
+Validation: All fonts extracted successfully
+----
+====
 
-== Contributing
+===== Validate collection
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/fontist/fontisan.
+Validate the structure and checksums of a TrueType Collection (TTC) or OpenType
+Collection (OTC).
 
-== License
+[source,shell]
+----
+$ fontisan validate FONT.{ttc,otc}
+----
 
-The gem is available as open source under the terms of the BSD-2-Clause license.
+NOTE: In `extract_ttc`, this was done with `extract_ttc --validate FONT.ttc`.
+=======
+==== Advanced Features Beyond extract_ttc
 
-== Copyright
+Fontisan provides capabilities that extract_ttc never had:
 
-Copyright https://www.ribose.com[Ribose].
+.Font analysis and inspection
+* Extract OpenType tables with checksums and offsets
+* Display Unicode mappings and glyph names
+* Analyze variable font axes and instances
+* Show supported scripts and OpenType features
+* Dump raw binary table data
+
+.Format conversion and subsetting
+* Convert between TTF, OTF, WOFF, and WOFF2 formats
+* Create font subsets with specific glyph ranges
+* Validate font structure and integrity
+* Generate SVG representations of glyphs
+
+.Collection creation
+* Build new TTC files from individual fonts
+* Optimize collection with table deduplication
+* Pack fonts with shared tables for smaller file sizes
+
+For complete migration guide, see link:docs/EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide].
+
+==== CLI Examples for Advanced Features
+
+===== Collection Creation and Management
+
+.Create TTC collection from multiple fonts
+[source,shell]
+----
+# Pack fonts into TTC with table sharing optimization
+$ fontisan pack font1.ttf font2.ttf font3.ttf --output family.ttc --analyze
+
+Collection Analysis:
+Total fonts: 3
+Shared tables: 12
+Potential space savings: 45.2 KB
+Table sharing: 68.5%
+
+Collection created successfully:
+  Output: family.ttc
+  Format: TTC
+  Fonts: 3
+  Size: 245.8 KB
+  Space saved: 45.2 KB
+  Sharing: 68.5%
+----
+
+.Create OTC collection from OpenType fonts
+[source,shell]
+----
+$ fontisan pack Regular.otf Bold.otf Italic.otf --output family.otc --format otc
+----
+
+.Extract fonts from collection
+[source,shell]
+----
+# Extract all fonts from collection
+$ fontisan unpack family.ttc --output-dir extracted/
+
+Collection unpacked successfully:
+  Input: family.ttc
+  Output directory: extracted/
+  Fonts extracted: 3/3
+  - font1.ttf (89.2 KB)
+  - font2.ttf (89.2 KB)
+  - font3.ttf (67.4 KB)
+
+# Extract specific font with format conversion
+$ fontisan unpack family.ttc --output-dir extracted/ --font-index 0 --format woff2
+----
+
+===== Format Conversion
+
+.Convert TTF to WOFF2 for web usage
+[source,shell]
+----
+$ fontisan convert font.ttf --to woff2 --output font.woff2
+
+Converting font.ttf to woff2...
+Conversion complete!
+  Input:  font.ttf (245.8 KB)
+  Output: font.woff2 (89.2 KB)
+----
+
+.Convert to SVG format
+[source,shell]
+----
+$ fontisan convert font.ttf --to svg --output font.svg
+
+Converting font.ttf to svg...
+Conversion complete!
+  Input:  font.ttf (245.8 KB)
+  Output: font.svg (1.2 MB)
+----
+
+===== Font Subsetting
+
+.Create PDF-optimized subset
+[source,shell]
+----
+$ fontisan subset font.ttf --text "Hello World" --output subset.ttf --profile pdf
+
+Subset font created:
+  Input: font.ttf
+  Output: subset.ttf
+  Original glyphs: 1253
+  Subset glyphs: 12
+  Profile: pdf
+  Size: 12.4 KB
+----
+
+.Subset with Unicode ranges
+[source,shell]
+----
+$ fontisan subset font.ttf --unicode "U+0041-U+005A,U+0061-U+007A" --output latin.ttf
+----
+
+===== Font Validation
+
+.Validate font with different levels
+[source,shell]
+----
+# Standard validation (allows warnings)
+$ fontisan validate font.ttf
+
+# Strict validation (no warnings allowed)
+$ fontisan validate font.ttf --level strict
+
+# Detailed validation report
+$ fontisan validate font.ttf --format yaml
+----
+
+===== Variable Font Instances
+
+.Generate static instance from variable font
+[source,shell]
+----
+# Create bold instance
+$ fontisan instance variable.ttf --wght=700 --output bold.ttf
+
+# Use named instance
+$ fontisan instance variable.ttf --named-instance="Bold" --output bold.ttf
+
+# List available instances
+$ fontisan instance variable.ttf --list-instances
+----
+
+===== Advanced Font Analysis
+
+.Dump raw table data for analysis
+[source,shell]
+----
+$ fontisan dump-table font.ttf name > name_table.bin
+$ fontisan dump-table font.ttf GPOS > gpos_table.bin
+----
+
+.Analyze font structure
+[source,shell]
+----
+# List all OpenType tables with details
+$ fontisan tables font.ttf --format yaml
+
+# Show variable font information
+$ fontisan variable font.ttf
+
+# Display optical size information
+$ fontisan optical-size font.ttf
+----
+
+.Get comprehensive font information
+[source,shell]
+----
+# Basic font info
+$ fontisan info font.ttf
+
+# Scripts and features analysis
+$ fontisan scripts font.ttf
+$ fontisan features font.ttf --script latn
+
+# Unicode coverage
+$ fontisan unicode font.ttf
+
+# Glyph names
+$ fontisan glyphs font.ttf
+----
+
+== Copyright and license
+
+Copyright Ribose.
+
+Fontisan is licensed under the Ribose 3-Clause BSD License. See the LICENSE file
+for details.

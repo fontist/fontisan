@@ -1,0 +1,171 @@
+# Font Format Conversion Matrix
+#
+# This file defines the supported font format conversions for Fontisan.
+# Each conversion specifies a source format ('from') and target format ('to').
+#
+# Format identifiers:
+# - ttf: TrueType Font (with glyf/loca tables)
+# - otf: OpenType Font with CFF outlines (with CFF table)
+# - woff: Web Open Font Format (not yet implemented)
+# - woff2: Web Open Font Format 2 (implemented in Phase 2)
+# - svg: SVG Font (implemented in Phase 2)
+#
+# Phase 1 (Milestone 1.3): Basic conversions
+# - Same format (copy/optimize): ttf→ttf, otf→otf
+# - Outline conversion: ttf↔otf (foundation implemented)
+#
+# Phase 2 (Milestone 2.1): Web font formats
+# - WOFF2 compression: ttf to woff2, otf to woff2
+#
+# Phase 2 (Milestone 2.2): SVG font generation
+# - SVG export: ttf to svg, otf to svg
+#
+# Future phases:
+# - Phase 3: Variable font conversions
+
+conversions:
+  # Same-format conversions (copy/optimize)
+  - from: ttf
+    to: ttf
+    strategy: table_copier
+    description: "Copy TrueType font with table optimization"
+    status: implemented
+
+  - from: otf
+    to: otf
+    strategy: table_copier
+    description: "Copy OpenType/CFF font with table optimization"
+    status: implemented
+
+  # Outline format conversions
+  - from: ttf
+    to: otf
+    strategy: outline_converter
+    description: "Convert TrueType outlines to CFF format"
+    status: foundation
+    notes: >
+      Foundation implemented. Full conversion requires complete CFF table
+      generation including CharString encoding, DICT structures, and
+      charset/encoding tables.
+
+  - from: otf
+    to: ttf
+    strategy: outline_converter
+    description: "Convert CFF outlines to TrueType format"
+    status: foundation
+    notes: >
+      Foundation implemented. Full conversion requires complete glyf/loca
+      table generation including cubic-to-quadratic curve conversion and
+      proper TrueType glyph structure encoding.
+
+  # Phase 2 conversions (Milestone 2.1) - WOFF2
+  - from: ttf
+    to: woff2
+    strategy: woff2_encoder
+    description: "Compress TrueType to WOFF2 format with Brotli"
+    status: implemented
+    notes: >
+      WOFF2 encoding with Brotli compression. Table transformations
+      are architectural placeholders for future optimization.
+
+  - from: otf
+    to: woff2
+    strategy: woff2_encoder
+    description: "Compress OpenType/CFF to WOFF2 format with Brotli"
+    status: implemented
+    notes: >
+      WOFF2 encoding with Brotli compression. Table transformations
+      are architectural placeholders for future optimization.
+
+  # Phase 2 conversions (Milestone 2.2) - SVG
+  - from: ttf
+    to: svg
+    strategy: svg_generator
+    description: "Generate SVG font from TrueType"
+    status: implemented
+    notes: >
+      SVG font generation with full glyph outline extraction and coordinate
+      transformation. Note: SVG fonts are deprecated in favor of WOFF2, but
+      useful for fallback, conversion, and inspection purposes.
+
+  - from: otf
+    to: svg
+    strategy: svg_generator
+    description: "Generate SVG font from OpenType/CFF"
+    status: implemented
+    notes: >
+      SVG font generation with full glyph outline extraction and coordinate
+      transformation. Note: SVG fonts are deprecated in favor of WOFF2, but
+      useful for fallback, conversion, and inspection purposes.
+
+# Conversion compatibility matrix
+#
+# This section documents which source features are preserved in conversions.
+# Not all features can be preserved across format boundaries.
+#
+compatibility:
+  ttf_to_otf:
+    preserves:
+      - glyph_outlines
+      - font_metrics
+      - name_table
+      - layout_features
+      - kerning
+    limitations:
+      - quadratic_to_cubic_approximation: >
+          TrueType quadratic curves are converted to CFF cubic curves.
+          The conversion is mathematically exact.
+      - hinting_loss: >
+          TrueType hinting instructions are not converted to CFF hints.
+
+  otf_to_ttf:
+    preserves:
+      - glyph_outlines
+      - font_metrics
+      - name_table
+      - layout_features
+      - kerning
+    limitations:
+      - cubic_to_quadratic_approximation: >
+          CFF cubic curves must be approximated as TrueType quadratic curves.
+          Multiple quadratic curves may be needed for accuracy.
+      - hinting_loss: >
+          CFF hints are not converted to TrueType hinting instructions.
+
+  same_format:
+    preserves:
+      - all_tables
+      - all_features
+      - exact_outline_data
+    benefits:
+      - table_reordering: Tables are written in optimal order
+      - checksum_correction: All checksums are recalculated
+      - padding_normalization: Table padding is normalized
+
+  to_woff2:
+    preserves:
+      - glyph_outlines
+      - font_metrics
+      - all_tables
+      - layout_features
+    benefits:
+      - brotli_compression: Excellent compression ratio for web delivery
+      - smaller_file_size: Typically 30-50% smaller than TTF/OTF
+    limitations:
+      - web_only: Primarily for web font delivery
+      - browser_support: Not all browsers support WOFF2
+
+  to_svg:
+    preserves:
+      - glyph_outlines: Outlines converted to SVG paths
+      - font_metrics: Basic metrics in font-face element
+      - unicode_mappings: Unicode to glyph associations
+    limitations:
+      - deprecated_format: SVG fonts deprecated in favor of WOFF2
+      - limited_browser_support: Mainly Safari
+      - no_hinting: Hinting information not preserved
+      - no_advanced_features: Complex layout features not supported
+    use_cases:
+      - fallback: Emergency fallback for very old browsers
+      - conversion: Intermediate format for font conversion workflows
+      - inspection: Easy-to-read format for font inspection

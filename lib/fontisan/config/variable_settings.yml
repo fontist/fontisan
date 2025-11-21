@@ -1,0 +1,99 @@
+# Configuration for variable font delta application
+#
+# These settings control how deltas are calculated and applied when
+# instancing variable fonts at specific design space coordinates.
+
+# Delta Application Settings
+delta_application:
+  # Rounding mode for accumulated deltas
+  # Options: round, floor, ceil, truncate
+  rounding_mode: round
+
+  # Interpolation quality
+  # Options: fast, normal, high
+  interpolation_quality: normal
+
+  # Whether to validate coordinates against axis ranges
+  validate_coordinates: true
+
+  # Whether to clamp out-of-range coordinates
+  clamp_coordinates: true
+
+  # Minimum scalar threshold below which deltas are ignored
+  # (Performance optimization: regions with very low contribution)
+  min_scalar_threshold: 0.0001
+
+# Coordinate Normalization Settings
+coordinate_normalization:
+  # Whether to normalize coordinates to -1.0 to 1.0 range
+  normalize: true
+
+  # Default axis values if not specified
+  use_axis_defaults: true
+
+  # Precision for normalized values (decimal places)
+  normalized_precision: 6
+
+# Region Matching Settings
+region_matching:
+  # Algorithm: standard (OpenType spec compliant)
+  algorithm: standard
+
+  # Whether to use multi-axis region matching
+  multi_axis: true
+
+  # Cache region scalars for reuse
+  cache_scalars: true
+
+# Glyph Delta Processing
+glyph_deltas:
+  # Apply deltas to simple glyphs
+  apply_to_simple: true
+
+  # Apply deltas to compound glyphs
+  apply_to_compound: true
+
+  # Process phantom points (metrics)
+  process_phantom_points: true
+
+  # Number of phantom points (standard: 4)
+  phantom_point_count: 4
+
+# Metric Delta Processing
+metric_deltas:
+  # Apply horizontal metric deltas (HVAR)
+  apply_hvar: true
+
+  # Apply vertical metric deltas (VVAR)
+  apply_vvar: true
+
+  # Apply font-level metric deltas (MVAR)
+  apply_mvar: true
+
+  # Update dependent metrics automatically
+  update_dependent_metrics: true
+
+# Performance Settings
+performance:
+  # Parallel processing for multiple glyphs
+  parallel_processing: false
+
+  # Maximum number of threads (if parallel)
+  max_threads: 4
+
+  # Cache parsed variation tables
+  cache_variation_tables: true
+
+# Validation Settings
+validation:
+  # Validate variation table consistency
+  validate_tables: true
+
+  # Check for required tables
+  check_required_tables: true
+
+  # Validate coordinate ranges
+  validate_ranges: true
+
+  # Strict mode (fail on any error)
+  strict_mode: false

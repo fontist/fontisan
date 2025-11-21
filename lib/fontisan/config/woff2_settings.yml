@@ -1,0 +1,77 @@
+# WOFF2 Encoding Configuration
+#
+# This file defines settings for WOFF2 font encoding, including
+# Brotli compression parameters and table transformation options.
+#
+# Reference: https://www.w3.org/TR/WOFF2/
+
+# Brotli compression settings
+brotli:
+  # Compression quality level (0-11)
+  # Higher values give better compression but slower encoding
+  # Quality 11 is recommended for production web fonts
+  quality: 11
+
+  # Compression mode
+  # :font - Optimized for font data (recommended)
+  # :text - Optimized for text data
+  # :generic - General purpose compression
+  mode: font
+
+# Table transformation settings
+transformations:
+  # Enable table transformations for better compression
+  # For Phase 2 Milestone 2.1: disabled (architecture in place)
+  # Future milestones will enable these for optimization
+  enabled: false
+
+  # Transform glyf and loca tables
+  # Combines glyf and loca into single stream with delta encoding
+  # Typical compression improvement: 20-30%
+  glyf_loca: false
+
+  # Transform hmtx table
+  # Compact representation of horizontal metrics
+  # Typical compression improvement: 10-20%
+  hmtx: false
+
+# Metadata settings
+metadata:
+  # Include font metadata in WOFF2 file
+  include: false
+
+  # Metadata compression
+  compress: true
+
+# Private data settings
+private_data:
+  # Include private data block
+  include: false
+
+# Validation settings
+validation:
+  # Verify checksums after encoding
+  verify_checksums: true
+
+  # Validate WOFF2 structure
+  validate_structure: true
+
+# Optimization settings
+optimization:
+  # Reorder tables for optimal compression
+  # Tables are sorted by tag for consistency
+  reorder_tables: true
+
+  # Remove unnecessary padding
+  minimize_padding: true
+
+# Logging settings
+logging:
+  # Log compression ratios
+  log_compression: true
+
+  # Log table sizes
+  log_table_sizes: false
+
+  # Verbose output
+  verbose: false

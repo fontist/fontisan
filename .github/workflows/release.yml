@@ -2,6 +2,10 @@
 # See https://github.com/metanorma/cimas
 name: release
 
+permissions:
+  contents: write
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -20,4 +24,5 @@ jobs:
       next_version: ${{ github.event.inputs.next_version }}
     secrets:
       rubygems-api-key: ${{ secrets.FONTIST_CI_RUBYGEMS_API_KEY }}
-      pat_token: ${{ secrets.FONTIST_CI_PAT_TOKEN }}
+      pat_token: ${{ secrets.GITHUB_TOKEN }}
+

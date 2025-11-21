@@ -1,0 +1,100 @@
+# Font Subsetting Profiles Configuration
+#
+# This file defines predefined subsetting profiles that specify which
+# font tables should be included in the subset. Each profile is optimized
+# for a specific use case.
+#
+# Profile Format:
+#   profile_name:
+#     description: Human-readable description of the profile
+#     tables: Array of table tags to include in the subset
+#
+# Common Table Tags:
+#   - cmap: Character to glyph mapping
+#   - head: Font header
+#   - hhea: Horizontal header
+#   - hmtx: Horizontal metrics
+#   - maxp: Maximum profile
+#   - name: Naming table
+#   - post: PostScript information
+#   - loca: Glyph location index (TrueType)
+#   - glyf: Glyph data (TrueType)
+#   - OS/2: OS/2 and Windows metrics
+#   - CFF : Compact Font Format (OpenType)
+#   - GSUB: Glyph Substitution
+#   - GPOS: Glyph Positioning
+#   - GDEF: Glyph Definition
+
+# PDF Profile: Minimal tables required for PDF embedding
+pdf:
+  description: Minimal tables required for PDF font embedding
+  tables:
+    - cmap
+    - head
+    - hhea
+    - hmtx
+    - maxp
+    - name
+    - post
+    - loca
+    - glyf
+
+# Web Profile: Tables required for web font usage
+web:
+  description: Tables required for web browsers and modern rendering
+  tables:
+    - cmap
+    - head
+    - hhea
+    - hmtx
+    - maxp
+    - name
+    - OS/2
+    - post
+    - loca
+    - glyf
+    - GSUB
+    - GPOS
+
+# Minimal Profile: Absolute minimum tables for font rendering
+minimal:
+  description: Absolute minimum tables for basic font rendering
+  tables:
+    - cmap
+    - head
+    - hhea
+    - hmtx
+    - maxp
+    - name
+    - OS/2
+    - post
+
+# Full Profile: All standard tables (for comprehensive subsetting)
+full:
+  description: All standard TrueType/OpenType tables
+  tables:
+    - cmap
+    - head
+    - hhea
+    - hmtx
+    - maxp
+    - name
+    - OS/2
+    - post
+    - loca
+    - glyf
+    - cvt
+    - fpgm
+    - prep
+    - gasp
+    - GSUB
+    - GPOS
+    - GDEF
+    - BASE
+    - JSTF
+    - CFF
+    - CFF2
+    - VORG
+    - kern
+    - vhea
+    - vmtx

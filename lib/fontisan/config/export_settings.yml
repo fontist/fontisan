@@ -1,0 +1,66 @@
+
+# Font Export Settings
+#
+# Configuration for font export to YAML/JSON formats
+
+# Default export settings
+defaults:
+  binary_format: hex  # hex or base64
+  pretty: true
+  include_metadata: true
+
+# Table export strategies
+# - parsed: Full Lutaml::Model serialization
+# - binary: Store as hex/base64
+# - mixed: Summary + binary data
+table_strategies:
+  parsed:
+    - head
+    - hhea
+    - maxp
+    - post
+    - OS/2
+    - name
+    - fvar
+    - HVAR
+    - VVAR
+    - MVAR
+    - cvar
+    - gvar
+
+  binary:
+    - cvt
+    - fpgm
+    - prep
+    - gasp
+    - DSIG
+    - GDEF
+    - GPOS
+    - GSUB
+
+  mixed:
+    - glyf
+    - loca
+    - cmap
+    - CFF
+    - hmtx
+    - vmtx
+
+# Binary data encoding preferences per table
+binary_encoding:
+  default: hex
+  DSIG: base64  # Signatures are typically base64
+
+# Pretty-print settings
+pretty_print:
+  yaml:
+    line_width: 80
+    indent: 2
+  json:
+    indent: 2
+    space: " "
+
+# Export optimization
+optimization:
+  compress_binary: false  # Compress binary data (future)
+  deduplicate_tables: false  # Deduplicate identical tables (future)

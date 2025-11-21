@@ -5,6 +5,7 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in fontisan.gemspec
 gemspec
 
+gem "canon", "~> 0.1.3"
 gem "openssl"
 gem "rake"
 gem "rspec"

@@ -1,0 +1,60 @@
+---
+# SVG Font Generation Settings
+#
+# Configuration for SVG font generation, following external configuration
+# principle. These settings control SVG output formatting and glyph selection.
+
+# Output formatting
+formatting:
+  # Pretty print XML with indentation
+  pretty_print: true
+  # Number of spaces for indentation
+  indent_spaces: 2
+  # Include XML declaration
+  xml_declaration: true
+
+# Coordinate precision
+coordinates:
+  # Number of decimal places for coordinates
+  decimal_places: 2
+  # Round coordinates to integers
+  round_to_integer: true
+
+# Glyph selection
+glyphs:
+  # Maximum number of glyphs to include (null = all)
+  max_glyphs: null
+  # Include .notdef glyph
+  include_notdef: true
+  # Include only glyphs with unicode mappings
+  unicode_only: false
+
+# Font metadata
+metadata:
+  # Include font-face element
+  include_font_face: true
+  # Include bounding box in font-face
+  include_bbox: true
+  # Include underline position/thickness
+  include_underline: true
+  # Include x-height and cap-height
+  include_heights: true
+
+# Default values for missing data
+defaults:
+  # Default advance width for missing-glyph
+  missing_glyph_advance: 500
+  # Default units per em
+  units_per_em: 1000
+  # Default ascent
+  ascent: 800
+  # Default descent
+  descent: -200
+
+# Limitations and warnings
+limitations:
+  # Note: SVG fonts are deprecated in favor of WOFF/WOFF2
+  # Limited browser support (mostly Safari)
+  # Useful for: fallback, conversion, inspection
+  # Modern web should use WOFF2
+  warn_deprecated: true

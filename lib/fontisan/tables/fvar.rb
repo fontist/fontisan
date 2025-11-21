@@ -89,7 +89,7 @@ module Fontisan
         return @axes = [] if axis_count.zero?
 
         # Get the full data buffer as binary string
-        data = to_binary_s
+        data = raw_data
 
         @axes = Array.new(axis_count) do |i|
           offset = axes_array_offset + (i * axis_size)
@@ -106,7 +106,7 @@ module Fontisan
         return @instances = [] if instance_count.zero?
 
         # Get the full data buffer as binary string
-        data = to_binary_s
+        data = raw_data
 
         # Calculate instance data offset (after all axes)
         instance_offset = axes_array_offset + (axis_count * axis_size)

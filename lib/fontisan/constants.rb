@@ -30,6 +30,15 @@ module Fontisan
     # the checksum adjustment field.
     HEAD_TAG = "head"
 
+    # Hhea table tag identifier (Horizontal Header)
+    HHEA_TAG = "hhea"
+
+    # Hmtx table tag identifier (Horizontal Metrics)
+    HMTX_TAG = "hmtx"
+
+    # Maxp table tag identifier (Maximum Profile)
+    MAXP_TAG = "maxp"
+
     # Name table tag identifier
     NAME_TAG = "name"
 
@@ -59,6 +68,24 @@ module Fontisan
 
     # Fvar table tag identifier (Font Variations)
     FVAR_TAG = "fvar"
+
+    # Gvar table tag identifier (Glyph Variations for TrueType)
+    GVAR_TAG = "gvar"
+
+    # HVAR table tag identifier (Horizontal Metrics Variations)
+    HVAR_TAG = "HVAR"
+
+    # MVAR table tag identifier (Metrics Variations)
+    MVAR_TAG = "MVAR"
+
+    # VVAR table tag identifier (Vertical Metrics Variations)
+    VVAR_TAG = "VVAR"
+
+    # Cvar table tag identifier (CVT Variations)
+    CVAR_TAG = "cvar"
+
+    # CFF2 table tag identifier (CFF version 2 with variations)
+    CFF2_TAG = "CFF2"
 
     # Magic number used for font file checksum adjustment calculation.
     # This constant is used in conjunction with the file checksum to compute

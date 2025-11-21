@@ -11,6 +11,20 @@ RuboCop::RakeTask.new
 namespace :fixtures do
   fixtures_dir = "spec/fixtures/fonts"
 
+  # Helper method to download a single file
+  def download_single_file(name, url, target_path)
+    require "open-uri"
+
+    puts "[fixtures:download] Downloading #{name}..."
+    FileUtils.mkdir_p(File.dirname(target_path))
+
+    URI.open(url) do |remote|
+      File.binwrite(target_path, remote.read)
+    end
+
+    puts "[fixtures:download] #{name} downloaded successfully"
+  end
+
   # Helper method to download and extract a font archive
   def download_font(name, url, target_dir)
     require "open-uri"
@@ -44,6 +58,12 @@ namespace :fixtures do
   # Font configurations with target directories and marker files
   # All fonts are downloaded via Rake
   fonts = {
+    "NotoSans" => {
+      url: "https://github.com/notofonts/notofonts.github.io/raw/refs/heads/main/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf",
+      target_dir: fixtures_dir.to_s,
+      marker: "#{fixtures_dir}/NotoSans-Regular.ttf",
+      single_file: true,
+    },
     "Libertinus" => {
       url: "https://github.com/alerque/libertinus/releases/download/v7.051/Libertinus-7.051.zip",
       target_dir: "#{fixtures_dir}/libertinus",
@@ -69,7 +89,11 @@ namespace :fixtures do
   # Create file tasks for each font
   fonts.each do |name, config|
     file config[:marker] do
-      download_font(name, config[:url], config[:target_dir])
+      if config[:single_file]
+        download_single_file(name, config[:url], config[:marker])
+      else
+        download_font(name, config[:url], config[:target_dir])
+      end
     end
   end
 
@@ -78,7 +102,8 @@ namespace :fixtures do
 
   desc "Clean downloaded fixtures"
   task :clean do
-    %w[libertinus MonaSans NotoSerifCJK NotoSerifCJK-VF].each do |dir|
+    %w[libertinus MonaSans NotoSerifCJK NotoSerifCJK-VF
+       NotoSans-Regular.ttf].each do |dir|
       path = File.join(fixtures_dir, dir)
       if File.exist?(path)
         FileUtils.rm_rf(path)

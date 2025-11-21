@@ -69,9 +69,33 @@ RSpec.describe Fontisan::Commands::ScriptsCommand do
 
     context "font without GSUB/GPOS" do
       it "returns empty scripts list" do
-        # Use a font without GSUB/GPOS tables (if such test font exists)
-        # For now, this is a placeholder for the architecture
-        skip "Need test font without GSUB/GPOS tables"
+        # Mock a font that has no GSUB or GPOS tables
+        mock_font = double("font")
+        allow(mock_font).to receive(:has_table?).with("GSUB").and_return(false)
+        allow(mock_font).to receive(:has_table?).with("GPOS").and_return(false)
+
+        # Mock the font loading process
+        allow(Fontisan::FontLoader).to receive(:load).and_return(mock_font)
+
+        # Create a temporary file path for the mock
+        temp_font_path = "spec/fixtures/fonts/mock_no_layout.ttf"
+        File.write(temp_font_path, "mock font data")
+
+        begin
+          # Mock the command to use our mock font
+          command = described_class.new(temp_font_path, {})
+
+          # Mock the internal font loading
+          allow(command).to receive(:font).and_return(mock_font)
+
+          result = command.run
+
+          expect(result).to be_a(Fontisan::Models::ScriptsInfo)
+          expect(result.script_count).to eq(0)
+          expect(result.scripts).to eq([])
+        ensure
+          File.delete(temp_font_path) if File.exist?(temp_font_path)
+        end
       end
     end
 

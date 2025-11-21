@@ -12,4 +12,6 @@ module Fontisan
   class MissingTableError < Error; end
 
   class ParseError < Error; end
+
+  class SubsettingError < Error; end
 end
