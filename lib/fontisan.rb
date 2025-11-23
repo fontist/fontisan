@@ -140,6 +140,13 @@ require_relative "fontisan/converters/table_copier"
 require_relative "fontisan/converters/outline_converter"
 require_relative "fontisan/converters/format_converter"
 
+# Optimization infrastructure
+require_relative "fontisan/optimizers/pattern_analyzer"
+require_relative "fontisan/optimizers/subroutine_builder"
+require_relative "fontisan/optimizers/charstring_rewriter"
+require_relative "fontisan/optimizers/subroutine_optimizer"
+require_relative "fontisan/optimizers/subroutine_generator"
+
 # Commands
 require_relative "fontisan/commands/base_command"
 require_relative "fontisan/commands/info_command"

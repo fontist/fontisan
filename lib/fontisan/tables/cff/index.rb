@@ -191,7 +191,7 @@ module Fontisan
             bytes.unpack1("n")
           when 3
             # 24-bit big-endian
-            bytes.unpack1("C3").inject(0) { |sum, byte| (sum << 8) | byte }
+            bytes.unpack("C3").inject(0) { |sum, byte| (sum << 8) | byte }
           when 4
             bytes.unpack1("N")
           else

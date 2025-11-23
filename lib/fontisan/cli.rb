@@ -200,6 +200,14 @@ module Fontisan
     option :output, type: :string, required: true,
                     desc: "Output file path",
                     aliases: "-o"
+    option :optimize, type: :boolean, default: false,
+                      desc: "Optimize CFF with subroutines (TTF→OTF only)"
+    option :min_pattern_length, type: :numeric, default: 10,
+                                desc: "Minimum pattern length for subroutines"
+    option :max_subroutines, type: :numeric, default: 65_535,
+                             desc: "Maximum number of subroutines"
+    option :optimize_ordering, type: :boolean, default: true,
+                               desc: "Optimize subroutine ordering by frequency"
     # Convert a font to a different format.
     #
     # Supported conversions:
@@ -207,10 +215,22 @@ module Fontisan
     # - TTF ↔ OTF: Outline format conversion (foundation)
     # - Future: WOFF2 compression, SVG export
     #
+    # Subroutine Optimization (--optimize):
+    # When converting TTF→OTF, you can enable automatic CFF subroutine generation
+    # to reduce file size. This analyzes repeated byte patterns across glyphs and
+    # creates shared subroutines, typically saving 30-50% in CFF table size.
+    #
     # @param font_file [String] Path to the font file
     #
     # @example Convert TTF to OTF
     #   fontisan convert font.ttf --to otf --output font.otf
+    #
+    # @example Convert with optimization
+    #   fontisan convert font.ttf --to otf --output font.otf --optimize --verbose
+    #
+    # @example Convert with custom optimization parameters
+    #   fontisan convert font.ttf --to otf --output font.otf --optimize \
+    #     --min-pattern-length 15 --max-subroutines 10000
     #
     # @example Copy/optimize TTF
     #   fontisan convert font.ttf --to ttf --output optimized.ttf

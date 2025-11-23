@@ -143,32 +143,122 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
     context "with TTF to OTF conversion" do
       let(:otf_output) { "spec/fixtures/output/converted.otf" }
 
+      before do
+        FileUtils.mkdir_p("spec/fixtures/output")
+      end
+
       after do
         FileUtils.rm_f(otf_output) if File.exist?(otf_output)
       end
 
-      it "raises NotImplementedError" do
+      # NOTE: NotoSans-Regular.ttf contains compound glyphs starting at glyph 111
+      # Compound glyph support has been implemented in Phase 1 Week 5
+
+      it "successfully converts fonts with compound glyphs", :compound_glyphs do
         command = described_class.new(
           font_path,
           to: "otf",
           output: otf_output,
         )
 
-        expect do
-          command.run
-        end.to raise_error(NotImplementedError)
+        result = command.run
+
+        expect(result[:success]).to be true
+        expect(result[:target_format]).to eq(:otf)
+        expect(File.exist?(otf_output)).to be true
       end
 
-      it "provides helpful error message" do
+      it "produces valid CFF output for compound glyphs", :compound_glyphs do
         command = described_class.new(
           font_path,
           to: "otf",
           output: otf_output,
         )
 
-        expect { command.run }.to raise_error do |error|
-          expect(error.message).to include("needs additional implementation")
+        command.run
+
+        # Load output font and verify structure
+        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
+        expect(output_font.has_table?("CFF ")).to be true
+        expect(output_font.has_table?("glyf")).to be false
+        expect(output_font.has_table?("loca")).to be false
+      end
+
+      it "successfully converts TTF to OTF" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+
+        result = command.run
+
+        expect(result[:success]).to be true
+        expect(result[:target_format]).to eq(:otf)
+        expect(File.exist?(otf_output)).to be true
+      end
+
+      it "creates output file with CFF table" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+
+        command.run
+
+        # Load output font and verify structure
+        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
+        expect(output_font.has_table?("CFF ")).to be true
+        expect(output_font.has_table?("glyf")).to be false
+        expect(output_font.has_table?("loca")).to be false
+      end
+
+      it "updates maxp table to version 0.5" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+
+        command.run
+
+        # Verify maxp version
+        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
+        maxp = output_font.table("maxp")
+        expect(maxp.version_raw).to eq(Fontisan::Tables::Maxp::VERSION_0_5)
+        expect(maxp.version).to eq(0.5)
+      end
+
+      it "preserves other font tables" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+
+        command.run
+
+        # Verify common tables are preserved
+        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
+        %w[head hhea maxp name post cmap].each do |tag|
+          expect(output_font.has_table?(tag)).to be true
         end
+      end
+
+      it "returns conversion details" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+
+        result = command.run
+
+        expect(result[:source_format]).to eq(:ttf)
+        expect(result[:target_format]).to eq(:otf)
+        expect(result[:input_size]).to be > 0
+        expect(result[:output_size]).to be > 0
       end
     end
   end
@@ -252,6 +342,209 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
       command = described_class.new(font_path, options)
       version = command.send(:determine_sfnt_version, :ttf)
       expect(version).to eq(0x00010000)
+    end
+  end
+
+  describe "subroutine optimization" do
+    let(:otf_output) { "spec/fixtures/output/optimized.otf" }
+
+    before do
+      FileUtils.mkdir_p("spec/fixtures/output")
+    end
+
+    after do
+      FileUtils.rm_f(otf_output) if File.exist?(otf_output)
+    end
+
+    describe "#initialize with optimization options" do
+      it "accepts optimize option" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+        )
+        expect(command.instance_variable_get(:@optimize)).to be true
+      end
+
+      it "accepts min_pattern_length option" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          min_pattern_length: 15,
+        )
+        expect(command.instance_variable_get(:@min_pattern_length)).to eq(15)
+      end
+
+      it "accepts max_subroutines option" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          max_subroutines: 1000,
+        )
+        expect(command.instance_variable_get(:@max_subroutines)).to eq(1000)
+      end
+
+      it "accepts optimize_ordering option" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          optimize_ordering: false,
+        )
+        expect(command.instance_variable_get(:@optimize_ordering)).to be false
+      end
+
+      it "uses default values when not specified" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+        )
+        expect(command.instance_variable_get(:@optimize)).to be false
+        expect(command.instance_variable_get(:@min_pattern_length)).to eq(10)
+        expect(command.instance_variable_get(:@max_subroutines)).to eq(65_535)
+        expect(command.instance_variable_get(:@optimize_ordering)).to be true
+      end
+    end
+
+    describe "#run with optimization" do
+      it "passes optimization options to converter" do
+        # Mock the entire conversion flow BEFORE creating command
+        mock_font = double("Font", has_table?: true, table: double)
+        allow(mock_font).to receive(:instance_variable_get).and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load_file).and_return(mock_font)
+
+        converter = instance_double(Fontisan::Converters::FormatConverter)
+        allow(Fontisan::Converters::FormatConverter).to receive(:new).and_return(converter)
+        allow(converter).to receive(:supported?).and_return(true)
+
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          min_pattern_length: 12,
+          max_subroutines: 5000,
+        )
+
+        # Expect converter to receive correct options
+        expect(converter).to receive(:convert) do |_font, target, options|
+          expect(target).to eq(:otf)
+          expect(options[:target_format]).to eq(:otf)
+          expect(options[:optimize_subroutines]).to be true
+          expect(options[:min_pattern_length]).to eq(12)
+          expect(options[:max_subroutines]).to eq(5000)
+          expect(options[:optimize_ordering]).to be true
+          {} # Return empty tables hash
+        end
+
+        # Mock FontWriter and File operations
+        allow(Fontisan::FontWriter).to receive(:write_to_file)
+        allow(File).to receive(:size).with(otf_output).and_return(100000)
+        allow(File).to receive(:size).with(font_path).and_return(100000)
+
+        expect { command.run }.to output(/Conversion complete/).to_stdout
+      end
+
+      it "does not pass optimization when disabled" do
+        # Mock the entire conversion flow BEFORE creating command
+        mock_font = double("Font", has_table?: true, table: double)
+        allow(mock_font).to receive(:instance_variable_get).and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load_file).and_return(mock_font)
+
+        converter = instance_double(Fontisan::Converters::FormatConverter)
+        allow(Fontisan::Converters::FormatConverter).to receive(:new).and_return(converter)
+        allow(converter).to receive(:supported?).and_return(true)
+
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: false,
+        )
+
+        expect(converter).to receive(:convert) do |_font, _target, options|
+          expect(options[:optimize_subroutines]).to be false
+          {}
+        end
+
+        allow(Fontisan::FontWriter).to receive(:write_to_file)
+        allow(File).to receive(:size).with(otf_output).and_return(100000)
+        allow(File).to receive(:size).with(font_path).and_return(100000)
+
+        expect { command.run }.to output(/Conversion complete/).to_stdout
+      end
+
+      it "displays optimization results when verbose" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          verbose: true,
+        )
+
+        # Mock the entire conversion flow
+        mock_font = double("Font", has_table?: true, table: double)
+        allow(mock_font).to receive(:instance_variable_get).and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load_file).and_return(mock_font)
+
+        # Mock successful conversion with optimization result
+        tables = {}
+        optimization_result = {
+          local_subrs: [[0x0B]],
+          selected_count: 5,
+          pattern_count: 10,
+          savings: 1000,
+          bias: 107,
+        }
+        tables.instance_variable_set(:@subroutine_optimization, optimization_result)
+
+        converter = instance_double(Fontisan::Converters::FormatConverter)
+        allow(Fontisan::Converters::FormatConverter).to receive(:new).and_return(converter)
+        allow(converter).to receive(:convert).and_return(tables)
+
+        allow(Fontisan::FontWriter).to receive(:write_to_file)
+        allow(File).to receive(:size).with(otf_output).and_return(100000)
+        allow(File).to receive(:size).with(font_path).and_return(100000)
+
+        expect do
+          command.run
+        end.to output(/Subroutine Optimization Results/).to_stdout
+      end
+
+      it "does not display results when not verbose" do
+        command = described_class.new(
+          font_path,
+          to: "otf",
+          output: otf_output,
+          optimize: true,
+          verbose: false,
+        )
+
+        # Mock the entire conversion flow
+        mock_font = double("Font", has_table?: true, table: double)
+        allow(mock_font).to receive(:instance_variable_get).and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load_file).and_return(mock_font)
+
+        converter = instance_double(Fontisan::Converters::FormatConverter)
+        allow(Fontisan::Converters::FormatConverter).to receive(:new).and_return(converter)
+        allow(converter).to receive(:convert).and_return({})
+
+        allow(Fontisan::FontWriter).to receive(:write_to_file)
+        allow(File).to receive(:size).with(otf_output).and_return(100000)
+        allow(File).to receive(:size).with(font_path).and_return(100000)
+
+        expect do
+          command.run
+        end.not_to output(/Subroutine Optimization/).to_stdout
+      end
     end
   end
 end

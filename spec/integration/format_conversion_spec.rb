@@ -75,25 +75,29 @@ RSpec.describe "Format Conversion Integration" do
     context "TTF to OTF" do
       let(:output_path) { File.join(output_dir, "ttf_to_otf.otf") }
 
-      it "is not yet fully implemented" do
+      # NOTE: NotoSans-Regular.ttf contains compound glyphs
+      # Compound glyph support has been implemented in Phase 1 Week 5
+      it "successfully converts fonts with compound glyphs" do
         converter = Fontisan::Converters::FormatConverter.new
         font = Fontisan::FontLoader.load(ttf_font_path)
 
-        expect do
-          converter.convert(font, :otf)
-        end.to raise_error(NotImplementedError, /TTF to OTF/)
+        tables = converter.convert(font, :otf)
+
+        expect(tables).to have_key("CFF ")
+        expect(tables).not_to have_key("glyf")
+        expect(tables).not_to have_key("loca")
       end
 
-      it "provides clear error message about implementation status" do
+      it "produces valid CFF output for compound glyphs" do
         converter = Fontisan::Converters::FormatConverter.new
         font = Fontisan::FontLoader.load(ttf_font_path)
 
-        begin
-          converter.convert(font, :otf)
-        rescue NotImplementedError => e
-          expect(e.message).to include("CFF table generation")
-          expect(e.message).to include("Phase 1")
-        end
+        tables = converter.convert(font, :otf)
+
+        # CFF table should be present and valid
+        expect(tables["CFF "]).to be_a(String)
+        expect(tables["CFF "].encoding).to eq(Encoding::BINARY)
+        expect(tables["CFF "].bytesize).to be > 0
       end
     end
   end
@@ -283,9 +287,11 @@ RSpec.describe "Format Conversion Integration" do
     it "uses OutlineConverter for cross-format conversions" do
       font = Fontisan::FontLoader.load(ttf_font_path)
 
-      expect do
-        converter.convert(font, :otf)
-      end.to raise_error(NotImplementedError)
+      expect_any_instance_of(Fontisan::Converters::OutlineConverter)
+        .to receive(:convert).and_call_original
+
+      tables = converter.convert(font, :otf)
+      expect(tables).to have_key("CFF ")
     end
 
     it "uses SvgGenerator for SVG conversions" do
@@ -304,10 +310,9 @@ RSpec.describe "Format Conversion Integration" do
       tables = converter.convert(font, :ttf)
       expect(tables).to include("glyf")
 
-      # Cross format = OutlineConverter (not implemented)
-      expect do
-        converter.convert(font, :otf)
-      end.to raise_error(NotImplementedError)
+      # Cross-format = OutlineConverter
+      tables = converter.convert(font, :otf)
+      expect(tables).to have_key("CFF ")
 
       # SVG generation = SvgGenerator
       result = converter.convert(font, :svg)

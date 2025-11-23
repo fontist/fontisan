@@ -40,11 +40,21 @@ module Fontisan
       # @option options [String] :to Target format (ttf, otf, woff2, svg)
       # @option options [String] :output Output file path (required)
       # @option options [Integer] :font_index Index for TTC/OTC (default: 0)
+      # @option options [Boolean] :optimize Enable subroutine optimization (TTF→OTF only)
+      # @option options [Integer] :min_pattern_length Minimum pattern length for subroutines
+      # @option options [Integer] :max_subroutines Maximum number of subroutines
+      # @option options [Boolean] :optimize_ordering Optimize subroutine ordering
       def initialize(font_path, options = {})
         super(font_path, options)
         @target_format = parse_target_format(options[:to])
         @output_path = options[:output]
         @converter = Converters::FormatConverter.new
+
+        # Optimization options
+        @optimize = options[:optimize] || false
+        @min_pattern_length = options[:min_pattern_length] || 10
+        @max_subroutines = options[:max_subroutines] || 65_535
+        @optimize_ordering = options[:optimize_ordering] != false
       end
 
       # Execute the conversion
@@ -57,8 +67,18 @@ module Fontisan
 
         puts "Converting #{File.basename(font_path)} to #{@target_format}..."
 
-        # Perform conversion
-        result = @converter.convert(font, @target_format)
+        # Build converter options
+        converter_options = {
+          target_format: @target_format,
+          optimize_subroutines: @optimize,
+          min_pattern_length: @min_pattern_length,
+          max_subroutines: @max_subroutines,
+          optimize_ordering: @optimize_ordering,
+          verbose: options[:verbose],
+        }
+
+        # Perform conversion with options
+        result = @converter.convert(font, @target_format, converter_options)
 
         # Handle special formats that return complete binary/text
         if @target_format == :woff && result.is_a?(String)
@@ -78,6 +98,9 @@ module Fontisan
           # Write output font
           FontWriter.write_to_file(tables, @output_path,
                                    sfnt_version: sfnt_version)
+
+          # Display optimization results if available
+          display_optimization_results(tables) if @optimize && options[:verbose]
         end
 
         output_size = File.size(@output_path)
@@ -240,6 +263,28 @@ module Fontisan
         end
 
         raise Error, message
+      end
+
+      # Display optimization results from subroutine generation
+      #
+      # @param tables [Hash] Table data with optimization metadata
+      def display_optimization_results(tables)
+        optimization = tables.instance_variable_get(:@subroutine_optimization)
+        return unless optimization
+
+        puts "\n=== Subroutine Optimization Results ==="
+        puts "  Patterns found: #{optimization[:pattern_count]}"
+        puts "  Patterns selected: #{optimization[:selected_count]}"
+        puts "  Subroutines generated: #{optimization[:local_subrs].length}"
+        puts "  Estimated bytes saved: #{optimization[:savings]}"
+        puts "  CFF bias: #{optimization[:bias]}"
+
+        if optimization[:selected_count].zero?
+          puts "  Note: No beneficial patterns found for optimization"
+        elsif optimization[:savings].positive?
+          savings_kb = (optimization[:savings] / 1024.0).round(1)
+          puts "  Estimated space savings: #{savings_kb} KB"
+        end
       end
     end
   end
