@@ -3,6 +3,8 @@
 require_relative "../binary/base_record"
 require_relative "glyf/simple_glyph"
 require_relative "glyf/compound_glyph"
+require_relative "glyf/curve_converter"
+require_relative "glyf/glyph_builder"
 
 module Fontisan
   module Tables
