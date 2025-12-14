@@ -258,6 +258,24 @@ module Fontisan
       @metadata = nil
     end
 
+    # Get WOFF private data if present
+    #
+    # WOFF private data is optional application-specific data
+    #
+    # @return [String, nil] Private data or nil
+    def private_data
+      return nil if header.priv_length.zero?
+      return @private_data if defined?(@private_data)
+
+      File.open(io_source.path, "rb") do |io|
+        io.seek(header.priv_offset)
+        @private_data = io.read(header.priv_length)
+      end
+    rescue StandardError => e
+      warn "Failed to read WOFF private data: #{e.message}"
+      @private_data = nil
+    end
+
     # Convert WOFF to TTF format
     #
     # Decompresses all tables and reconstructs a standard TTF file

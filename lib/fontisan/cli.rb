@@ -287,44 +287,37 @@ module Fontisan
       handle_error(e)
     end
 
-    desc "validate FONT_FILE", "Validate font file integrity and structure"
-    option :level, type: :string, default: "standard",
-                   desc: "Validation level (strict, standard, lenient)",
-                   aliases: "-l"
-    # Validate font file for structural integrity, table consistency, and OpenType compliance.
-    #
-    # Validation levels:
-    # - strict: All checks must pass, no warnings allowed
-    # - standard: No errors (warnings allowed)
-    # - lenient: Basic checks only
-    #
-    # Exit codes:
-    # - 0: Valid (passes all checks for the given level)
-    # - 1: Invalid (has errors)
-    # - 2: Has warnings only
-    #
-    # @param font_file [String] Path to the font file
-    #
-    # @example Validate with standard level
-    #   fontisan validate font.ttf
-    #
-    # @example Validate with strict level and YAML output
-    #   fontisan validate font.ttf --level=strict --format=yaml
-    #
-    # @example Validate with JSON output
-    #   fontisan validate font.ttf --format=json
+    desc "validate FONT_FILE", "Validate font file structure and checksums"
+    option :verbose, type: :boolean, default: false,
+                     desc: "Show detailed validation information"
     def validate(font_file)
-      command = Commands::ValidateCommand.new(
-        input: font_file,
-        level: options[:level].to_sym,
+      command = Commands::ValidateCommand.new(font_file, verbose: options[:verbose])
+      exit command.run
+    end
+
+    desc "export FONT_FILE", "Export font to TTX/YAML/JSON format"
+    option :output, type: :string,
+                    desc: "Output file path (default: stdout)",
+                    aliases: "-o"
+    option :format, type: :string, default: "yaml",
+                    desc: "Export format (yaml, json, ttx)",
+                    aliases: "-f"
+    option :tables, type: :array,
+                    desc: "Specific tables to export",
+                    aliases: "-t"
+    option :binary_format, type: :string, default: "hex",
+                           desc: "Binary encoding (hex, base64)",
+                           aliases: "-b"
+
+    def export(font_file)
+      command = Commands::ExportCommand.new(
+        font_file,
+        output: options[:output],
         format: options[:format].to_sym,
-        verbose: options[:verbose],
-        quiet: options[:quiet],
+        tables: options[:tables],
+        binary_format: options[:binary_format].to_sym,
       )
-      exit_code = command.run
-      exit exit_code
-    rescue Errno::ENOENT, Error => e
-      handle_error(e)
+      exit command.run
     end
 
     desc "version", "Display version information"

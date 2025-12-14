@@ -61,14 +61,24 @@ gem install fontisan
 * Extract glyph names from post table
 * Display Unicode codepoint to glyph index mappings
 * Analyze variable font axes and named instances
+* Generate static font instances from variable fonts
 * Display optical size information
 * List supported scripts from GSUB/GPOS tables
 * List OpenType features (ligatures, kerning, etc.) by script
 * Dump raw binary table data for analysis
-* Support for OTF, TTF, and TTC font formats
-* Command-line interface with full otfinfo parity
+* Font subsetting with multiple profiles (PDF, web, minimal)
+* Font validation with multiple severity levels
+* Collection management (pack/unpack TTC/OTC files with table deduplication)
+* Support for TTF, OTF, TTC, OTC font formats (production ready)
+* WOFF format support (reading complete, writing functional, pending full integration)
+* WOFF2 format support (reading partial, writing planned)
+* SVG font generation (complete)
+* TTX/YAML/JSON export (complete)
+* Command-line interface with 18 commands
 * Ruby library API for programmatic access
 * Structured output in YAML, JSON, and text formats
+
+NOTE: Format conversion between TTF and OTF outline formats is planned. See link:docs/STATUS_TRACKER.md[Status Tracker] for detailed feature roadmap.
 
 
 == Usage
@@ -591,6 +601,64 @@ $ fontisan dump-table spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular
 ----
 
 The output is binary data written directly to stdout, which can be redirected to a file for further analysis.
+====
+
+==== Export font structure
+
+Export font structure to TTX (FontTools XML), YAML, or JSON formats for analysis,
+interchange, or version control. Supports selective table export and configurable
+binary data encoding.
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan export FONT_FILE [--output FILE] [--format FORMAT] [--tables TABLES] [--binary-format FORMAT]
+----
+
+Where,
+
+`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`--output FILE`:: Output file path (default: stdout)
+`--format FORMAT`:: Export format: `yaml` (default), `json`, or `ttx`
+`--tables TABLES`:: Specific tables to export (space-separated list)
+`--binary-format FORMAT`:: Binary encoding: `hex` (default) or `base64`
+
+
+.Export font to YAML format
+[example]
+====
+[source,shell]
+----
+$ fontisan export spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf --output font.yaml
+
+# Output: font.yaml with complete font structure in YAML
+----
+====
+
+.Export specific tables to TTX format
+[example]
+====
+[source,shell]
+----
+$ fontisan export spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf \
+  --format ttx --tables head hhea maxp name --output font.ttx
+----
+
+Exports only the specified tables in FontTools TTX XML format for compatibility
+with fonttools.
+====
+
+.Export to JSON with base64 binary encoding
+[example]
+====
+[source,shell]
+----
+$ fontisan export font.ttf --format json --binary-format base64 --output font.json
+----
+
+Uses base64 encoding for binary data instead of hexadecimal, useful for
+JSON-based workflows.
 ====
 
 ==== General options
