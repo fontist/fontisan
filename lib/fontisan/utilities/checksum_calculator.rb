@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "stringio"
 require_relative "../constants"
 
 module Fontisan
@@ -53,6 +54,23 @@ module Fontisan
       #   # => 1452851062
       def self.calculate_adjustment(file_checksum)
         (Constants::CHECKSUM_ADJUSTMENT_MAGIC - file_checksum) & 0xFFFFFFFF
+      end
+
+      # Calculate checksum for raw table data.
+      #
+      # This method calculates the checksum for a binary string of table data.
+      # Used when creating WOFF files or validating table integrity.
+      #
+      # @param data [String] binary table data
+      # @return [Integer] the calculated uint32 checksum
+      #
+      # @example
+      #   checksum = ChecksumCalculator.calculate_table_checksum(table_data)
+      #   # => 1234567890
+      def self.calculate_table_checksum(data)
+        io = StringIO.new(data)
+        io.set_encoding(Encoding::BINARY)
+        calculate_checksum_from_io(io)
       end
 
       # Calculate checksum from an IO object.

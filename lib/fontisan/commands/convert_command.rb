@@ -61,7 +61,10 @@ module Fontisan
         result = @converter.convert(font, @target_format)
 
         # Handle special formats that return complete binary/text
-        if @target_format == :woff2 && result.is_a?(Hash) && result[:woff2_binary]
+        if @target_format == :woff && result.is_a?(String)
+          # WOFF returns complete binary
+          File.binwrite(@output_path, result)
+        elsif @target_format == :woff2 && result.is_a?(Hash) && result[:woff2_binary]
           File.binwrite(@output_path, result[:woff2_binary])
         elsif @target_format == :svg && result.is_a?(Hash) && result[:svg_xml]
           File.write(@output_path, result[:svg_xml])
