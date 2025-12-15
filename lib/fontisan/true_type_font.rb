@@ -2,6 +2,7 @@
 
 require "bindata"
 require_relative "constants"
+require_relative "loading_modes"
 require_relative "utilities/checksum_calculator"
 
 module Fontisan
@@ -38,6 +39,11 @@ module Fontisan
   #   name_table = ttf.table("name")  # Fontisan extension
   #   puts name_table.english_name(Tables::Name::FAMILY)
   #
+  # @example Loading with metadata mode
+  #   ttf = TrueTypeFont.from_file("font.ttf", mode: :metadata)
+  #   puts ttf.loading_mode  # => :metadata
+  #   ttf.table_available?("GSUB")  # => false
+  #
   # @example Writing a font
   #   ttf.to_file("output.ttf")
   class TrueTypeFont < BinData::Record
@@ -54,24 +60,49 @@ module Fontisan
     # Parsed table instances cache (Fontisan extension)
     attr_accessor :parsed_tables
 
+    # Loading mode for this font (:metadata or :full)
+    attr_accessor :loading_mode
+
+    # IO source for lazy loading
+    attr_accessor :io_source
+
+    # Whether lazy loading is enabled
+    attr_accessor :lazy_load_enabled
+
     # Read TrueType Font from a file
     #
     # @param path [String] Path to the TTF file
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
+    # @param lazy [Boolean] If true, load tables on demand (default: true)
     # @return [TrueTypeFont] A new instance
-    # @raise [ArgumentError] if path is nil or empty
+    # @raise [ArgumentError] if path is nil or empty, or if mode is invalid
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [RuntimeError] if file format is invalid
-    def self.from_file(path)
+    def self.from_file(path, mode: LoadingModes::FULL, lazy: true)
       if path.nil? || path.to_s.empty?
         raise ArgumentError,
               "path cannot be nil or empty"
       end
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
 
+      # Validate mode
+      LoadingModes.validate_mode!(mode)
+
       File.open(path, "rb") do |io|
         font = read(io)
         font.initialize_storage
-        font.read_table_data(io)
+        font.loading_mode = mode
+        font.lazy_load_enabled = lazy
+
+        if lazy
+          # Keep file handle open for lazy loading
+          font.io_source = File.open(path, "rb")
+          font.setup_finalizer
+        else
+          # Read tables upfront
+          font.read_table_data(io)
+        end
+
         font
       end
     rescue BinData::ValidityError, EOFError => e
@@ -82,11 +113,15 @@ module Fontisan
     #
     # @param io [IO] Open file handle
     # @param offset [Integer] Byte offset to the font
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
     # @return [TrueTypeFont] A new instance
-    def self.from_ttc(io, offset)
+    def self.from_ttc(io, offset, mode: LoadingModes::FULL)
+      LoadingModes.validate_mode!(mode)
+
       io.seek(offset)
       font = read(io)
       font.initialize_storage
+      font.loading_mode = mode
       font.read_table_data(io)
       font
     end
@@ -97,19 +132,45 @@ module Fontisan
     def initialize_storage
       @table_data = {}
       @parsed_tables = {}
+      @loading_mode = LoadingModes::FULL
+      @lazy_load_enabled = false
+      @io_source = nil
     end
 
     # Read table data for all tables
+    #
+    # In metadata mode, only reads metadata tables. In full mode, reads all tables.
+    # In lazy load mode, doesn't read data upfront.
     #
     # @param io [IO] Open file handle
     # @return [void]
     def read_table_data(io)
       @table_data = {}
-      tables.each do |entry|
-        io.seek(entry.offset)
-        # Force UTF-8 encoding on tag for hash key consistency
-        tag_key = entry.tag.dup.force_encoding("UTF-8")
-        @table_data[tag_key] = io.read(entry.table_length)
+
+      if @lazy_load_enabled
+        # Don't read data, just keep IO reference
+        @io_source = io
+        return
+      end
+
+      if @loading_mode == LoadingModes::METADATA
+        # Only read metadata tables for performance
+        metadata_tables = LoadingModes.tables_for(LoadingModes::METADATA)
+        tables.each do |entry|
+          next unless metadata_tables.include?(entry.tag)
+
+          io.seek(entry.offset)
+          tag_key = entry.tag.dup.force_encoding("UTF-8")
+          @table_data[tag_key] = io.read(entry.table_length)
+        end
+      else
+        # Read all tables
+        tables.each do |entry|
+          io.seek(entry.offset)
+          # Force UTF-8 encoding on tag for hash key consistency
+          tag_key = entry.tag.dup.force_encoding("UTF-8")
+          @table_data[tag_key] = io.read(entry.table_length)
+        end
       end
     end
 
@@ -159,6 +220,15 @@ module Fontisan
       tables.any? { |entry| entry.tag == tag }
     end
 
+    # Check if a table is available in the current loading mode
+    #
+    # @param tag [String] The table tag to check
+    # @return [Boolean] true if table is available in current mode
+    def table_available?(tag)
+      return false unless has_table?(tag)
+      LoadingModes.table_allowed?(@loading_mode, tag)
+    end
+
     # Find a table entry by tag
     #
     # @param tag [String] The table tag to find
@@ -184,11 +254,30 @@ module Fontisan
     # Get parsed table instance (Fontisan extension)
     #
     # This method parses the raw table data into a structured table object
-    # and caches the result for subsequent calls.
+    # and caches the result for subsequent calls. Enforces mode restrictions.
     #
     # @param tag [String] The table tag to retrieve
     # @return [Tables::*, nil] Parsed table object or nil if not found
+    # @raise [ArgumentError] if table is not available in current loading mode
     def table(tag)
+      # Check mode restrictions
+      unless table_available?(tag)
+        if has_table?(tag)
+          raise ArgumentError,
+                "Table '#{tag}' is not available in #{@loading_mode} mode. " \
+                "Available tables: #{LoadingModes.tables_for(@loading_mode).inspect}"
+        else
+          return nil
+        end
+      end
+
+      return @parsed_tables[tag] if @parsed_tables.key?(tag)
+
+      # Lazy load table data if enabled
+      if @lazy_load_enabled && !@table_data.key?(tag)
+        load_table_data(tag)
+      end
+
       @parsed_tables[tag] ||= parse_table(tag)
     end
 
@@ -200,7 +289,96 @@ module Fontisan
       head&.units_per_em
     end
 
+    # Convenience methods for accessing common name table fields
+    # These are particularly useful in minimal mode
+
+    # Get font family name
+    #
+    # @return [String, nil] Family name or nil if not found
+    def family_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::FAMILY)
+    end
+
+    # Get font subfamily name (e.g., Regular, Bold, Italic)
+    #
+    # @return [String, nil] Subfamily name or nil if not found
+    def subfamily_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::SUBFAMILY)
+    end
+
+    # Get full font name
+    #
+    # @return [String, nil] Full name or nil if not found
+    def full_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::FULL_NAME)
+    end
+
+    # Get PostScript name
+    #
+    # @return [String, nil] PostScript name or nil if not found
+    def post_script_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::POSTSCRIPT_NAME)
+    end
+
+    # Get preferred family name
+    #
+    # @return [String, nil] Preferred family name or nil if not found
+    def preferred_family_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::PREFERRED_FAMILY)
+    end
+
+    # Get preferred subfamily name
+    #
+    # @return [String, nil] Preferred subfamily name or nil if not found
+    def preferred_subfamily_name
+      name_table = table(Constants::NAME_TAG)
+      name_table&.english_name(Tables::Name::PREFERRED_SUBFAMILY)
+    end
+
+    # Close the IO source (for lazy loading)
+    #
+    # @return [void]
+    def close
+      @io_source&.close
+      @io_source = nil
+    end
+
+    # Setup finalizer for cleanup
+    #
+    # @return [void]
+    def setup_finalizer
+      ObjectSpace.define_finalizer(self, self.class.finalize(@io_source))
+    end
+
+    # Finalizer proc for closing IO
+    #
+    # @param io [IO] The IO object to close
+    # @return [Proc] The finalizer proc
+    def self.finalize(io)
+      proc { io&.close }
+    end
+
     private
+
+    # Load a single table's data on demand
+    #
+    # @param tag [String] The table tag to load
+    # @return [void]
+    def load_table_data(tag)
+      return unless @io_source
+
+      entry = find_table_entry(tag)
+      return nil unless entry
+
+      @io_source.seek(entry.offset)
+      tag_key = tag.dup.force_encoding("UTF-8")
+      @table_data[tag_key] = @io_source.read(entry.table_length)
+    end
 
     # Parse a table from raw data (Fontisan extension)
     #

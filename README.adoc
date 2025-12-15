@@ -84,8 +84,161 @@ gem install fontisan
 * TrueType curve converter for bi-directional quadratic/cubic conversion (complete)
 * Compound glyph decomposition with transformation support (complete)
 * CFF subroutine optimization for space-efficient OTF generation (preview mode)
+* Various loading modes for high-performance font indexing (5x faster)
 
 NOTE: TTF ↔ OTF outline format conversion is in active development (Phase 1, ~80% complete). The universal outline model, CFF builders, curve converter, and compound glyph support are fully functional. Simple and compound glyphs convert successfully. See link:docs/IMPLEMENTATION_STATUS_V4.md[Implementation Status] for detailed progress tracking.
+
+
+== Loading Modes
+
+=== General
+
+Fontisan provides a flexible loading modes architecture that enables efficient
+font parsing for different use cases.
+
+The system supports two distinct modes:
+
+`:metadata` mode:: Loads only metadata tables needed for font identification and
+metrics (similar to `otfinfo` functionality). This mode is around 5x faster
+than full parsing and uses significantly less memory.
+
+`:full` mode:: Loads all tables in the font for complete analysis and
+manipulation
+
+This architecture is particularly useful for software that only
+needs basic font information without full parsing overhead, such as
+font indexing systems or font discovery tools.
+
+This mode was developed to improve performance in font indexing in the
+https://github.com/fontist/fontist[Fontist] library, where system fonts
+need to be scanned quickly without loading unnecessary data.
+
+A font file opened in `:metadata` mode will only have a subset of tables
+loaded, and attempts to access non-loaded tables will return `nil`.
+
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.ttf', mode: :metadata)
+
+# Check table availability before accessing
+font.table_available?("name")  # => true
+font.table_available?("GSUB")  # => false
+
+# Access allowed tables
+font.table("name")  # => Works
+font.table("head")  # => Works
+
+# Restricted tables return nil
+font.table("GSUB")  # => nil (not loaded in metadata mode)
+----
+
+You can also set loading modes via the environment:
+
+[source,ruby]
+----
+# Set defaults via environment
+ENV['FONTISAN_MODE'] = 'metadata'
+ENV['FONTISAN_LAZY'] = 'false'
+
+# Uses environment settings
+font = Fontisan::FontLoader.load('font.ttf')
+
+# Explicit parameters override environment
+font = Fontisan::FontLoader.load('font.ttf', mode: :full)
+----
+
+The loading mode can be queried at any time.
+
+[source,ruby]
+----
+# Mode stored as font property
+font.loading_mode  # => :metadata or :full
+
+# Table availability checked before access
+font.table_available?(tag)  # => boolean
+
+# Access restricted based on mode
+font.table(tag)  # => Returns table or raises error
+----
+
+
+
+=== Metadata mode
+
+Loads only 6 tables (name, head, hhea, maxp, OS/2, post) instead of 15-20 tables.
+
+.Metadata mode: Fast loading for font identification
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.ttf', mode: :metadata)
+puts font.family_name          # => "Arial"
+puts font.subfamily_name       # => "Regular"
+puts font.post_script_name     # => "ArialMT"
+----
+
+Tables loaded:
+
+name:: Font names and metadata
+head:: Font header with global metrics
+hhea:: Horizontal header with line spacing
+maxp:: Maximum profile with glyph count
+OS/2:: OS/2 and Windows metrics
+post:: PostScript information
+
+
+In metadata mode, these convenience methods provide direct access to name table
+fields:
+
+`family_name`:: Font family name (nameID 1)
+`subfamily_name`:: Font subfamily/style name (nameID 2)
+`full_name`:: Full font name (nameID 4)
+`post_script_name`:: PostScript name (nameID 6)
+`preferred_family_name`:: Preferred family name (nameID 16, may be nil)
+`preferred_subfamily_name`:: Preferred subfamily name (nameID 17, may be nil)
+`units_per_em`:: Units per em from head table
+
+
+=== Full mode
+
+Loads all tables in the font for complete analysis and manipulation.
+
+.Full mode: Complete font analysis
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.ttf', mode: :full)
+font.table("GSUB")  # => Available
+font.table("GPOS")  # => Available
+
+# Check which mode is active
+puts font.loading_mode  # => :metadata or :full
+----
+
+Tables loaded:
+
+* All tables in the font
+* Including GSUB, GPOS, cmap, glyf/CFF, etc.
+
+=== Lazy loading option
+
+Fontisan supports lazy loading of tables in both `:metadata` and `:full` modes.
+When lazy loading is enabled (default), tables are only parsed when accessed.
+
+[source,ruby]
+----
+# Metadata mode with lazy loading (default, fastest)
+font = Fontisan::FontLoader.load('font.ttf', mode: :metadata, lazy: true)
+
+# Metadata mode with eager loading (loads all metadata tables upfront)
+font = Fontisan::FontLoader.load('font.ttf', mode: :metadata, lazy: false)
+
+# Full mode with lazy loading (tables loaded on-demand)
+font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: true)
+
+# Full mode with eager loading (all tables loaded upfront)
+font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: false)
+----
+
+
 
 
 == Outline Format Conversion

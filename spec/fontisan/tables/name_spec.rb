@@ -142,6 +142,8 @@ RSpec.describe Fontisan::Tables::Name do
       let(:name) { described_class.read(data) }
 
       it "decodes UTF-16BE strings correctly" do
+        # Call decode_all_strings to populate record.string attributes
+        name.decode_all_strings
         record = name.name_records.first
         expect(record.string).to eq("Test Font")
       end
@@ -159,6 +161,8 @@ RSpec.describe Fontisan::Tables::Name do
         unicode_data = build_name_table(records: unicode_records)
         unicode_name = described_class.read(unicode_data)
 
+        # Call decode_all_strings to populate record.string attributes
+        unicode_name.decode_all_strings
         expect(unicode_name.name_records.first.string).to eq("Test Fönt Ñamé")
       end
     end
@@ -179,6 +183,8 @@ RSpec.describe Fontisan::Tables::Name do
       let(:name) { described_class.read(data) }
 
       it "decodes ASCII strings correctly" do
+        # Call decode_all_strings to populate record.string attributes
+        name.decode_all_strings
         record = name.name_records.first
         expect(record.string).to eq("Test Font")
       end
@@ -387,6 +393,173 @@ RSpec.describe Fontisan::Tables::Name do
                               ])
       name = described_class.read(data)
       expect(name).to be_valid
+    end
+  end
+
+  describe "lazy decoding" do
+    let(:records) do
+      [
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: described_class::FAMILY,
+          string: "Test Family",
+        },
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: described_class::SUBFAMILY,
+          string: "Regular",
+        },
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: described_class::FULL_NAME,
+          string: "Test Family Regular",
+        },
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: described_class::POSTSCRIPT_NAME,
+          string: "TestFamily-Regular",
+        },
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: described_class::VERSION,
+          string: "Version 1.0",
+        },
+      ]
+    end
+    let(:data) { build_name_table(records: records) }
+    let(:name_table) { described_class.read(data) }
+
+    it "does not decode all strings upfront" do
+      # Cache should start empty
+      expect(name_table.decoded_names_cache).to be_empty
+    end
+
+    it "decodes strings on demand" do
+      family = name_table.english_name(described_class::FAMILY)
+
+      # Should have decoded family name
+      expect(name_table.decoded_names_cache).to have_key(described_class::FAMILY)
+      expect(family).to be_a(String)
+      expect(family).to eq("Test Family")
+    end
+
+    it "caches decoded strings" do
+      # First access
+      family1 = name_table.english_name(described_class::FAMILY)
+
+      # Second access (should use cache)
+      family2 = name_table.english_name(described_class::FAMILY)
+
+      # Should be same object (cached and frozen)
+      expect(family1.object_id).to eq(family2.object_id)
+    end
+
+    it "only decodes requested name IDs" do
+      # Request only family name
+      name_table.english_name(described_class::FAMILY)
+
+      # Should not have decoded other names
+      expect(name_table.decoded_names_cache.size).to eq(1)
+      expect(name_table.decoded_names_cache).to have_key(described_class::FAMILY)
+      expect(name_table.decoded_names_cache).not_to have_key(described_class::SUBFAMILY)
+      expect(name_table.decoded_names_cache).not_to have_key(described_class::VERSION)
+    end
+
+    it "decodes multiple names independently" do
+      # Request multiple names
+      family = name_table.english_name(described_class::FAMILY)
+      subfamily = name_table.english_name(described_class::SUBFAMILY)
+      full_name = name_table.english_name(described_class::FULL_NAME)
+
+      # All should be decoded and cached
+      expect(name_table.decoded_names_cache.size).to eq(3)
+      expect(family).to eq("Test Family")
+      expect(subfamily).to eq("Regular")
+      expect(full_name).to eq("Test Family Regular")
+    end
+
+    it "returns nil for non-existent name IDs without decoding" do
+      result = name_table.english_name(described_class::DESIGNER)
+
+      expect(result).to be_nil
+      # Should not cache nil results
+      expect(name_table.decoded_names_cache).not_to have_key(described_class::DESIGNER)
+    end
+
+    it "freezes decoded strings for interning" do
+      family = name_table.english_name(described_class::FAMILY)
+
+      expect(family).to be_frozen
+    end
+
+    it "handles subsequent accesses efficiently" do
+      # First access (decode)
+      family1 = name_table.english_name(described_class::FAMILY)
+
+      # Multiple subsequent accesses (from cache)
+      100.times do
+        family = name_table.english_name(described_class::FAMILY)
+        expect(family.object_id).to eq(family1.object_id)
+      end
+
+      # Should still only have one entry in cache
+      expect(name_table.decoded_names_cache.size).to eq(1)
+    end
+  end
+
+  describe "performance" do
+    let(:large_records) do
+      # Create many name records to simulate real font
+      (0..50).map do |i|
+        {
+          platform_id: 3,
+          encoding_id: 1,
+          language_id: 0x0409,
+          name_id: i,
+          string: "Name Record #{i}",
+        }
+      end
+    end
+    let(:data) { build_name_table(records: large_records) }
+
+    it "is faster with lazy decoding when accessing few names" do
+      # With lazy decoding, accessing just one name should be fast
+      name_table = described_class.read(data)
+
+      # Access only family name (ID 1)
+      family = name_table.english_name(described_class::FAMILY)
+
+      # Should have decoded only one string
+      expect(name_table.decoded_names_cache.size).to eq(1)
+      expect(family).to eq("Name Record 1")
+    end
+
+    it "caches results to avoid redundant decoding" do
+      name_table = described_class.read(data)
+
+      # First access
+      start_time = Time.now
+      family1 = name_table.english_name(described_class::FAMILY)
+      first_time = Time.now - start_time
+
+      # Subsequent access should be from cache (much faster)
+      start_time = Time.now
+      family2 = name_table.english_name(described_class::FAMILY)
+      cached_time = Time.now - start_time
+
+      # Cached access should be faster (or at least not slower)
+      expect(cached_time).to be <= first_time
+      expect(family1).to eq(family2)
     end
   end
 end

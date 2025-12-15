@@ -101,5 +101,47 @@ module Fontisan
     # All table data in TTF files must be aligned to 4-byte boundaries,
     # with padding added as necessary.
     TABLE_ALIGNMENT = 4
+
+    # Common font subfamily names for string interning
+    #
+    # These strings are frozen and reused to reduce memory allocations
+    # when parsing fonts with common subfamily names.
+    STRING_POOL = {
+      "Regular" => "Regular".freeze,
+      "Bold" => "Bold".freeze,
+      "Italic" => "Italic".freeze,
+      "Bold Italic" => "Bold Italic".freeze,
+      "BoldItalic" => "BoldItalic".freeze,
+      "Light" => "Light".freeze,
+      "Medium" => "Medium".freeze,
+      "Semibold" => "Semibold".freeze,
+      "SemiBold" => "SemiBold".freeze,
+      "Black" => "Black".freeze,
+      "Thin" => "Thin".freeze,
+      "ExtraLight" => "ExtraLight".freeze,
+      "Extra Light" => "Extra Light".freeze,
+      "ExtraBold" => "ExtraBold".freeze,
+      "Extra Bold" => "Extra Bold".freeze,
+      "Heavy" => "Heavy".freeze,
+      "Book" => "Book".freeze,
+      "Roman" => "Roman".freeze,
+      "Normal" => "Normal".freeze,
+      "Oblique" => "Oblique".freeze,
+      "Light Italic" => "Light Italic".freeze,
+      "Medium Italic" => "Medium Italic".freeze,
+      "Semibold Italic" => "Semibold Italic".freeze,
+      "Bold Oblique" => "Bold Oblique".freeze,
+    }.freeze
+
+    # Intern a string using the string pool
+    #
+    # If the string is in the pool, returns the pooled instance.
+    # Otherwise, freezes and returns the original string.
+    #
+    # @param str [String] The string to intern
+    # @return [String] The interned string
+    def self.intern_string(str)
+      STRING_POOL[str] || str.freeze
+    end
   end
 end

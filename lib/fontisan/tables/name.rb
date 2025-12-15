@@ -107,9 +107,13 @@ module Fontisan
       array :name_records, type: :name_record, initial_length: :record_count
       rest :string_storage
 
+      # Cache for decoded names
+      attr_accessor :decoded_names_cache
+
       # Hook that gets called after all fields are read
       def after_read_hook
-        decode_all_strings
+        # Don't decode anything yet - wait for request
+        @decoded_names_cache = {}
       end
 
       # Make sure we call our hook after BinData finishes reading
@@ -125,43 +129,13 @@ module Fontisan
         record_count
       end
 
-      # Find an English name for the given name ID
-      #
-      # Priority: Platform 3 (Windows) with language 0x0409 (US English)
-      # Fallback: Platform 1 (Mac) with language 0
-      #
-      # @param name_id [Integer] The name ID to search for
-      # @return [String, nil] The decoded string or nil if not found
-      def english_name(name_id)
-        # First try Windows English
-        record = name_records.find do |rec|
-          rec.name_id == name_id &&
-            rec.platform_id == PLATFORM_WINDOWS &&
-            rec.language_id == WINDOWS_LANGUAGE_EN_US
-        end
-
-        # Fallback to Mac English
-        record ||= name_records.find do |rec|
-          rec.name_id == name_id &&
-            rec.platform_id == PLATFORM_MACINTOSH &&
-            rec.language_id == MAC_LANGUAGE_ENGLISH
-        end
-
-        record&.string
-      end
-
-      # Validate the table
-      #
-      # @return [Boolean] True if the table is valid
-      def valid?
-        !format.nil?
-      rescue StandardError
-        false
-      end
-
-      private
-
       # Decode all strings from the string storage area
+      #
+      # This method can be called explicitly to decode all name records upfront.
+      # Useful for testing or when you know you'll need all strings.
+      # By default, strings are decoded lazily on demand.
+      #
+      # @return [void]
       def decode_all_strings
         # Get the raw string storage as a plain Ruby binary string
         storage_bytes = string_storage.to_s.b
@@ -182,6 +156,101 @@ module Fontisan
           string_data = storage_bytes.byteslice(offset, length)
           record.decode_string(string_data) if string_data && !string_data.empty?
         end
+      end
+
+      # Find an English name for the given name ID
+      #
+      # Priority: Platform 3 (Windows) with language 0x0409 (US English)
+      # Fallback: Platform 1 (Mac) with language 0
+      #
+      # @param name_id [Integer] The name ID to search for
+      # @return [String, nil] The decoded string or nil if not found
+      def english_name(name_id)
+        # Check cache first
+        return @decoded_names_cache[name_id] if @decoded_names_cache.key?(name_id)
+
+        # Find record (don't decode yet)
+        record = find_name_record(
+          name_id,
+          platform: PLATFORM_WINDOWS,
+          language: WINDOWS_LANGUAGE_EN_US
+        )
+
+        record ||= find_name_record(
+          name_id,
+          platform: PLATFORM_MACINTOSH,
+          language: MAC_LANGUAGE_ENGLISH
+        )
+
+        return nil unless record
+
+        # Decode only this one record
+        decoded = decode_name_record(record)
+        @decoded_names_cache[name_id] = decoded
+        decoded
+      end
+
+      # Validate the table
+      #
+      # @return [Boolean] True if the table is valid
+      def valid?
+        !format.nil?
+      rescue StandardError
+        false
+      end
+
+      private
+
+      # Find a name record matching the criteria
+      #
+      # @param name_id [Integer] The name ID to search for
+      # @param platform [Integer] The platform ID
+      # @param language [Integer] The language ID
+      # @return [NameRecord, nil] The matching record or nil
+      def find_name_record(name_id, platform:, language:)
+        name_records.find do |rec|
+          rec.name_id == name_id &&
+            rec.platform_id == platform &&
+            rec.language_id == language
+        end
+      end
+
+      # Decode a single name record on demand
+      #
+      # @param record [NameRecord] The record to decode
+      # @return [String] The decoded string
+      def decode_name_record(record)
+        # Get raw string storage
+        storage_bytes = string_storage.to_s.b
+
+        # Extract this record's string
+        offset = record.string_offset
+        length = record.string_length
+
+        return nil if offset + length > storage_bytes.bytesize
+        return nil if length.zero?
+
+        string_data = storage_bytes.byteslice(offset, length)
+
+        # Decode based on platform
+        decoded = case record.platform_id
+                  when PLATFORM_WINDOWS, PLATFORM_UNICODE
+                    string_data.dup.force_encoding("UTF-16BE")
+                               .encode("UTF-8", invalid: :replace, undef: :replace)
+                  when PLATFORM_MACINTOSH
+                    string_data.dup.force_encoding("ASCII-8BIT")
+                               .encode("UTF-8", invalid: :replace, undef: :replace)
+                  else
+                    string_data.dup.force_encoding("UTF-8")
+                  end
+
+        # Intern common strings to reduce memory usage
+        interned = Fontisan::Constants.intern_string(decoded)
+
+        # Also populate the record's string attribute for backward compatibility
+        record.string = interned
+
+        interned
       end
     end
   end
