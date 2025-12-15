@@ -66,7 +66,14 @@ module Fontisan
       # @raise [InvalidFontError] for corrupted or unknown formats
       # @raise [Error] for other loading failures
       def load_font
-        FontLoader.load(@font_path, font_index: @options[:font_index] || 0)
+        # ConvertCommand and similar commands need all tables loaded upfront
+        # Use mode and lazy from options, or sensible defaults
+        FontLoader.load(
+          @font_path,
+          font_index: @options[:font_index] || 0,
+          mode: @options[:mode] || LoadingModes::FULL,
+          lazy: @options.key?(:lazy) ? @options[:lazy] : false
+        )
       rescue Errno::ENOENT
         # Re-raise file not found as-is
         raise

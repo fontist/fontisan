@@ -98,12 +98,12 @@ font parsing for different use cases.
 
 The system supports two distinct modes:
 
+`:full` mode:: (default) Loads all tables in the font for complete analysis and
+manipulation
+
 `:metadata` mode:: Loads only metadata tables needed for font identification and
 metrics (similar to `otfinfo` functionality). This mode is around 5x faster
 than full parsing and uses significantly less memory.
-
-`:full` mode:: Loads all tables in the font for complete analysis and
-manipulation
 
 This architecture is particularly useful for software that only
 needs basic font information without full parsing overhead, such as
@@ -221,7 +221,14 @@ Tables loaded:
 === Lazy loading option
 
 Fontisan supports lazy loading of tables in both `:metadata` and `:full` modes.
-When lazy loading is enabled (default), tables are only parsed when accessed.
+When lazy loading is enabled (optional), tables are only parsed when accessed.
+
+Options:
+
+`false`:: (default) Eager loading. All tables for the selected mode are parsed
+upfront.
+
+`true`:: Lazy loading enabled. Tables are parsed on-demand.
 
 [source,ruby]
 ----
