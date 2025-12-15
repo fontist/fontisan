@@ -7,15 +7,15 @@ RSpec.describe "Lazy Table Loading" do
   let(:font_path) { fixture_path("fonts/NotoSans-Regular.ttf") }
 
   describe "lazy loading behavior" do
-    it "does not load table data upfront with lazy_load: true" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+    it "does not load table data upfront with lazy: true" do
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Table data should be empty initially
       expect(font.table_data).to be_empty
     end
 
     it "loads table data on first access" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access name table
       name_table = font.table("name")
@@ -26,7 +26,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "caches parsed table instances" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access same table twice
       table1 = font.table("name")
@@ -37,7 +37,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "only loads accessed tables" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access only name table
       font.table("name")
@@ -51,7 +51,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "loads multiple tables independently" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access multiple tables
       font.table("name")
@@ -66,7 +66,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "returns nil for non-existent tables" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Try to access non-existent table
       result = font.table("ZZZZ")
@@ -75,7 +75,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "keeps IO source reference when lazy loading" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       expect(font.io_source).not_to be_nil
       expect(font.io_source).to be_a(File)
@@ -89,14 +89,14 @@ RSpec.describe "Lazy Table Loading" do
     it "is faster than eager loading for single table access" do
       eager_time = Benchmark.realtime do
         10.times do
-          font = Fontisan::FontLoader.load(font_path, lazy_load: false)
+          font = Fontisan::FontLoader.load(font_path, lazy: false)
           font.table("name")  # Only access one table
         end
       end
 
       lazy_time = Benchmark.realtime do
         10.times do
-          font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+          font = Fontisan::FontLoader.load(font_path, lazy: true)
           font.table("name")  # Only access one table
           font.close
         end
@@ -113,7 +113,7 @@ RSpec.describe "Lazy Table Loading" do
     it "has similar performance to eager loading when accessing all tables" do
       eager_time = Benchmark.realtime do
         5.times do
-          font = Fontisan::FontLoader.load(font_path, lazy_load: false)
+          font = Fontisan::FontLoader.load(font_path, lazy: false)
           # Access all common tables
           font.table("name")
           font.table("head")
@@ -126,7 +126,7 @@ RSpec.describe "Lazy Table Loading" do
 
       lazy_time = Benchmark.realtime do
         5.times do
-          font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+          font = Fontisan::FontLoader.load(font_path, lazy: true)
           # Access same tables
           font.table("name")
           font.table("head")
@@ -150,7 +150,7 @@ RSpec.describe "Lazy Table Loading" do
 
   describe "cleanup" do
     it "closes file handle when explicitly closed" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
       io = font.io_source
 
       expect(io).not_to be_closed
@@ -162,14 +162,14 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "does not error when closing already closed font" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       font.close
       expect { font.close }.not_to raise_error
     end
 
     it "can still access cached tables after closing" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access table before closing
       name_table = font.table("name")
@@ -183,7 +183,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "cannot load new tables after closing" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access one table
       font.table("name")
@@ -195,9 +195,9 @@ RSpec.describe "Lazy Table Loading" do
     end
   end
 
-  describe "backward compatibility" do
-    it "works with lazy_load: false (old behavior)" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: false)
+  describe "default behavior" do
+    it "works with lazy: false (eager loading)" do
+      font = Fontisan::FontLoader.load(font_path, lazy: false)
 
       # Should have loaded all table data upfront
       expect(font.table_data.size).to be > 5
@@ -209,7 +209,7 @@ RSpec.describe "Lazy Table Loading" do
       expect(font.table("head")).not_to be_nil
     end
 
-    it "defaults to lazy loading for new code" do
+    it "defaults to lazy loading" do
       font = Fontisan::FontLoader.load(font_path)
 
       # Default should be lazy loading
@@ -219,9 +219,9 @@ RSpec.describe "Lazy Table Loading" do
       font.close
     end
 
-    it "maintains same API for table access" do
-      eager_font = Fontisan::FontLoader.load(font_path, lazy_load: false)
-      lazy_font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+    it "maintains same API for table access regardless of lazy setting" do
+      eager_font = Fontisan::FontLoader.load(font_path, lazy: false)
+      lazy_font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Both should return same values
       expect(eager_font.family_name).to eq(lazy_font.family_name)
@@ -231,16 +231,8 @@ RSpec.describe "Lazy Table Loading" do
       lazy_font.close
     end
 
-    it "works with minimal mode" do
-      font = Fontisan::FontLoader.load(font_path, minimal: true, lazy_load: false)
-
-      # Minimal mode with eager loading should only load name table
-      expect(font.table_data.size).to eq(1)
-      expect(font.table_data).to have_key("name")
-    end
-
-    it "combines lazy loading with minimal mode" do
-      font = Fontisan::FontLoader.load(font_path, minimal: true, lazy_load: true)
+    it "works with metadata mode and lazy loading" do
+      font = Fontisan::FontLoader.load(font_path, mode: :metadata, lazy: true)
 
       # Should not load anything upfront
       expect(font.table_data).to be_empty
@@ -257,12 +249,12 @@ RSpec.describe "Lazy Table Loading" do
   describe "edge cases" do
     it "handles invalid file path" do
       expect {
-        Fontisan::FontLoader.load("nonexistent.ttf", lazy_load: true)
+        Fontisan::FontLoader.load("nonexistent.ttf", lazy: true)
       }.to raise_error(Errno::ENOENT)
     end
 
     it "handles accessing same table multiple times" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access table multiple times
       5.times { font.table("name") }
@@ -274,7 +266,7 @@ RSpec.describe "Lazy Table Loading" do
     end
 
     it "handles table access before and after other operations" do
-      font = Fontisan::FontLoader.load(font_path, lazy_load: true)
+      font = Fontisan::FontLoader.load(font_path, lazy: true)
 
       # Access tables in various orders
       name1 = font.table("name")
@@ -290,7 +282,7 @@ RSpec.describe "Lazy Table Loading" do
 
   describe "TrueTypeFont direct usage" do
     it "supports lazy loading via from_file" do
-      font = Fontisan::TrueTypeFont.from_file(font_path, lazy_load: true)
+      font = Fontisan::TrueTypeFont.from_file(font_path, lazy: true)
 
       expect(font.lazy_load_enabled).to be true
       expect(font.table_data).to be_empty
