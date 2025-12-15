@@ -63,12 +63,13 @@ module Fontisan
     #
     # @param index [Integer] Index of the font (0-based)
     # @param io [IO] Open file handle
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
     # @return [OpenTypeFont, nil] Font object or nil if index out of range
-    def font(index, io)
+    def font(index, io, mode: LoadingModes::FULL)
       return nil if index >= num_fonts
 
       require_relative "open_type_font"
-      OpenTypeFont.from_collection(io, font_offsets[index])
+      OpenTypeFont.from_collection(io, font_offsets[index], mode: mode)
     end
 
     # Get font count

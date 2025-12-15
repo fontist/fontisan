@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "constants"
+require_relative "loading_modes"
 require_relative "true_type_font"
 require_relative "open_type_font"
 require_relative "true_type_collection"
@@ -21,17 +22,34 @@ module Fontisan
   #   font = FontLoader.load("font.otf")  # => OpenTypeFont
   #   font = FontLoader.load("fonts.ttc") # => TrueTypeFont (first in collection)
   #   font = FontLoader.load("fonts.ttc", font_index: 2) # => TrueTypeFont (third in collection)
+  #
+  # @example Loading modes
+  #   font = FontLoader.load("font.ttf", mode: :metadata)  # Load only metadata tables
+  #   font = FontLoader.load("font.ttf", mode: :full)      # Load all tables
+  #
+  # @example Lazy loading control
+  #   font = FontLoader.load("font.ttf", lazy: true)   # Tables loaded on-demand
+  #   font = FontLoader.load("font.ttf", lazy: false)  # All tables loaded upfront
   class FontLoader
     # Load a font from file with automatic format detection
     #
     # @param path [String] Path to the font file
     # @param font_index [Integer] Index of font in collection (0-based, default: 0)
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: from ENV or :full)
+    # @param lazy [Boolean] If true, load tables on demand (default: from ENV or true)
     # @return [TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font] The loaded font object
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [UnsupportedFormatError] for unsupported formats
     # @raise [InvalidFontError] for corrupted or unknown formats
-    def self.load(path, font_index: 0)
+    def self.load(path, font_index: 0, mode: nil, lazy: nil)
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+
+      # Resolve mode and lazy parameters with environment variables
+      resolved_mode = mode || env_mode || LoadingModes::FULL
+      resolved_lazy = lazy.nil? ? env_lazy : lazy
+
+      # Validate mode
+      LoadingModes.validate_mode!(resolved_mode)
 
       File.open(path, "rb") do |io|
         signature = io.read(4)
@@ -39,11 +57,11 @@ module Fontisan
 
         case signature
         when Constants::TTC_TAG
-          load_from_collection(io, path, font_index)
+          load_from_collection(io, path, font_index, mode: resolved_mode, lazy: resolved_lazy)
         when pack_uint32(Constants::SFNT_VERSION_TRUETYPE)
-          TrueTypeFont.from_file(path)
+          TrueTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "OTTO"
-          OpenTypeFont.from_file(path)
+          OpenTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "wOFF"
           raise UnsupportedFormatError,
                 "Unsupported font format: WOFF. Please convert to TTF/OTF first."
@@ -121,14 +139,37 @@ module Fontisan
       end
     end
 
+    # Get mode from environment variable
+    #
+    # @return [Symbol, nil] Mode from FONTISAN_MODE or nil
+    # @api private
+    def self.env_mode
+      env_value = ENV["FONTISAN_MODE"]
+      return nil unless env_value
+
+      mode = env_value.to_sym
+      LoadingModes.valid_mode?(mode) ? mode : nil
+    end
+
+    # Get lazy setting from environment variable
+    #
+    # @return [Boolean] Lazy setting from FONTISAN_LAZY or default true
+    # @api private
+    def self.env_lazy
+      env_value = ENV["FONTISAN_LAZY"]
+      env_value ? (env_value.downcase == "true") : true
+    end
+
     # Load from a collection file (TTC or OTC)
     #
     # @param io [IO] Open file handle
     # @param path [String] Path to the collection file
     # @param font_index [Integer] Index of font to extract
+    # @param mode [Symbol] Loading mode (:metadata or :full)
+    # @param lazy [Boolean] If true, load tables on demand
     # @return [TrueTypeFont, OpenTypeFont] The loaded font object
     # @raise [InvalidFontError] if collection type cannot be determined
-    def self.load_from_collection(io, path, font_index)
+    def self.load_from_collection(io, path, font_index, mode: LoadingModes::FULL, lazy: true)
       # Read collection header to get font offsets
       io.seek(12) # Skip tag (4) + major_version (2) + minor_version (2) + num_fonts marker (4)
       num_fonts = io.read(4).unpack1("N")
@@ -150,11 +191,11 @@ module Fontisan
       when Constants::SFNT_VERSION_TRUETYPE
         # TrueType Collection
         ttc = TrueTypeCollection.from_file(path)
-        File.open(path, "rb") { |f| ttc.font(font_index, f) }
+        File.open(path, "rb") { |f| ttc.font(font_index, f, mode: mode) }
       when Constants::SFNT_VERSION_OTTO
         # OpenType Collection
         otc = OpenTypeCollection.from_file(path)
-        File.open(path, "rb") { |f| otc.font(font_index, f) }
+        File.open(path, "rb") { |f| otc.font(font_index, f, mode: mode) }
       else
         raise InvalidFontError,
               "Unknown font type in collection (sfnt version: 0x#{sfnt_version.to_s(16)})"
@@ -170,6 +211,6 @@ module Fontisan
       [value].pack("N")
     end
 
-    private_class_method :load_from_collection, :pack_uint32
+    private_class_method :load_from_collection, :pack_uint32, :env_mode, :env_lazy
   end
 end
