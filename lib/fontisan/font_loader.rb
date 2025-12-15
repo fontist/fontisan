@@ -36,7 +36,7 @@ module Fontisan
     # @param path [String] Path to the font file
     # @param font_index [Integer] Index of font in collection (0-based, default: 0)
     # @param mode [Symbol] Loading mode (:metadata or :full, default: from ENV or :full)
-    # @param lazy [Boolean] If true, load tables on demand (default: from ENV or true)
+    # @param lazy [Boolean] If true, load tables on demand (default: false for eager loading)
     # @return [TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font] The loaded font object
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [UnsupportedFormatError] for unsupported formats
@@ -46,7 +46,7 @@ module Fontisan
 
       # Resolve mode and lazy parameters with environment variables
       resolved_mode = mode || env_mode || LoadingModes::FULL
-      resolved_lazy = lazy.nil? ? env_lazy : lazy
+      resolved_lazy = lazy.nil? ? (env_lazy.nil? ? false : env_lazy) : lazy
 
       # Validate mode
       LoadingModes.validate_mode!(resolved_mode)
@@ -153,11 +153,13 @@ module Fontisan
 
     # Get lazy setting from environment variable
     #
-    # @return [Boolean] Lazy setting from FONTISAN_LAZY or default true
+    # @return [Boolean, nil] Lazy setting from FONTISAN_LAZY or nil if not set
     # @api private
     def self.env_lazy
       env_value = ENV["FONTISAN_LAZY"]
-      env_value ? (env_value.downcase == "true") : true
+      return nil unless env_value
+
+      env_value.downcase == "true"
     end
 
     # Load from a collection file (TTC or OTC)

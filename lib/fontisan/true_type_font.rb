@@ -73,12 +73,12 @@ module Fontisan
     #
     # @param path [String] Path to the TTF file
     # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
-    # @param lazy [Boolean] If true, load tables on demand (default: true)
+    # @param lazy [Boolean] If true, load tables on demand (default: false for eager loading)
     # @return [TrueTypeFont] A new instance
     # @raise [ArgumentError] if path is nil or empty, or if mode is invalid
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [RuntimeError] if file format is invalid
-    def self.from_file(path, mode: LoadingModes::FULL, lazy: true)
+    def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
       if path.nil? || path.to_s.empty?
         raise ArgumentError,
               "path cannot be nil or empty"
