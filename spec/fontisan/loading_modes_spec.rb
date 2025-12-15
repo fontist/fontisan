@@ -505,7 +505,7 @@ RSpec.describe "Loading Modes Integration" do
       skip "No test fonts available" if test_fonts.empty?
 
       metadata_time = Benchmark.realtime do
-        test_fonts.each { |path| Fontisan::FontLoader.load(path, mode: :metadata, lazy: false) }
+        test_fonts.each { |path| Fontisan::FontLoader.load(path, mode: :metadata) }
       end
 
       full_time = Benchmark.realtime do
