@@ -8,7 +8,6 @@ require_relative "../tables/cff/index_builder"
 require_relative "../tables/cff/dict_builder"
 require_relative "../tables/glyf/glyph_builder"
 require_relative "../tables/glyf/compound_glyph_resolver"
-require_relative "../optimizers/subroutine_generator"
 
 module Fontisan
   module Converters
@@ -64,12 +63,6 @@ module Fontisan
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param options [Hash] Conversion options
       # @option options [Symbol] :target_format Target format (:ttf or :otf)
-      # @option options [Boolean] :optimize_subroutines Enable subroutine optimization (TTF→OTF only)
-      # @option options [Boolean] :stack_aware Enable stack-aware pattern detection (default: false)
-      # @option options [Integer] :min_pattern_length Minimum pattern length for subroutines (default: 10)
-      # @option options [Integer] :max_subroutines Maximum number of subroutines (default: 65_535)
-      # @option options [Boolean] :optimize_ordering Optimize subroutine ordering (default: true)
-      # @option options [Boolean] :verbose Show detailed optimization statistics
       # @return [Hash<String, String>] Map of table tags to binary data
       def convert(font, options = {})
         @font = font
@@ -94,53 +87,20 @@ module Fontisan
       # Convert TrueType font to OpenType/CFF
       #
       # @param font [TrueTypeFont] Source font
-      # @param options [Hash] Conversion options
+      # @param options [Hash] Conversion options (currently unused)
       # @return [Hash<String, String>] Target tables
       def convert_ttf_to_otf(font, options = {})
         # Extract all glyphs from glyf table
         outlines = extract_ttf_outlines(font)
 
-        # Build CharStrings from outlines first
-        charstrings = outlines.map do |outline|
-          builder = Tables::Cff::CharStringBuilder.new
-          if outline.empty?
-            builder.build_empty
-          else
-            builder.build(outline)
-          end
-        end
-
-        # Optimize CharStrings if requested
-        optimization_result = nil
-        if options[:optimize_subroutines]
-          begin
-            optimization_result = optimize_charstrings_directly(
-              charstrings,
-              options,
-            )
-          rescue Fontisan::Error, StandardError => e
-            # Optimization failed - log and continue without optimization
-            if options[:verbose]
-              puts "Note: Subroutine optimization failed (#{e.message})"
-              puts "Continuing with unoptimized conversion..."
-            end
-            optimization_result = nil
-          end
-        end
-
-        # Build CFF table with optimized CharStrings (if optimization succeeded)
-        cff_data = build_cff_table(outlines, font, optimization_result)
+        # Build CFF table from outlines
+        cff_data = build_cff_table(outlines, font)
 
         # Copy all tables except glyf/loca
         tables = copy_tables(font, %w[glyf loca])
 
         # Add CFF table
         tables["CFF "] = cff_data
-
-        # Store optimization result for access by caller
-        if optimization_result
-          tables.instance_variable_set(:@subroutine_optimization, optimization_result)
-        end
 
         # Update maxp table for CFF
         tables["maxp"] = update_maxp_for_cff(font, outlines.length)
@@ -314,26 +274,18 @@ module Fontisan
       #
       # @param outlines [Array<Outline>] Glyph outlines
       # @param font [TrueTypeFont] Source font (for metadata)
-      # @param optimization_result [Hash, nil] Optional subroutine optimization result
       # @return [String] CFF table binary data
-      def build_cff_table(outlines, font, optimization_result = nil)
-        # Build CharStrings INDEX
-        # Use rewritten CharStrings if optimization was performed
+      def build_cff_table(outlines, font)
+        # Build CharStrings INDEX from outlines
         begin
-          charstrings = if optimization_result && optimization_result[:charstrings]
-                          # Use optimized CharStrings with subroutine calls
-                          optimization_result[:charstrings].values
-                        else
-                          # Build CharStrings from outlines normally
-                          outlines.map do |outline|
-                            builder = Tables::Cff::CharStringBuilder.new
-                            if outline.empty?
-                              builder.build_empty
-                            else
-                              builder.build(outline)
-                            end
-                          end
-                        end
+          charstrings = outlines.map do |outline|
+            builder = Tables::Cff::CharStringBuilder.new
+            if outline.empty?
+              builder.build_empty
+            else
+              builder.build(outline)
+            end
+          end
         rescue StandardError => e
           raise Fontisan::Error, "Failed to build CharStrings: #{e.message}"
         end
@@ -344,51 +296,23 @@ module Fontisan
           raise Fontisan::Error, "Failed to build CharStrings INDEX: #{e.message}"
         end
 
-        # Build Local Subrs INDEX if optimization was performed
+        # Build empty Local Subrs INDEX (no optimization)
         begin
-          local_subrs_index_data = if optimization_result && optimization_result[:local_subrs]
-                                     Tables::Cff::IndexBuilder.build(optimization_result[:local_subrs])
-                                   else
-                                     Tables::Cff::IndexBuilder.build([]) # Empty
-                                   end
+          local_subrs_index_data = Tables::Cff::IndexBuilder.build([])
         rescue StandardError => e
           raise Fontisan::Error, "Failed to build Local Subrs INDEX: #{e.message}"
         end
 
         # Build Private DICT
-        # Private DICT needs to reference Local Subrs if present
         begin
           private_dict_hash = {
             default_width_x: 1000,
             nominal_width_x: 0,
           }
 
-          # Add Subrs pointer if we have subroutines
-          if optimization_result && optimization_result[:local_subrs] && !optimization_result[:local_subrs].empty?
-            # Subrs offset is relative to Private DICT start
-            # It will be at the end of the Private DICT data
-            # We'll calculate this after building the dict
-            private_dict_hash[:subrs] = 0 # Placeholder, will update
-          end
-
           private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
         rescue StandardError => e
           raise Fontisan::Error, "Failed to build Private DICT: #{e.message}"
-        end
-
-        # If we have subroutines, append Local Subrs INDEX after Private DICT
-        # and update Subrs offset in the dict
-        if optimization_result && optimization_result[:local_subrs] && !optimization_result[:local_subrs].empty?
-          begin
-            # Subrs offset is the size of the Private DICT data
-            subrs_offset = private_dict_data.bytesize
-
-            # Rebuild Private DICT with correct Subrs offset
-            private_dict_hash[:subrs] = subrs_offset
-            private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
-          rescue StandardError => e
-            raise Fontisan::Error, "Failed to update Private DICT with Subrs offset: #{e.message}"
-          end
         end
 
         # Build font metadata
@@ -409,9 +333,6 @@ module Fontisan
         end
 
         # Calculate offset to CharStrings from start of CFF table
-        # We need to account for: Header + Name INDEX + Top DICT INDEX + String INDEX + Global Subr INDEX
-        # Top DICT INDEX size is not yet known, so we'll calculate it iteratively
-
         begin
           # First pass: build Top DICT with approximate CharStrings offset
           top_dict_index_start = header_size + name_index_data.bytesize
@@ -434,9 +355,6 @@ module Fontisan
 
           # Calculate Private DICT location (after CharStrings)
           private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
-
-          # Private DICT size is just the dict data, NOT including Local Subrs
-          # Local Subrs INDEX is separate and comes after the Private DICT
           private_dict_size = private_dict_data.bytesize
 
           # Update Top DICT with CharStrings offset and Private DICT info
@@ -725,268 +643,6 @@ module Fontisan
             raise Fontisan::MissingTableError,
                   "Font missing required #{tag} table"
           end
-        end
-      end
-
-      # Optimize CFF table with subroutines
-      #
-      # @param tables [Hash] Current table data (containing CFF table)
-      # @param font [TrueTypeFont] Source font (for creating temporary font object)
-      # @param options [Hash] Optimization options
-      # @return [Hash] Optimization result with metrics
-      def optimize_cff_subroutines(tables, font, options)
-        # Create a temporary font object with the new CFF table
-        # so SubroutineGenerator can read CharStrings
-        temp_font = create_temp_font(font, tables)
-
-        # Create generator with options
-        generator = Fontisan::Optimizers::SubroutineGenerator.new(
-          min_pattern_length: options[:min_pattern_length] || 10,
-          max_subroutines: options[:max_subroutines] || 65_535,
-          optimize_ordering: options[:optimize_ordering] != false,
-        )
-
-        # Generate subroutines
-        result = generator.generate(temp_font)
-
-        # Log results if verbose
-        log_optimization_results(result) if options[:verbose]
-
-        # Note: Actual CFF table updating with subroutines requires CFF writing support
-        # For now, we return the result which includes all generated data
-        # The result can be used later when CFF serialization is implemented
-
-        result
-      rescue StandardError => e
-        # Optimization failed - this is expected for TTF->OTF conversion
-        # until full CFF serialization is implemented
-        # Return a stub result indicating no optimization occurred
-        puts "Note: Subroutine optimization skipped (#{e.message})" if options[:verbose]
-
-        {
-          pattern_count: 0,
-          selected_count: 0,
-          local_subrs: [],
-          bias: 0,
-          savings: 0,
-          processing_time: 0.0,
-          subroutines: [],
-        }
-      end
-
-      # Optimize CharStrings directly without parsing CFF table
-      #
-      # This method works with raw CharString bytes and avoids the circular
-      # dependency of parsing a CFF table we just created.
-      #
-      # @param charstrings [Array<String>] Raw CharString bytes
-      # @param options [Hash] Optimization options
-      # @return [Hash, nil] Optimization result with metrics, or nil if failed
-      def optimize_charstrings_directly(charstrings, options)
-        # Create a hash mapping glyph_id => charstring_bytes for the analyzer
-        charstrings_hash = {}
-        charstrings.each_with_index do |cs, index|
-          charstrings_hash[index] = cs
-        end
-
-        # Create generator with options
-        Fontisan::Optimizers::SubroutineGenerator.new(
-          min_pattern_length: options[:min_pattern_length] || 10,
-          max_subroutines: options[:max_subroutines] || 65_535,
-          optimize_ordering: options[:optimize_ordering] != false,
-          stack_aware: options[:stack_aware],
-        )
-
-        # Manually run the optimization pipeline
-        start_time = Time.now
-
-        # 1. Analyze patterns
-        if options[:verbose]
-          puts "Analyzing CharString patterns (#{charstrings.length} glyphs)..."
-        end
-
-        begin
-          analyzer = Fontisan::Optimizers::PatternAnalyzer.new(
-            min_length: options[:min_pattern_length] || 10,
-            stack_aware: options[:stack_aware],
-          )
-          patterns = analyzer.analyze(charstrings_hash)
-
-          if options[:verbose]
-            puts "  Found #{patterns.length} potential patterns"
-          end
-        rescue StandardError => e
-          raise Fontisan::Error, "Pattern analysis failed: #{e.message}"
-        end
-
-        # 2. Optimize selection
-        if options[:verbose]
-          puts "Selecting optimal patterns..."
-        end
-
-        begin
-          optimizer = Fontisan::Optimizers::SubroutineOptimizer.new(
-            patterns,
-            max_subrs: options[:max_subroutines] || 65_535,
-          )
-          selected_patterns = optimizer.optimize_selection
-
-          if options[:verbose]
-            puts "  Selected #{selected_patterns.length} patterns for subroutinization"
-          end
-        rescue StandardError => e
-          raise Fontisan::Error, "Pattern selection failed: #{e.message}"
-        end
-
-        # 3. Optimize ordering (if enabled)
-        if options[:optimize_ordering] != false
-          if options[:verbose]
-            puts "Optimizing subroutine ordering..."
-          end
-
-          begin
-            selected_patterns = optimizer.optimize_ordering(selected_patterns)
-          rescue StandardError => e
-            raise Fontisan::Error, "Pattern ordering failed: #{e.message}"
-          end
-        end
-
-        # 4. Build subroutines
-        if options[:verbose]
-          puts "Building subroutines..."
-        end
-
-        begin
-          builder = Fontisan::Optimizers::SubroutineBuilder.new(
-            selected_patterns,
-            type: :local,
-          )
-          subroutines = builder.build
-
-          if options[:verbose]
-            puts "  Generated #{subroutines.length} subroutines"
-          end
-        rescue StandardError => e
-          raise Fontisan::Error, "Subroutine building failed: #{e.message}"
-        end
-
-        # 5. Build subroutine map
-        subroutine_map = {}
-        selected_patterns.each_with_index do |pattern, index|
-          subroutine_map[pattern.bytes] = index
-        end
-
-        # 6. Rewrite CharStrings
-        if options[:verbose]
-          puts "Rewriting CharStrings with subroutine calls..."
-        end
-
-        begin
-          rewriter = Fontisan::Optimizers::CharstringRewriter.new(
-            subroutine_map,
-            builder,
-          )
-
-          # OPTIMIZATION: Pre-build reverse index (glyph_id => patterns)
-          # This avoids O(n*m) complexity when rewriting CharStrings
-          glyph_to_patterns = Hash.new { |h, k| h[k] = [] }
-          selected_patterns.each do |pattern|
-            pattern.glyphs.each do |glyph_id|
-              glyph_to_patterns[glyph_id] << pattern
-            end
-          end
-
-          rewritten_charstrings = {}
-          charstrings_hash.each do |glyph_id, charstring|
-            glyph_patterns = glyph_to_patterns[glyph_id]
-
-            rewritten_charstrings[glyph_id] = if glyph_patterns.empty?
-                                                charstring
-                                              else
-                                                rewriter.rewrite(charstring, glyph_patterns)
-                                              end
-          end
-
-          if options[:verbose]
-            puts "  Rewrote #{charstrings.length} CharStrings"
-          end
-        rescue StandardError => e
-          raise Fontisan::Error, "CharString rewriting failed: #{e.message}"
-        end
-
-        processing_time = Time.now - start_time
-
-        result = {
-          local_subrs: subroutines,
-          charstrings: rewritten_charstrings,
-          bias: builder.bias,
-          savings: selected_patterns.sum(&:savings),
-          pattern_count: patterns.length,
-          selected_count: selected_patterns.length,
-          processing_time: processing_time,
-          subroutines: selected_patterns.map do |pattern|
-            {
-              commands: pattern.bytes,
-              usage_count: pattern.frequency,
-              savings: pattern.savings,
-            }
-          end,
-        }
-
-        # Log results if verbose
-        log_optimization_results(result) if options[:verbose]
-
-        result
-      rescue Fontisan::Error
-        # Re-raise our own errors
-        raise
-      rescue StandardError => e
-        # Wrap unexpected errors with context
-        raise Fontisan::Error, "Subroutine optimization failed unexpectedly: #{e.message}"
-      end
-
-      # Create temporary font object with updated tables for optimization
-      #
-      # @param source_font [TrueTypeFont] Original source font
-      # @param tables [Hash] New table data
-      # @return [OpenTypeFont] Temporary font object
-      def create_temp_font(_source_font, tables)
-        # Create a minimal font-like object that can provide the CFF table
-        # This allows SubroutineGenerator to extract CharStrings
-        temp_font = Object.new
-
-        # Define methods needed by SubroutineGenerator
-        temp_font.define_singleton_method(:table) do |tag|
-          return nil unless tables[tag]
-
-          # Parse CFF table if requested
-          if tag == "CFF "
-            cff = Fontisan::Tables::Cff.new
-            cff.parse!(tables[tag])
-            cff
-          end
-        end
-
-        temp_font.define_singleton_method(:has_table?) do |tag|
-          tables.key?(tag)
-        end
-
-        temp_font
-      end
-
-      # Log optimization results to console
-      #
-      # @param result [Hash] Optimization result from SubroutineGenerator
-      def log_optimization_results(result)
-        puts "\nSubroutine Optimization Results:"
-        puts "  Patterns found: #{result[:pattern_count]}"
-        puts "  Patterns selected: #{result[:selected_count]}"
-        puts "  Subroutines generated: #{result[:local_subrs].length}"
-        puts "  Estimated bytes saved: #{result[:savings]}"
-        puts "  CFF bias: #{result[:bias]}"
-
-        if result[:selected_count].zero?
-          puts "  Note: No beneficial patterns found for optimization"
         end
       end
     end

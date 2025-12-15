@@ -229,13 +229,14 @@ module Fontisan
         consumed, produced = effect
 
         if consumed == -1
-          # Variable consumption - need special handling
-          # For now, conservatively assume it consumes all available operands
+          # Variable consumption - these operators consume all available operands
+          # For path operators like rlineto, rrcurveto, etc., they consume pairs/tuples
+          # The stack depth after execution is just what they produce (usually 0)
           new_depth = produced
         else
           new_depth = current_depth - consumed + produced
           # Ensure depth doesn't go negative
-          new_depth = 0 if new_depth.negative?
+          new_depth = [new_depth, 0].max
         end
 
         new_depth

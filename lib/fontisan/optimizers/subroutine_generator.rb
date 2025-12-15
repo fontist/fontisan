@@ -72,7 +72,10 @@ module Fontisan
         end
 
         # 2. Analyze patterns
-        analyzer = PatternAnalyzer.new(min_length: @min_pattern_length)
+        analyzer = PatternAnalyzer.new(
+          min_length: @min_pattern_length,
+          stack_aware: true
+        )
         patterns = analyzer.analyze(charstrings)
 
         # 3. Optimize selection

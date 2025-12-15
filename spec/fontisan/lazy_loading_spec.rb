@@ -209,14 +209,12 @@ RSpec.describe "Lazy Table Loading" do
       expect(font.table("head")).not_to be_nil
     end
 
-    it "defaults to lazy loading" do
+    it "defaults to eager loading" do
       font = Fontisan::FontLoader.load(font_path)
 
-      # Default should be lazy loading
-      expect(font.lazy_load_enabled).to be true
-      expect(font.table_data).to be_empty
-
-      font.close
+      # Default should be eager loading (lazy: false)
+      expect(font.lazy_load_enabled).to be false
+      expect(font.table_data.size).to be > 5
     end
 
     it "maintains same API for table access regardless of lazy setting" do
@@ -293,12 +291,10 @@ RSpec.describe "Lazy Table Loading" do
       font.close
     end
 
-    it "defaults to lazy loading in from_file" do
+    it "defaults to eager loading in from_file" do
       font = Fontisan::TrueTypeFont.from_file(font_path)
 
-      expect(font.lazy_load_enabled).to be true
-
-      font.close
+      expect(font.lazy_load_enabled).to be false
     end
   end
 end
