@@ -505,7 +505,7 @@ RSpec.describe "Loading Modes Integration" do
       skip "No test fonts available" if test_fonts.empty?
 
       metadata_time = Benchmark.realtime do
-        test_fonts.each { |path| Fontisan::FontLoader.load(path, mode: :metadata) }
+        test_fonts.each { |path| Fontisan::FontLoader.load(path, mode: :metadata, lazy: false) }
       end
 
       full_time = Benchmark.realtime do
@@ -524,7 +524,7 @@ RSpec.describe "Loading Modes Integration" do
 
       # Informational test - timing can vary based on system load
       # We expect metadata to be faster, but don't fail on timing variations
-      expect(metadata_time).to be < (full_time * 1.5),
+      expect(metadata_time).to be < (full_time * 0.8),
         "Metadata mode should generally be faster or comparable to full mode"
     end
 
