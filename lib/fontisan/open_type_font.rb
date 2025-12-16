@@ -133,9 +133,11 @@ module Fontisan
 
       if @loading_mode == LoadingModes::METADATA
         # Only read metadata tables for performance
-        metadata_tables = LoadingModes.tables_for(LoadingModes::METADATA)
+        # Use Set for O(1) lookup instead of Array#include? O(n) lookup
+        require "set"
+        metadata_tables_set = LoadingModes.tables_for(LoadingModes::METADATA).to_set
         tables.each do |entry|
-          next unless metadata_tables.include?(entry.tag)
+          next unless metadata_tables_set.include?(entry.tag)
 
           io.seek(entry.offset)
           tag_key = entry.tag.dup.force_encoding("UTF-8")
