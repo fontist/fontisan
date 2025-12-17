@@ -8,6 +8,19 @@ require_relative "../tables/cff/index_builder"
 require_relative "../tables/cff/dict_builder"
 require_relative "../tables/glyf/glyph_builder"
 require_relative "../tables/glyf/compound_glyph_resolver"
+require_relative "../optimizers/pattern_analyzer"
+require_relative "../optimizers/subroutine_optimizer"
+require_relative "../optimizers/subroutine_builder"
+require_relative "../optimizers/charstring_rewriter"
+require_relative "../hints/truetype_hint_extractor"
+require_relative "../hints/postscript_hint_extractor"
+require_relative "../hints/hint_converter"
+require_relative "../hints/truetype_hint_applier"
+require_relative "../hints/postscript_hint_applier"
+require_relative "../tables/cff2"
+require_relative "../variation/data_extractor"
+require_relative "../variation/instance_generator"
+require_relative "../variation/converter"
 
 module Fontisan
   module Converters
@@ -21,6 +34,7 @@ module Fontisan
     # - Building target format tables using specialized builders
     # - Updating related tables (maxp, head)
     # - Preserving all other font tables
+    # - Optionally preserving rendering hints
     #
     # **Conversion Details:**
     #
@@ -47,8 +61,15 @@ module Fontisan
     # @example Converting OTF to TTF
     #   converter = Fontisan::Converters::OutlineConverter.new
     #   ttf_font = converter.convert(otf_font, target_format: :ttf)
+    #
+    # @example Converting with hint preservation
+    #   converter = Fontisan::Converters::OutlineConverter.new
+    #   otf_font = converter.convert(ttf_font, target_format: :otf, preserve_hints: true)
     class OutlineConverter
       include ConversionStrategy
+
+      # Supported outline formats
+      SUPPORTED_FORMATS = %i[ttf otf cff2].freeze
 
       # @return [TrueTypeFont, OpenTypeFont] Source font
       attr_reader :font
@@ -63,21 +84,42 @@ module Fontisan
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param options [Hash] Conversion options
       # @option options [Symbol] :target_format Target format (:ttf or :otf)
+      # @option options [Boolean] :optimize_cff Enable CFF subroutine optimization (default: false)
+      # @option options [Boolean] :preserve_hints Preserve rendering hints (default: false)
+      # @option options [Boolean] :preserve_variations Keep variation data during conversion (default: true)
+      # @option options [Boolean] :generate_instance Generate static instance instead of variable font (default: false)
+      # @option options [Hash] :instance_coordinates Axis coordinates for instance generation (default: {})
       # @return [Hash<String, String>] Map of table tags to binary data
       def convert(font, options = {})
         @font = font
         @options = options
+        @optimize_cff = options.fetch(:optimize_cff, false)
+        @preserve_hints = options.fetch(:preserve_hints, false)
+        @preserve_variations = options.fetch(:preserve_variations, true)
+        @generate_instance = options.fetch(:generate_instance, false)
+        @instance_coordinates = options.fetch(:instance_coordinates, {})
         target_format = options[:target_format] ||
           detect_target_format(font)
         validate(font, target_format)
 
         source_format = detect_format(font)
 
+        # Check if we should generate a static instance instead
+        if @generate_instance && variable_font?(font)
+          return generate_static_instance(font, source_format, target_format)
+        end
+
         case [source_format, target_format]
         when %i[ttf otf]
           convert_ttf_to_otf(font, options)
         when %i[otf ttf]
           convert_otf_to_ttf(font)
+        when %i[cff2 ttf]
+          # CFF2 to TTF - treat CFF2 similar to OTF for now
+          convert_otf_to_ttf(font)
+        when %i[ttf cff2]
+          # TTF to CFF2 - for variable fonts
+          convert_ttf_to_otf(font, options)
         else
           raise Fontisan::Error,
                 "Unsupported conversion: #{source_format} → #{target_format}"
@@ -93,8 +135,11 @@ module Fontisan
         # Extract all glyphs from glyf table
         outlines = extract_ttf_outlines(font)
 
-        # Build CFF table from outlines
-        cff_data = build_cff_table(outlines, font)
+        # Extract hints if preservation is enabled
+        hints_per_glyph = @preserve_hints ? extract_ttf_hints(font) : {}
+
+        # Build CFF table from outlines and hints
+        cff_data = build_cff_table(outlines, font, hints_per_glyph)
 
         # Copy all tables except glyf/loca
         tables = copy_tables(font, %w[glyf loca])
@@ -119,8 +164,11 @@ module Fontisan
         # Extract all glyphs from CFF table
         outlines = extract_cff_outlines(font)
 
+        # Extract hints if preservation is enabled
+        hints_per_glyph = @preserve_hints ? extract_cff_hints(font) : {}
+
         # Build glyf and loca tables
-        glyf_data, loca_data, loca_format = build_glyf_loca_tables(outlines)
+        glyf_data, loca_data, loca_format = build_glyf_loca_tables(outlines, hints_per_glyph)
 
         # Copy all tables except CFF
         tables = copy_tables(font, ["CFF ", "CFF2"])
@@ -163,6 +211,8 @@ module Fontisan
         [
           %i[ttf otf],
           %i[otf ttf],
+          %i[cff2 ttf],
+          %i[ttf cff2],
         ]
       end
 
@@ -275,7 +325,7 @@ module Fontisan
       # @param outlines [Array<Outline>] Glyph outlines
       # @param font [TrueTypeFont] Source font (for metadata)
       # @return [String] CFF table binary data
-      def build_cff_table(outlines, font)
+      def build_cff_table(outlines, font, hints_per_glyph)
         # Build CharStrings INDEX from outlines
         begin
           charstrings = outlines.map do |outline|
@@ -290,29 +340,17 @@ module Fontisan
           raise Fontisan::Error, "Failed to build CharStrings: #{e.message}"
         end
 
-        begin
-          charstrings_index_data = Tables::Cff::IndexBuilder.build(charstrings)
-        rescue StandardError => e
-          raise Fontisan::Error, "Failed to build CharStrings INDEX: #{e.message}"
-        end
+        # Apply subroutine optimization if enabled
+        local_subrs = []
 
-        # Build empty Local Subrs INDEX (no optimization)
-        begin
-          local_subrs_index_data = Tables::Cff::IndexBuilder.build([])
-        rescue StandardError => e
-          raise Fontisan::Error, "Failed to build Local Subrs INDEX: #{e.message}"
-        end
-
-        # Build Private DICT
-        begin
-          private_dict_hash = {
-            default_width_x: 1000,
-            nominal_width_x: 0,
-          }
-
-          private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
-        rescue StandardError => e
-          raise Fontisan::Error, "Failed to build Private DICT: #{e.message}"
+        if @optimize_cff
+          begin
+            charstrings, local_subrs = optimize_charstrings(charstrings)
+          rescue StandardError => e
+            # If optimization fails, fall back to unoptimized CharStrings
+            warn "CFF optimization failed: #{e.message}, using unoptimized CharStrings"
+            local_subrs = []
+          end
         end
 
         # Build font metadata
@@ -322,42 +360,67 @@ module Fontisan
           raise Fontisan::Error, "Failed to extract font name: #{e.message}"
         end
 
-        # CFF structure: Header + Name INDEX + Top DICT INDEX + String INDEX + Global Subr INDEX + CharStrings + Private DICT + Local Subrs
+        # Build all INDEXes
         begin
           header_size = 4
           name_index_data = Tables::Cff::IndexBuilder.build([font_name])
           string_index_data = Tables::Cff::IndexBuilder.build([]) # Empty strings
           global_subr_index_data = Tables::Cff::IndexBuilder.build([]) # Empty global subrs
+          charstrings_index_data = Tables::Cff::IndexBuilder.build(charstrings)
+          local_subrs_index_data = Tables::Cff::IndexBuilder.build(local_subrs)
         rescue StandardError => e
           raise Fontisan::Error, "Failed to build CFF indexes: #{e.message}"
         end
 
-        # Calculate offset to CharStrings from start of CFF table
+        # Build Private DICT with Subrs offset if we have local subroutines
         begin
-          # First pass: build Top DICT with approximate CharStrings offset
+          private_dict_hash = {
+            default_width_x: 1000,
+            nominal_width_x: 0,
+          }
+
+          # If we have local subroutines, add Subrs offset
+          # Subrs offset is relative to Private DICT start
+          if local_subrs.any?
+            # Calculate size of Private DICT itself to know where Subrs starts
+            temp_private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
+            subrs_offset = temp_private_dict_data.bytesize
+
+            # Add Subrs offset to DICT
+            private_dict_hash[:subrs] = subrs_offset
+          end
+
+          # Build final Private DICT
+          private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
+          private_dict_size = private_dict_data.bytesize
+        rescue StandardError => e
+          raise Fontisan::Error, "Failed to build Private DICT: #{e.message}"
+        end
+
+        # Calculate offsets with iterative refinement
+        begin
+          # Initial pass
           top_dict_index_start = header_size + name_index_data.bytesize
           string_index_start = top_dict_index_start + 100 # Approximate
           global_subr_index_start = string_index_start + string_index_data.bytesize
           charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
 
+          # Build Top DICT
           top_dict_hash = {
-            charset: 0, # ISOAdobe
-            encoding: 0, # Standard encoding
+            charset: 0,
+            encoding: 0,
             charstrings: charstrings_offset,
           }
           top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
           top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
 
-          # Second pass: recalculate with actual Top DICT size
+          # Recalculate with actual Top DICT size
           string_index_start = top_dict_index_start + top_dict_index_data.bytesize
           global_subr_index_start = string_index_start + string_index_data.bytesize
           charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
-
-          # Calculate Private DICT location (after CharStrings)
           private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
-          private_dict_size = private_dict_data.bytesize
 
-          # Update Top DICT with CharStrings offset and Private DICT info
+          # Update Top DICT with Private DICT info
           top_dict_hash = {
             charset: 0,
             encoding: 0,
@@ -367,13 +430,13 @@ module Fontisan
           top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
           top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
 
-          # Final recalculation to ensure accuracy
+          # Final recalculation
           string_index_start = top_dict_index_start + top_dict_index_data.bytesize
           global_subr_index_start = string_index_start + string_index_data.bytesize
           charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
           private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
 
-          # Rebuild Top DICT with final offsets
+          # Final Top DICT
           top_dict_hash = {
             charset: 0,
             encoding: 0,
@@ -417,7 +480,7 @@ module Fontisan
       #
       # @param outlines [Array<Outline>] Glyph outlines
       # @return [Array<String, String, Integer>] [glyf_data, loca_data, loca_format]
-      def build_glyf_loca_tables(outlines)
+      def build_glyf_loca_tables(outlines, hints_per_glyph)
         glyf_data = "".b
         offsets = []
 
@@ -541,7 +604,7 @@ module Fontisan
           0,                           # maxSizeOfInstructions
           0,                           # maxComponentElements
           0,                           # maxComponentDepth
-        ].pack("Nnnnnnnnnnnnnnnn")
+        ].pack("Nnnnnnnnnnnnnnn")
       end
 
       # Update head table for CFF format
@@ -589,21 +652,162 @@ module Fontisan
         "UnnamedFont"
       end
 
+      # Optimize CharStrings using subroutine extraction
+      #
+      # @param charstrings [Array<String>] Original CharString bytes
+      # @return [Array<Array<String>, Array<String>>] [optimized_charstrings, local_subrs]
+      def optimize_charstrings(charstrings)
+        # Convert to hash format expected by PatternAnalyzer
+        charstrings_hash = {}
+        charstrings.each_with_index do |cs, index|
+          charstrings_hash[index] = cs
+        end
+
+        # Analyze patterns
+        analyzer = Optimizers::PatternAnalyzer.new(
+          min_length: 10,
+          stack_aware: true
+        )
+        patterns = analyzer.analyze(charstrings_hash)
+
+        # Return original if no patterns found
+        return [charstrings, []] if patterns.empty?
+
+        # Optimize selection
+        optimizer = Optimizers::SubroutineOptimizer.new(patterns, max_subrs: 65_535)
+        selected_patterns = optimizer.optimize_selection
+
+        # Optimize ordering
+        selected_patterns = optimizer.optimize_ordering(selected_patterns)
+
+        # Return original if no patterns selected
+        return [charstrings, []] if selected_patterns.empty?
+
+        # Build subroutines
+        builder = Optimizers::SubroutineBuilder.new(selected_patterns, type: :local)
+        local_subrs = builder.build
+
+        # Build subroutine map
+        subroutine_map = {}
+        selected_patterns.each_with_index do |pattern, index|
+          subroutine_map[pattern.bytes] = index
+        end
+
+        # Rewrite CharStrings
+        rewriter = Optimizers::CharstringRewriter.new(subroutine_map, builder)
+        optimized_charstrings = charstrings.map.with_index do |charstring, glyph_id|
+          # Find patterns for this glyph
+          glyph_patterns = selected_patterns.select { |p| p.glyphs.include?(glyph_id) }
+
+          if glyph_patterns.empty?
+            charstring
+          else
+            rewriter.rewrite(charstring, glyph_patterns)
+          end
+        end
+
+        [optimized_charstrings, local_subrs]
+      rescue StandardError => e
+        # If optimization fails for any reason, return original CharStrings
+        warn "Optimization warning: #{e.message}"
+        [charstrings, []]
+      end
+
+      # Generate static instance from variable font
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Variable font
+      # @param source_format [Symbol] Source format
+      # @param target_format [Symbol] Target format
+      # @return [Hash<String, String>] Static font tables
+      def generate_static_instance(font, source_format, target_format)
+        # Generate instance at specified coordinates
+        fvar = font.table("fvar")
+        axes = fvar ? fvar.axes : []
+
+        generator = Variation::InstanceGenerator.new(font, @instance_coordinates)
+        instance_tables = generator.generate
+
+        # If target format differs from source, convert outlines
+        if source_format != target_format
+          # Create temporary font with instance tables
+          temp_font = font.class.new
+          temp_font.instance_variable_set(:@table_data, instance_tables)
+
+          # Convert outline format
+          case [source_format, target_format]
+          when %i[ttf otf]
+            convert_ttf_to_otf(temp_font, @options)
+          when %i[otf ttf], %i[cff2 ttf]
+            convert_otf_to_ttf(temp_font)
+          else
+            instance_tables
+          end
+        else
+          instance_tables
+        end
+      end
+
+      # Convert variation data during outline conversion
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      # @param target_format [Symbol] Target format
+      # @return [Hash, nil] Converted variation data or nil
+      def convert_variations(font, target_format)
+        return nil unless @preserve_variations
+        return nil unless variable_font?(font)
+
+        fvar = font.table("fvar")
+        return nil unless fvar
+
+        axes = fvar.axes
+        converter = Variation::Converter.new(font, axes)
+
+        # Get glyph count
+        maxp = font.table("maxp")
+        return nil unless maxp
+
+        glyph_count = maxp.num_glyphs
+
+        # Convert variation data for each glyph
+        variation_data = {}
+        glyph_count.times do |glyph_id|
+          source_format = detect_format(font)
+
+          data = case [source_format, target_format]
+                 when %i[ttf otf], %i[ttf cff2]
+                   # gvar → blend
+                   converter.gvar_to_blend(glyph_id)
+                 when %i[otf ttf], %i[cff2 ttf]
+                   # blend → gvar
+                   converter.blend_to_gvar(glyph_id)
+                 else
+                   nil
+                 end
+
+          variation_data[glyph_id] = data if data
+        end
+
+        variation_data.empty? ? nil : variation_data
+      end
+
       # Detect font format from tables
       #
       # @param font [TrueTypeFont, OpenTypeFont] Font to detect
-      # @return [Symbol] Format (:ttf or :otf)
+      # @return [Symbol] Format (:ttf, :otf, or :cff2)
       # @raise [Error] If format cannot be detected
       def detect_format(font)
-        # Check for CFF/CFF2 tables (OpenType/CFF)
-        if font.has_table?("CFF ") || font.has_table?("CFF2")
+        # Check for CFF2 table first (OpenType variable fonts with CFF2 outlines)
+        if font.has_table?("CFF2")
+          :cff2
+        # Check for CFF table (OpenType/CFF)
+        elsif font.has_table?("CFF ")
           :otf
         # Check for glyf table (TrueType)
         elsif font.has_table?("glyf")
           :ttf
         else
           raise Fontisan::Error,
-                "Cannot detect font format: missing both CFF and glyf tables"
+                "Cannot detect font format: missing outline tables (CFF2, CFF, or glyf)"
         end
       end
 
@@ -613,7 +817,14 @@ module Fontisan
       # @return [Symbol] Target format
       def detect_target_format(font)
         source = detect_format(font)
-        source == :ttf ? :otf : :ttf
+        case source
+        when :ttf
+          :otf
+        when :cff2
+          :ttf
+        else
+          :ttf
+        end
       end
 
       # Validate source font has required tables
@@ -629,11 +840,16 @@ module Fontisan
             raise Fontisan::MissingTableError,
                   "TrueType font missing required glyf or loca table"
           end
+        when :cff2
+          unless font.has_table?("CFF2") && font.table("CFF2")
+            raise Fontisan::MissingTableError,
+                  "CFF2 font missing required CFF2 table"
+          end
         when :otf
           unless (font.has_table?("CFF ") && font.table("CFF ")) ||
               (font.has_table?("CFF2") && font.table("CFF2"))
             raise Fontisan::MissingTableError,
-                  "OpenType font missing required CFF table"
+                  "OpenType font missing required CFF or CFF2 table"
           end
         end
 
@@ -644,6 +860,76 @@ module Fontisan
                   "Font missing required #{tag} table"
           end
         end
+      end
+
+      # Extract hints from TrueType font
+      #
+      # @param font [TrueTypeFont] Source font
+      # @return [Hash<Integer, Array<Hint>>] Map of glyph ID to hints
+      def extract_ttf_hints(font)
+        hints_per_glyph = {}
+        extractor = Hints::TrueTypeHintExtractor.new
+
+        # Get required tables
+        head = font.table("head")
+        maxp = font.table("maxp")
+        loca = font.table("loca")
+        glyf = font.table("glyf")
+
+        # Parse loca with context
+        loca.parse_with_context(head.index_to_loc_format, maxp.num_glyphs)
+
+        # Extract hints from each glyph
+        maxp.num_glyphs.times do |glyph_id|
+          glyph = glyf.glyph_for(glyph_id, loca, head)
+          next if glyph.nil? || glyph.empty?
+
+          hints = extractor.extract(glyph)
+          hints_per_glyph[glyph_id] = hints if hints.any?
+        end
+
+        hints_per_glyph
+      rescue StandardError => e
+        warn "Failed to extract TrueType hints: #{e.message}"
+        {}
+      end
+
+      # Extract hints from CFF font
+      #
+      # @param font [OpenTypeFont] Source font
+      # @return [Hash<Integer, Array<Hint>>] Map of glyph ID to hints
+      def extract_cff_hints(font)
+        hints_per_glyph = {}
+        extractor = Hints::PostScriptHintExtractor.new
+
+        # Get CFF table
+        cff = font.table("CFF ")
+        return {} unless cff
+
+        # Get number of glyphs
+        num_glyphs = cff.glyph_count
+
+        # Extract hints from each CharString
+        num_glyphs.times do |glyph_id|
+          charstring = cff.charstring_for_glyph(glyph_id)
+          next if charstring.nil?
+
+          hints = extractor.extract(charstring)
+          hints_per_glyph[glyph_id] = hints if hints.any?
+        end
+
+        hints_per_glyph
+      rescue StandardError => e
+        warn "Failed to extract CFF hints: #{e.message}"
+        {}
+      end
+
+      # Check if font is a variable font
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Font to check
+      # @return [Boolean] True if font has variation tables
+      def variable_font?(font)
+        font.has_table?("fvar")
       end
     end
   end
