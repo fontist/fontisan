@@ -505,7 +505,7 @@ RSpec.describe "Loading Modes Integration" do
       skip "No test fonts available" if test_fonts.empty?
 
       # Run benchmark multiple times and average to reduce variance
-      iterations = 3
+      iterations = 100
       metadata_times = []
       full_times = []
 
