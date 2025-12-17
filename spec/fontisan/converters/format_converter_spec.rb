@@ -18,7 +18,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(ttf_font).to receive_messages(tables: { "glyf" => double,
                                                   "head" => double },
                                         table_data: { "glyf" => "glyf_data",
-                                                      "head" => "head_data" },
+                                                      "head" => "\x00" * 54 },
                                         read_table_data: "data")
 
     # Add stubs for OutlineConverter validation
@@ -26,23 +26,44 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(ttf_font).to receive(:has_table?).with("head").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("hhea").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("maxp").and_return(true)
-    allow(ttf_font).to receive(:table).with("loca").and_return(double("loca"))
+    allow(ttf_font).to receive(:table).with("loca").and_return(double("loca",
+                                                                      parse_with_context: nil))
     allow(ttf_font).to receive(:table).with("head").and_return(double("head",
-                                                                      units_per_em: 1000))
+                                                                      units_per_em: 1000,
+                                                                      index_to_loc_format: 1))
     allow(ttf_font).to receive(:table).with("hhea").and_return(double("hhea"))
     allow(ttf_font).to receive(:table).with("maxp").and_return(double("maxp",
                                                                       num_glyphs: 100))
+    allow(ttf_font).to receive(:table).with("name").and_return(double("name",
+                                                                      english_name: "TestFont"))
+
+    # Mock glyf table to handle glyph_for calls
+    glyf_mock = double("glyf")
+    allow(glyf_mock).to receive(:glyph_for) do |glyph_id, _loca, _head|
+      # Return empty glyph mock
+      glyph_mock = double("glyph")
+      allow(glyph_mock).to receive_messages(
+        nil?: false,
+        empty?: true,
+        simple?: true,
+        compound?: false
+      )
+      glyph_mock
+    end
+    allow(ttf_font).to receive(:table).with("glyf").and_return(glyf_mock)
 
     allow(otf_font).to receive(:has_table?).with("glyf").and_return(false)
     allow(otf_font).to receive(:has_table?).with("CFF ").and_return(true)
     allow(otf_font).to receive(:has_table?).with("CFF2").and_return(false)
-    allow(otf_font).to receive(:table).with("CFF ").and_return(double)
+    allow(otf_font).to receive(:table).with("CFF ").and_return(double("cff",
+                                                                      glyph_count: 100,
+                                                                      charstring_for_glyph: nil))
     allow(otf_font).to receive(:table).with("CFF2").and_return(nil)
     allow(otf_font).to receive(:table).with("glyf").and_return(nil)
     allow(otf_font).to receive_messages(tables: { "CFF " => double,
                                                   "head" => double },
                                         table_data: { "CFF " => "CFF _data",
-                                                      "head" => "head_data" },
+                                                      "head" => "\x00" * 54 },
                                         read_table_data: "data")
 
     # Add stubs for OutlineConverter validation
@@ -93,19 +114,19 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
       # Skip these tests - they use mocks that don't fully simulate real fonts
       # Integration tests with real fonts cover actual conversion behavior
-      xit "raises compound glyph error for TTF to OTF (real font)" do
-        # OutlineConverter is implemented but doesn't support compound glyphs
-        # This will attempt conversion but fail on compound glyphs
+      it "successfully converts TTF to OTF with compound glyph support" do
+        # CompoundGlyphResolver is implemented and handles compound glyphs
+        # This should succeed without errors
         expect do
           converter.convert(ttf_font, :otf)
-        end.to raise_error(Fontisan::Error)
+        end.not_to raise_error
       end
 
-      xit "raises compound glyph error for OTF to TTF (real font)" do
-        # OutlineConverter is implemented but doesn't support compound glyphs
+      it "successfully converts OTF to TTF with compound glyph support" do
+        # CompoundGlyphResolver is implemented
         expect do
           converter.convert(otf_font, :ttf)
-        end.to raise_error(Fontisan::Error)
+        end.not_to raise_error
       end
     end
 

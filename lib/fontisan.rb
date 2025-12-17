@@ -140,6 +140,19 @@ require_relative "fontisan/converters/table_copier"
 require_relative "fontisan/converters/outline_converter"
 require_relative "fontisan/converters/format_converter"
 
+# Variation infrastructure
+require_relative "fontisan/variation/interpolator"
+require_relative "fontisan/variation/region_matcher"
+require_relative "fontisan/variation/data_extractor"
+require_relative "fontisan/variation/instance_generator"
+require_relative "fontisan/variation/interpolator"
+require_relative "fontisan/variation/region_matcher"
+require_relative "fontisan/variation/metrics_adjuster"
+require_relative "fontisan/variation/converter"
+require_relative "fontisan/variation/delta_parser"
+require_relative "fontisan/variation/delta_applier"
+require_relative "fontisan/variation/blend_applier"
+
 # Optimization infrastructure
 require_relative "fontisan/optimizers/pattern_analyzer"
 require_relative "fontisan/optimizers/subroutine_builder"
