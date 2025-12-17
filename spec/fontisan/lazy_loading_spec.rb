@@ -112,7 +112,7 @@ RSpec.describe "Lazy Table Loading" do
       # Lazy loading should not be significantly slower than eager loading
       # Allow up to 50% overhead for lazy infrastructure
       expect(lazy_time).to be < (eager_time * 1.5),
-        "Lazy loading should not be significantly slower than eager loading (max 1.5x)"
+                           "Lazy loading should not be significantly slower than eager loading (max 1.5x)"
     end
 
     it "has similar performance to eager loading when accessing all tables" do
@@ -148,11 +148,15 @@ RSpec.describe "Lazy Table Loading" do
       puts "\nLazy loading performance (multiple tables, #{iterations} iterations):"
       puts "  Eager: #{(eager_time * 1000).round(2)}ms (avg: #{(eager_time * 1000 / iterations).round(2)}ms)"
       puts "  Lazy:  #{(lazy_time * 1000).round(2)}ms (avg: #{(lazy_time * 1000 / iterations).round(2)}ms)"
-      puts "  Ratio: #{(lazy_time / eager_time).round(2)}x"
+      if lazy_time < eager_time
+        puts "  Speedup: #{(eager_time / lazy_time).round(1)}x"
+      else
+        puts "  Ratio: #{(lazy_time / eager_time).round(2)}x"
+      end
 
       # Should be within 50% of eager loading
       expect(lazy_time).to be < (eager_time * 1.5),
-        "Lazy loading should not be significantly slower than eager loading (max 1.5x)"
+                           "Lazy loading should not be significantly slower than eager loading (max 1.5x)"
     end
   end
 

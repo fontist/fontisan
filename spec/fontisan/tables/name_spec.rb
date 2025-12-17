@@ -548,18 +548,21 @@ RSpec.describe Fontisan::Tables::Name do
       name_table = described_class.read(data)
 
       # First access
-      start_time = Time.now
       family1 = name_table.english_name(described_class::FAMILY)
-      first_time = Time.now - start_time
 
-      # Subsequent access should be from cache (much faster)
-      start_time = Time.now
+      # Verify it's cached
+      expect(name_table.decoded_names_cache).to have_key(described_class::FAMILY)
+      expect(name_table.decoded_names_cache[described_class::FAMILY]).to eq(family1)
+
+      # Subsequent access should return same cached object
       family2 = name_table.english_name(described_class::FAMILY)
-      cached_time = Time.now - start_time
 
-      # Cached access should be faster (or at least not slower)
-      expect(cached_time).to be <= first_time
+      # Should be same object (cached)
+      expect(family1.object_id).to eq(family2.object_id)
       expect(family1).to eq(family2)
+
+      # Cache should still only have one entry
+      expect(name_table.decoded_names_cache.size).to eq(1)
     end
   end
 end
