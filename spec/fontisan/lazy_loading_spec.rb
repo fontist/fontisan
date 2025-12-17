@@ -87,32 +87,36 @@ RSpec.describe "Lazy Table Loading" do
 
   describe "performance" do
     it "is faster than eager loading for single table access" do
+      iterations = 100
+
       eager_time = Benchmark.realtime do
-        10.times do
+        iterations.times do
           font = Fontisan::FontLoader.load(font_path, lazy: false)
           font.table("name")  # Only access one table
         end
       end
 
       lazy_time = Benchmark.realtime do
-        10.times do
+        iterations.times do
           font = Fontisan::FontLoader.load(font_path, lazy: true)
           font.table("name")  # Only access one table
           font.close
         end
       end
 
-      puts "\nLazy loading performance (single table):"
-      puts "  Eager: #{eager_time.round(3)}s"
-      puts "  Lazy:  #{lazy_time.round(3)}s"
+      puts "\nLazy loading performance (single table, #{iterations} iterations):"
+      puts "  Eager: #{(eager_time * 1000).round(2)}ms (avg: #{(eager_time * 1000 / iterations).round(2)}ms)"
+      puts "  Lazy:  #{(lazy_time * 1000).round(2)}ms (avg: #{(lazy_time * 1000 / iterations).round(2)}ms)"
       puts "  Speedup: #{(eager_time / lazy_time).round(1)}x"
 
       expect(lazy_time).to be < eager_time
     end
 
     it "has similar performance to eager loading when accessing all tables" do
+      iterations = 100
+
       eager_time = Benchmark.realtime do
-        5.times do
+        iterations.times do
           font = Fontisan::FontLoader.load(font_path, lazy: false)
           # Access all common tables
           font.table("name")
@@ -125,7 +129,7 @@ RSpec.describe "Lazy Table Loading" do
       end
 
       lazy_time = Benchmark.realtime do
-        5.times do
+        iterations.times do
           font = Fontisan::FontLoader.load(font_path, lazy: true)
           # Access same tables
           font.table("name")
@@ -138,9 +142,9 @@ RSpec.describe "Lazy Table Loading" do
         end
       end
 
-      puts "\nLazy loading performance (multiple tables):"
-      puts "  Eager: #{eager_time.round(3)}s"
-      puts "  Lazy:  #{lazy_time.round(3)}s"
+      puts "\nLazy loading performance (multiple tables, #{iterations} iterations):"
+      puts "  Eager: #{(eager_time * 1000).round(2)}ms (avg: #{(eager_time * 1000 / iterations).round(2)}ms)"
+      puts "  Lazy:  #{(lazy_time * 1000).round(2)}ms (avg: #{(lazy_time * 1000 / iterations).round(2)}ms)"
       puts "  Ratio: #{(lazy_time / eager_time).round(2)}x"
 
       # Should be within 50% of eager loading (relaxed from 30% for timing stability)

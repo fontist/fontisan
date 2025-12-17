@@ -34,6 +34,10 @@ module Fontisan
       }.freeze
     }.freeze
 
+    # Pre-computed Set for O(1) lookup of metadata tables
+    # This constant avoids recreating the Set on every font load
+    METADATA_TABLES_SET = MODES[METADATA][:tables].to_set.freeze
+
     # Get the list of tables allowed for a given mode
     #
     # @param mode [Symbol] The loading mode (:metadata or :full)

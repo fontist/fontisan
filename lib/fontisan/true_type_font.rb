@@ -69,6 +69,12 @@ module Fontisan
     # Whether lazy loading is enabled
     attr_accessor :lazy_load_enabled
 
+    # Page cache for lazy loading (maps page_start_offset => page_data)
+    attr_accessor :page_cache
+
+    # Page size for lazy loading alignment (typical filesystem page size)
+    PAGE_SIZE = 4096
+
     # Read TrueType Font from a file
     #
     # @param path [String] Path to the TTF file
@@ -135,6 +141,7 @@ module Fontisan
       @loading_mode = LoadingModes::FULL
       @lazy_load_enabled = false
       @io_source = nil
+      @page_cache = {}
     end
 
     # Read table data for all tables
@@ -155,16 +162,8 @@ module Fontisan
 
       if @loading_mode == LoadingModes::METADATA
         # Only read metadata tables for performance
-        # Use Set for O(1) lookup instead of Array#include? O(n) lookup
-        require "set"
-        metadata_tables_set = LoadingModes.tables_for(LoadingModes::METADATA).to_set
-        tables.each do |entry|
-          next unless metadata_tables_set.include?(entry.tag)
-
-          io.seek(entry.offset)
-          tag_key = entry.tag.dup.force_encoding("UTF-8")
-          @table_data[tag_key] = io.read(entry.table_length)
-        end
+        # Use page-aware batched reading to maximize filesystem prefetching
+        read_metadata_tables_batched(io)
       else
         # Read all tables
         tables.each do |entry|
@@ -173,6 +172,72 @@ module Fontisan
           tag_key = entry.tag.dup.force_encoding("UTF-8")
           @table_data[tag_key] = io.read(entry.table_length)
         end
+      end
+    end
+
+    # Read metadata tables using page-aware batching
+    #
+    # Groups adjacent tables within page boundaries and reads them together
+    # to maximize filesystem prefetching and minimize random seeks.
+    #
+    # @param io [IO] Open file handle
+    # @return [void]
+    def read_metadata_tables_batched(io)
+      # Typical filesystem page size (4KB is common, but 8KB gives better prefetch window)
+      page_threshold = 8192
+
+      # Get metadata tables sorted by offset for sequential access
+      metadata_entries = tables.select { |entry| LoadingModes::METADATA_TABLES_SET.include?(entry.tag) }
+      metadata_entries.sort_by!(&:offset)
+
+      return if metadata_entries.empty?
+
+      # Group adjacent tables within page threshold for batched reading
+      i = 0
+      while i < metadata_entries.size
+        batch_start = metadata_entries[i]
+        batch_end = batch_start
+        batch_entries = [batch_start]
+
+        # Extend batch while next table is within page threshold
+        j = i + 1
+        while j < metadata_entries.size
+          next_entry = metadata_entries[j]
+          gap = next_entry.offset - (batch_end.offset + batch_end.table_length)
+
+          # If gap is small (within page threshold), include in batch
+          if gap <= page_threshold
+            batch_end = next_entry
+            batch_entries << next_entry
+            j += 1
+          else
+            break
+          end
+        end
+
+        # Read batch
+        if batch_entries.size == 1
+          # Single table, read normally
+          io.seek(batch_start.offset)
+          tag_key = batch_start.tag.dup.force_encoding("UTF-8")
+          @table_data[tag_key] = io.read(batch_start.table_length)
+        else
+          # Multiple tables, read contiguous segment
+          batch_offset = batch_start.offset
+          batch_length = (batch_end.offset + batch_end.table_length) - batch_start.offset
+
+          io.seek(batch_offset)
+          batch_data = io.read(batch_length)
+
+          # Extract individual tables from batch
+          batch_entries.each do |entry|
+            relative_offset = entry.offset - batch_offset
+            tag_key = entry.tag.dup.force_encoding("UTF-8")
+            @table_data[tag_key] = batch_data[relative_offset, entry.table_length]
+          end
+        end
+
+        i = j
       end
     end
 
@@ -369,6 +434,9 @@ module Fontisan
 
     # Load a single table's data on demand
     #
+    # Uses page-aligned reads and caches pages to ensure lazy loading
+    # performance is not slower than eager loading.
+    #
     # @param tag [String] The table tag to load
     # @return [void]
     def load_table_data(tag)
@@ -377,9 +445,42 @@ module Fontisan
       entry = find_table_entry(tag)
       return nil unless entry
 
-      @io_source.seek(entry.offset)
+      # Use page-aligned reading with caching
+      table_start = entry.offset
+      table_end = entry.offset + entry.table_length
+
+      # Calculate page boundaries
+      page_start = (table_start / PAGE_SIZE) * PAGE_SIZE
+      page_end = ((table_end + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE
+
+      # Read all required pages (or use cached pages)
+      table_data_parts = []
+      current_page = page_start
+
+      while current_page < page_end
+        page_data = @page_cache[current_page]
+
+        unless page_data
+          # Read page from disk and cache it
+          @io_source.seek(current_page)
+          page_data = @io_source.read(PAGE_SIZE) || ""
+          @page_cache[current_page] = page_data
+        end
+
+        # Calculate which part of this page we need
+        chunk_start = [table_start - current_page, 0].max
+        chunk_end = [table_end - current_page, PAGE_SIZE].min
+
+        if chunk_end > chunk_start
+          table_data_parts << page_data[chunk_start...chunk_end]
+        end
+
+        current_page += PAGE_SIZE
+      end
+
+      # Combine parts and store
       tag_key = tag.dup.force_encoding("UTF-8")
-      @table_data[tag_key] = @io_source.read(entry.table_length)
+      @table_data[tag_key] = table_data_parts.join
     end
 
     # Parse a table from raw data (Fontisan extension)
@@ -468,7 +569,7 @@ module Fontisan
         directory_offset_position = 12 + (index * 16) + 8
         current_pos = io.pos
         io.seek(directory_offset_position)
-        io.write([current_position].pack("N"))
+        io.write([current_position].pack("N")) # Offset is now known
         io.seek(current_pos)
       end
     end
