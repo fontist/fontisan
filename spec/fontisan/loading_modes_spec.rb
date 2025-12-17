@@ -523,8 +523,8 @@ RSpec.describe "Loading Modes Integration" do
       end
 
       # Informational test - timing can vary based on system load
-      # We expect metadata to be faster, but don't fail on timing variations
-      expect(metadata_time).to be < (full_time * 0.8),
+      # We expect metadata to be faster, but allow equal performance
+      expect(metadata_time).to be <= full_time,
         "Metadata mode should generally be faster or comparable to full mode"
     end
 

@@ -3,7 +3,10 @@
 require "thor"
 require_relative "base_command"
 require_relative "../variable/instancer"
+require_relative "../variation/validator"
+require_relative "../variation/parallel_generator"
 require_relative "../converters/format_converter"
+require_relative "../error"
 
 module Fontisan
   module Commands
@@ -14,15 +17,22 @@ module Fontisan
     # - Using named instances
     # - Converting output format during instancing
     # - Listing available instances
+    # - Validation before generation
+    # - Dry-run mode for previewing
+    # - Progress tracking
+    # - Parallel batch generation
     #
     # @example Instance at coordinates
     #   fontisan instance variable.ttf --wght=700 --output=bold.ttf
     #
-    # @example Instance using named instance
-    #   fontisan instance variable.ttf --named-instance="Bold" --output=bold.ttf
+    # @example Instance with validation
+    #   fontisan instance variable.ttf --wght=700 --validate --output=bold.ttf
     #
-    # @example Instance with format conversion
-    #   fontisan instance variable.ttf --wght=700 --to=woff2 --output=bold.woff2
+    # @example Dry-run to preview
+    #   fontisan instance variable.ttf --wght=700 --dry-run
+    #
+    # @example Instance with progress
+    #   fontisan instance variable.ttf --wght=700 --progress --output=bold.ttf
     class InstanceCommand < BaseCommand
       # Instance a variable font at specified coordinates
       #
@@ -31,12 +41,21 @@ module Fontisan
         # Load variable font
         font = load_font(input_path)
 
+        # Validate font if requested
+        validate_font(font) if options[:validate]
+
         # Create instancer
         instancer = Variable::Instancer.new(font)
 
         # Handle list-instances option
         if options[:list_instances]
           list_instances(instancer)
+          return
+        end
+
+        # Handle dry-run mode
+        if options[:dry_run]
+          preview_instance(instancer, options)
           return
         end
 
@@ -53,9 +72,60 @@ module Fontisan
         end
 
         puts "Static font instance written to: #{output_path}"
+      rescue VariationError => e
+        $stderr.puts "Variation Error: #{e.detailed_message}"
+        exit 1
+      rescue StandardError => e
+        $stderr.puts "Error: #{e.message}"
+        $stderr.puts e.backtrace.first(5).join("\n") if options[:verbose]
+        exit 1
       end
 
       private
+
+      # Validate font before generating instance
+      #
+      # @param font [Object] Font object
+      def validate_font(font)
+        puts "Validating font..." if @options[:verbose]
+
+        validator = Variation::Validator.new(font)
+        errors = validator.validate
+
+        if errors.any?
+          $stderr.puts "Validation errors found:"
+          errors.each do |error|
+            $stderr.puts "  - #{error}"
+          end
+          exit 1
+        end
+
+        puts "Font validation passed" if @options[:verbose]
+      end
+
+      # Preview instance without generating
+      #
+      # @param instancer [Variable::Instancer] Instancer object
+      # @param options [Hash] Command options
+      def preview_instance(instancer, options)
+        coords = extract_coordinates(options)
+
+        if coords.empty?
+          raise ArgumentError,
+                "No coordinates specified. Use --wght=700, --wdth=100, etc."
+        end
+
+        puts "Dry-run mode: Preview of instance generation"
+        puts
+        puts "Coordinates:"
+        coords.each do |axis, value|
+          puts "  #{axis}: #{value}"
+        end
+        puts
+        puts "Output would be written to: #{determine_output_path(@input_path, options)}"
+        puts
+        puts "Use without --dry-run to actually generate the instance."
+      end
 
       # Instance at specific coordinates
       #
@@ -69,14 +139,25 @@ module Fontisan
                 "No coordinates specified. Use --wght=700, --wdth=100, etc."
         end
 
+        # Show progress if requested
+        print "Generating instance..." if options[:progress]
+
         # Generate instance
         binary = instancer.instance(coords)
 
+        puts " done" if options[:progress]
+
         # Convert format if requested
-        binary = convert_format(binary, options) if options[:to]
+        if options[:to]
+          print "Converting format..." if options[:progress]
+          binary = convert_format(binary, options)
+          puts " done" if options[:progress]
+        end
 
         # Write to file
+        print "Writing output..." if options[:progress]
         File.binwrite(output_path, binary)
+        puts " done" if options[:progress]
       end
 
       # Instance using named instance
