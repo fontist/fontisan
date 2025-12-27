@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+module Fontisan
+<<<<<<< HEAD
+  VERSION = "2.0.0"
+=======
+  VERSION = "0.2.0"
+>>>>>>> 4bcec10 (fix: update loading modes)
+end

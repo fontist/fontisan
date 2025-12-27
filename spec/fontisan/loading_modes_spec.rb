@@ -171,7 +171,7 @@ end
 
 RSpec.describe "Loading Modes Integration" do
   let(:ttf_path) { fixture_path("fonts/NotoSans-Regular.ttf") }
-  let(:otf_path) { fixture_path("fonts/MonaSans/MonaSans/otf/MonaSans-Medium.otf") }
+  let(:otf_path) { fixture_path("fonts/MonaSans/fonts/static/otf/MonaSans-Medium.otf") }
 
   describe "FontLoader" do
     context "with metadata mode" do

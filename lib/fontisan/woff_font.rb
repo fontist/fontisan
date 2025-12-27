@@ -450,13 +450,8 @@ module Fontisan
     # @param path [String] Path to the font file
     # @return [void]
     def update_checksum_adjustment_in_file(path)
-      # Calculate file checksum
-      checksum = Utilities::ChecksumCalculator.calculate_file_checksum(path)
-
-      # Calculate adjustment
-      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
       # Find head table position in output file
+      head_offset = nil
       File.open(path, "rb") do |io|
         io.seek(4) # Skip sfnt_version
         num_tables = io.read(2).unpack1("n")
@@ -469,14 +464,24 @@ module Fontisan
           io.read(4) # length
 
           if tag == Constants::HEAD_TAG
-            # Write adjustment to head table (offset 8 within head table)
-            File.open(path, "r+b") do |write_io|
-              write_io.seek(offset + 8)
-              write_io.write([adjustment].pack("N"))
-            end
+            head_offset = offset
             break
           end
         end
+      end
+
+      return unless head_offset
+
+      # Use tempfile-based checksum calculation for Windows compatibility
+      File.open(path, "r+b") do |io|
+        checksum, _tmpfile = Utilities::ChecksumCalculator.calculate_checksum_from_io_with_tempfile(io)
+
+        # Calculate adjustment
+        adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
+
+        # Write adjustment to head table (offset 8 within head table)
+        io.seek(head_offset + 8)
+        io.write([adjustment].pack("N"))
       end
     end
   end

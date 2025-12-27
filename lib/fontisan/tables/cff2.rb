@@ -22,7 +22,7 @@ module Fontisan
     #   num_glyphs = cff2.glyph_count
     class Cff2 < Binary::BaseRecord
       # CFF2 header structure
-      class Header < Binary::BaseRecord
+      class Cff2Header < Binary::BaseRecord
         uint8 :major_version
         uint8 :minor_version
         uint8 :header_size
@@ -53,7 +53,7 @@ module Fontisan
 
       # Get the CFF2 header
       #
-      # @return [Header] Header structure
+      # @return [Cff2Header] Header structure
       def header
         parse unless @parsed
         @header
@@ -137,12 +137,12 @@ module Fontisan
 
       # Parse CFF2 header
       #
-      # @return [Header] Parsed header
+      # @return [Cff2Header] Parsed header
       def parse_header
         data = raw_data
         return nil if data.nil? || data.bytesize < 5
 
-        Header.read(data.byteslice(0, 5))
+        Cff2Header.read(data.byteslice(0, 5))
       end
 
       # Parse Global Subr INDEX
@@ -339,3 +339,8 @@ end
 require_relative "cff2/charstring_parser"
 require_relative "cff2/blend_operator"
 require_relative "cff2/operand_stack"
+require_relative "cff2/table_reader"
+require_relative "cff2/variation_data_extractor"
+require_relative "cff2/region_matcher"
+require_relative "cff2/private_dict_blend_handler"
+require_relative "cff2/table_builder"

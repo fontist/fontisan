@@ -23,7 +23,7 @@ required_tables:
 
   # Additional tables required for OpenType/CFF fonts (.otf)
   opentype_cff:
-    - CFF   # or CFF2 for CFF2 format
+    - "CFF "  # or CFF2 for CFF2 format (note: CFF has trailing space per OpenType spec)
 
   # Additional tables required for variable fonts
   variable:

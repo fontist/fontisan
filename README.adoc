@@ -71,7 +71,7 @@ gem install fontisan
 * Collection management (pack/unpack TTC/OTC files with table deduplication)
 * Support for TTF, OTF, TTC, OTC font formats (production ready)
 * WOFF format support (reading complete, writing functional, pending full integration)
-* WOFF2 format support (reading partial, writing planned)
+* WOFF2 format support (reading complete with table transformations, writing planned)
 * SVG font generation (complete)
 * TTX/YAML/JSON export (complete)
 * Command-line interface with 18 commands
@@ -85,8 +85,14 @@ gem install fontisan
 * Compound glyph decomposition with transformation support (complete)
 * CFF subroutine optimization for space-efficient OTF generation (preview mode)
 * Various loading modes for high-performance font indexing (5x faster)
+* Hint preservation during TTF ↔ OTF conversion (optional, partially complete)
+* CFF2 variable font support for PostScript hint conversion (complete)
 
-NOTE: TTF ↔ OTF outline format conversion is in active development (Phase 1, ~80% complete). The universal outline model, CFF builders, curve converter, and compound glyph support are fully functional. Simple and compound glyphs convert successfully. See link:docs/IMPLEMENTATION_STATUS_V4.md[Implementation Status] for detailed progress tracking.
+NOTE: TTF ↔ OTF outline format conversion is in active development (~80%
+complete). The universal outline model, CFF builders, curve converter, and
+compound glyph support are fully functional. Simple and compound glyphs convert
+successfully. See link:docs/IMPLEMENTATION_STATUS_V4.md[Implementation Status]
+for detailed progress tracking.
 
 
 == Loading Modes
@@ -160,6 +166,7 @@ font.table_available?(tag)  # => boolean
 # Access restricted based on mode
 font.table(tag)  # => Returns table or raises error
 ----
+"
 
 
 
@@ -256,7 +263,7 @@ Fontisan supports bidirectional conversion between TrueType (TTF) and OpenType/C
 
 The outline converter enables transformation between glyph outline formats:
 
-* **TrueType (TTF)**: Uses quadratic Bézier curves stored in glyf/loc tables
+* **TrueType (TTF)**: Uses quadratic Bézier curves stored in glyf/loca tables
 * **OpenType/CFF (OTF)**: Uses cubic Bézier curves stored in CFF table
 
 Conversion uses a format-agnostic universal outline model as an intermediate representation, ensuring high-quality results while preserving glyph metrics and bounding boxes.
@@ -296,6 +303,11 @@ fontisan convert font.ttf --to cff --output font.otf
 ----
 
 ==== Validation
+
+Font integrity validation is now enabled by default for all conversions.
+The validator ensures proper OpenType checksum calculation including correct
+handling of the head table's checksumAdjustment field per the OpenType
+specification.
 
 After conversion, validate the output font:
 
@@ -1325,6 +1337,148 @@ Instance 2 position:    75 300
 ----
 ====
 
+==== Generate static instances from variable fonts
+
+Generate static font instances from variable fonts at specific variation coordinates
+and output in any supported format (TTF, OTF, WOFF).
+
+Syntax:
+
+[source,shell]
+----
+$ fontisan instance VARIABLE_FONT [OPTIONS]
+----
+
+Where,
+
+`VARIABLE_FONT`:: Path to the variable font file
+`OPTIONS`:: Instance generation options
+
+Options:
+
+`--wght VALUE`:: Weight axis value
+`--wdth VALUE`:: Width axis value
+`--slnt VALUE`:: Slant axis value
+`--ital VALUE`:: Italic axis value
+`--opsz VALUE`:: Optical size axis value
+`--to FORMAT`:: Output format: `ttf` (default), `otf`, `woff`, or `woff2`
+`--output FILE`:: Output file path
+`--optimize`:: Enable CFF optimization for OTF output
+`--named-instance INDEX`:: Use named instance by index
+`--list-instances`:: List available named instances
+`--validate`:: Validate font before generation
+`--dry-run`:: Preview instance without generating
+`--progress`:: Show progress during generation
+
+
+.Generate bold instance at wght=700
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --wght 700 --output bold.ttf
+
+Generating instance... done
+Writing output... done
+Static font instance written to: bold.ttf
+----
+====
+
+.Generate instance and convert to OTF
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --wght 300 --to otf --output light.otf
+
+Generating instance... done
+Writing output... done
+Static font instance written to: light.otf
+----
+====
+
+.Generate instance and convert to WOFF
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --wght 600 --to woff --output semibold.woff
+
+Generating instance... done
+Writing output... done
+Static font instance written to: semibold.woff
+----
+====
+
+.Generate instance with multiple axes
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --wght 600 --wdth 75 --output condensed.ttf
+
+Generating instance... done
+Writing output... done
+Static font instance written to: condensed.ttf
+----
+====
+
+.List available named instances
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --list-instances
+
+Available named instances:
+
+  [0] Instance 4
+    Coordinates:
+      wdth: 75.0
+      wght: 200.0
+
+  [1] Instance 5
+    Coordinates:
+      wdth: 75.0
+      wght: 250.0
+
+  [2] Instance 6
+    Coordinates:
+      wdth: 75.0
+      wght: 300.0
+----
+====
+
+.Use named instance
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --named-instance 0 --output thin.ttf
+----
+====
+
+.Preview instance generation (dry-run)
+[example]
+====
+[source,shell]
+----
+$ fontisan instance variable.ttf --wght 700 --dry-run
+
+Dry-run mode: Preview of instance generation
+
+Coordinates:
+  wght: 700.0
+
+Output would be written to: variable-instance.ttf
+Output
+
+ format: same as input
+
+Use without --dry-run to actually generate the instance.
+----
+====
+
 ==== Optical size information
 
 Display optical size range from the OS/2 table for fonts designed for specific
@@ -1644,7 +1798,7 @@ Font 3: Noto Serif CJK TC
 
 ===== Show collection info
 
-Show detailed information about a TrueType Collection (TTC), OpenType Collection
+Show detailed information about a TrueType Collection (TTC) or OpenType Collection
 (OTC), including the number of fonts and metadata for each font.
 
 [source,shell]

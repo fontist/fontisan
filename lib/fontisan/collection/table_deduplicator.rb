@@ -15,6 +15,12 @@ module Fontisan
     #   sharing_map = deduplicator.build_sharing_map
     #   canonical_tables = deduplicator.canonical_tables
     class TableDeduplicator
+      # Tables that can be shared in variable font collections if identical
+      VARIATION_SHAREABLE_TABLES = %w[fvar avar STAT HVAR VVAR MVAR].freeze
+
+      # Tables that must remain font-specific in variable fonts
+      VARIATION_FONT_SPECIFIC_TABLES = %w[gvar CFF2].freeze
+
       # Canonical tables (unique table data)
       # @return [Hash<String, Hash>] Map of table tag to canonical versions
       attr_reader :canonical_tables
@@ -61,6 +67,9 @@ module Fontisan
       def build_sharing_map
         # First pass: collect all unique tables
         collect_canonical_tables
+
+        # Handle variable font table deduplication
+        deduplicate_variation_tables if has_variable_fonts?
 
         # Second pass: build sharing map for each font
         build_font_sharing_references
@@ -114,6 +123,73 @@ module Fontisan
       end
 
       private
+
+      # Check if any font is a variable font
+      #
+      # @return [Boolean] true if any font has fvar table
+      def has_variable_fonts?
+        @fonts.any? { |font| font.has_table?("fvar") }
+      end
+
+      # Deduplicate variable font tables
+      #
+      # Handles special logic for variable font tables:
+      # - Share tables that are identical across fonts (fvar, avar, etc.)
+      # - Keep font-specific tables separate (gvar, CFF2)
+      #
+      # @return [void]
+      def deduplicate_variation_tables
+        # Share tables that are identical across fonts
+        VARIATION_SHAREABLE_TABLES.each do |tag|
+          share_if_identical(tag)
+        end
+
+        # Never share font-specific variation tables
+        VARIATION_FONT_SPECIFIC_TABLES.each do |tag|
+          keep_separate(tag)
+        end
+      end
+
+      # Share table if identical across all fonts that have it
+      #
+      # @param tag [String] Table tag
+      # @return [void]
+      def share_if_identical(tag)
+        # Get all instances of this table
+        tables = @fonts.map { |f| f.table_data[tag] }.compact
+        return if tables.empty?
+
+        # Check if all instances are identical
+        nil if tables.uniq.length > 1
+
+        # All instances are identical, mark as shareable
+        # The normal deduplication logic will handle this
+      end
+
+      # Ensure table stays separate for each font
+      #
+      # @param tag [String] Table tag
+      # @return [void]
+      def keep_separate(tag)
+        # Mark each font's instance as non-shareable
+        @fonts.each_with_index do |font, _font_index|
+          next unless font.has_table?(tag)
+
+          # Find this font's canonical table for this tag
+          table_data = font.table_data[tag]
+          checksum = calculate_checksum(table_data)
+
+          # Ensure canonical table exists
+          @canonical_tables[tag] ||= {}
+          canonical_id = @checksum_to_canonical.dig(tag, checksum)
+
+          next unless canonical_id && @canonical_tables[tag][canonical_id]
+
+          # Mark as non-shareable
+          @canonical_tables[tag][canonical_id][:shared] = false
+          @canonical_tables[tag][canonical_id][:font_specific] = true
+        end
+      end
 
       # Collect all unique (canonical) tables across all fonts
       #

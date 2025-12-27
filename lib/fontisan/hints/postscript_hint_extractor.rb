@@ -29,6 +29,28 @@ module Fontisan
       HSTEM3 = 12 << 8 | 2
       VSTEM3 = 12 << 8 | 1
 
+      # Extract complete hint data from OpenType/CFF font
+      #
+      # This extracts both font-level hints (CFF Private dict) and
+      # per-glyph hints from CharStrings.
+      #
+      # @param font [OpenTypeFont] OpenType font with CFF table
+      # @return [Models::HintSet] Complete hint set
+      def extract_from_font(font)
+        hint_set = Models::HintSet.new(format: "postscript")
+
+        # Extract font-level Private dict hints
+        hint_set.private_dict_hints = extract_private_dict_hints(font).to_json
+
+        # Extract per-glyph CharString hints
+        extract_charstring_hints(font, hint_set)
+
+        # Update metadata
+        hint_set.has_hints = !hint_set.empty?
+
+        hint_set
+      end
+
       # Extract hints from CFF CharString
       #
       # @param charstring [CharString, String] CFF CharString object or bytes
@@ -248,6 +270,84 @@ module Fontisan
           },
           source_format: :postscript
         )
+      end
+
+      # Extract Private dict hints from CFF table
+      #
+      # Private dict contains font-level hint parameters like BlueValues,
+      # StdHW, StdVW, etc.
+      #
+      # @param font [OpenTypeFont] OpenType font
+      # @return [Hash] Private dict hint parameters
+      def extract_private_dict_hints(font)
+        hints = {}
+
+        return hints unless font.has_table?("CFF ")
+
+        cff_table = font.table("CFF ")
+        return hints unless cff_table
+
+        # Get Private DICT for first font (index 0)
+        private_dict = cff_table.private_dict(0)
+        return hints unless private_dict
+
+        # Extract hint-related parameters from Private DICT
+        # These are the key hinting parameters in CFF
+        hints[:blue_values] = private_dict.blue_values if private_dict.respond_to?(:blue_values)
+        hints[:other_blues] = private_dict.other_blues if private_dict.respond_to?(:other_blues)
+        hints[:family_blues] = private_dict.family_blues if private_dict.respond_to?(:family_blues)
+        hints[:family_other_blues] = private_dict.family_other_blues if private_dict.respond_to?(:family_other_blues)
+        hints[:blue_scale] = private_dict.blue_scale if private_dict.respond_to?(:blue_scale)
+        hints[:blue_shift] = private_dict.blue_shift if private_dict.respond_to?(:blue_shift)
+        hints[:blue_fuzz] = private_dict.blue_fuzz if private_dict.respond_to?(:blue_fuzz)
+        hints[:std_hw] = private_dict.std_hw if private_dict.respond_to?(:std_hw)
+        hints[:std_vw] = private_dict.std_vw if private_dict.respond_to?(:std_vw)
+        hints[:stem_snap_h] = private_dict.stem_snap_h if private_dict.respond_to?(:stem_snap_h)
+        hints[:stem_snap_v] = private_dict.stem_snap_v if private_dict.respond_to?(:stem_snap_v)
+        hints[:force_bold] = private_dict.force_bold if private_dict.respond_to?(:force_bold)
+        hints[:language_group] = private_dict.language_group if private_dict.respond_to?(:language_group)
+
+        hints.compact
+      rescue StandardError => e
+        warn "Failed to extract Private dict hints: #{e.message}"
+        {}
+      end
+
+      # Extract per-glyph CharString hints from CFF table
+      #
+      # @param font [OpenTypeFont] OpenType font
+      # @param hint_set [Models::HintSet] Hint set to populate
+      # @return [void]
+      def extract_charstring_hints(font, hint_set)
+        return unless font.has_table?("CFF ")
+
+        cff_table = font.table("CFF ")
+        return unless cff_table
+
+        # Get CharStrings INDEX
+        charstrings_index = cff_table.charstrings_index(0)
+        return unless charstrings_index
+
+        # Iterate through all glyphs
+        glyph_count = cff_table.glyph_count(0)
+        (0...glyph_count).each do |glyph_id|
+          begin
+            # Get CharString for this glyph
+            charstring = cff_table.charstring_for_glyph(glyph_id, 0)
+            next unless charstring
+
+            # Extract hints from CharString
+            hints = extract(charstring)
+            next if hints.empty?
+
+            # Store glyph hints
+            hint_set.add_glyph_hints(glyph_id, hints)
+          rescue StandardError => e
+            warn "Failed to extract hints for glyph #{glyph_id}: #{e.message}"
+          end
+        end
+      rescue StandardError => e
+        warn "Failed to extract CharString hints: #{e.message}"
       end
     end
   end

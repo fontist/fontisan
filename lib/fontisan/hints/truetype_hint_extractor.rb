@@ -35,6 +35,30 @@ module Fontisan
       DELTAP2 = 0x71
       DELTAP3 = 0x72
 
+      # Extract complete hint data from TrueType font
+      #
+      # This extracts both font-level hints (fpgm, prep, cvt tables) and
+      # per-glyph hints from glyph instructions.
+      #
+      # @param font [TrueTypeFont] TrueType font object
+      # @return [Models::HintSet] Complete hint set
+      def extract_from_font(font)
+        hint_set = Models::HintSet.new(format: "truetype")
+
+        # Extract font-level programs
+        hint_set.font_program = extract_font_program(font)
+        hint_set.control_value_program = extract_control_value_program(font)
+        hint_set.control_values = extract_control_values(font)
+
+        # Extract per-glyph hints
+        extract_glyph_hints(font, hint_set)
+
+        # Update metadata
+        hint_set.has_hints = !hint_set.empty?
+
+        hint_set
+      end
+
       # Extract hints from TrueType glyph
       #
       # @param glyph [Glyph] TrueType glyph with instructions
@@ -156,6 +180,109 @@ module Fontisan
         else
           nil
         end
+      end
+
+      # Extract font program (fpgm table)
+      #
+      # @param font [TrueTypeFont] TrueType font
+      # @return [String] Font program bytecode (binary string)
+      def extract_font_program(font)
+        return "" unless font.has_table?("fpgm")
+
+        font_program_data = font.instance_variable_get(:@table_data)["fpgm"]
+        return "" unless font_program_data
+
+        # Return as binary string
+        font_program_data.force_encoding("ASCII-8BIT")
+      rescue StandardError => e
+        warn "Failed to extract font program: #{e.message}"
+        ""
+      end
+
+      # Extract control value program (prep table)
+      #
+      # @param font [TrueTypeFont] TrueType font
+      # @return [String] Control value program bytecode (binary string)
+      def extract_control_value_program(font)
+        return "" unless font.has_table?("prep")
+
+        prep_data = font.instance_variable_get(:@table_data)["prep"]
+        return "" unless prep_data
+
+        # Return as binary string
+        prep_data.force_encoding("ASCII-8BIT")
+      rescue StandardError => e
+        warn "Failed to extract control value program: #{e.message}"
+        ""
+      end
+
+      # Extract control values (cvt table)
+      #
+      # @param font [TrueTypeFont] TrueType font
+      # @return [Array<Integer>] Control values
+      def extract_control_values(font)
+        return [] unless font.has_table?("cvt ")
+
+        cvt_data = font.instance_variable_get(:@table_data)["cvt "]
+        return [] unless cvt_data
+
+        # CVT table is an array of 16-bit signed integers (FWord values)
+        values = []
+        io = StringIO.new(cvt_data)
+        while !io.eof?
+          # Read 16-bit big-endian signed integer
+          bytes = io.read(2)
+          break unless bytes&.length == 2
+
+          value = bytes.unpack1("n") # Unsigned short
+          # Convert to signed
+          value = value - 65536 if value > 32767
+          values << value
+        end
+
+        values
+      rescue StandardError => e
+        warn "Failed to extract control values: #{e.message}"
+        []
+      end
+
+      # Extract per-glyph hints from glyf table
+      #
+      # @param font [TrueTypeFont] TrueType font
+      # @param hint_set [Models::HintSet] Hint set to populate
+      # @return [void]
+      def extract_glyph_hints(font, hint_set)
+        return unless font.has_table?("glyf")
+
+        glyf_table = font.table("glyf")
+        return unless glyf_table
+
+        # Get number of glyphs from maxp table
+        maxp_table = font.table("maxp")
+        return unless maxp_table
+
+        num_glyphs = maxp_table.num_glyphs
+
+        # Iterate through all glyphs
+        (0...num_glyphs).each do |glyph_id|
+          begin
+            glyph = glyf_table.glyph_for(glyph_id)
+            next unless glyph
+            next if glyph.number_of_contours <= 0 # Skip compound glyphs and empty glyphs
+
+            # Extract hints from simple glyph instructions
+            hints = extract(glyph)
+            next if hints.empty?
+
+            # Store glyph hints
+            hint_set.add_glyph_hints(glyph_id, hints)
+          rescue StandardError => e
+            # Skip glyphs that fail to parse
+            next
+          end
+        end
+      rescue StandardError => e
+        warn "Failed to extract glyph hints: #{e.message}"
       end
     end
   end

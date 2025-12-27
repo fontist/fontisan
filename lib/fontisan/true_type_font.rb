@@ -279,6 +279,20 @@ module Fontisan
       true
     end
 
+    # Check if font is TrueType flavored
+    #
+    # @return [Boolean] true for TrueType fonts
+    def truetype?
+      true
+    end
+
+    # Check if font is CFF flavored
+    #
+    # @return [Boolean] false for TrueType fonts
+    def cff?
+      false
+    end
+
     # Check if font has a specific table
     #
     # @param tag [String] The table tag to check for
@@ -579,18 +593,19 @@ module Fontisan
     # @param path [String] Path to the TTF file
     # @return [void]
     def update_checksum_adjustment_in_file(path)
-      # Calculate file checksum
-      checksum = Utilities::ChecksumCalculator.calculate_file_checksum(path)
-
-      # Calculate adjustment
-      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
-      # Find head table position
-      head_entry = head_table
-      return unless head_entry
-
-      # Write adjustment to head table (offset 8 within head table)
+      # Use tempfile-based checksum calculation for Windows compatibility
+      # This keeps the tempfile alive until we're done with the checksum
       File.open(path, "r+b") do |io|
+        checksum, _tmpfile = Utilities::ChecksumCalculator.calculate_checksum_from_io_with_tempfile(io)
+
+        # Calculate adjustment
+        adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
+
+        # Find head table position
+        head_entry = head_table
+        return unless head_entry
+
+        # Write adjustment to head table (offset 8 within head table)
         io.seek(head_entry.offset + 8)
         io.write([adjustment].pack("N"))
       end

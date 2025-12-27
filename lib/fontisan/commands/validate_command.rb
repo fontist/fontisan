@@ -2,6 +2,7 @@
 
 require_relative "base_command"
 require_relative "../validation/validator"
+require_relative "../validation/variable_font_validator"
 require_relative "../font_loader"
 
 module Fontisan
@@ -53,6 +54,9 @@ quiet: false)
         # Run validation
         report = validator.validate(font, @input)
 
+        # Add variable font validation if applicable
+        validate_variable_font(font, report) if font.has_table?("fvar")
+
         # Output results unless quiet mode
         output_report(report) unless @quiet
 
@@ -65,6 +69,27 @@ quiet: false)
       end
 
       private
+
+      # Validate variable font structure
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] The font to validate
+      # @param report [Models::ValidationReport] The validation report to update
+      # @return [void]
+      def validate_variable_font(font, report)
+        var_validator = Validation::VariableFontValidator.new(font)
+        errors = var_validator.validate
+
+        if errors.any?
+          puts "\nVariable font validation:" if @verbose && !@quiet
+          errors.each do |error|
+            puts "  ERROR: #{error}" if @verbose && !@quiet
+            # Add to report if report supports adding errors
+            report.errors << { message: error, category: "variable_font" } if report.respond_to?(:errors)
+          end
+        elsif @verbose && !@quiet
+          puts "\n✓ Variable font structure valid"
+        end
+      end
 
       # Validate command parameters
       #

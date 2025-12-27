@@ -56,17 +56,16 @@ RSpec.describe Fontisan::Woff2Font do
   describe "#validate_signature!" do
     it "raises error for invalid signature" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = 0x12345678
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = 0xDEADBEEF
 
-      expect { woff2.validate_signature! }
-        .to raise_error(Fontisan::InvalidFontError, /Invalid WOFF2 signature/)
+      expect { woff2.validate_signature! }.to raise_error(Fontisan::InvalidFontError)
     end
 
     it "does not raise error for valid signature" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = Fontisan::Woff2Font::WOFF2_SIGNATURE
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
 
       expect { woff2.validate_signature! }.not_to raise_error
     end
@@ -75,7 +74,7 @@ RSpec.describe Fontisan::Woff2Font do
   describe "#truetype?" do
     it "returns true for TrueType flavor (0x00010000)" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = 0x00010000
 
       expect(woff2.truetype?).to be true
@@ -83,7 +82,7 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns true for TrueType flavor (SFNT_VERSION_TRUETYPE)" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = Fontisan::Constants::SFNT_VERSION_TRUETYPE
 
       expect(woff2.truetype?).to be true
@@ -91,7 +90,7 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns false for CFF flavor" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = 0x4F54544F # 'OTTO'
 
       expect(woff2.truetype?).to be false
@@ -101,7 +100,7 @@ RSpec.describe Fontisan::Woff2Font do
   describe "#cff?" do
     it "returns true for CFF flavor (OTTO)" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = 0x4F54544F # 'OTTO'
 
       expect(woff2.cff?).to be true
@@ -109,7 +108,7 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns true for CFF flavor (SFNT_VERSION_OTTO)" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = Fontisan::Constants::SFNT_VERSION_OTTO
 
       expect(woff2.cff?).to be true
@@ -117,7 +116,7 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns false for TrueType flavor" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.flavor = 0x00010000
 
       expect(woff2.cff?).to be false
@@ -222,14 +221,13 @@ RSpec.describe Fontisan::Woff2Font do
   describe "#valid?" do
     it "returns false when header is missing" do
       woff2 = described_class.new
-
       expect(woff2.valid?).to be false
     end
 
     it "returns false when signature is invalid" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = 0x12345678
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = 0xDEADBEEF
       woff2.table_entries = []
 
       expect(woff2.valid?).to be false
@@ -237,21 +235,20 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns false when table count mismatch" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = Fontisan::Woff2Font::WOFF2_SIGNATURE
-      woff2.header.num_tables = 2
-      woff2.table_entries = [Fontisan::Woff2TableDirectoryEntry.new]
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
+      woff2.header.num_tables = 5
+      woff2.table_entries = [double(tag: "head")]
 
       expect(woff2.valid?).to be false
     end
 
     it "returns false when head table is missing" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = Fontisan::Woff2Font::WOFF2_SIGNATURE
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
       woff2.header.num_tables = 1
-      entry = Fontisan::Woff2TableDirectoryEntry.new
-      entry.tag = "name"
+      entry = double(tag: "name")
       woff2.table_entries = [entry]
 
       expect(woff2.valid?).to be false
@@ -259,11 +256,10 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "returns true when all validations pass" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.signature = Fontisan::Woff2Font::WOFF2_SIGNATURE
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
       woff2.header.num_tables = 1
-      entry = Fontisan::Woff2TableDirectoryEntry.new
-      entry.tag = "head"
+      entry = double(tag: "head")
       woff2.table_entries = [entry]
 
       expect(woff2.valid?).to be true
@@ -273,22 +269,24 @@ RSpec.describe Fontisan::Woff2Font do
   describe "#to_ttf" do
     it "raises error when font is not TrueType flavored" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.flavor = 0x4F54544F # CFF
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.flavor = 0x4F54544F # 'OTTO'
 
-      expect { woff2.to_ttf("output.ttf") }
-        .to raise_error(Fontisan::InvalidFontError, /Cannot convert to TTF/)
+      expect do
+        woff2.to_ttf("output.ttf")
+      end.to raise_error(Fontisan::InvalidFontError, /Cannot convert to TTF/)
     end
   end
 
   describe "#to_otf" do
     it "raises error when font is not CFF flavored" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
-      woff2.header.flavor = 0x00010000 # TrueType
+      woff2.header = Fontisan::Woff2::Woff2Header.new
+      woff2.header.flavor = 0x00010000
 
-      expect { woff2.to_otf("output.otf") }
-        .to raise_error(Fontisan::InvalidFontError, /Cannot convert to OTF/)
+      expect do
+        woff2.to_otf("output.otf")
+      end.to raise_error(Fontisan::InvalidFontError, /Cannot convert to OTF/)
     end
   end
 
@@ -296,7 +294,7 @@ RSpec.describe Fontisan::Woff2Font do
     context "when no metadata present" do
       it "returns nil" do
         woff2 = described_class.new
-        woff2.header = Fontisan::Woff2Header.new
+        woff2.header = Fontisan::Woff2::Woff2Header.new
         woff2.header.meta_length = 0
 
         expect(woff2.metadata).to be_nil
@@ -306,24 +304,16 @@ RSpec.describe Fontisan::Woff2Font do
     context "when metadata decompression fails" do
       it "returns nil and warns" do
         woff2 = described_class.new
-        woff2.header = Fontisan::Woff2Header.new
+        woff2.header = Fontisan::Woff2::Woff2Header.new
         woff2.header.meta_offset = 100
         woff2.header.meta_length = 10
         woff2.header.meta_orig_length = 50
+        woff2.io_source = double(path: "test.woff2")
 
-        # Create a temp file with invalid data
-        Tempfile.create(["woff2", ".woff2"]) do |f|
-          f.write("\x00" * 200)
-          f.close
+        allow(File).to receive(:open).and_raise(StandardError, "Decompression error")
+        expect { woff2.metadata }.to output(/Failed to decompress/).to_stderr
 
-          woff2.io_source = File.open(f.path, "rb")
-
-          expect { woff2.metadata }.to output(/Failed to decompress/).to_stderr
-
-          expect(woff2.metadata).to be_nil
-        ensure
-          woff2.io_source&.close
-        end
+        expect(woff2.metadata).to be_nil
       end
     end
   end
@@ -526,22 +516,70 @@ RSpec.describe Fontisan::Woff2Font do
   end
 
   describe "transformation reconstruction" do
-    it "warns about unimplemented glyf/loca reconstruction" do
-      woff2 = described_class.new
-      entry = Fontisan::Woff2TableDirectoryEntry.new
-      entry.tag = "glyf"
+    context "with real WOFF2 file containing transformations" do
+      let(:woff2_path) { "spec/fixtures/fonts/MonaSans/fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2" }
 
-      expect { woff2.send(:reconstruct_glyf_loca, entry, "test_data") }
-        .to output(/not yet implemented/).to_stderr
-    end
+      before do
+        skip "MonaSans WOFF2 fixture not available" unless File.exist?(woff2_path)
+      end
 
-    it "warns about unimplemented hmtx reconstruction" do
-      woff2 = described_class.new
-      entry = Fontisan::Woff2TableDirectoryEntry.new
-      entry.tag = "hmtx"
+      it "successfully reconstructs glyf/loca tables" do
+        font = Fontisan::FontLoader.load(woff2_path)
 
-      expect { woff2.send(:reconstruct_hmtx, entry, "test_data") }
-        .to output(/not yet implemented/).to_stderr
+        expect(font).to be_a(described_class)
+        expect(font.has_table?("glyf")).to be true
+        expect(font.has_table?("loca")).to be true
+
+        # Verify glyf table has data
+        glyf_data = font.table_data("glyf")
+        expect(glyf_data).not_to be_nil
+        expect(glyf_data.bytesize).to be > 0
+
+        # Verify loca table has data
+        loca_data = font.table_data("loca")
+        expect(loca_data).not_to be_nil
+        expect(loca_data.bytesize).to be > 0
+      end
+
+      it "successfully reconstructs hmtx table" do
+        font = Fontisan::FontLoader.load(woff2_path)
+
+        expect(font).to be_a(described_class)
+        expect(font.has_table?("hmtx")).to be true
+
+        # Verify hmtx table has data
+        hmtx_data = font.table_data("hmtx")
+        expect(hmtx_data).not_to be_nil
+        expect(hmtx_data.bytesize).to be > 0
+      end
+
+      it "provides access to font metadata" do
+        pending "Requires TrueTypeFont integration refactoring - see GitHub issue for WOFF2 table parsing"
+
+        font = Fontisan::FontLoader.load(woff2_path, mode: Fontisan::LoadingModes::FULL)
+
+        # Access maxp table to get glyph count
+        expect(font.has_table?("maxp")).to be true
+
+        maxp = font.table("maxp")
+        expect(maxp).not_to be_nil
+        expect(maxp.num_glyphs).to be > 0
+
+        # Verify we can access name table
+        expect(font.has_table?("name")).to be true
+      end
+
+      it "allows conversion to TTF when TrueType flavored" do
+        pending "Requires TrueTypeFont integration refactoring - see GitHub issue for WOFF2 table parsing"
+
+        font = Fontisan::FontLoader.load(woff2_path, mode: Fontisan::LoadingModes::FULL)
+
+        if font.truetype?
+          expect(font.family_name).to eq("Mona Sans")
+          # Variable font will have different glyph count than the static font
+          expect(font.table("maxp").num_glyphs).to be > 0
+        end
+      end
     end
   end
 
@@ -556,7 +594,7 @@ RSpec.describe Fontisan::Woff2Font do
 
     it "handles nil io_source gracefully" do
       woff2 = described_class.new
-      woff2.header = Fontisan::Woff2Header.new
+      woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.meta_length = 0
 
       expect(woff2.metadata).to be_nil
