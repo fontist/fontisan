@@ -72,7 +72,7 @@ namespace :fixtures do
     "MonaSans" => {
       url: "https://github.com/github/mona-sans/releases/download/v2.0/MonaSans.zip",
       target_dir: "#{fixtures_dir}/MonaSans",
-      marker: "#{fixtures_dir}/MonaSans/MonaSans/variable/MonaSans[wdth,wght].ttf",
+      marker: "#{fixtures_dir}/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf",
     },
     "NotoSerifCJK" => {
       url: "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/01_NotoSerifCJK.ttc.zip",

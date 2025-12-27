@@ -10,7 +10,8 @@ FIXTURES_DIR = File.join(__dir__, "fixtures")
 REQUIRED_FIXTURES = [
   File.join(FIXTURES_DIR, "fonts/NotoSans-Regular.ttf"),
   File.join(FIXTURES_DIR, "fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"),
-  File.join(FIXTURES_DIR, "fonts/MonaSans/MonaSans/variable/MonaSans[wdth,wght].ttf"),
+  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf"),
+  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/static/ttf/MonaSans-ExtraLightItalic.ttf"),
   File.join(FIXTURES_DIR, "fonts/NotoSerifCJK/NotoSerifCJK.ttc"),
   File.join(FIXTURES_DIR, "fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc"),
 ].freeze
