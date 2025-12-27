@@ -3,9 +3,9 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Validation::Validator do
-  let(:test_font_path) do
-    File.join(__dir__, "..", "..", "fixtures", "fonts", "MonaSans", "MonaSans",
-              "ttf", "MonaSans-ExtraLightItalic.ttf")
+  let(:valid_font_path) do
+    File.join(__dir__, "..", "..", "fixtures", "fonts", "MonaSans", "fonts",
+              "static", "ttf", "MonaSans-ExtraLightItalic.ttf")
   end
 
   describe ".new" do
@@ -35,23 +35,23 @@ RSpec.describe Fontisan::Validation::Validator do
   end
 
   describe "#validate" do
-    let(:font) { Fontisan::FontLoader.load(test_font_path) }
+    let(:font) { Fontisan::FontLoader.load(valid_font_path) }
     let(:validator) { described_class.new(level: :standard) }
 
     it "returns a ValidationReport" do
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       expect(report).to be_a(Fontisan::Models::ValidationReport)
     end
 
     it "sets font_path in report" do
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
-      expect(report.font_path).to eq(test_font_path)
+      expect(report.font_path).to eq(valid_font_path)
     end
 
     it "validates a valid font" do
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       expect(report.valid).to be true
       expect(report.has_errors?).to be false
@@ -59,7 +59,7 @@ RSpec.describe Fontisan::Validation::Validator do
 
     it "runs all validators" do
       # The real font should pass all enabled validations
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       expect(report.summary).to be_a(Fontisan::Models::ValidationReport::Summary)
       expect(report.issues).to be_an(Array)
@@ -69,7 +69,7 @@ RSpec.describe Fontisan::Validation::Validator do
       let(:validator) { described_class.new(level: :strict) }
 
       it "validates with strict rules" do
-        report = validator.validate(font, test_font_path)
+        report = validator.validate(font, valid_font_path)
 
         # Strict level doesn't allow warnings
         expect(report).to be_a(Fontisan::Models::ValidationReport)
@@ -80,7 +80,7 @@ RSpec.describe Fontisan::Validation::Validator do
       let(:validator) { described_class.new(level: :lenient) }
 
       it "validates with lenient rules" do
-        report = validator.validate(font, test_font_path)
+        report = validator.validate(font, valid_font_path)
 
         # Lenient level allows more issues
         expect(report).to be_a(Fontisan::Models::ValidationReport)
@@ -93,7 +93,7 @@ RSpec.describe Fontisan::Validation::Validator do
         allow_any_instance_of(Fontisan::Validation::TableValidator)
           .to receive(:validate).and_raise(StandardError, "Test error")
 
-        report = validator.validate(font, test_font_path)
+        report = validator.validate(font, valid_font_path)
 
         expect(report.valid).to be false
         expect(report.has_errors?).to be true
@@ -103,11 +103,11 @@ RSpec.describe Fontisan::Validation::Validator do
   end
 
   describe "validation levels" do
-    let(:font) { Fontisan::FontLoader.load(test_font_path) }
+    let(:font) { Fontisan::FontLoader.load(valid_font_path) }
 
     it "strict level rejects warnings" do
       validator = described_class.new(level: :strict)
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       # If there are warnings, strict should mark as invalid
       if report.has_warnings?
@@ -117,7 +117,7 @@ RSpec.describe Fontisan::Validation::Validator do
 
     it "standard level allows warnings" do
       validator = described_class.new(level: :standard)
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       # Standard should be valid if no errors (even with warnings)
       unless report.has_errors?
@@ -127,7 +127,7 @@ RSpec.describe Fontisan::Validation::Validator do
 
     it "lenient level is most permissive" do
       validator = described_class.new(level: :lenient)
-      report = validator.validate(font, test_font_path)
+      report = validator.validate(font, valid_font_path)
 
       # Lenient should be valid if no errors
       unless report.has_errors?

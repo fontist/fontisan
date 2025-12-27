@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require_relative "../models/hint"
 
 module Fontisan
@@ -65,6 +66,59 @@ module Fontisan
 
         # Remove conflicting hints (keep first)
         remove_conflicts(unique_hints)
+      end
+
+      # Convert entire HintSet between formats
+      #
+      # @param hint_set [Models::HintSet] Source hint set
+      # @param target_format [Symbol] Target format (:truetype or :postscript)
+      # @return [Models::HintSet] Converted hint set
+      def convert_hint_set(hint_set, target_format)
+        return hint_set if hint_set.format == target_format.to_s
+
+        result = Models::HintSet.new(format: target_format.to_s)
+
+        case target_format
+        when :postscript
+          # Convert font-level TT → PS
+          if hint_set.font_program || hint_set.control_value_program ||
+             hint_set.control_values&.any?
+            ps_dict = convert_tt_programs_to_ps_dict(
+              hint_set.font_program,
+              hint_set.control_value_program,
+              hint_set.control_values
+            )
+            result.private_dict_hints = ps_dict.to_json
+          end
+
+          # Convert per-glyph hints
+          hint_set.hinted_glyph_ids.each do |glyph_id|
+            glyph_hints = hint_set.get_glyph_hints(glyph_id)
+            ps_hints = to_postscript(glyph_hints)
+            result.add_glyph_hints(glyph_id, ps_hints) unless ps_hints.empty?
+          end
+
+        when :truetype
+          # Convert font-level PS → TT
+          if hint_set.private_dict_hints && hint_set.private_dict_hints != "{}"
+            tt_programs = convert_ps_dict_to_tt_programs(
+              JSON.parse(hint_set.private_dict_hints)
+            )
+            result.font_program = tt_programs[:fpgm]
+            result.control_value_program = tt_programs[:prep]
+            result.control_values = tt_programs[:cvt]
+          end
+
+          # Convert per-glyph hints
+          hint_set.hinted_glyph_ids.each do |glyph_id|
+            glyph_hints = hint_set.get_glyph_hints(glyph_id)
+            tt_hints = to_truetype(glyph_hints)
+            result.add_glyph_hints(glyph_id, tt_hints) unless tt_hints.empty?
+          end
+        end
+
+        result.has_hints = !result.empty?
+        result
       end
 
       private
@@ -171,6 +225,85 @@ module Fontisan
         end2 = pos2 + width2
 
         pos1 < end2 && pos2 < end1
+      end
+
+      # Convert TrueType font programs to PostScript Private dict
+      #
+      # Analyzes TrueType fpgm, prep, and cvt to extract semantic intent
+      # and generate corresponding PostScript hint parameters.
+      #
+      # @param fpgm [String] Font program bytecode
+      # @param prep [String] Control value program bytecode
+      # @param cvt [Array<Integer>] Control values
+      # @return [Hash] PostScript Private dict hint parameters
+      def convert_tt_programs_to_ps_dict(fpgm, prep, cvt)
+        hints = {}
+
+        # Extract stem widths from cvt if present
+        # CVT values typically contain standard widths
+        if cvt && !cvt.empty?
+          # First CVT value often represents standard horizontal stem
+          hints[:std_hw] = cvt[0].abs if cvt.length > 0
+          # Second CVT value often represents standard vertical stem
+          hints[:std_vw] = cvt[1].abs if cvt.length > 1
+        end
+
+        # Analyze control value program for alignment zones
+        # TrueType doesn't have exact Blue zones, so we use defaults
+        # These are standard values that work for most Latin fonts
+        hints[:blue_values] = [-20, 0, 706, 726]
+
+        # Optional: Add other_blues for descenders if we detect them
+        # This would require analyzing prep program, which is complex
+        # For now, use conservative defaults
+
+        hints
+      rescue StandardError => e
+        warn "Error converting TT programs to PS dict: #{e.message}"
+        {}
+      end
+
+      # Convert PostScript Private dict to TrueType font programs
+      #
+      # Generates TrueType control values and programs from PostScript
+      # hint parameters.
+      #
+      # @param ps_dict [Hash] PostScript Private dict parameters
+      # @return [Hash] TrueType programs ({ fpgm:, prep:, cvt: })
+      def convert_ps_dict_to_tt_programs(ps_dict)
+        # Handle both string and symbol keys from JSON
+        ps_dict = ps_dict.transform_keys(&:to_sym) if ps_dict.keys.first.is_a?(String)
+
+        # Generate control values from PS parameters
+        cvt = []
+
+        # Add standard stem widths as CVT values
+        cvt << ps_dict[:std_hw] if ps_dict[:std_hw]
+        cvt << ps_dict[:std_vw] if ps_dict[:std_vw]
+
+        # Add stem snap values if present
+        if ps_dict[:stem_snap_h]&.is_a?(Array)
+          cvt.concat(ps_dict[:stem_snap_h])
+        end
+        if ps_dict[:stem_snap_v]&.is_a?(Array)
+          cvt.concat(ps_dict[:stem_snap_v])
+        end
+
+        # Remove duplicates and sort
+        cvt = cvt.uniq.sort
+
+        # Generate basic prep program (empty for converted fonts)
+        # A real implementation would generate instructions to set up CVT
+        prep = ""
+
+        # fpgm typically empty for converted fonts
+        # Functions would need to be synthesized from scratch
+        fpgm = ""
+
+        { fpgm: fpgm, prep: prep, cvt: cvt }
+      rescue StandardError => e
+        warn "Error converting PS dict to TT programs: #{e.message}"
+        { fpgm: "", prep: "", cvt: [] }
       end
     end
   end

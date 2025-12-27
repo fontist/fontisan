@@ -66,6 +66,22 @@ module Fontisan
       # @raise [InvalidFontError] for corrupted or unknown formats
       # @raise [Error] for other loading failures
       def load_font
+        # BaseCommand is for inspection - reject compressed formats first
+        # Check file signature before attempting to load
+        File.open(@font_path, "rb") do |io|
+          signature = io.read(4)
+
+          if signature == "wOFF"
+            raise UnsupportedFormatError,
+                  "Unsupported font format: WOFF files must be decompressed first. " \
+                  "Use ConvertCommand to convert WOFF to TTF/OTF."
+          elsif signature == "wOF2"
+            raise UnsupportedFormatError,
+                  "Unsupported font format: WOFF2 files must be decompressed first. " \
+                  "Use ConvertCommand to convert WOFF2 to TTF/OTF."
+          end
+        end
+
         # ConvertCommand and similar commands need all tables loaded upfront
         # Use mode and lazy from options, or sensible defaults
         FontLoader.load(

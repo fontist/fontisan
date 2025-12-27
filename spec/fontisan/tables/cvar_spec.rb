@@ -230,31 +230,31 @@ RSpec.describe Fontisan::Tables::Cvar do
 
     it "parses data size" do
       data = build_tuple_header(data_size: 20)
-      header = described_class::TupleVariationHeader.read(data)
+      header = Fontisan::Variation::TupleVariationHeader.read(data)
       expect(header.variation_data_size).to eq(20)
     end
 
     it "detects embedded peak tuple flag" do
       data = build_tuple_header(embedded_peak: true)
-      header = described_class::TupleVariationHeader.read(data)
+      header = Fontisan::Variation::TupleVariationHeader.read(data)
       expect(header.embedded_peak_tuple?).to be true
     end
 
     it "detects intermediate region flag" do
       data = build_tuple_header(intermediate: true)
-      header = described_class::TupleVariationHeader.read(data)
+      header = Fontisan::Variation::TupleVariationHeader.read(data)
       expect(header.intermediate_region?).to be true
     end
 
     it "detects private point numbers flag" do
       data = build_tuple_header(private_points: true)
-      header = described_class::TupleVariationHeader.read(data)
+      header = Fontisan::Variation::TupleVariationHeader.read(data)
       expect(header.private_point_numbers?).to be true
     end
 
     it "extracts shared tuple index" do
       data = build_tuple_header
-      header = described_class::TupleVariationHeader.read(data)
+      header = Fontisan::Variation::TupleVariationHeader.read(data)
       expect(header.shared_tuple_index).to eq(0)
     end
   end

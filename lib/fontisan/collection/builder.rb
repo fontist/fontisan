@@ -164,6 +164,9 @@ module Fontisan
           raise Error, "Format mismatch: #{incompatible.join(', ')}"
         end
 
+        # Check variable font compatibility
+        validate_variation_compatibility! if variable_fonts_in_collection?
+
         # Check all fonts have required tables
         @fonts.each_with_index do |font, index|
           required_tables = %w[head hhea maxp]
@@ -175,6 +178,26 @@ module Fontisan
         end
 
         true
+      end
+
+      # Check if collection contains variable fonts
+      #
+      # @return [Boolean] true if any font has fvar table
+      def variable_fonts_in_collection?
+        @fonts.any? { |font| font.has_table?("fvar") }
+      end
+
+      # Validate variable font compatibility
+      #
+      # Ensures all variable fonts in the collection are compatible:
+      # - All must be same variation type (TrueType or CFF2)
+      # - All must have the same axes
+      #
+      # @return [void]
+      # @raise [Error] if variable fonts are incompatible
+      def validate_variation_compatibility!
+        validate_all_same_variation_type!
+        validate_same_axes!
       end
 
       private
@@ -254,6 +277,64 @@ module Fontisan
         end
 
         incompatible
+      end
+
+      # Validate all variable fonts use same variation type
+      #
+      # @return [void]
+      # @raise [Error] if mixing TrueType and CFF2 variable fonts
+      def validate_all_same_variation_type!
+        variable_fonts = @fonts.select { |f| f.has_table?("fvar") }
+        return if variable_fonts.empty?
+
+        ttf_count = variable_fonts.count { |f| f.has_table?("glyf") }
+        otf_count = variable_fonts.count { |f| f.has_table?("CFF2") }
+
+        if ttf_count.positive? && otf_count.positive?
+          raise Error, "Cannot mix TrueType and CFF2 variable fonts in collection"
+        end
+      end
+
+      # Validate all variable fonts have same axes
+      #
+      # @return [void]
+      # @raise [Error] if variable fonts have different axes
+      def validate_same_axes!
+        variable_fonts = @fonts.select { |f| f.has_table?("fvar") }
+        return if variable_fonts.size < 2
+
+        first_axes = extract_axes(variable_fonts.first)
+        variable_fonts.each_with_index do |font, index|
+          font_axes = extract_axes(font)
+          unless axes_match?(font_axes, first_axes)
+            raise Error,
+                  "Variable font #{index} has different axes. " \
+                  "Expected: #{first_axes.join(', ')}, " \
+                  "Got: #{font_axes.join(', ')}"
+          end
+        end
+      end
+
+      # Extract axis tags from a font's fvar table
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Font to extract axes from
+      # @return [Array<String>] Sorted array of axis tags
+      def extract_axes(font)
+        return [] unless font.has_table?("fvar")
+
+        fvar_table = font.table("fvar")
+        return [] unless fvar_table.respond_to?(:axes)
+
+        fvar_table.axes.map(&:axis_tag).sort
+      end
+
+      # Check if two axis arrays match
+      #
+      # @param axes1 [Array<String>] First axis array
+      # @param axes2 [Array<String>] Second axis array
+      # @return [Boolean] true if axes match
+      def axes_match?(axes1, axes2)
+        axes1 == axes2
       end
     end
   end

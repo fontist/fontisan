@@ -71,8 +71,8 @@ module Fontisan
         attribute :tag, :string
         attribute :checksum, :string
         attribute :parsed, :boolean, default: -> { false }
-        attribute :data, :string, default: -> {}
-        attribute :fields, :string, default: -> {}
+        attribute :data, :string, default: -> { nil }
+        attribute :fields, :string, default: -> { nil }
 
         yaml do
           map "tag", to: :tag

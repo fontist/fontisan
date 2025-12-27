@@ -153,6 +153,22 @@ module Fontisan
         # Update head table for CFF
         tables["head"] = update_head_for_cff(font)
 
+        # Convert and apply hints if preservation is enabled
+        if @preserve_hints && hints_per_glyph.any?
+          # Extract font-level hints separately
+          hint_set = extract_ttf_hint_set(font)
+
+          unless hint_set.empty?
+            # Convert TrueType hints to PostScript format
+            converter = Hints::HintConverter.new
+            ps_hint_set = converter.convert_hint_set(hint_set, :postscript)
+
+            # Apply PostScript hints (validation mode - CFF modification pending)
+            applier = Hints::PostScriptHintApplier.new
+            tables = applier.apply(ps_hint_set, tables)
+          end
+        end
+
         tables
       end
 
@@ -182,6 +198,22 @@ module Fontisan
 
         # Update head table for TrueType
         tables["head"] = update_head_for_truetype(font, loca_format)
+
+        # Convert and apply hints if preservation is enabled
+        if @preserve_hints && hints_per_glyph.any?
+          # Extract font-level hints separately
+          hint_set = extract_cff_hint_set(font)
+
+          unless hint_set.empty?
+            # Convert PostScript hints to TrueType format
+            converter = Hints::HintConverter.new
+            tt_hint_set = converter.convert_hint_set(hint_set, :truetype)
+
+            # Apply TrueType hints (writes fpgm/prep/cvt tables)
+            applier = Hints::TrueTypeHintApplier.new
+            tables = applier.apply(tt_hint_set, tables)
+          end
+        end
 
         tables
       end
@@ -493,19 +525,8 @@ module Fontisan
             next
           end
 
-          # Convert outline to TrueType contours
-          contours = outline.to_truetype_contours
-
-          # Build glyph data
-          builder = Tables::Glyf::GlyphBuilder.new(
-            contours: contours,
-            x_min: outline.bbox[:x_min],
-            y_min: outline.bbox[:y_min],
-            x_max: outline.bbox[:x_max],
-            y_max: outline.bbox[:y_max],
-          )
-
-          glyph_data = builder.build
+          # Build glyph data using GlyphBuilder class method
+          glyph_data = Fontisan::Tables::GlyphBuilder.build_simple_glyph(outline)
           glyf_data << glyph_data
 
           # Add padding to 4-byte boundary
@@ -835,19 +856,31 @@ module Fontisan
       def validate_source_tables(font, format)
         case format
         when :ttf
-          unless font.has_table?("glyf") && font.has_table?("loca") &&
-              font.table("glyf") && font.table("loca")
+          unless font.has_table?("glyf") && font.has_table?("loca")
+            raise Fontisan::MissingTableError,
+                  "TrueType font missing required glyf or loca table"
+          end
+          # Also verify tables can actually be loaded
+          unless font.table("glyf") && font.table("loca")
             raise Fontisan::MissingTableError,
                   "TrueType font missing required glyf or loca table"
           end
         when :cff2
-          unless font.has_table?("CFF2") && font.table("CFF2")
+          unless font.has_table?("CFF2")
+            raise Fontisan::MissingTableError,
+                  "CFF2 font missing required CFF2 table"
+          end
+          unless font.table("CFF2")
             raise Fontisan::MissingTableError,
                   "CFF2 font missing required CFF2 table"
           end
         when :otf
-          unless (font.has_table?("CFF ") && font.table("CFF ")) ||
-              (font.has_table?("CFF2") && font.table("CFF2"))
+          unless font.has_table?("CFF ") || font.has_table?("CFF2")
+            raise Fontisan::MissingTableError,
+                  "OpenType font missing required CFF or CFF2 table"
+          end
+          # Verify at least one can be loaded
+          unless font.table("CFF ") || font.table("CFF2")
             raise Fontisan::MissingTableError,
                   "OpenType font missing required CFF or CFF2 table"
           end
@@ -855,6 +888,11 @@ module Fontisan
 
         # Common required tables
         %w[head hhea maxp].each do |tag|
+          unless font.has_table?(tag)
+            raise Fontisan::MissingTableError,
+                  "Font missing required #{tag} table"
+          end
+          # Verify table can actually be loaded
           unless font.table(tag)
             raise Fontisan::MissingTableError,
                   "Font missing required #{tag} table"
@@ -922,6 +960,30 @@ module Fontisan
       rescue StandardError => e
         warn "Failed to extract CFF hints: #{e.message}"
         {}
+      end
+
+      # Extract complete TrueType hint set from font
+      #
+      # @param font [TrueTypeFont] Source font
+      # @return [HintSet] Complete hint set
+      def extract_ttf_hint_set(font)
+        extractor = Hints::TrueTypeHintExtractor.new
+        extractor.extract_from_font(font)
+      rescue StandardError => e
+        warn "Failed to extract TrueType hint set: #{e.message}"
+        Models::HintSet.new(format: :truetype)
+      end
+
+      # Extract complete PostScript hint set from font
+      #
+      # @param font [OpenTypeFont] Source font
+      # @return [HintSet] Complete hint set
+      def extract_cff_hint_set(font)
+        extractor = Hints::PostScriptHintExtractor.new
+        extractor.extract_from_font(font)
+      rescue StandardError => e
+        warn "Failed to extract PostScript hint set: #{e.message}"
+        Models::HintSet.new(format: :postscript)
       end
 
       # Check if font is a variable font

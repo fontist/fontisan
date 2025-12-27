@@ -25,16 +25,21 @@ module Fontisan
                          desc: "Suppress non-error output",
                          aliases: "-q"
 
-    desc "info FONT_FILE", "Display font information"
+    desc "info PATH", "Display font information"
     # Extract and display comprehensive font metadata.
     #
-    # @param font_file [String] Path to the font file
-    def info(font_file)
-      command = Commands::InfoCommand.new(font_file, options)
-      result = command.run
-      output_result(result)
-    rescue Errno::ENOENT, Error => e
-      handle_error(e)
+    # @param path [String] Path to the font file or collection
+    def info(path)
+      command = Commands::InfoCommand.new(path, options)
+      info = command.run
+      output_result(info) unless options[:quiet]
+    rescue Errno::ENOENT => e
+      if options[:verbose]
+        raise
+      else
+        warn "File not found: #{path}" unless options[:quiet]
+        exit 1
+      end
     end
 
     desc "ls FILE", "List contents (fonts in collection or font summary)"
@@ -195,47 +200,79 @@ module Fontisan
 
     desc "convert FONT_FILE", "Convert font to different format"
     option :to, type: :string, required: true,
-                desc: "Target format (ttf, otf, woff2, svg)",
+                desc: "Target format (ttf, otf, woff, woff2)",
                 aliases: "-t"
     option :output, type: :string, required: true,
                     desc: "Output file path",
                     aliases: "-o"
-    option :optimize, type: :boolean, default: false,
-                      desc: "Optimize CFF with subroutines (TTF→OTF only)"
-    option :min_pattern_length, type: :numeric, default: 10,
-                                desc: "Minimum pattern length for subroutines"
-    option :max_subroutines, type: :numeric, default: 65_535,
-                             desc: "Maximum number of subroutines"
-    option :optimize_ordering, type: :boolean, default: true,
-                               desc: "Optimize subroutine ordering by frequency"
-    # Convert a font to a different format.
+    option :coordinates, type: :string,
+                         desc: "Instance coordinates (e.g., wght=700,wdth=100)",
+                         aliases: "-c"
+    option :instance_index, type: :numeric,
+                            desc: "Named instance index",
+                            aliases: "-n"
+    option :preserve_variation, type: :boolean,
+                                desc: "Force variation preservation (auto-detected by default)"
+    option :no_validate, type: :boolean, default: false,
+                         desc: "Skip output validation"
+    option :preserve_hints, type: :boolean, default: false,
+                            desc: "Preserve rendering hints during conversion (TTF→OTF preservations may be limited)"
+    option :wght, type: :numeric,
+                  desc: "Weight axis value (alternative to --coordinates)"
+    option :wdth, type: :numeric,
+                  desc: "Width axis value (alternative to --coordinates)"
+    option :slnt, type: :numeric,
+                  desc: "Slant axis value (alternative to --coordinates)"
+    option :ital, type: :numeric,
+                  desc: "Italic axis value (alternative to --coordinates)"
+    option :opsz, type: :numeric,
+                  desc: "Optical size axis value (alternative to --coordinates)"
+    # Convert a font to a different format using the universal transformation pipeline.
     #
     # Supported conversions:
-    # - Same format (ttf→ttf, otf→otf): Copy/optimize
-    # - TTF ↔ OTF: Outline format conversion (foundation)
-    # - Future: WOFF2 compression, SVG export
+    # - TTF ↔ OTF: Outline format conversion
+    # - WOFF/WOFF2: Web font packaging
+    # - Variable fonts: Automatic variation preservation or instance generation
     #
-    # Subroutine Optimization (--optimize):
-    # When converting TTF→OTF, you can enable automatic CFF subroutine generation
-    # to reduce file size. This analyzes repeated byte patterns across glyphs and
-    # creates shared subroutines, typically saving 30-50% in CFF table size.
+    # Variable Font Operations:
+    # The pipeline automatically detects whether variation data can be preserved based on
+    # source and target formats. For same outline family (TTF→WOFF or OTF→WOFF2), variation
+    # is preserved automatically. For cross-family conversions (TTF↔OTF), an instance is
+    # generated unless --preserve-variation is explicitly set.
+    #
+    # Instance Generation:
+    # Use --coordinates to specify exact axis values (e.g., wght=700,wdth=100) or
+    # --instance-index to use a named instance. Individual axis options (--wght, --wdth)
+    # are also supported for convenience.
     #
     # @param font_file [String] Path to the font file
     #
     # @example Convert TTF to OTF
     #   fontisan convert font.ttf --to otf --output font.otf
     #
-    # @example Convert with optimization
-    #   fontisan convert font.ttf --to otf --output font.otf --optimize --verbose
+    # @example Generate bold instance at specific coordinates
+    #   fontisan convert variable.ttf --to ttf --output bold.ttf --coordinates "wght=700,wdth=100"
     #
-    # @example Convert with custom optimization parameters
-    #   fontisan convert font.ttf --to otf --output font.otf --optimize \
-    #     --min-pattern-length 15 --max-subroutines 10000
+    # @example Generate bold instance using individual axis options
+    #   fontisan convert variable.ttf --to ttf --output bold.ttf --wght 700
     #
-    # @example Copy/optimize TTF
-    #   fontisan convert font.ttf --to ttf --output optimized.ttf
+    # @example Use named instance
+    #   fontisan convert variable.ttf --to woff2 --output bold.woff2 --instance-index 0
+    #
+    # @example Force variation preservation (if compatible)
+    #   fontisan convert variable.ttf --to woff2 --output variable.woff2 --preserve-variation
+    #
+    # @example Convert without validation
+    #   fontisan convert font.ttf --to otf --output font.otf --no-validate
     def convert(font_file)
-      command = Commands::ConvertCommand.new(font_file, options)
+      # Build instance coordinates from axis options
+      instance_coords = build_instance_coordinates(options)
+
+      # Merge coordinates into options
+      convert_options = options.to_h.dup
+      convert_options[:instance_coordinates] = instance_coords if instance_coords.any?
+
+      command = Commands::ConvertCommand.new(font_file, convert_options)
       command.run
     rescue Errno::ENOENT, Error => e
       handle_error(e)
@@ -443,6 +480,20 @@ module Fontisan
     end
 
     private
+
+    # Build instance coordinates from CLI axis options
+    #
+    # @param options [Hash] CLI options
+    # @return [Hash] Coordinates hash
+    def build_instance_coordinates(options)
+      coords = {}
+      coords["wght"] = options[:wght].to_f if options[:wght]
+      coords["wdth"] = options[:wdth].to_f if options[:wdth]
+      coords["slnt"] = options[:slnt].to_f if options[:slnt]
+      coords["ital"] = options[:ital].to_f if options[:ital]
+      coords["opsz"] = options[:opsz].to_f if options[:opsz]
+      coords
+    end
 
     # Output the result in the requested format.
     #

@@ -118,6 +118,40 @@ module Fontisan
           @output.string
         end
 
+        # Build a CharString from operation list
+        #
+        # This method takes operations from CharStringParser and encodes them
+        # back to binary CharString format. Useful for CharString modification.
+        #
+        # @param operations [Array<Hash>] Array of operation hashes from parser
+        # @return [String] Binary CharString data
+        def self.build_from_operations(operations)
+          new.build_from_operations(operations)
+        end
+
+        # Instance method for building from operations
+        #
+        # @param operations [Array<Hash>] Array of operation hashes
+        # @return [String] Binary CharString data
+        def build_from_operations(operations)
+          @output = StringIO.new("".b)
+
+          operations.each do |op|
+            # Write operands
+            op[:operands].each { |operand| write_number(operand) }
+
+            # Write operator
+            write_operator(op[:name])
+
+            # Write hint data if present (for hintmask/cntrmask)
+            if op[:hint_data]
+              @output.write(op[:hint_data])
+            end
+          end
+
+          @output.string
+        end
+
         # Build an empty CharString (for .notdef or empty glyphs)
         #
         # @param width [Integer, nil] Glyph width

@@ -63,14 +63,12 @@ module Fontisan
         when "OTTO"
           OpenTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "wOFF"
-          raise UnsupportedFormatError,
-                "Unsupported font format: WOFF. Please convert to TTF/OTF first."
+          WoffFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "wOF2"
-          raise UnsupportedFormatError,
-                "Unsupported font format: WOFF2. Please convert to TTF/OTF first."
+          Woff2Font.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         else
           raise InvalidFontError,
-                "Unknown font format. Expected TTF, OTF, TTC, or OTC file."
+                "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, or WOFF2 file."
         end
       end
     end

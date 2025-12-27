@@ -73,20 +73,50 @@ module Fontisan
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param target_format [Symbol] Target format (:ttf, :otf, :woff2, :svg)
       # @param options [Hash] Additional conversion options
+      # @option options [Boolean] :preserve_variation Preserve variation data
+      #   (default: true)
+      # @option options [Boolean] :preserve_hints Preserve rendering hints
+      #   (default: false)
+      # @option options [Hash] :instance_coordinates Coordinates for variable→SVG
+      # @option options [Integer] :instance_index Named instance index for variable→SVG
       # @return [Hash<String, String>] Map of table tags to binary data
       # @raise [ArgumentError] If parameters are invalid
       # @raise [Error] If conversion is not supported
       #
       # @example
       #   tables = converter.convert(font, :otf)
+      #
+      # @example Variable font to SVG at specific weight
+      #   result = converter.convert(variable_font, :svg, instance_coordinates: { "wght" => 700.0 })
+      #
+      # @example Convert with hint preservation
+      #   tables = converter.convert(font, :otf, preserve_hints: true)
       def convert(font, target_format, options = {})
         validate_parameters!(font, target_format)
 
         source_format = detect_format(font)
         validate_conversion_supported!(source_format, target_format)
 
+        # Special case: Variable font to SVG
+        if variable_font?(font) && target_format == :svg
+          return convert_variable_to_svg(font, options)
+        end
+
         strategy = select_strategy(source_format, target_format)
-        strategy.convert(font, options.merge(target_format: target_format))
+        tables = strategy.convert(font, options.merge(target_format: target_format))
+
+        # Preserve variation data if requested and font is variable
+        if options.fetch(:preserve_variation, true) && variable_font?(font)
+          tables = preserve_variation_data(
+            font,
+            tables,
+            source_format,
+            target_format,
+            options,
+          )
+        end
+
+        tables
       end
 
       # Check if a conversion is supported
@@ -136,6 +166,125 @@ module Fontisan
       end
 
       private
+
+      # Convert variable font to SVG at specific coordinates
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Variable font
+      # @param options [Hash] Conversion options
+      # @option options [Hash] :instance_coordinates Design space coordinates
+      # @option options [Integer] :instance_index Named instance index
+      # @return [Hash] Hash with :svg_xml key
+      def convert_variable_to_svg(font, options = {})
+        require_relative "../variation/variable_svg_generator"
+
+        coordinates = options[:instance_coordinates] || {}
+        generator = Variation::VariableSvgGenerator.new(font, coordinates)
+
+        # Use named instance if specified
+        if options[:instance_index]
+          generator.generate_named_instance(options[:instance_index], options)
+        else
+          generator.generate(options)
+        end
+      end
+
+      # Check if font is a variable font
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Font to check
+      # @return [Boolean] True if font has fvar table
+      def variable_font?(font)
+        font.has_table?("fvar")
+      end
+
+      # Preserve variation data from source to target
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      # @param tables [Hash<String, String>] Target tables
+      # @param source_format [Symbol] Source format
+      # @param target_format [Symbol] Target format
+      # @param options [Hash] Preservation options
+      # @return [Hash<String, String>] Tables with variation preserved
+      def preserve_variation_data(font, tables, source_format, target_format, options)
+        # Case 1: Compatible formats (same outline format) - just copy tables
+        if compatible_variation_formats?(source_format, target_format)
+          require_relative "../variation/variation_preserver"
+          Variation::VariationPreserver.preserve(font, tables, options)
+
+        # Case 2: Different outline formats - convert variation data
+        elsif convertible_variation_formats?(source_format, target_format)
+          convert_variation_data(font, tables, source_format, target_format, options)
+
+        # Case 3: Unsupported conversion
+        else
+          if options[:preserve_variation]
+            raise Fontisan::Error,
+                  "Cannot preserve variation data for " \
+                  "#{source_format} → #{target_format}"
+          end
+          tables
+        end
+      end
+
+      # Check if formats have compatible variation (same outline format)
+      #
+      # @param source [Symbol] Source format
+      # @param target [Symbol] Target format
+      # @return [Boolean] True if compatible
+      def compatible_variation_formats?(source, target)
+        # Same format (copy operation)
+        return true if source == target
+
+        # Same outline format (just packaging change)
+        (source == :ttf && target == :woff) ||
+          (source == :otf && target == :woff) ||
+          (source == :woff && target == :ttf) ||
+          (source == :woff && target == :otf) ||
+          (source == :ttf && target == :woff2) ||
+          (source == :otf && target == :woff2)
+      end
+
+      # Check if formats allow variation conversion (different outline formats)
+      #
+      # @param source [Symbol] Source format
+      # @param target [Symbol] Target format
+      # @return [Boolean] True if convertible
+      def convertible_variation_formats?(source, target)
+        # Different outline formats (need variation conversion)
+        (source == :ttf && target == :otf) ||
+          (source == :otf && target == :ttf)
+      end
+
+      # Convert variation data between outline formats
+      #
+      # This is a placeholder for full TTF↔OTF variation conversion.
+      # Full implementation would:
+      # 1. Use Variation::Converter to convert gvar ↔ CFF2 blend
+      # 2. Build appropriate variation tables for target format
+      # 3. Preserve common tables (fvar, avar, STAT, metrics)
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      # @param tables [Hash<String, String>] Target tables
+      # @param source_format [Symbol] Source format
+      # @param target_format [Symbol] Target format
+      # @param options [Hash] Conversion options
+      # @return [Hash<String, String>] Tables with converted variation
+      def convert_variation_data(font, tables, source_format, target_format, _options)
+        require_relative "../variation/variation_preserver"
+        require_relative "../variation/converter"
+
+        # For now, just preserve common tables and warn about conversion
+        warn "WARNING: Full variation conversion (#{source_format} → " \
+             "#{target_format}) not yet implemented. " \
+             "Preserving common variation tables only."
+
+        # Preserve common tables (fvar, avar, STAT) but not format-specific
+        Variation::VariationPreserver.preserve(
+          font,
+          tables,
+          preserve_format_specific: false,
+          preserve_metrics: true,
+        )
+      end
 
       # Load conversion matrix from YAML config
       #

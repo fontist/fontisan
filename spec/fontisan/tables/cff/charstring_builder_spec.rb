@@ -440,4 +440,149 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       expect(charstring).not_to be_empty
     end
   end
+
+  describe ".build_from_operations" do
+    context "with simple operations" do
+      it "builds CharString from endchar operation" do
+        operations = [
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to eq([14])
+      end
+
+      it "builds CharString from rmoveto operation" do
+        operations = [
+          { type: :operator, name: :rmoveto, operands: [100, 200] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes.last).to eq(14)
+        expect(charstring.bytes).to include(21) # rmoveto operator
+      end
+
+      it "builds CharString from rlineto operation" do
+        operations = [
+          { type: :operator, name: :rlineto, operands: [50, 100] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(5) # rlineto operator
+      end
+    end
+
+    context "with hint operators" do
+      it "builds CharString with hstem" do
+        operations = [
+          { type: :operator, name: :hstem, operands: [10, 20] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(1) # hstem operator
+      end
+
+      it "builds CharString with hintmask and hint data" do
+        operations = [
+          { type: :operator, name: :hstem, operands: [10, 20] },
+          { type: :operator, name: :hintmask, operands: [], hint_data: [0xFF].pack("C") },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(1) # hstem
+        expect(charstring.bytes).to include(19) # hintmask
+        expect(charstring.bytes).to include(0xFF) # hint data
+      end
+    end
+
+    context "with complex operations" do
+      it "builds CharString from multiple operations" do
+        operations = [
+          { type: :operator, name: :hmoveto, operands: [100] },
+          { type: :operator, name: :vlineto, operands: [200] },
+          { type: :operator, name: :hlineto, operands: [150] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(22) # hmoveto
+        expect(charstring.bytes).to include(7)  # vlineto
+        expect(charstring.bytes).to include(6)  # hlineto
+        expect(charstring.bytes.last).to eq(14) # endchar
+      end
+
+      it "builds CharString with curves" do
+        operations = [
+          { type: :operator, name: :rmoveto, operands: [0, 0] },
+          { type: :operator, name: :rrcurveto, operands: [10, 20, 30, 40, 50, 60] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(8) # rrcurveto
+      end
+    end
+
+    context "with two-byte operators" do
+      it "builds CharString with flex operator" do
+        operations = [
+          { type: :operator, name: :flex, operands: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 50] },
+          { type: :operator, name: :endchar, operands: [] }
+        ]
+        charstring = described_class.build_from_operations(operations)
+
+        expect(charstring.bytes).to include(12) # Two-byte operator prefix
+        expect(charstring.bytes).to include(35) # flex operator
+      end
+    end
+
+    context "round-trip with parser" do
+      it "can rebuild CharString from parsed operations" do
+        # Original CharString: 100 hmoveto, 200 vlineto, endchar
+        original = []
+        original << 239 # 100
+        original << 22  # hmoveto
+        original << (139 + 61) # 200
+        original << 7   # vlineto
+        original << 14  # endchar
+        original_data = original.pack("C*")
+
+        # Parse it
+        parser = Fontisan::Tables::Cff::CharStringParser.new(original_data)
+        operations = parser.parse
+
+        # Rebuild it
+        rebuilt = described_class.build_from_operations(operations)
+
+        # Should be identical
+        expect(rebuilt).to eq(original_data)
+      end
+
+      it "preserves hint mask data in round-trip" do
+        # CharString with hintmask
+        original = []
+        original << 149 # 10
+        original << 159 # 20
+        original << 1   # hstem
+        original << 19  # hintmask
+        original << 0xFF # hint data
+        original << 14  # endchar
+        original_data = original.pack("C*")
+
+        # Parse
+        parser = Fontisan::Tables::Cff::CharStringParser.new(original_data, stem_count: 8)
+        operations = parser.parse
+
+        # Rebuild
+        rebuilt = described_class.build_from_operations(operations)
+
+        # Should be identical
+        expect(rebuilt).to eq(original_data)
+      end
+    end
+  end
 end

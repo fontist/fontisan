@@ -1,70 +1,116 @@
 # frozen_string_literal: true
 
-require_relative "../models/hint"
-
 module Fontisan
   module Hints
-    # Applies rendering hints to TrueType glyph data
+    # Applies rendering hints to TrueType font tables
     #
-    # This applier converts universal Hint objects into TrueType bytecode
-    # instructions and integrates them into glyph data. It ensures proper
-    # instruction sequencing and maintains compatibility with TrueType
-    # instruction execution model.
+    # This applier writes TrueType hint data into font-level tables:
+    # - fpgm (Font Program) - bytecode executed once at font initialization
+    # - prep (Control Value Program) - bytecode for glyph preparation
+    # - cvt (Control Values) - array of 16-bit values for hinting metrics
     #
-    # @example Apply hints to a glyph
+    # The applier ensures proper table structure with correct checksums
+    # and does not corrupt the font if hint application fails.
+    #
+    # @example Apply hints from a HintSet
     #   applier = TrueTypeHintApplier.new
-    #   glyph_with_hints = applier.apply(glyph, hints)
+    #   tables = {}
+    #   updated_tables = applier.apply(hint_set, tables)
     class TrueTypeHintApplier
-      # Apply hints to TrueType glyph
+      # Apply TrueType hints to font tables
       #
-      # @param glyph [Glyph] Target glyph
-      # @param hints [Array<Hint>] Hints to apply
-      # @return [Glyph] Glyph with applied hints
-      def apply(glyph, hints)
-        return glyph if hints.nil? || hints.empty?
-        return glyph if glyph.nil?
+      # @param hint_set [HintSet] Hint data to apply
+      # @param tables [Hash] Font tables to update
+      # @return [Hash] Updated font tables
+      def apply(hint_set, tables)
+        return tables if hint_set.nil? || hint_set.empty?
+        return tables unless hint_set.format == "truetype"
 
-        # Convert hints to TrueType instructions
-        instructions = build_instructions(hints)
+        # Write fpgm table if present
+        if hint_set.font_program && !hint_set.font_program.empty?
+          tables["fpgm"] = build_fpgm_table(hint_set.font_program)
+        end
 
-        # Apply to glyph (this is a simplified version)
-        # In a real implementation, we would need to:
-        # 1. Analyze existing glyph structure
-        # 2. Insert instructions at appropriate points
-        # 3. Update glyph instruction data
+        # Write prep table if present
+        if hint_set.control_value_program && !hint_set.control_value_program.empty?
+          tables["prep"] = build_prep_table(hint_set.control_value_program)
+        end
 
-        # For now, we just return the glyph as-is since
-        # this is a complex operation requiring deep integration
-        # with the glyph structure
-        glyph
+        # Write cvt table if present
+        if hint_set.control_values && !hint_set.control_values.empty?
+          tables["cvt "] = build_cvt_table(hint_set.control_values)
+        end
+
+        # Future enhancement: Apply per-glyph hints to glyf table
+        # For now, font-level tables only
+
+        tables
       end
 
       private
 
-      # Build TrueType instruction sequence from hints
+      # Build fpgm (Font Program) table
       #
-      # @param hints [Array<Hint>] Hints to convert
-      # @return [Array<Integer>] Instruction bytes
-      def build_instructions(hints)
-        instructions = []
-
-        hints.each do |hint|
-          hint_instructions = hint.to_truetype
-          instructions.concat(hint_instructions) if hint_instructions
-        end
-
-        instructions
+      # @param program_data [String] Raw bytecode
+      # @return [Hash] Table structure with tag, data, and checksum
+      def build_fpgm_table(program_data)
+        {
+          tag: "fpgm",
+          data: program_data,
+          checksum: calculate_checksum(program_data),
+        }
       end
 
-      # Validate instruction sequence
+      # Build prep (Control Value Program) table
       #
-      # @param instructions [Array<Integer>] Instructions to validate
-      # @return [Boolean] True if valid
-      def valid_instructions?(instructions)
-        return true if instructions.empty?
+      # @param program_data [String] Raw bytecode
+      # @return [Hash] Table structure with tag, data, and checksum
+      def build_prep_table(program_data)
+        {
+          tag: "prep",
+          data: program_data,
+          checksum: calculate_checksum(program_data),
+        }
+      end
 
-        # Basic validation - check for valid opcodes
-        instructions.all? { |byte| byte >= 0 && byte <= 255 }
+      # Build cvt (Control Values) table
+      #
+      # CVT values are 16-bit signed integers (FWORD) in big-endian format.
+      # Each value represents a design-space coordinate used for hinting.
+      #
+      # @param control_values [Array<Integer>] Array of 16-bit signed values
+      # @return [Hash] Table structure with tag, data, and checksum
+      def build_cvt_table(control_values)
+        # Pack as 16-bit big-endian signed integers (s> = signed big-endian)
+        data = control_values.pack("s>*")
+
+        {
+          tag: "cvt ",
+          data: data,
+          checksum: calculate_checksum(data),
+        }
+      end
+
+      # Calculate OpenType table checksum
+      #
+      # OpenType spec requires tables to be checksummed as 32-bit unsigned
+      # integers in big-endian format. The table is padded to a multiple of
+      # 4 bytes with zeros before checksum calculation.
+      #
+      # @param data [String] Table data
+      # @return [Integer] 32-bit checksum
+      def calculate_checksum(data)
+        # Pad to 4-byte boundary with zeros
+        padding_needed = (4 - data.length % 4) % 4
+        padded = data + ("\x00" * padding_needed)
+
+        # Sum as 32-bit unsigned integers in big-endian
+        checksum = 0
+        (0...padded.length).step(4) do |i|
+          checksum = (checksum + padded[i, 4].unpack1("N")) & 0xFFFFFFFF
+        end
+
+        checksum
       end
     end
   end

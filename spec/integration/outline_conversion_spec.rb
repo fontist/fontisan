@@ -470,7 +470,7 @@ RSpec.describe "Outline Conversion Integration" do
       expect(defined?(Fontisan::Tables::Cff2)).to be_truthy
 
       # Use a real variable font for testing
-      variable_font_path = "spec/fixtures/fonts/MonaSans/MonaSans/variable/MonaSans[wdth,wght].ttf"
+      variable_font_path = "spec/fixtures/fonts/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf"
       skip "Variable font not available" unless File.exist?(variable_font_path)
 
       variable_font = Fontisan::FontLoader.load(variable_font_path)

@@ -78,6 +78,10 @@ require_relative "fontisan/open_type_collection"
 require_relative "fontisan/woff_font"
 require_relative "fontisan/woff2_font"
 
+# Font extensions for table-based construction
+require_relative "fontisan/true_type_font_extensions"
+require_relative "fontisan/open_type_font_extensions"
+
 # Font loading
 require_relative "fontisan/font_loader"
 
@@ -149,9 +153,17 @@ require_relative "fontisan/variation/interpolator"
 require_relative "fontisan/variation/region_matcher"
 require_relative "fontisan/variation/metrics_adjuster"
 require_relative "fontisan/variation/converter"
+require_relative "fontisan/variation/variation_preserver"
 require_relative "fontisan/variation/delta_parser"
 require_relative "fontisan/variation/delta_applier"
 require_relative "fontisan/variation/blend_applier"
+require_relative "fontisan/variation/variable_svg_generator"
+
+# Pipeline infrastructure
+require_relative "fontisan/pipeline/format_detector"
+require_relative "fontisan/pipeline/variation_resolver"
+require_relative "fontisan/pipeline/output_writer"
+require_relative "fontisan/pipeline/transformation_pipeline"
 
 # Optimization infrastructure
 require_relative "fontisan/optimizers/pattern_analyzer"

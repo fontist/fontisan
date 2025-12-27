@@ -3,19 +3,20 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Collection::TableDeduplicator do
-  let(:font1) do
+  let(:fonts) { [font1, font2, font3] }
+  let(:font3) do
     double(
       "truetype_font",
-      table_names: %w[head hhea maxp name],
+      table_names: %w[head hhea maxp],
       table_data: {
-        "head" => "head_data_1",
+        "head" => "head_data_3",
         "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_1",
-        "name" => "shared_name_data",
+        "maxp" => "maxp_data_3",
       },
-    )
+    ).tap do |font|
+      allow(font).to receive(:has_table?).with("fvar").and_return(false)
+    end
   end
-
   let(:font2) do
     double(
       "truetype_font",
@@ -26,22 +27,169 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
         "maxp" => "maxp_data_2",
         "name" => "shared_name_data",
       },
-    )
+    ).tap do |font|
+      allow(font).to receive(:has_table?).with("fvar").and_return(false)
+    end
   end
-
-  let(:font3) do
+  let(:font1) do
     double(
       "truetype_font",
-      table_names: %w[head hhea maxp],
+      table_names: %w[head hhea maxp name],
       table_data: {
-        "head" => "head_data_3",
+        "head" => "head_data_1",
         "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_3",
+        "maxp" => "maxp_data_1",
+        "name" => "shared_name_data",
       },
-    )
+    ).tap do |font|
+      allow(font).to receive(:has_table?).with("fvar").and_return(false)
+    end
   end
 
-  let(:fonts) { [font1, font2, font3] }
+  describe "variable font table deduplication" do
+    describe "shareable variation tables" do
+      it "shares identical fvar tables" do
+        fvar_data = "fvar_table_content"
+        font1 = create_font_with_table("fvar", fvar_data)
+        font2 = create_font_with_table("fvar", fvar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        # Both fonts should reference the same canonical fvar
+        canonical_id_1 = sharing_map[0]["fvar"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["fvar"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+        expect(sharing_map[0]["fvar"][:shared]).to be true
+      end
+
+      it "shares identical avar tables" do
+        avar_data = "avar_table_content"
+        font1 = create_font_with_table("avar", avar_data)
+        font2 = create_font_with_table("avar", avar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["avar"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["avar"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+        expect(sharing_map[0]["avar"][:shared]).to be true
+      end
+
+      it "shares identical STAT tables" do
+        stat_data = "stat_table_content"
+        font1 = create_font_with_table("STAT", stat_data)
+        font2 = create_font_with_table("STAT", stat_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["STAT"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["STAT"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+      end
+
+      it "shares identical HVAR tables" do
+        hvar_data = "hvar_table_content"
+        font1 = create_font_with_table("HVAR", hvar_data)
+        font2 = create_font_with_table("HVAR", hvar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["HVAR"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["HVAR"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+      end
+
+      it "shares identical VVAR tables" do
+        vvar_data = "vvar_table_content"
+        font1 = create_font_with_table("VVAR", vvar_data)
+        font2 = create_font_with_table("VVAR", vvar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["VVAR"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["VVAR"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+      end
+
+      it "shares identical MVAR tables" do
+        mvar_data = "mvar_table_content"
+        font1 = create_font_with_table("MVAR", mvar_data)
+        font2 = create_font_with_table("MVAR", mvar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["MVAR"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["MVAR"][:canonical_id]
+        expect(canonical_id_1).to eq(canonical_id_2)
+      end
+    end
+
+    describe "font-specific variation tables" do
+      it "keeps gvar tables separate even if identical" do
+        gvar_data = "gvar_table_content"
+        font1 = create_variable_font_with_tables("fvar" => "fvar", "gvar" => gvar_data)
+        font2 = create_variable_font_with_tables("fvar" => "fvar", "gvar" => gvar_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        # gvar should not be marked as shared
+        expect(sharing_map[0]["gvar"][:shared]).to be false
+        expect(sharing_map[1]["gvar"][:shared]).to be false
+      end
+
+      it "keeps CFF2 tables separate even if identical" do
+        cff2_data = "cff2_table_content"
+        font1 = create_variable_font_with_tables("fvar" => "fvar", "CFF2" => cff2_data)
+        font2 = create_variable_font_with_tables("fvar" => "fvar", "CFF2" => cff2_data)
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        # CFF2 should not be marked as shared
+        expect(sharing_map[0]["CFF2"][:shared]).to be false
+        expect(sharing_map[1]["CFF2"][:shared]).to be false
+      end
+    end
+
+    describe "has_variable_fonts?" do
+      it "returns true when fonts have fvar table" do
+        font = create_font_with_table("fvar", "fvar_data")
+        deduplicator = described_class.new([font])
+
+        expect(deduplicator.send(:has_variable_fonts?)).to be true
+      end
+
+      it "returns false when fonts do not have fvar table" do
+        font = create_font_with_table("head", "head_data")
+        deduplicator = described_class.new([font])
+
+        expect(deduplicator.send(:has_variable_fonts?)).to be false
+      end
+    end
+
+    describe "different variation table content" do
+      it "does not share different fvar tables" do
+        font1 = create_font_with_table("fvar", "fvar_content_1")
+        font2 = create_font_with_table("fvar", "fvar_content_2")
+
+        deduplicator = described_class.new([font1, font2])
+        sharing_map = deduplicator.build_sharing_map
+
+        canonical_id_1 = sharing_map[0]["fvar"][:canonical_id]
+        canonical_id_2 = sharing_map[1]["fvar"][:canonical_id]
+        expect(canonical_id_1).not_to eq(canonical_id_2)
+        expect(sharing_map[0]["fvar"][:shared]).to be false
+        expect(sharing_map[1]["fvar"][:shared]).to be false
+      end
+    end
+  end
 
   describe "#initialize" do
     it "initializes with fonts array" do
@@ -256,7 +404,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
             "head" => "same_data",
             "name" => "same_name",
           },
-        ),
+        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
         double(
           "truetype_font",
           table_names: %w[head name],
@@ -264,7 +412,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
             "head" => "same_data",
             "name" => "same_name",
           },
-        ),
+        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
       ]
     end
 
@@ -287,7 +435,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
             "head" => "unique_1",
             "name" => "name_1",
           },
-        ),
+        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
         double(
           "truetype_font",
           table_names: %w[head name],
@@ -295,7 +443,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
             "head" => "unique_2",
             "name" => "name_2",
           },
-        ),
+        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
       ]
     end
 
@@ -307,5 +455,28 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
       expect(stats[:shared_tables]).to eq(0)
       expect(stats[:sharing_percentage]).to eq(0.0)
     end
+  end
+
+  # Helper methods
+  def create_font_with_table(tag, data)
+    font = instance_double(Fontisan::TrueTypeFont)
+    allow(font).to receive_messages(table_names: [tag], table_data: { tag => data }, has_table?: false)
+    allow(font).to receive(:has_table?).with(tag).and_return(true)
+    allow(font).to receive(:has_table?).with("fvar").and_return(tag == "fvar")
+    font
+  end
+
+  def create_variable_font_with_tables(tables)
+    font = instance_double(Fontisan::TrueTypeFont)
+
+    # Default to false for all tables
+    allow(font).to receive_messages(table_names: tables.keys, table_data: tables, has_table?: false)
+
+    # Set true for tables that exist
+    tables.each_key do |tag|
+      allow(font).to receive(:has_table?).with(tag).and_return(true)
+    end
+
+    font
   end
 end

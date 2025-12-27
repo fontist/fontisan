@@ -24,13 +24,13 @@ module Fontisan
     # 4. Build gvar table structure
     #
     # @example Converting gvar to CFF2 blend
-    #   converter = VariationConverter.new(font, axes)
+    #   converter = Converter.new(font, axes)
     #   blend_data = converter.gvar_to_blend(glyph_id)
     #
     # @example Converting CFF2 blend to gvar
-    #   converter = VariationConverter.new(font, axes)
+    #   converter = Converter.new(font, axes)
     #   tuple_data = converter.blend_to_gvar(glyph_id)
-    class VariationConverter
+    class Converter
       include TableAccessor
 
       # @return [TrueTypeFont, OpenTypeFont] Font instance
@@ -72,19 +72,49 @@ module Fontisan
       #
       # @param glyph_id [Integer] Glyph ID
       # @return [Hash, nil] Tuple data or nil
-      def blend_to_gvar(_glyph_id)
+      def blend_to_gvar(glyph_id)
         return nil unless has_variation_table?("CFF2")
 
         cff2 = variation_table("CFF2")
         return nil unless cff2
 
         # Get CharString with blend operators
-        # This is a placeholder - full implementation would parse CharString
-        # and extract blend operator data
+        charstring = cff2.charstring_for_glyph(glyph_id)
+        return nil unless charstring
 
-        # Convert blend data to tuples
-        # Placeholder for full implementation
-        nil
+        # Parse CharString to extract blend data
+        charstring.parse unless charstring.instance_variable_get(:@parsed)
+        blend_data = charstring.blend_data
+        return nil if blend_data.nil? || blend_data.empty?
+
+        # Convert blend data to tuple format
+        convert_blend_to_tuples_for_glyph(blend_data)
+      end
+
+      # Convert all glyphs from gvar to blend format
+      #
+      # @param glyph_count [Integer] Number of glyphs
+      # @return [Hash<Integer, Hash>] Map of glyph_id to blend data
+      def convert_all_gvar_to_blend(glyph_count)
+        return {} unless can_convert?
+
+        (0...glyph_count).each_with_object({}) do |glyph_id, result|
+          blend_data = gvar_to_blend(glyph_id)
+          result[glyph_id] = blend_data if blend_data
+        end
+      end
+
+      # Convert all glyphs from blend to gvar format
+      #
+      # @param glyph_count [Integer] Number of glyphs
+      # @return [Hash<Integer, Hash>] Map of glyph_id to tuple data
+      def convert_all_blend_to_gvar(glyph_count)
+        return {} unless can_convert?
+
+        (0...glyph_count).each_with_object({}) do |glyph_id, result|
+          tuple_data = blend_to_gvar(glyph_id)
+          result[glyph_id] = tuple_data if tuple_data
+        end
       end
 
       # Check if variation data can be converted
@@ -98,6 +128,76 @@ module Fontisan
       end
 
       private
+
+      # Convert blend data from a glyph to tuple format
+      #
+      # @param blend_data [Array<Hash>] Array of blend operations
+      # @return [Hash] Tuple variation data
+      def convert_blend_to_tuples_for_glyph(blend_data)
+        # Each blend operation represents variation at different points
+        # We need to aggregate these into region-based tuples
+
+        # Extract all regions from blend operations
+        regions_map = {}
+        point_count = 0
+
+        blend_data.each_with_index do |blend_op, idx|
+          blend_op[:blends].each do |blend|
+            # Track the maximum point index we've seen
+            point_count = [point_count, idx + 1].max
+
+            # For each delta axis, we need to create or update a region
+            blend[:deltas].each_with_index do |delta, axis_index|
+              next if delta.zero? # Skip zero deltas
+
+              # Create region key based on unique delta pattern
+              region_key = "region_#{axis_index}"
+
+              regions_map[region_key] ||= {
+                axis_index: axis_index,
+                deltas_per_point: Array.new(point_count) { { x: 0, y: 0 } },
+              }
+
+              # Store this delta for this point
+              # Note: CFF2 blend deltas are per-coordinate, we need to map to x/y
+              # This is a simplified mapping - full implementation would track
+              # which coordinates are being varied
+              regions_map[region_key][:deltas_per_point][idx / 2] ||= { x: 0, y: 0 }
+              if idx.even?
+                regions_map[region_key][:deltas_per_point][idx / 2][:x] = delta
+              else
+                regions_map[region_key][:deltas_per_point][idx / 2][:y] = delta
+              end
+            end
+          end
+        end
+
+        # Convert regions to tuples
+        tuples = []
+        regions_map.each_value do |region_data|
+          axis_index = region_data[:axis_index]
+
+          # Build peak coordinates (one per axis)
+          peak = Array.new(@axes.length, 0.0)
+          peak[axis_index] = 1.0 if axis_index < @axes.length
+
+          # Build start/end (default full range)
+          start_vals = Array.new(@axes.length, -1.0)
+          end_vals = Array.new(@axes.length, 1.0)
+
+          tuples << {
+            peak: peak,
+            start: start_vals,
+            end: end_vals,
+            deltas: region_data[:deltas_per_point],
+          }
+        end
+
+        {
+          tuples: tuples,
+          point_count: point_count,
+        }
+      end
 
       # Convert tuple variations to blend format
       #
@@ -172,12 +272,19 @@ module Fontisan
       # @param tuple [Hash] Tuple data
       # @param point_count [Integer] Number of points
       # @return [Array<Hash>] Deltas with :x and :y
-      def parse_tuple_deltas(_tuple, point_count)
-        # This is a placeholder - full implementation would:
-        # 1. Parse delta data from tuple
+      def parse_tuple_deltas(tuple, point_count)
+        # If tuple has deltas array, use it
+        if tuple[:deltas].is_a?(Array)
+          return tuple[:deltas].map do |delta|
+            { x: delta[:x] || 0, y: delta[:y] || 0 }
+          end
+        end
+
+        # Otherwise return zeros (placeholder for parsing raw delta data)
+        # Full implementation would:
+        # 1. Parse delta data from tuple[:data]
         # 2. Decompress if needed
         # 3. Return array of { x: dx, y: dy } for each point
-
         Array.new(point_count) { { x: 0, y: 0 } }
       end
 

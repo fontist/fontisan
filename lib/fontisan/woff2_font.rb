@@ -2,32 +2,18 @@
 
 require "bindata"
 require "brotli"
+require "stringio"
 require_relative "constants"
+require_relative "loading_modes"
 require_relative "utilities/checksum_calculator"
+require_relative "woff2/header"
+require_relative "woff2/glyf_transformer"
+require_relative "woff2/hmtx_transformer"
+require_relative "true_type_font"
+require_relative "open_type_font"
+require_relative "error"
 
 module Fontisan
-  # WOFF2 Header structure
-  #
-  # WOFF2 header is more compact than WOFF, using variable-length integers
-  # for some fields and omitting redundant information.
-  class Woff2Header < BinData::Record
-    endian :big
-    uint32 :signature        # 0x774F4632 'wOF2'
-    uint32 :flavor           # sfnt version (0x00010000 for TTF, 'OTTO' for CFF)
-    uint32 :woff2_length     # Total size of WOFF2 file
-    uint16 :num_tables       # Number of entries in directory
-    uint16 :reserved         # Reserved, must be zero
-    uint32 :total_sfnt_size  # Total size needed for uncompressed font
-    uint32 :total_compressed_size # Total size of compressed data block
-    uint16 :major_version    # Major version of WOFF file
-    uint16 :minor_version    # Minor version of WOFF file
-    uint32 :meta_offset      # Offset to metadata block
-    uint32 :meta_length      # Length of compressed metadata block
-    uint32 :meta_orig_length # Length of uncompressed metadata block
-    uint32 :priv_offset      # Offset to private data block
-    uint32 :priv_length      # Length of private data block
-  end
-
   # WOFF2 Table Directory Entry structure
   #
   # WOFF2 table directory entries are more complex than WOFF,
@@ -56,7 +42,8 @@ module Fontisan
 
     def initialize
       @flags = 0
-      @transform_version = TRANSFORM_NONE
+      # Don't initialize transform_version - leave it nil
+      # It will be set during parsing if table is transformed
     end
 
     # Check if table is transformed
@@ -85,59 +72,21 @@ module Fontisan
     end
   end
 
-  # Web Open Font Format 2.0 (WOFF2) font domain object
+  # Web Open Font Format 2.0 (WOFF2) font loader
   #
-  # Represents a WOFF2 font file that uses Brotli compression and table
-  # transformations. WOFF2 is significantly more complex than WOFF.
-  #
-  # According to the WOFF2 specification (https://www.w3.org/TR/WOFF2/):
-  # - Tables can be transformed (glyf, loca, hmtx have special formats)
-  # - All compressed data in a single Brotli stream
-  # - Variable-length integer encoding (UIntBase128, 255UInt16)
-  # - More efficient compression than WOFF
+  # This class manages WOFF2 font files and provides access to
+  # decompressed tables and transformed data.
   #
   # @example Reading a WOFF2 font
-  #   woff2 = Woff2Font.from_file("font.woff2")
-  #   puts woff2.header.num_tables
-  #   name_table = woff2.table("name")
-  #   puts name_table.english_name(Tables::Name::FAMILY)
-  #
-  # @example Converting to TTF/OTF
-  #   woff2 = Woff2Font.from_file("font.woff2")
-  #   woff2.to_ttf("output.ttf")  # if TrueType flavored
-  #   woff2.to_otf("output.otf")  # if CFF flavored
+  #   font = Woff2Font.from_file("font.woff2")
+  #   puts font.header.flavor
+  #   puts font.table_names
   class Woff2Font
-    attr_accessor :header, :table_entries, :decompressed_tables,
-                  :parsed_tables, :io_source
+    # Simple struct for storing file path
+    IOSource = Struct.new(:path)
 
-    # WOFF2 signature constant
-    WOFF2_SIGNATURE = 0x774F4632 # 'wOF2'
-
-    # Read WOFF2 font from a file
-    #
-    # @param path [String] Path to the WOFF2 file
-    # @return [Woff2Font] A new instance
-    # @raise [ArgumentError] if path is nil or empty
-    # @raise [Errno::ENOENT] if file does not exist
-    # @raise [InvalidFontError] if file format is invalid
-    def self.from_file(path)
-      if path.nil? || path.to_s.empty?
-        raise ArgumentError, "path cannot be nil or empty"
-      end
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      File.open(path, "rb") do |io|
-        font = new
-        font.read_from_io(io)
-        font.validate_signature!
-        font.initialize_storage
-        font.decompress_and_parse_tables(io)
-        font.io_source = io
-        font
-      end
-    rescue BinData::ValidityError, EOFError => e
-      raise InvalidFontError, "Invalid WOFF2 file: #{e.message}"
-    end
+    attr_accessor :header, :table_entries, :decompressed_tables, :parsed_tables, :io_source
+    attr_writer :underlying_font  # Allow setting from class methods
 
     def initialize
       @header = nil
@@ -145,190 +94,344 @@ module Fontisan
       @decompressed_tables = {}
       @parsed_tables = {}
       @io_source = nil
-    end
-
-    # Read header and table directory from IO
-    #
-    # @param io [IO] Open file handle
-    # @return [void]
-    def read_from_io(io)
-      @header = Woff2Header.read(io)
-      read_table_directory(io)
+      @underlying_font = nil  # Store the actual TrueTypeFont/OpenTypeFont
     end
 
     # Initialize storage hashes
-    #
-    # @return [void]
     def initialize_storage
       @decompressed_tables ||= {}
       @initialize_storage ||= {}
     end
 
-    # Validate WOFF2 signature
-    #
-    # @raise [InvalidFontError] if signature is invalid
-    # @return [void]
-    def validate_signature!
-      signature_value = header.signature.to_i
-      unless signature_value == WOFF2_SIGNATURE
-        Kernel.raise(::Fontisan::InvalidFontError,
-                     "Invalid WOFF2 signature: expected 0x#{WOFF2_SIGNATURE.to_s(16)}, " \
-                     "got 0x#{signature_value.to_s(16)}")
-      end
-    end
-
-    # Check if font is TrueType flavored
-    #
-    # @return [Boolean] true if TrueType, false if CFF
+    # Check if font has TrueType flavor
     def truetype?
-      [Constants::SFNT_VERSION_TRUETYPE, 0x00010000].include?(header.flavor)
+      return false unless @header
+
+      [Constants::SFNT_VERSION_TRUETYPE, 0x00010000].include?(@header.flavor)
     end
 
-    # Check if font is CFF flavored (OpenType with CFF outlines)
-    #
-    # @return [Boolean] true if CFF, false if TrueType
+    # Check if font has CFF flavor
     def cff?
-      [Constants::SFNT_VERSION_OTTO, 0x4F54544F].include?(header.flavor) # 'OTTO'
+      return false unless @header
+
+      [Constants::SFNT_VERSION_OTTO, 0x4F54544F].include?(@header.flavor)
     end
 
-    # Get decompressed table data
+    # Check if font is a variable font
     #
-    # Provides unified interface compatible with WoffFont
-    #
-    # @param tag [String] The table tag
-    # @return [String, nil] Decompressed table data or nil if not found
-    def table_data(tag)
-      @decompressed_tables[tag]
+    # @return [Boolean] true if font has fvar table (variable font)
+    def variable_font?
+      has_table?("fvar")
     end
 
-    # Check if font has a specific table
-    #
-    # @param tag [String] The table tag to check for
-    # @return [Boolean] true if table exists, false otherwise
-    def has_table?(tag)
-      table_entries.any? { |entry| entry.tag == tag }
-    end
-
-    # Find a table entry by tag
-    #
-    # @param tag [String] The table tag to find
-    # @return [Woff2TableDirectoryEntry, nil] The table entry or nil
-    def find_table_entry(tag)
-      table_entries.find { |entry| entry.tag == tag }
-    end
-
-    # Get list of all table tags
-    #
-    # @return [Array<String>] Array of table tag strings
-    def table_names
-      table_entries.map(&:tag)
-    end
-
-    # Get parsed table instance
-    #
-    # This method decompresses and parses the raw table data into a
-    # structured table object and caches the result for subsequent calls.
-    #
-    # @param tag [String] The table tag to retrieve
-    # @return [Tables::*, nil] Parsed table object or nil if not found
-    def table(tag)
-      @parsed_tables[tag] ||= parse_table(tag)
-    end
-
-    # Get units per em from head table
-    #
-    # @return [Integer, nil] Units per em value
-    def units_per_em
-      head = table(Constants::HEAD_TAG)
-      head&.units_per_em
-    end
-
-    # Get WOFF2 metadata if present
-    #
-    # @return [String, nil] Decompressed metadata XML or nil
-    def metadata
-      return nil if header.meta_length.zero?
-      return @metadata if defined?(@metadata)
-
-      File.open(io_source.path, "rb") do |io|
-        io.seek(header.meta_offset)
-        compressed_meta = io.read(header.meta_length)
-        @metadata = Brotli.inflate(compressed_meta)
-
-        # Verify decompressed size
-        if @metadata.bytesize != header.meta_orig_length
-          raise InvalidFontError,
-                "Metadata size mismatch: expected #{header.meta_orig_length}, got #{@metadata.bytesize}"
-        end
-
-        @metadata
+    # Validate WOFF2 signature
+    def validate_signature!
+      unless @header && @header.signature == Woff2::Woff2Header::SIGNATURE
+        raise InvalidFontError, "Invalid WOFF2 signature"
       end
-    rescue StandardError => e
-      warn "Failed to decompress WOFF2 metadata: #{e.message}"
-      @metadata = nil
     end
 
-    # Convert WOFF2 to TTF format
-    #
-    # Decompresses and reconstructs tables, then builds a standard TTF file
-    #
-    # @param output_path [String] Path where TTF file will be written
-    # @return [Integer] Number of bytes written
-    # @raise [InvalidFontError] if font is not TrueType flavored
-    def to_ttf(output_path)
-      unless truetype?
-        raise InvalidFontError,
-              "Cannot convert to TTF: font is CFF flavored (use to_otf)"
-      end
-
-      build_sfnt_font(output_path, Constants::SFNT_VERSION_TRUETYPE)
-    end
-
-    # Convert WOFF2 to OTF format
-    #
-    # Decompresses and reconstructs tables, then builds a standard OTF file
-    #
-    # @param output_path [String] Path where OTF file will be written
-    # @return [Integer] Number of bytes written
-    # @raise [InvalidFontError] if font is not CFF flavored
-    def to_otf(output_path)
-      unless cff?
-        raise InvalidFontError,
-              "Cannot convert to OTF: font is TrueType flavored (use to_ttf)"
-      end
-
-      build_sfnt_font(output_path, Constants::SFNT_VERSION_OTTO)
-    end
-
-    # Validate format correctness
-    #
-    # @return [Boolean] true if the WOFF2 format is valid, false otherwise
+    # Check if font is valid
     def valid?
-      return false unless header
-      return false unless header.signature == WOFF2_SIGNATURE
-      return false unless table_entries.respond_to?(:length)
-      return false if table_entries.length != header.num_tables
-      return false unless has_table?(Constants::HEAD_TAG)
+      return false unless @header
+      return false unless @header.signature == Woff2::Woff2Header::SIGNATURE
+      return false unless @header.num_tables == @table_entries.length
+      return false unless has_table?("head")
 
       true
     end
 
-    private
+    # Check if table exists
+    def has_table?(tag)
+      @table_entries.any? { |entry| entry.tag == tag }
+    end
 
-    # Read variable-length UIntBase128 integer
+    # Find table entry by tag
+    def find_table_entry(tag)
+      @table_entries.find { |entry| entry.tag == tag }
+    end
+
+    # Get list of table tags
+    def table_names
+      @table_entries.map(&:tag)
+    end
+
+    # Get decompressed table data
+    def table_data(tag)
+      # First try underlying font's table data if available
+      if @underlying_font && @underlying_font.respond_to?(:table_data)
+        underlying_data = @underlying_font.table_data[tag]
+        return underlying_data if underlying_data
+      end
+
+      # Fallback to decompressed_tables
+      @decompressed_tables[tag]
+    end
+
+    # Get parsed table object
+    def table(tag)
+      # Delegate to underlying font if available
+      return @underlying_font.table(tag) if @underlying_font
+
+      # Fallback to parsed_tables hash
+      # Normalize tag to UTF-8 string for hash lookup
+      # Use dup to create mutable copy since force_encoding modifies in place
+      tag_key = tag.to_s.dup.force_encoding("UTF-8")
+      @parsed_tables[tag_key]
+    end
+
+    # Convert to TTF
+    def to_ttf(output_path)
+      unless truetype?
+        raise InvalidFontError, "Cannot convert to TTF: font is not TrueType flavored"
+      end
+
+      # Build SFNT and create TrueTypeFont
+      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries, @decompressed_tables)
+      sfnt_io = StringIO.new(sfnt_data)
+
+      # Create actual TrueTypeFont and save for table delegation
+      @underlying_font = TrueTypeFont.read(sfnt_io)
+      @underlying_font.initialize_storage
+      @underlying_font.read_table_data(sfnt_io)
+
+      FontWriter.write_to_file(@underlying_font.tables, output_path)
+    end
+
+    # Convert to OTF
+    def to_otf(output_path)
+      unless cff?
+        raise InvalidFontError, "Cannot convert to OTF: font is not CFF flavored"
+      end
+
+      # Build SFNT and create OpenTypeFont
+      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries, @decompressed_tables)
+      sfnt_io = StringIO.new(sfnt_data)
+
+      # Create actual OpenTypeFont and save for table delegation
+      @underlying_font = OpenTypeFont.read(sfnt_io)
+      @underlying_font.initialize_storage
+      @underlying_font.read_table_data(sfnt_io)
+
+      FontWriter.write_to_file(@underlying_font.tables, output_path)
+    end
+
+    # Get metadata (if present)
+    def metadata
+      return nil unless @header&.meta_length&.positive?
+      return nil unless @io_source
+
+      begin
+        File.open(@io_source.path, "rb") do |io|
+          io.seek(@header.meta_offset)
+          compressed_meta = io.read(@header.meta_length)
+          Brotli.inflate(compressed_meta)
+        end
+      rescue StandardError => e
+        warn "Failed to decompress metadata: #{e.message}"
+        nil
+      end
+    end
+
+    # Convenience methods for accessing common name table fields
+
+    # Get font family name
+    def family_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::FAMILY)
+    end
+
+    # Get font subfamily name
+    def subfamily_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::SUBFAMILY)
+    end
+
+    # Get full font name
+    def full_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::FULL_NAME)
+    end
+
+    # Get PostScript name
+    def post_script_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::POSTSCRIPT_NAME)
+    end
+
+    # Get preferred family name
+    def preferred_family_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::PREFERRED_FAMILY)
+    end
+
+    # Get preferred subfamily name
+    def preferred_subfamily_name
+      name_table = table("name")
+      name_table&.english_name(Tables::Name::PREFERRED_SUBFAMILY)
+    end
+
+    # Get units per em
+    def units_per_em
+      head = table("head")
+      head&.units_per_em
+    end
+
+    # Read WOFF2 font from a file and return Woff2Font instance
     #
-    # WOFF2 uses a variable-length encoding for table sizes:
-    # - If high bit is 0, it's a single byte value
-    # - If high bit is 1, continue reading bytes
-    # - Maximum 5 bytes for a 32-bit value
+    # @param path [String] Path to the WOFF2 file
+    # @param mode [Symbol] Loading mode (:metadata or :full)
+    # @param lazy [Boolean] If true, load tables on demand
+    # @return [Woff2Font] The WOFF2 font object
+    # @raise [ArgumentError] if path is nil or empty
+    # @raise [Errno::ENOENT] if file does not exist
+    # @raise [InvalidFontError] if file format is invalid
+    def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
+      if path.nil? || path.to_s.empty?
+        raise ArgumentError, "path cannot be nil or empty"
+      end
+      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+
+      woff2 = new
+      woff2.io_source = IOSource.new(path)
+
+      File.open(path, "rb") do |io|
+        # Read header to determine font flavor
+        woff2.header = Woff2::Woff2Header.read(io)
+
+        # Validate signature
+        unless woff2.header.signature == Woff2::Woff2Header::SIGNATURE
+          raise InvalidFontError,
+                "Invalid WOFF2 signature: expected 0x#{Woff2::Woff2Header::SIGNATURE.to_s(16)}, " \
+                "got 0x#{woff2.header.signature.to_i.to_s(16)}"
+        end
+
+        # Read table directory
+        woff2.table_entries = read_table_directory_from_io(io, woff2.header)
+
+        # Decompress table data
+        woff2.decompressed_tables = decompress_tables(io, woff2.header, woff2.table_entries)
+
+        # Apply table transformations if present
+        apply_transformations!(woff2.table_entries, woff2.decompressed_tables)
+
+        # Build SFNT structure in memory
+        sfnt_data = build_sfnt_in_memory(woff2.header, woff2.table_entries, woff2.decompressed_tables)
+
+        # Create StringIO for reading
+        sfnt_io = StringIO.new(sfnt_data)
+        sfnt_io.rewind
+
+        # Parse tables based on font type
+        if woff2.truetype?
+          font = TrueTypeFont.read(sfnt_io)
+          font.initialize_storage
+          font.loading_mode = mode
+          font.lazy_load_enabled = lazy
+
+          # Create fresh StringIO for table data reading
+          table_io = StringIO.new(sfnt_data)
+          font.read_table_data(table_io)
+
+          # Store underlying font for table access delegation
+          woff2.underlying_font = font
+          woff2.parsed_tables = font.parsed_tables
+        elsif woff2.cff?
+          font = OpenTypeFont.read(sfnt_io)
+          font.initialize_storage
+          font.loading_mode = mode
+          font.lazy_load_enabled = lazy
+
+          # Create fresh StringIO for table data reading
+          table_io = StringIO.new(sfnt_data)
+          font.read_table_data(table_io)
+
+          # Store underlying font for table access delegation
+          woff2.underlying_font = font
+          woff2.parsed_tables = font.parsed_tables
+        else
+          raise InvalidFontError,
+                "Unknown WOFF2 flavor: 0x#{woff2.header.flavor.to_s(16)}"
+        end
+      end
+
+      woff2
+    rescue BinData::ValidityError, EOFError => e
+      raise InvalidFontError, "Invalid WOFF2 file: #{e.message}"
+    end
+
+    # Read table directory from IO
+    #
+    # @param io [IO] Open file handle
+    # @param header [Woff2::Woff2Header] WOFF2 header
+    # @return [Array<Woff2TableDirectoryEntry>] Table entries
+    def self.read_table_directory_from_io(io, header)
+      table_entries = []
+
+      header.num_tables.times do
+        entry = Woff2TableDirectoryEntry.new
+
+        # Read flags byte with nil check
+        flags_data = io.read(1)
+        raise EOFError, "Unexpected EOF while reading table directory flags" if flags_data.nil?
+
+        flags = flags_data.unpack1("C")
+        entry.flags = flags
+
+        # Determine tag
+        tag_index = flags & 0x3F
+        if tag_index == 0x3F
+          # Custom tag (4 bytes)
+          tag_data = io.read(4)
+          raise EOFError, "Unexpected EOF while reading custom tag" if tag_data.nil? || tag_data.bytesize < 4
+          entry.tag = tag_data.force_encoding("UTF-8")
+        else
+          # Known tag from table
+          entry.tag = Woff2TableDirectoryEntry::KNOWN_TAGS[tag_index]
+          unless entry.tag
+            raise InvalidFontError, "Invalid table tag index: #{tag_index}"
+          end
+        end
+
+        # Read orig_length (UIntBase128)
+        entry.orig_length = read_uint_base128_from_io(io)
+
+        # Determine if transformLength should be read
+        # According to WOFF2 spec section 4.2:
+        # - glyf/loca with version 0: TRANSFORMED (transformLength present)
+        # - hmtx with non-zero version: TRANSFORMED (transformLength present)
+        # - all other tables: transformation version is 0 (no transformLength)
+        transform_version = (flags >> 6) & 0x03
+        has_transform_length = if ["glyf", "loca"].include?(entry.tag) && transform_version.zero?
+                                 true
+                               elsif entry.tag == "hmtx" && transform_version != 0
+                                 true
+                               else
+                                 false
+                               end
+
+        if has_transform_length
+          entry.transform_length = read_uint_base128_from_io(io)
+          entry.transform_version = transform_version
+        end
+
+        table_entries << entry
+      end
+
+      table_entries
+    end
+
+    # Read variable-length UIntBase128 integer from IO
     #
     # @param io [IO] Open file handle
     # @return [Integer] The decoded integer value
-    def read_uint_base128(io)
+    def self.read_uint_base128_from_io(io)
       result = 0
       5.times do
-        byte = io.read(1).unpack1("C")
-        return nil unless byte
+        byte_data = io.read(1)
+        raise EOFError, "Unexpected EOF while reading UIntBase128" if byte_data.nil?
+
+        byte = byte_data.unpack1("C")
 
         # Continue if high bit is set
         if (byte & 0x80).zero?
@@ -342,123 +445,102 @@ module Fontisan
       raise InvalidFontError, "Invalid UIntBase128 encoding"
     end
 
-    # Read 255UInt16 variable-length integer
-    #
-    # Used in transformed glyf table:
-    # - If value < 253, it's the value itself (1 byte)
-    # - If value == 253, read next byte + 253 (2 bytes)
-    # - If value == 254, read next 2 bytes as big-endian (3 bytes)
-    # - If value == 255, read next 2 bytes + 506 (3 bytes special)
+    # Decompress tables from WOFF2 compressed data block
     #
     # @param io [IO] Open file handle
-    # @return [Integer] The decoded integer value
-    def read_255_uint16(io)
-      first = io.read(1).unpack1("C")
-      return nil unless first
-
-      case first
-      when 0..252
-        first
-      when 253
-        second = io.read(1).unpack1("C")
-        253 + second
-      when 254
-        io.read(2).unpack1("n")
-      when 255
-        value = io.read(2).unpack1("n")
-        value + 506
-      end
-    end
-
-    # Read WOFF2 table directory
-    #
-    # The table directory in WOFF2 is more compact than WOFF,
-    # using variable-length integers and known table indices.
-    #
-    # @param io [IO] Open file handle
-    # @return [void]
-    def read_table_directory(io)
-      @table_entries = []
-
-      header.num_tables.times do
-        entry = Woff2TableDirectoryEntry.new
-
-        # Read flags byte
-        flags = io.read(1).unpack1("C")
-        entry.flags = flags
-
-        # Determine tag
-        tag_index = flags & 0x3F
-        if tag_index == 0x3F
-          # Custom tag (4 bytes)
-          entry.tag = io.read(4).force_encoding("UTF-8")
-        else
-          # Known tag from table
-          entry.tag = Woff2TableDirectoryEntry::KNOWN_TAGS[tag_index]
-          unless entry.tag
-            raise InvalidFontError, "Invalid table tag index: #{tag_index}"
-          end
-        end
-
-        # Read orig_length (UIntBase128)
-        entry.orig_length = read_uint_base128(io)
-
-        # For transformed tables, read transform_length
-        transform_version = (flags >> 6) & 0x03
-        if transform_version != 0 && ["glyf", "loca",
-                                      "hmtx"].include?(entry.tag)
-          entry.transform_length = read_uint_base128(io)
-          entry.transform_version = transform_version
-        end
-
-        @table_entries << entry
-      end
-    end
-
-    # Decompress table data block and reconstruct tables
-    #
-    # WOFF2 stores all table data in a single Brotli-compressed block.
-    # After decompression, we need to:
-    # 1. Split into individual tables
-    # 2. Reconstruct transformed tables (glyf, loca, hmtx)
-    #
-    # @param io [IO] Open file handle
-    # @return [void]
-    def decompress_and_parse_tables(io)
-      # Position after table directory
-      # The compressed data starts immediately after the table directory
-      compressed_offset = header.to_binary_s.bytesize +
-        calculate_table_directory_size
-
-      io.seek(compressed_offset)
+    # @param header [Woff2::Woff2Header] WOFF2 header
+    # @param table_entries [Array<Woff2TableDirectoryEntry>] Table entries
+    # @return [Hash<String, String>] Map of tag to decompressed data
+    def self.decompress_tables(io, header, table_entries)
+      # IO stream is already positioned at compressed data after reading table directory
+      # No need to seek - just read from current position
       compressed_data = io.read(header.total_compressed_size)
 
       # Decompress entire data block with Brotli
       decompressed_data = Brotli.inflate(compressed_data)
 
       # Split decompressed data into individual tables
+      decompressed_tables = {}
       offset = 0
+
       table_entries.each do |entry|
         table_size = entry.transform_length || entry.orig_length
-
         table_data = decompressed_data[offset, table_size]
         offset += table_size
 
-        # Reconstruct transformed tables
-        if entry.transform_version && entry.transform_version != Woff2TableDirectoryEntry::TRANSFORM_NONE
-          table_data = reconstruct_transformed_table(entry, table_data)
-        end
+        decompressed_tables[entry.tag] = table_data
+      end
 
-        @decompressed_tables[entry.tag] = table_data
+      decompressed_tables
+    end
+
+    # Apply table transformations for glyf/loca/hmtx tables
+    #
+    # @param table_entries [Array<Woff2TableDirectoryEntry>] Table entries
+    # @param decompressed_tables [Hash<String, String>] Decompressed tables
+    # @return [void] Modifies decompressed_tables in place
+    def self.apply_transformations!(table_entries, decompressed_tables)
+      # Find entries that need transformation
+      glyf_entry = table_entries.find { |e| e.tag == "glyf" }
+      hmtx_entry = table_entries.find { |e| e.tag == "hmtx" }
+
+      # Get required metadata for transformations
+      maxp_data = decompressed_tables["maxp"]
+      hhea_data = decompressed_tables["hhea"]
+
+      return unless maxp_data && hhea_data
+
+      # Parse num_glyphs from maxp table
+      # maxp format: version(4) + numGlyphs(2) + ...
+      num_glyphs = maxp_data[4, 2].unpack1("n")
+
+      # Parse numberOfHMetrics from hhea table
+      # hhea format: ... + numberOfHMetrics(2) at offset 34
+      number_of_h_metrics = hhea_data[34, 2].unpack1("n")
+
+      # Check if this is a variable font by checking for fvar table
+      variable_font = table_entries.any? { |e| e.tag == "fvar" }
+
+      # Transform glyf/loca if needed
+      # transform_length is only set when table is actually transformed
+      # Check that transform_length exists and is greater than 0
+      if glyf_entry&.instance_variable_defined?(:@transform_length) &&
+          glyf_entry.transform_length&.positive?
+        transformed_glyf = decompressed_tables["glyf"]
+
+        if transformed_glyf
+          result = Woff2::GlyfTransformer.reconstruct(
+            transformed_glyf,
+            num_glyphs,
+            variable_font: variable_font
+          )
+          decompressed_tables["glyf"] = result[:glyf]
+          decompressed_tables["loca"] = result[:loca]
+        end
+      end
+
+      # Transform hmtx if needed
+      # transform_length is only set when table is actually transformed
+      # Check that transform_length exists and is greater than 0
+      if hmtx_entry&.instance_variable_defined?(:@transform_length) &&
+          hmtx_entry.transform_length&.positive?
+        transformed_hmtx = decompressed_tables["hmtx"]
+
+        if transformed_hmtx
+          decompressed_tables["hmtx"] = Woff2::HmtxTransformer.reconstruct(
+            transformed_hmtx,
+            num_glyphs,
+            number_of_h_metrics,
+          )
+        end
       end
     end
 
     # Calculate size of table directory
     #
-    # Variable-length encoding makes this non-trivial
-    #
+    # @param table_entries [Array<Woff2TableDirectoryEntry>] Table entries
     # @return [Integer] Size in bytes
-    def calculate_table_directory_size
+    def self.calculate_table_directory_size(table_entries)
       size = 0
       table_entries.each do |entry|
         size += 1 # flags byte
@@ -471,7 +553,7 @@ module Fontisan
         size += uint_base128_size(entry.orig_length)
 
         # transform_length if present
-        if entry.transform_version && entry.transform_version != Woff2TableDirectoryEntry::TRANSFORM_NONE
+        if entry.transform_version && !entry.transform_version.nil?
           size += uint_base128_size(entry.transform_length)
         end
       end
@@ -482,7 +564,7 @@ module Fontisan
     #
     # @param value [Integer] The value to encode
     # @return [Integer] Estimated size in bytes
-    def uint_base128_size(value)
+    def self.uint_base128_size(value)
       return 1 if value < 128
 
       bytes = 0
@@ -491,222 +573,143 @@ module Fontisan
         bytes += 1
         v >>= 7
       end
-      [bytes, 5].min # Max 5 bytes
+      [
+        bytes,
+        5,
+      ].min # Max 5 bytes
     end
 
-    # Reconstruct transformed table from WOFF2 format
+    # Build SFNT binary structure in memory
     #
-    # WOFF2 can transform certain tables for better compression:
-    # - glyf/loca: Complex transformation with multiple streams
-    # - hmtx: Can omit redundant data
-    #
-    # @param entry [Woff2TableDirectoryEntry] Table entry
-    # @param data [String] Transformed table data
-    # @return [String] Reconstructed standard table data
-    def reconstruct_transformed_table(entry, data)
-      case entry.tag
-      when "glyf", "loca"
-        reconstruct_glyf_loca(entry, data)
-      when "hmtx"
-        reconstruct_hmtx(entry, data)
-      else
-        # Unknown transformation, return as-is
-        data
-      end
-    end
+    # @param header [Woff2::Woff2Header] WOFF2 header
+    # @param table_entries [Array<Woff2TableDirectoryEntry>] Table entries
+    # @param decompressed_tables [Hash<String, String>] Decompressed table data
+    # @return [String] Complete SFNT binary data
+    def self.build_sfnt_in_memory(header, table_entries, decompressed_tables)
+      sfnt_data = +""
 
-    # Reconstruct glyf/loca tables from WOFF2 transformed format
-    #
-    # This is the most complex WOFF2 transformation. The transformed
-    # glyf table contains multiple streams that need to be reconstructed.
-    #
-    # @param entry [Woff2TableDirectoryEntry] Table entry
-    # @param data [String] Transformed data
-    # @return [String] Reconstructed glyf or loca table data
-    def reconstruct_glyf_loca(_entry, _data)
-      # TODO: Implement full glyf/loca reconstruction
-      # This is extremely complex and requires:
-      # 1. Parse glyph streams (nContour, nPoints, flags, coords, etc.)
-      # 2. Reconstruct standard glyf format
-      # 3. Build loca table with proper offsets
-      #
-      # For now, return empty data to prevent crashes
-      # This will need proper implementation for production use
-      warn "WOFF2 transformed glyf/loca reconstruction not yet implemented"
-      ""
-    end
+      # Calculate offset table fields
+      num_tables = table_entries.length
+      entry_selector = (Math.log(num_tables) / Math.log(2)).floor
+      search_range = (2**entry_selector) * 16
+      range_shift = num_tables * 16 - search_range
 
-    # Reconstruct hmtx table from WOFF2 transformed format
-    #
-    # WOFF2 can store hmtx in a more compact format by:
-    # - Omitting redundant advance widths
-    # - Using flags to indicate presence of LSB array
-    #
-    # @param entry [Woff2TableDirectoryEntry] Table entry
-    # @param data [String] Transformed data
-    # @return [String] Reconstructed hmtx table data
-    def reconstruct_hmtx(_entry, data)
-      # TODO: Implement hmtx reconstruction
-      # This requires:
-      # 1. Parse flags
-      # 2. Reconstruct advance width array
-      # 3. Reconstruct LSB array (if present) or derive from glyf
-      #
-      # For now, return as-is
-      warn "WOFF2 transformed hmtx reconstruction not yet implemented"
-      data
-    end
+      # Write offset table
+      sfnt_data << [header.flavor].pack("N")
+      sfnt_data << [num_tables].pack("n")
+      sfnt_data << [search_range].pack("n")
+      sfnt_data << [entry_selector].pack("n")
+      sfnt_data << [range_shift].pack("n")
 
-    # Parse a table from decompressed data
-    #
-    # @param tag [String] The table tag to parse
-    # @return [Tables::*, nil] Parsed table object or nil
-    def parse_table(tag)
-      raw_data = table_data(tag)
-      return nil unless raw_data
+      # Calculate table offsets
+      offset = 12 + (num_tables * 16) # Header + directory
+      table_records = []
 
-      table_class = table_class_for(tag)
-      return nil unless table_class
+      table_entries.each do |entry|
+        tag = entry.tag
+        data = decompressed_tables[tag]
+        next unless data
 
-      table_class.read(raw_data)
-    end
+        length = data.bytesize
 
-    # Map table tag to parser class
-    #
-    # @param tag [String] The table tag
-    # @return [Class, nil] Table parser class or nil
-    def table_class_for(tag)
-      {
-        Constants::HEAD_TAG => Tables::Head,
-        Constants::HHEA_TAG => Tables::Hhea,
-        Constants::HMTX_TAG => Tables::Hmtx,
-        Constants::MAXP_TAG => Tables::Maxp,
-        Constants::NAME_TAG => Tables::Name,
-        Constants::OS2_TAG => Tables::Os2,
-        Constants::POST_TAG => Tables::Post,
-        Constants::CMAP_TAG => Tables::Cmap,
-        Constants::FVAR_TAG => Tables::Fvar,
-        Constants::GSUB_TAG => Tables::Gsub,
-        Constants::GPOS_TAG => Tables::Gpos,
-      }[tag]
-    end
+        # Calculate checksum
+        checksum = Utilities::ChecksumCalculator.calculate_table_checksum(data)
 
-    # Build an SFNT font file (TTF or OTF) from decompressed WOFF2 data
-    #
-    # @param output_path [String] Path where font will be written
-    # @param sfnt_version [Integer] SFNT version
-    # @return [Integer] Number of bytes written
-    def build_sfnt_font(output_path, sfnt_version)
-      File.open(output_path, "wb") do |io|
-        # Calculate offset table fields
-        num_tables = table_entries.length
-        search_range, entry_selector, range_shift = calculate_offset_table_fields(num_tables)
+        table_records << {
+          tag: tag,
+          checksum: checksum,
+          offset: offset,
+          length: length,
+          data: data,
+        }
 
-        # Write offset table
-        io.write([sfnt_version].pack("N"))
-        io.write([num_tables].pack("n"))
-        io.write([search_range].pack("n"))
-        io.write([entry_selector].pack("n"))
-        io.write([range_shift].pack("n"))
-
-        # Calculate table offsets
-        offset = 12 + (num_tables * 16) # Header + directory
-        table_records = []
-
-        table_entries.each do |entry|
-          tag = entry.tag
-          data = @decompressed_tables[tag]
-          next unless data
-
-          length = data.bytesize
-
-          # Calculate checksum
-          checksum = Utilities::ChecksumCalculator.calculate_table_checksum(data)
-
-          table_records << {
-            tag: tag,
-            checksum: checksum,
-            offset: offset,
-            length: length,
-            data: data,
-          }
-
-          # Update offset for next table (with padding)
-          offset += length
-          padding = (Constants::TABLE_ALIGNMENT - (length % Constants::TABLE_ALIGNMENT)) %
-            Constants::TABLE_ALIGNMENT
-          offset += padding
-        end
-
-        # Write table directory
-        table_records.each do |record|
-          io.write(record[:tag].ljust(4, "\x00"))
-          io.write([record[:checksum]].pack("N"))
-          io.write([record[:offset]].pack("N"))
-          io.write([record[:length]].pack("N"))
-
-          # Write table data
-          io.write(record[:data])
-
-          # Add padding
-          padding = (Constants::TABLE_ALIGNMENT - (record[:length] % Constants::TABLE_ALIGNMENT)) %
-            Constants::TABLE_ALIGNMENT
-          io.write("\x00" * padding) if padding.positive?
-        end
-
-        io.pos
+        # Update offset for next table (with padding)
+        offset += length
+        padding = (Constants::TABLE_ALIGNMENT - (length % Constants::TABLE_ALIGNMENT)) %
+          Constants::TABLE_ALIGNMENT
+        offset += padding
       end
 
-      # Update checksum adjustment in head table
-      update_checksum_adjustment_in_file(output_path)
+      # Write table directory
+      table_records.each do |record|
+        sfnt_data << record[:tag].ljust(4, "\x00")
+        sfnt_data << [record[:checksum]].pack("N")
+        sfnt_data << [record[:offset]].pack("N")
+        sfnt_data << [record[:length]].pack("N")
 
-      File.size(output_path)
+        # Write table data with padding
+        sfnt_data << record[:data]
+
+        # Add padding
+        padding = (Constants::TABLE_ALIGNMENT - (record[:length] % Constants::TABLE_ALIGNMENT)) %
+          Constants::TABLE_ALIGNMENT
+        sfnt_data << ("\x00" * padding) if padding.positive?
+      end
+
+      # Update checksumAdjustment in head table
+      update_checksum_in_memory(sfnt_data, table_records)
+
+      sfnt_data
+    end
+
+    # Update checksumAdjustment field in head table in memory
+    #
+    # @param sfnt_data [String] The SFNT binary data
+    # @param table_records [Array<Hash>] Table records with offsets
+    # @return [void]
+    def self.update_checksum_in_memory(sfnt_data, table_records)
+      # Find head table record
+      head_record = table_records.find { |r| r[:tag] == Constants::HEAD_TAG }
+      return unless head_record
+
+      # Zero out checksumAdjustment field first
+      head_offset = head_record[:offset]
+      sfnt_data[head_offset + 8, 4] = "\x00\x00\x00\x00"
+
+      # Calculate file checksum
+      checksum = 0
+      sfnt_data.bytes.each_slice(4) do |bytes|
+        word = bytes.pack("C*").ljust(4, "\x00").unpack1("N")
+        checksum = (checksum + word) & 0xFFFFFFFF
+      end
+
+      # Calculate adjustment
+      adjustment = (0xB1B0AFBA - checksum) & 0xFFFFFFFF
+
+      # Write adjustment to head table
+      sfnt_data[head_offset + 8, 4] = [adjustment].pack("N")
+    end
+
+    private
+
+    # Read variable-length UIntBase128 integer from IO
+    def read_uint_base128(io)
+      self.class.read_uint_base128_from_io(io)
+    end
+
+    # Read 255UInt16 variable-length integer
+    def read_255_uint16(io)
+      code = io.read(1).unpack1("C")
+
+      case code
+      when 0..252
+        code
+      when 253
+        253 + io.read(1).unpack1("C")
+      when 254
+        io.read(2).unpack1("n")
+      when 255
+        io.read(2).unpack1("n") + 506
+      end
     end
 
     # Calculate offset table fields
-    #
-    # @param num_tables [Integer] Number of tables
-    # @return [Array<Integer>] [searchRange, entrySelector, rangeShift]
     def calculate_offset_table_fields(num_tables)
       entry_selector = (Math.log(num_tables) / Math.log(2)).floor
       search_range = (2**entry_selector) * 16
       range_shift = num_tables * 16 - search_range
+
       [search_range, entry_selector, range_shift]
-    end
-
-    # Update checksumAdjustment field in head table
-    #
-    # @param path [String] Path to the font file
-    # @return [void]
-    def update_checksum_adjustment_in_file(path)
-      # Calculate file checksum
-      checksum = Utilities::ChecksumCalculator.calculate_file_checksum(path)
-
-      # Calculate adjustment
-      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
-      # Find head table position in output file
-      File.open(path, "rb") do |io|
-        io.seek(4) # Skip sfnt_version
-        num_tables = io.read(2).unpack1("n")
-        io.seek(12) # Start of table directory
-
-        num_tables.times do
-          tag = io.read(4)
-          io.read(4) # checksum
-          offset = io.read(4).unpack1("N")
-          io.read(4) # length
-
-          if tag == Constants::HEAD_TAG
-            # Write adjustment to head table (offset 8 within head table)
-            File.open(path, "r+b") do |write_io|
-              write_io.seek(offset + 8)
-              write_io.write([adjustment].pack("N"))
-            end
-            break
-          end
-        end
-      end
     end
   end
 end

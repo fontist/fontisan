@@ -1,184 +1,256 @@
 # frozen_string_literal: true
 
 require_relative "../models/hint"
+require "json"
 
 module Fontisan
   module Hints
-    # Applies rendering hints to PostScript/CFF CharString data
+    # Applies rendering hints to PostScript/CFF font tables
     #
-    # This applier converts universal Hint objects into PostScript hint
-    # operators and integrates them into CharString data. It ensures proper
-    # operator placement and maintains CharString validity.
+    # This applier validates and applies PostScript hint data to CFF fonts by
+    # rebuilding the entire CFF table structure with updated Private DICT parameters.
     #
-    # **PostScript Hint Placement:**
+    # **Status**: Fully Operational (Phase 10A Complete)
     #
-    # - Stem hints (hstem/vstem) must appear at the beginning
-    # - Hintmask operators can appear throughout the CharString
-    # - Hints affect all subsequent path operations
+    # **PostScript Hint Parameters (Private DICT)**:
     #
-    # @example Apply hints to a CharString
+    # - blue_values: Alignment zones for overshoot suppression
+    # - other_blues: Additional alignment zones
+    # - std_hw: Standard horizontal stem width
+    # - std_vw: Standard vertical stem width
+    # - stem_snap_h: Horizontal stem snap widths
+    # - stem_snap_v: Vertical stem snap widths
+    # - blue_scale, blue_shift, blue_fuzz: Overshoot parameters
+    # - force_bold: Force bold flag
+    # - language_group: Language group (0=Latin, 1=CJK)
+    #
+    # @example Apply PostScript hints
     #   applier = PostScriptHintApplier.new
-    #   charstring_with_hints = applier.apply(charstring, hints)
+    #   tables = { "CFF " => cff_table }
+    #   hint_set = HintSet.new(format: "postscript", private_dict_hints: hints_json)
+    #   result = applier.apply(hint_set, tables)
     class PostScriptHintApplier
-      # CFF CharString operators
-      HSTEM = 1
-      VSTEM = 3
-      HINTMASK = 19
-      CNTRMASK = 20
-      HSTEM3 = [12, 2]
-      VSTEM3 = [12, 1]
-
-      # Apply hints to CharString
+      # Apply PostScript hints to font tables
       #
-      # @param charstring [String] Original CharString bytes
-      # @param hints [Array<Hint>] Hints to apply
-      # @return [String] CharString with applied hints
-      def apply(charstring, hints)
-        return charstring if hints.nil? || hints.empty?
-        return charstring if charstring.nil? || charstring.empty?
+      # Validates hint data and rebuilds CFF table with updated Private DICT.
+      # Supports arbitrary Private DICT size changes through full table reconstruction.
+      # Also supports per-glyph hints injected directly into CharStrings.
+      #
+      # @param hint_set [HintSet] Hint data to apply
+      # @param tables [Hash] Font tables (must include "CFF " or "CFF2 ")
+      # @return [Hash] Updated font tables with hints applied
+      def apply(hint_set, tables)
+        return tables if hint_set.nil? || hint_set.empty?
+        return tables unless hint_set.format == "postscript"
 
-        # Build hint operators
-        hint_ops = build_hint_operators(hints)
-
-        # Insert hints at the beginning of CharString
-        # (simplified - real implementation would analyze existing structure)
-        hint_ops + charstring
+        if cff2_table?(tables)
+          apply_cff2_hints(hint_set, tables)
+        elsif cff_table?(tables)
+          apply_cff_hints(hint_set, tables)
+        else
+          tables
+        end
       end
 
       private
 
-      # Build hint operators from hints
+      # Check if tables contain CFF2 table
       #
-      # @param hints [Array<Hint>] Hints to convert
-      # @return [String] Hint operator bytes
-      def build_hint_operators(hints)
-        operators = "".b
-
-        # Group hints by type for proper ordering
-        stem_hints = hints.select { |h| h.type == :stem }
-        stem3_hints = hints.select { |h| h.type == :stem3 }
-        mask_hints = hints.select { |h| %i[hint_replacement counter].include?(h.type) }
-
-        # Add stem hints first
-        stem_hints.each do |hint|
-          operators << encode_stem_hint(hint)
-        end
-
-        # Add stem3 hints
-        stem3_hints.each do |hint|
-          operators << encode_stem3_hint(hint)
-        end
-
-        # Add mask hints
-        mask_hints.each do |hint|
-          operators << encode_mask_hint(hint)
-        end
-
-        operators
+      # @param tables [Hash] Font tables
+      # @return [Boolean] True if CFF2 table present
+      def cff2_table?(tables)
+        tables.key?("CFF2") || tables.key?("CFF2 ")
       end
 
-      # Encode stem hint as CharString bytes
+      # Check if tables contain CFF table
       #
-      # @param hint [Hint] Stem hint
-      # @return [String] Encoded bytes
-      def encode_stem_hint(hint)
-        data = hint.to_postscript
-        return "".b if data.empty?
-
-        args = data[:args] || []
-        operator = data[:operator]
-
-        # Encode arguments as CFF integers
-        bytes = args.map { |arg| encode_cff_integer(arg) }.join
-
-        # Add operator
-        bytes << if operator == :vstem
-                   [VSTEM].pack("C")
-                 else
-                   [HSTEM].pack("C")
-                 end
-
-        bytes
+      # @param tables [Hash] Font tables
+      # @return [Boolean] True if CFF table present
+      def cff_table?(tables)
+        tables.key?("CFF ")
       end
 
-      # Encode stem3 hint as CharString bytes
+      # Apply hints to CFF2 variable font
       #
-      # @param hint [Hint] Stem3 hint
-      # @return [String] Encoded bytes
-      def encode_stem3_hint(hint)
-        data = hint.to_postscript
-        return "".b if data.empty?
+      # @param hint_set [HintSet] Hint set with font-level and per-glyph hints
+      # @param tables [Hash] Font tables
+      # @return [Hash] Updated tables
+      def apply_cff2_hints(hint_set, tables)
+        # Load CFF2 table
+        cff2_data = tables["CFF2"] || tables["CFF2 "]
 
-        args = data[:args] || []
-        operator = data[:operator]
+        begin
+          require_relative "../tables/cff2/table_reader"
+          require_relative "../tables/cff2/table_builder"
 
-        # Encode arguments
-        bytes = args.map { |arg| encode_cff_integer(arg) }.join
+          reader = Tables::Cff2::TableReader.new(cff2_data)
 
-        # Add two-byte operator (12 followed by subop)
-        bytes << if operator == :vstem3
-                   VSTEM3.pack("C*")
-                 else
-                   HSTEM3.pack("C*")
-                 end
+          # Validate CFF2 version
+          reader.read_header
+          unless reader.header[:major_version] == 2
+            warn "Invalid CFF2 table version: #{reader.header[:major_version]}"
+            return tables
+          end
 
-        bytes
+          # Build with hints
+          builder = Tables::Cff2::TableBuilder.new(reader, hint_set)
+          modified_table = builder.build
+
+          # Update tables
+          table_key = tables.key?("CFF2") ? "CFF2" : "CFF2 "
+          tables[table_key] = modified_table
+
+          tables
+        rescue StandardError => e
+          warn "Error applying CFF2 hints: #{e.message}"
+          tables
+        end
       end
 
-      # Encode mask hint as CharString bytes
+      # Apply hints to CFF font
       #
-      # @param hint [Hint] Mask hint
-      # @return [String] Encoded bytes
-      def encode_mask_hint(hint)
-        operator = hint.type == :hint_replacement ? HINTMASK : CNTRMASK
-        mask = hint.data[:mask] || []
+      # @param hint_set [HintSet] Hint set with font-level and per-glyph hints
+      # @param tables [Hash] Font tables
+      # @return [Hash] Updated tables
+      def apply_cff_hints(hint_set, tables)
+        return tables unless tables["CFF "]
 
-        # Encode mask bytes
-        bytes = mask.map { |b| [b].pack("C") }.join
+        # Validate hint parameters (Private DICT)
+        hint_params = parse_hint_parameters(hint_set)
 
-        # Add operator
-        bytes + [operator].pack("C")
+        # Check if we have per-glyph hints
+        has_per_glyph_hints = hint_set.hinted_glyph_count.positive?
+
+        # If neither font-level nor per-glyph hints, return unchanged
+        return tables unless hint_params || has_per_glyph_hints
+
+        # Validate font-level parameters if present
+        if hint_params && !valid_hint_parameters?(hint_params)
+          return tables
+        end
+
+        # Apply hints (both font-level and per-glyph)
+        begin
+          require_relative "../tables/cff/table_builder"
+          require_relative "../tables/cff/charstring_rebuilder"
+          require_relative "../tables/cff/hint_operation_injector"
+
+          # Prepare per-glyph hint data if present
+          per_glyph_hints = if has_per_glyph_hints
+                              extract_per_glyph_hints(hint_set)
+                            else
+                              nil
+                            end
+
+          new_cff_data = Tables::Cff::TableBuilder.rebuild(
+            tables["CFF "],
+            private_dict_hints: hint_params,
+            per_glyph_hints: per_glyph_hints
+          )
+
+          tables["CFF "] = new_cff_data
+          tables
+        rescue StandardError => e
+          warn "Failed to apply PostScript hints: #{e.message}"
+          tables
+        end
       end
 
-      # Encode integer as CFF CharString number
+      # Parse hint parameters from HintSet
       #
-      # @param num [Integer] Number to encode
-      # @return [String] Encoded bytes
-      def encode_cff_integer(num)
-        # Range 1: -107 to 107 (single byte)
-        if num >= -107 && num <= 107
-          return [32 + num].pack("c")
+      # @param hint_set [HintSet] Hint set with Private dict hints
+      # @return [Hash, nil] Parsed hint parameters, or nil if invalid
+      def parse_hint_parameters(hint_set)
+        return nil unless hint_set.private_dict_hints
+        return nil if hint_set.private_dict_hints == "{}"
+
+        JSON.parse(hint_set.private_dict_hints)
+      rescue JSON::ParserError => e
+        warn "Failed to parse Private dict hints: #{e.message}"
+        nil
+      end
+
+      # Validate hint parameters against CFF specification limits
+      #
+      # @param params [Hash] Hint parameters
+      # @return [Boolean] True if all parameters are valid
+      def valid_hint_parameters?(params)
+        # Validate blue values (must be pairs, max 7 pairs = 14 values)
+        if params["blue_values"] || params[:blue_values]
+          values = params["blue_values"] || params[:blue_values]
+          return false unless values.is_a?(Array)
+          return false if values.length > 14  # Max 7 pairs
+          return false if values.length.odd?  # Must be pairs
         end
 
-        # Range 2: 108 to 1131 (two bytes)
-        if num >= 108 && num <= 1131
-          b0 = 247 + ((num - 108) >> 8)
-          b1 = (num - 108) & 0xff
-          return [b0, b1].pack("C*")
+        # Validate other_blues (max 5 pairs = 10 values)
+        if params["other_blues"] || params[:other_blues]
+          values = params["other_blues"] || params[:other_blues]
+          return false unless values.is_a?(Array)
+          return false if values.length > 10
+          return false if values.length.odd?
         end
 
-        # Range 3: -1131 to -108 (two bytes)
-        if num >= -1131 && num <= -108
-          b0 = 251 - ((num + 108) >> 8)
-          b1 = -(num + 108) & 0xff
-          return [b0, b1].pack("C*")
+        # Validate stem widths (single values)
+        if params["std_hw"] || params[:std_hw]
+          value = params["std_hw"] || params[:std_hw]
+          return false unless value.is_a?(Numeric)
+          return false if value.negative?
         end
 
-        # Range 4: -32768 to 32767 (three bytes)
-        if num >= -32_768 && num <= 32_767
-          bytes = [28, (num >> 8) & 0xff, num & 0xff]
-          return bytes.pack("C*")
+        if params["std_vw"] || params[:std_vw]
+          value = params["std_vw"] || params[:std_vw]
+          return false unless value.is_a?(Numeric)
+          return false if value.negative?
         end
 
-        # Range 5: Larger numbers (five bytes)
-        bytes = [
-          255,
-          (num >> 24) & 0xff,
-          (num >> 16) & 0xff,
-          (num >> 8) & 0xff,
-          num & 0xff
-        ]
-        bytes.pack("C*")
+        # Validate stem snaps (arrays, max 12 values each)
+        %w[stem_snap_h stem_snap_v].each do |key|
+          next unless params[key] || params[key.to_sym]
+
+          values = params[key] || params[key.to_sym]
+          return false unless values.is_a?(Array)
+          return false if values.length > 12
+        end
+
+        # Validate blue_scale (should be positive)
+        if params["blue_scale"] || params[:blue_scale]
+          value = params["blue_scale"] || params[:blue_scale]
+          return false unless value.is_a?(Numeric)
+          return false if value <= 0
+        end
+
+        # Validate language_group (0 or 1 only)
+        if params["language_group"] || params[:language_group]
+          value = params["language_group"] || params[:language_group]
+          return false unless [0, 1].include?(value)
+        end
+
+        true
+      end
+
+      # Extract specific hint parameter with symbol/string key support
+      #
+      # @param params [Hash] Hint parameters
+      # @param key [String] Parameter name
+      # @return [Object, nil] Parameter value
+      def extract_param(params, key)
+        params[key] || params[key.to_sym]
+      end
+
+      # Extract per-glyph hint data from HintSet
+      #
+      # @param hint_set [HintSet] Hint set with per-glyph hints
+      # @return [Hash] Hash mapping glyph_id => Array<Hint>
+      def extract_per_glyph_hints(hint_set)
+        per_glyph = {}
+
+        hint_set.hinted_glyph_ids.each do |glyph_id|
+          hints = hint_set.get_glyph_hints(glyph_id)
+          per_glyph[glyph_id.to_i] = hints unless hints.empty?
+        end
+
+        per_glyph
       end
     end
   end

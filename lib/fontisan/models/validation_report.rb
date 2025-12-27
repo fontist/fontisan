@@ -29,7 +29,7 @@ module Fontisan
         attribute :severity, :string
         attribute :category, :string
         attribute :message, :string
-        attribute :location, :string, default: -> {}
+        attribute :location, :string, default: -> { nil }
 
         yaml do
           map "severity", to: :severity

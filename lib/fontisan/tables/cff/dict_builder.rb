@@ -52,6 +52,7 @@ module Fontisan
           charstring_type: [12, 6],
           font_matrix: [12, 7],
           stroke_width: [12, 8],
+          font_bbox: 5,
           synthetic_base: [12, 20],
           postscript: [12, 21],
           base_font_name: [12, 22],
@@ -60,6 +61,20 @@ module Fontisan
           subrs: 19,
           default_width_x: 20,
           nominal_width_x: 21,
+          # Hint-related Private DICT operators
+          blue_values: 6,
+          other_blues: 7,
+          family_blues: 8,
+          family_other_blues: 9,
+          std_hw: 10,
+          std_vw: 11,
+          stem_snap_h: [12, 12],
+          stem_snap_v: [12, 13],
+          blue_scale: [12, 9],
+          blue_shift: [12, 10],
+          blue_fuzz: [12, 11],
+          force_bold: [12, 14],
+          language_group: [12, 17],
         }.freeze
 
         # Build DICT structure from hash

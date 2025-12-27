@@ -84,7 +84,7 @@ module Fontisan
           next if font.has_table?(table_tag)
 
           # Special case: CFF or CFF2 are alternatives
-          if (table_tag == "CFF") && font.has_table?("CFF2")
+          if (table_tag == Constants::CFF_TAG) && font.has_table?("CFF2")
             next
           end
 
