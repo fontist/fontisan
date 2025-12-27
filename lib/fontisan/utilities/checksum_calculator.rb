@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stringio"
+require "tempfile"
 require_relative "../constants"
 
 module Fontisan
@@ -99,6 +100,47 @@ module Fontisan
         end
 
         sum
+      end
+
+      # Calculate checksum from an IO object using a tempfile for Windows compatibility.
+      #
+      # This method creates a temporary file from the IO content to ensure proper
+      # file handle semantics on Windows, where file handles must remain open
+      # for checksum calculation. The tempfile reference is returned alongside
+      # the checksum to prevent premature garbage collection on Windows.
+      #
+      # @param io [IO] the IO object to read from (must be rewindable)
+      # @return [Array<Integer, Tempfile>] array containing [checksum, tempfile]
+      #   The checksum value and the tempfile that must be kept alive until
+      #   the caller is done with the checksum.
+      #
+      # @example
+      #   checksum, tmpfile = ChecksumCalculator.calculate_checksum_from_io_with_tempfile(io)
+      #   # Use checksum...
+      #   # tmpfile will be GC'd when it goes out of scope, which is safe
+      #
+      # @note On Windows, Ruby's Tempfile automatically deletes the temp file when
+      #   the Tempfile object is garbage collected. In multi-threaded environments,
+      #   this can cause PermissionDenied errors if the file is deleted while
+      #   another thread is still using it. By returning the tempfile reference,
+      #   the caller can ensure it remains alive until all operations complete.
+      def self.calculate_checksum_from_io_with_tempfile(io)
+        io.rewind
+
+        # Create a tempfile to handle Windows file locking issues
+        tmpfile = Tempfile.new(["font", ".ttf"])
+        tmpfile.binmode
+
+        # Copy IO content to tempfile
+        IO.copy_stream(io, tmpfile)
+        tmpfile.close
+
+        # Calculate checksum from the tempfile
+        checksum = calculate_file_checksum(tmpfile.path)
+
+        # Return both checksum and tempfile to keep it alive
+        # The caller must keep the tempfile reference until done with checksum
+        [checksum, tmpfile]
       end
 
       private_class_method :calculate_checksum_from_io

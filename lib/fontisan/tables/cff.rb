@@ -479,6 +479,8 @@ module Fontisan
     require_relative "cff/top_dict"
     require_relative "cff/private_dict"
     require_relative "cff/charstring"
+    require_relative "cff/charstring_parser"
+    require_relative "cff/charstring_rebuilder"
     require_relative "cff/charstrings_index"
     require_relative "cff/charset"
     require_relative "cff/encoding"

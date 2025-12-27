@@ -2,10 +2,9 @@
 
 require "thor"
 require_relative "base_command"
-require_relative "../variable/instancer"
+require_relative "../variation/instance_generator"
+require_relative "../variation/instance_writer"
 require_relative "../variation/validator"
-require_relative "../variation/parallel_generator"
-require_relative "../converters/format_converter"
 require_relative "../error"
 
 module Fontisan
@@ -20,19 +19,18 @@ module Fontisan
     # - Validation before generation
     # - Dry-run mode for previewing
     # - Progress tracking
-    # - Parallel batch generation
     #
     # @example Instance at coordinates
     #   fontisan instance variable.ttf --wght=700 --output=bold.ttf
+    #
+    # @example Instance with format conversion
+    #   fontisan instance variable.ttf --wght=700 --to=otf --output=bold.otf
     #
     # @example Instance with validation
     #   fontisan instance variable.ttf --wght=700 --validate --output=bold.ttf
     #
     # @example Dry-run to preview
     #   fontisan instance variable.ttf --wght=700 --dry-run
-    #
-    # @example Instance with progress
-    #   fontisan instance variable.ttf --wght=700 --progress --output=bold.ttf
     class InstanceCommand < BaseCommand
       # Instance a variable font at specified coordinates
       #
@@ -44,18 +42,15 @@ module Fontisan
         # Validate font if requested
         validate_font(font) if options[:validate]
 
-        # Create instancer
-        instancer = Variable::Instancer.new(font)
-
         # Handle list-instances option
         if options[:list_instances]
-          list_instances(instancer)
+          list_instances(font)
           return
         end
 
         # Handle dry-run mode
         if options[:dry_run]
-          preview_instance(instancer, options)
+          preview_instance(font, input_path, options)
           return
         end
 
@@ -64,10 +59,9 @@ module Fontisan
 
         # Generate instance
         if options[:named_instance]
-          instance_named(instancer, options[:named_instance], output_path,
-                         options)
+          instance_named(font, options[:named_instance], output_path, options)
         else
-          instance_coords(instancer, extract_coordinates(options), output_path,
+          instance_coords(font, extract_coordinates(options), output_path,
                           options)
         end
 
@@ -105,9 +99,10 @@ module Fontisan
 
       # Preview instance without generating
       #
-      # @param instancer [Variable::Instancer] Instancer object
+      # @param font [Object] Font object
+      # @param input_path [String] Input file path
       # @param options [Hash] Command options
-      def preview_instance(instancer, options)
+      def preview_instance(font, input_path, options)
         coords = extract_coordinates(options)
 
         if coords.empty?
@@ -122,18 +117,19 @@ module Fontisan
           puts "  #{axis}: #{value}"
         end
         puts
-        puts "Output would be written to: #{determine_output_path(@input_path, options)}"
+        puts "Output would be written to: #{determine_output_path(input_path, options)}"
+        puts "Output format: #{options[:to] || 'same as input'}"
         puts
         puts "Use without --dry-run to actually generate the instance."
       end
 
       # Instance at specific coordinates
       #
-      # @param instancer [Variable::Instancer] Instancer object
+      # @param font [Object] Font object
       # @param coords [Hash] User coordinates
       # @param output_path [String] Output file path
       # @param options [Hash] Command options
-      def instance_coords(instancer, coords, output_path, options)
+      def instance_coords(font, coords, output_path, options)
         if coords.empty?
           raise ArgumentError,
                 "No coordinates specified. Use --wght=700, --wdth=100, etc."
@@ -142,47 +138,64 @@ module Fontisan
         # Show progress if requested
         print "Generating instance..." if options[:progress]
 
-        # Generate instance
-        binary = instancer.instance(coords)
+        # Generate instance tables using InstanceGenerator
+        generator = Variation::InstanceGenerator.new(font, coords)
+        tables = generator.generate
 
         puts " done" if options[:progress]
 
-        # Convert format if requested
-        if options[:to]
-          print "Converting format..." if options[:progress]
-          binary = convert_format(binary, options)
-          puts " done" if options[:progress]
-        end
-
-        # Write to file
+        # Write instance using InstanceWriter
         print "Writing output..." if options[:progress]
-        File.binwrite(output_path, binary)
+
+        # Detect source format for conversion
+        source_format = detect_source_format(font)
+
+        Variation::InstanceWriter.write(
+          tables,
+          output_path,
+          format: options[:to]&.to_sym,
+          source_format: source_format,
+          optimize: options[:optimize] || false,
+        )
+
         puts " done" if options[:progress]
       end
 
       # Instance using named instance
       #
-      # @param instancer [Variable::Instancer] Instancer object
-      # @param instance_name [String] Named instance name
+      # @param font [Object] Font object
+      # @param instance_index [Integer] Named instance index
       # @param output_path [String] Output file path
       # @param options [Hash] Command options
-      def instance_named(instancer, instance_name, output_path, options)
-        # Generate instance
-        binary = instancer.instance_named(instance_name)
+      def instance_named(font, instance_index, output_path, options)
+        # Generate instance using named instance
+        generator = Variation::InstanceGenerator.new(font)
+        tables = generator.generate_named_instance(instance_index)
 
-        # Convert format if requested
-        binary = convert_format(binary, options) if options[:to]
+        # Detect source format
+        source_format = detect_source_format(font)
 
-        # Write to file
-        File.binwrite(output_path, binary)
+        # Write instance
+        Variation::InstanceWriter.write(
+          tables,
+          output_path,
+          format: options[:to]&.to_sym,
+          source_format: source_format,
+          optimize: options[:optimize] || false,
+        )
       end
 
       # List available named instances
       #
-      # @param instancer [Variable::Instancer] Instancer object
-      def list_instances(instancer)
-        instances = instancer.named_instances
+      # @param font [Object] Font object
+      def list_instances(font)
+        fvar = font.table("fvar")
+        unless fvar
+          puts "Not a variable font - no named instances available."
+          return
+        end
 
+        instances = fvar.instances
         if instances.empty?
           puts "No named instances defined in font."
           return
@@ -191,11 +204,15 @@ module Fontisan
         puts "Available named instances:"
         puts
 
-        instances.each do |instance|
-          puts "  #{instance[:name]}"
+        instances.each_with_index do |instance, index|
+          name_id = instance[:subfamily_name_id]
+          puts "  [#{index}] Instance #{name_id}"
           puts "    Coordinates:"
-          instance[:coordinates].each do |axis, value|
-            puts "      #{axis}: #{value}"
+          instance[:coordinates].each_with_index do |value, axis_index|
+            next if axis_index >= fvar.axes.length
+
+            axis = fvar.axes[axis_index]
+            puts "      #{axis.axis_tag}: #{value}"
           end
           puts
         end
@@ -243,38 +260,12 @@ module Fontisan
         "#{dir}/#{base}-instance.#{ext}"
       end
 
-      # Convert format using FormatConverter
+      # Detect source format from font
       #
-      # @param binary [String] Font binary
-      # @param options [Hash] Command options
-      # @return [String] Converted binary
-      def convert_format(binary, options)
-        target_format = options[:to].to_sym
-
-        # Load font from binary
-        require "tempfile"
-        Tempfile.create(["instance", ".ttf"]) do |temp_file|
-          temp_file.binmode
-          temp_file.write(binary)
-          temp_file.flush
-
-          font = FontLoader.load(temp_file.path)
-          converter = Converters::FormatConverter.new
-
-          result = converter.convert(font, target_format)
-
-          case target_format
-          when :woff, :woff2
-            result[:font_data]
-          when :svg
-            result[:svg_xml]
-          else
-            binary
-          end
-        end
-      rescue StandardError => e
-        warn "Format conversion failed: #{e.message}"
-        binary
+      # @param font [Object] Font object
+      # @return [Symbol] Source format (:ttf or :otf)
+      def detect_source_format(font)
+        font.has_table?("CFF ") || font.has_table?("CFF2") ? :otf : :ttf
       end
 
       # Load font from file

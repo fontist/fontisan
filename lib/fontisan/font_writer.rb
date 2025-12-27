@@ -263,16 +263,17 @@ module Fontisan
       head_entry = table_entries.find { |e| e[:tag] == "head" }
       return unless head_entry
 
-      # Calculate font checksum (with head checksumAdjustment set to 0)
-      # The head table at offset 8 should already be 0 from original table
+      # Zero out checksumAdjustment field (offset 8 in head table) before calculating
+      # This ensures we calculate the correct checksum regardless of source font's value
+      head_offset = head_entry[:offset]
+      checksum_offset = head_offset + 8
+      font_data[checksum_offset, 4] = "\x00\x00\x00\x00"
+
+      # Calculate font checksum (with head checksumAdjustment zeroed)
       font_checksum = calculate_font_checksum(font_data)
 
       # Calculate adjustment
       adjustment = (Constants::CHECKSUM_ADJUSTMENT_MAGIC - font_checksum) & 0xFFFFFFFF
-
-      # Update head table checksumAdjustment field (offset 8 in head table)
-      head_offset = head_entry[:offset]
-      checksum_offset = head_offset + 8
 
       # Write adjustment as uint32 big-endian
       font_data[checksum_offset, 4] = [adjustment].pack("N")

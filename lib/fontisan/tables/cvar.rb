@@ -2,6 +2,7 @@
 
 require "stringio"
 require_relative "../binary/base_record"
+require_relative "../variation/tuple_variation_header"
 
 module Fontisan
   module Tables
@@ -25,46 +26,6 @@ module Fontisan
       uint16 :minor_version
       uint16 :tuple_variation_count
       uint16 :data_offset
-
-      # Tuple variation header
-      class TupleVariationHeader < Binary::BaseRecord
-        uint16 :variation_data_size
-        uint16 :tuple_index
-
-        # Tuple index flags
-        EMBEDDED_PEAK_TUPLE = 0x8000
-        INTERMEDIATE_REGION = 0x4000
-        PRIVATE_POINT_NUMBERS = 0x2000
-        TUPLE_INDEX_MASK = 0x0FFF
-
-        # Check if tuple has embedded peak coordinates
-        #
-        # @return [Boolean] True if embedded
-        def embedded_peak_tuple?
-          (tuple_index & EMBEDDED_PEAK_TUPLE) != 0
-        end
-
-        # Check if tuple has intermediate region
-        #
-        # @return [Boolean] True if intermediate region
-        def intermediate_region?
-          (tuple_index & INTERMEDIATE_REGION) != 0
-        end
-
-        # Check if tuple has private point numbers
-        #
-        # @return [Boolean] True if private points
-        def private_point_numbers?
-          (tuple_index & PRIVATE_POINT_NUMBERS) != 0
-        end
-
-        # Get shared tuple index
-        #
-        # @return [Integer] Tuple index
-        def shared_tuple_index
-          tuple_index & TUPLE_INDEX_MASK
-        end
-      end
 
       # Get version as a float
       #
@@ -109,7 +70,7 @@ module Fontisan
           break if offset + 4 > data.bytesize
 
           header_data = data.byteslice(offset, 4)
-          header = TupleVariationHeader.read(header_data)
+          header = Variation::TupleVariationHeader.read(header_data)
           offset += 4
 
           tuple_info = {

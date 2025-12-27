@@ -12,14 +12,14 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(ttf_font).to receive(:has_table?).with("glyf").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("CFF ").and_return(false)
     allow(ttf_font).to receive(:has_table?).with("CFF2").and_return(false)
+    allow(ttf_font).to receive(:has_table?).with("fvar").and_return(false)
     allow(ttf_font).to receive(:table).with("glyf").and_return(double)
     allow(ttf_font).to receive(:table).with("CFF ").and_return(nil)
     allow(ttf_font).to receive(:table).with("CFF2").and_return(nil)
-    allow(ttf_font).to receive_messages(tables: { "glyf" => double,
-                                                  "head" => double },
-                                        table_data: { "glyf" => "glyf_data",
-                                                      "head" => "\x00" * 54 },
-                                        read_table_data: "data")
+    allow(ttf_font).to receive_messages(tables: { "glyf" => double, "head" => double }, table_data: { "glyf" => "glyf_data",
+                                                                                                      "head" => "\x00" * 54 }, read_table_data: "data")
+    allow(ttf_font).to receive(:table).with("name").and_return(double("name",
+                                                                      english_name: "TestFont"))
 
     # Add stubs for OutlineConverter validation
     allow(ttf_font).to receive(:has_table?).with("loca").and_return(true)
@@ -55,16 +55,14 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(otf_font).to receive(:has_table?).with("glyf").and_return(false)
     allow(otf_font).to receive(:has_table?).with("CFF ").and_return(true)
     allow(otf_font).to receive(:has_table?).with("CFF2").and_return(false)
+    allow(otf_font).to receive(:has_table?).with("fvar").and_return(false)
     allow(otf_font).to receive(:table).with("CFF ").and_return(double("cff",
                                                                       glyph_count: 100,
                                                                       charstring_for_glyph: nil))
     allow(otf_font).to receive(:table).with("CFF2").and_return(nil)
     allow(otf_font).to receive(:table).with("glyf").and_return(nil)
-    allow(otf_font).to receive_messages(tables: { "CFF " => double,
-                                                  "head" => double },
-                                        table_data: { "CFF " => "CFF _data",
-                                                      "head" => "\x00" * 54 },
-                                        read_table_data: "data")
+    allow(otf_font).to receive_messages(tables: { "CFF " => double, "head" => double }, table_data: { "CFF " => "CFF _data",
+                                                                                                      "head" => "\x00" * 54 }, read_table_data: "data")
 
     # Add stubs for OutlineConverter validation
     allow(otf_font).to receive(:has_table?).with("head").and_return(true)
@@ -327,6 +325,246 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
         expect(converter.conversion_matrix).not_to be_nil
         expect(converter.supported?(:ttf, :ttf)).to be true
+      end
+    end
+  end
+
+  describe "variable font preservation" do
+    let(:variable_ttf_font) { double("VariableTrueTypeFont") }
+    let(:variable_otf_font) { double("VariableOpenTypeFont") }
+
+    before do
+      # Setup variable TTF font
+      allow(variable_ttf_font).to receive(:has_table?).with("glyf").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("CFF ").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("CFF2").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("fvar").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("gvar").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("avar").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("STAT").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("cvar").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("HVAR").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("VVAR").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("MVAR").and_return(false)
+      allow(variable_ttf_font).to receive(:has_table?).with("loca").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("head").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("hhea").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("maxp").and_return(true)
+      allow(variable_ttf_font).to receive(:has_table?).with("cmap").and_return(false)
+
+      # Mock tables
+      allow(variable_ttf_font).to receive(:table).with("glyf").and_return(
+        double("glyf", glyph_for: double(nil?: false, empty?: true,
+                                         simple?: true, compound?: false))
+      )
+      allow(variable_ttf_font).to receive(:table).with("loca").and_return(
+        double("loca", parse_with_context: nil)
+      )
+      allow(variable_ttf_font).to receive(:table).with("head").and_return(
+        double("head", units_per_em: 1000, index_to_loc_format: 1)
+      )
+      allow(variable_ttf_font).to receive(:table).with("hhea").and_return(double("hhea"))
+      allow(variable_ttf_font).to receive(:table).with("maxp").and_return(
+        double("maxp", num_glyphs: 100)
+      )
+      allow(variable_ttf_font).to receive(:table).with("name").and_return(
+        double("name", english_name: "TestFont")
+      )
+      allow(variable_ttf_font).to receive_messages(table_data: {
+                                                     "glyf" => "glyf_data",
+                                                     "fvar" => "fvar_data",
+                                                     "gvar" => "gvar_data",
+                                                     "head" => "\x00" * 54,
+                                                   }, tables: {}, read_table_data: "data")
+
+      # Setup variable OTF font
+      allow(variable_otf_font).to receive(:has_table?).with("glyf").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("CFF ").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("CFF2").and_return(true)
+      allow(variable_otf_font).to receive(:has_table?).with("fvar").and_return(true)
+      allow(variable_otf_font).to receive(:has_table?).with("avar").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("STAT").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("HVAR").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("VVAR").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("MVAR").and_return(false)
+      allow(variable_otf_font).to receive(:has_table?).with("head").and_return(true)
+      allow(variable_otf_font).to receive(:has_table?).with("hhea").and_return(true)
+      allow(variable_otf_font).to receive(:has_table?).with("maxp").and_return(true)
+      allow(variable_otf_font).to receive(:has_table?).with("cmap").and_return(false)
+
+      allow(variable_otf_font).to receive(:table).with("CFF2").and_return(
+        double("cff2", glyph_count: 100, charstring_for_glyph: nil)
+      )
+      allow(variable_otf_font).to receive(:table).with("CFF ").and_return(
+        double("cff", glyph_count: 100, charstring_for_glyph: nil)
+      )
+      allow(variable_otf_font).to receive(:table).with("head").and_return(
+        double("head", units_per_em: 1000)
+      )
+      allow(variable_otf_font).to receive(:table).with("hhea").and_return(double("hhea"))
+      allow(variable_otf_font).to receive(:table).with("maxp").and_return(
+        double("maxp", num_glyphs: 100)
+      )
+      allow(variable_otf_font).to receive_messages(table_data: {
+                                                     "CFF2" => "cff2_data",
+                                                     "fvar" => "fvar_data",
+                                                     "head" => "\x00" * 54,
+                                                   }, tables: {}, read_table_data: "data")
+    end
+
+    describe "variable font detection" do
+      it "detects variable TTF font" do
+        # Mock VariationPreserver to check if it's called
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        converter.convert(variable_ttf_font, :ttf)
+
+        expect(preserver_class).to have_received(:preserve)
+      end
+
+      it "detects non-variable font" do
+        # Mock VariationPreserver to check it's NOT called
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        converter.convert(ttf_font, :ttf)
+
+        expect(preserver_class).not_to have_received(:preserve)
+      end
+    end
+
+    describe "preserve_variation option" do
+      it "preserves variation by default" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        converter.convert(variable_ttf_font, :ttf)
+
+        expect(preserver_class).to have_received(:preserve)
+      end
+
+      it "preserves variation when explicitly enabled" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        converter.convert(variable_ttf_font, :ttf, preserve_variation: true)
+
+        expect(preserver_class).to have_received(:preserve)
+      end
+
+      it "does not preserve variation when disabled" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        converter.convert(variable_ttf_font, :ttf, preserve_variation: false)
+
+        expect(preserver_class).not_to have_received(:preserve)
+      end
+    end
+
+    describe "compatible format preservation (TTF→TTF)" do
+      it "preserves variation tables for same format conversion" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve) do |_font, tables, _options|
+          tables.merge("fvar" => "fvar_data", "gvar" => "gvar_data")
+        end
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        result = converter.convert(variable_ttf_font, :ttf)
+
+        expect(preserver_class).to have_received(:preserve)
+        expect(result).to have_key("fvar")
+        expect(result).to have_key("gvar")
+      end
+    end
+
+    describe "compatible format preservation (OTF→OTF)" do
+      it "preserves variation tables for same format conversion" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve) do |_font, tables, _options|
+          tables.merge("fvar" => "fvar_data", "CFF2" => "cff2_data")
+        end
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        result = converter.convert(variable_otf_font, :otf)
+
+        expect(preserver_class).to have_received(:preserve)
+        expect(result).to have_key("fvar")
+        expect(result).to have_key("CFF2")
+      end
+    end
+
+    describe "format conversion with variation (TTF→OTF)" do
+      it "warns about incomplete conversion and preserves common tables" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        expect do
+          converter.convert(variable_ttf_font, :otf)
+        end.to output(/WARNING.*variation conversion.*not yet implemented/i).to_stderr
+
+        expect(preserver_class).to have_received(:preserve).with(
+          anything,
+          anything,
+          hash_including(
+            preserve_format_specific: false,
+            preserve_metrics: true
+          )
+        )
+      end
+    end
+
+    describe "format conversion with variation (OTF→TTF)" do
+      it "warns about incomplete conversion and preserves common tables" do
+        preserver_class = double("VariationPreserver")
+        allow(preserver_class).to receive(:preserve).and_return({})
+        stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
+
+        expect do
+          converter.convert(variable_otf_font, :ttf)
+        end.to output(/WARNING.*variation conversion.*not yet implemented/i).to_stderr
+
+        expect(preserver_class).to have_received(:preserve).with(
+          anything,
+          anything,
+          hash_including(
+            preserve_format_specific: false,
+            preserve_metrics: true
+          )
+        )
+      end
+    end
+
+    describe "unsupported variation preservation" do
+      it "recognizes SVG as unsupported for variation preservation" do
+        # Check that SVG is neither compatible nor convertible for variations
+        expect(converter.send(:compatible_variation_formats?, :ttf, :svg)).to be false
+        expect(converter.send(:convertible_variation_formats?, :ttf, :svg)).to be false
+        expect(converter.send(:compatible_variation_formats?, :otf, :svg)).to be false
+        expect(converter.send(:convertible_variation_formats?, :otf, :svg)).to be false
+      end
+
+      it "recognizes compatible variation formats" do
+        # Same format
+        expect(converter.send(:compatible_variation_formats?, :ttf, :ttf)).to be true
+        expect(converter.send(:compatible_variation_formats?, :otf, :otf)).to be true
+
+        # Format wrapping (TTF/OTF → WOFF/WOFF2)
+        expect(converter.send(:compatible_variation_formats?, :ttf, :woff2)).to be true
+        expect(converter.send(:compatible_variation_formats?, :otf, :woff2)).to be true
+      end
+
+      it "recognizes convertible variation formats" do
+        # TTF ↔ OTF require variation conversion
+        expect(converter.send(:convertible_variation_formats?, :ttf, :otf)).to be true
+        expect(converter.send(:convertible_variation_formats?, :otf, :ttf)).to be true
       end
     end
   end

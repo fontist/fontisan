@@ -18,6 +18,7 @@ RSpec.describe Fontisan::Collection::Builder do
       allow(f).to receive(:has_table?).with("head").and_return(true)
       allow(f).to receive(:has_table?).with("hhea").and_return(true)
       allow(f).to receive(:has_table?).with("maxp").and_return(true)
+      allow(f).to receive(:has_table?).with("fvar").and_return(false)
     end
   end
 
@@ -36,6 +37,7 @@ RSpec.describe Fontisan::Collection::Builder do
       allow(f).to receive(:has_table?).with("head").and_return(true)
       allow(f).to receive(:has_table?).with("hhea").and_return(true)
       allow(f).to receive(:has_table?).with("maxp").and_return(true)
+      allow(f).to receive(:has_table?).with("fvar").and_return(false)
     end
   end
 

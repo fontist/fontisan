@@ -87,6 +87,16 @@ module Fontisan
     # CFF2 table tag identifier (CFF version 2 with variations)
     CFF2_TAG = "CFF2"
 
+    # TrueType hinting tables
+    # Font Program table (TrueType bytecode executed once at font load)
+    FPGM_TAG = "fpgm"
+
+    # Control Value Program table (TrueType bytecode for initialization)
+    PREP_TAG = "prep"
+
+    # Control Value Table (metrics used by TrueType hinting)
+    CVT_TAG = "cvt "
+
     # Magic number used for font file checksum adjustment calculation.
     # This constant is used in conjunction with the file checksum to compute
     # the checksumAdjustment value stored in the 'head' table.

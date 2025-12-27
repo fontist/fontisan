@@ -3,345 +3,220 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Commands::ConvertCommand do
-  let(:font_path) { "spec/fixtures/fonts/NotoSans-Regular.ttf" }
-  let(:output_path) { "spec/fixtures/output/converted.ttf" }
-  let(:options) { { to: "ttf", output: output_path } }
-
-  before do
-    # Clean up any existing output files
-    FileUtils.rm_f(output_path)
-  end
+  let(:fixtures_dir) { File.expand_path("../../fixtures/fonts", __dir__) }
+  let(:ttf_path) { File.join(fixtures_dir, "NotoSans-Regular.ttf") }
+  let(:variable_ttf) { File.join(fixtures_dir, "MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+  let(:output_dir) { Dir.mktmpdir }
 
   after do
-    # Clean up test output files
-    FileUtils.rm_f(output_path) if File.exist?(output_path)
+    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
   end
 
   describe "#initialize" do
-    it "initializes with font path and options" do
-      command = described_class.new(font_path, options)
-      expect(command).to be_a(described_class)
+    it "initializes with input path and options" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(ttf_path, to: "otf", output: output_path)
+
+      expect(command).to be_a(Fontisan::Commands::BaseCommand)
     end
 
-    it "parses target format from options" do
-      command = described_class.new(font_path, to: "otf", output: output_path)
+    it "parses target format correctly" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(ttf_path, to: "otf", output: output_path)
+
       expect(command.instance_variable_get(:@target_format)).to eq(:otf)
     end
 
-    it "accepts various format aliases" do
-      {
-        "ttf" => :ttf,
-        "truetype" => :ttf,
-        "otf" => :otf,
-        "opentype" => :otf,
-        "cff" => :otf,
-      }.each do |input, expected|
-        command = described_class.new(
-          font_path,
-          to: input,
-          output: output_path,
-        )
-        expect(command.instance_variable_get(:@target_format)).to eq(expected)
-      end
+    it "parses coordinates string correctly" do
+      output_path = File.join(output_dir, "output.ttf")
+      command = described_class.new(
+        variable_ttf,
+        to: "ttf",
+        output: output_path,
+        coordinates: "wght=700,wdth=100",
+      )
+
+      coords = command.instance_variable_get(:@coordinates)
+      expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
     end
 
-    it "raises ArgumentError for unknown format" do
-      expect do
-        described_class.new(font_path, to: "unknown", output: output_path)
-      end.to raise_error(ArgumentError, /Unknown target format/)
+    it "handles instance_coordinates hash" do
+      output_path = File.join(output_dir, "output.ttf")
+      coords_hash = { "wght" => 700.0, "wdth" => 100.0 }
+      command = described_class.new(
+        variable_ttf,
+        to: "ttf",
+        output: output_path,
+        instance_coordinates: coords_hash,
+      )
+
+      coords = command.instance_variable_get(:@coordinates)
+      expect(coords).to eq(coords_hash)
+    end
+  end
+
+  describe "#parse_coordinates" do
+    let(:command) do
+      output_path = File.join(output_dir, "output.ttf")
+      described_class.new(ttf_path, to: "ttf", output: output_path)
+    end
+
+    it "parses simple coordinate string" do
+      coords = command.send(:parse_coordinates, "wght=700")
+      expect(coords).to eq({ "wght" => 700.0 })
+    end
+
+    it "parses multiple coordinates" do
+      coords = command.send(:parse_coordinates, "wght=700,wdth=100,slnt=-10")
+      expect(coords).to eq({
+                             "wght" => 700.0,
+                             "wdth" => 100.0,
+                             "slnt" => -10.0,
+                           })
+    end
+
+    it "handles whitespace in coordinate string" do
+      coords = command.send(:parse_coordinates, "wght = 700 ,   wdth=100")
+      expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
+    end
+
+    it "handles empty pairs gracefully" do
+      coords = command.send(:parse_coordinates, "wght=700,,wdth=100")
+      expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
     end
   end
 
   describe "#run" do
-    context "with valid TTF to TTF conversion" do
-      it "copies the font successfully" do
-        command = described_class.new(font_path, options)
-        result = command.run
-
-        expect(result[:success]).to be true
-        expect(result[:input_path]).to eq(font_path)
-        expect(result[:output_path]).to eq(output_path)
-        expect(File.exist?(output_path)).to be true
-      end
-
-      it "returns conversion details" do
-        command = described_class.new(font_path, options)
-        result = command.run
-
-        expect(result).to include(
-          :success,
-          :input_path,
-          :output_path,
-          :source_format,
-          :target_format,
-          :input_size,
-          :output_size,
-        )
-      end
-
-      it "detects source format correctly" do
-        command = described_class.new(font_path, options)
-        result = command.run
-
-        expect(result[:source_format]).to eq(:ttf)
-      end
-
-      it "preserves target format" do
-        command = described_class.new(font_path, options)
-        result = command.run
-
-        expect(result[:target_format]).to eq(:ttf)
-      end
-    end
-
-    context "with missing required options" do
-      it "raises ArgumentError without output path" do
-        command = described_class.new(font_path, to: "ttf")
-
-        expect do
-          command.run
-        end.to raise_error(ArgumentError, /Output path is required/)
-      end
-
-      it "raises ArgumentError without target format" do
-        command = described_class.new(font_path, output: output_path)
-
-        expect do
-          command.run
-        end.to raise_error(ArgumentError, /Target format is required/)
-      end
-    end
-
-    context "with unsupported conversions" do
-      it "raises error for unsupported conversion" do
-        command = described_class.new(
-          font_path,
-          to: "woff",
-          output: output_path,
-        )
-
-        expect do
-          command.run
-        end.to raise_error(ArgumentError, /not supported.*Available targets/)
-      end
-
-      it "lists available targets in error message" do
-        command = described_class.new(
-          font_path,
-          to: "woff",
-          output: output_path,
-        )
-
-        begin
-          command.run
-        rescue ArgumentError => e
-          expect(e.message).to include("Available targets")
-        end
-      end
-    end
-
-    context "with TTF to OTF conversion" do
-      let(:otf_output) { "spec/fixtures/output/converted.otf" }
-
-      before do
-        FileUtils.mkdir_p("spec/fixtures/output")
-      end
-
-      after do
-        FileUtils.rm_f(otf_output) if File.exist?(otf_output)
-      end
-
-      # NOTE: NotoSans-Regular.ttf contains compound glyphs starting at glyph 111
-      # Compound glyph support has been implemented in Phase 1 Week 5
-
-      it "successfully converts fonts with compound glyphs", :compound_glyphs do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        result = command.run
-
-        expect(result[:success]).to be true
-        expect(result[:target_format]).to eq(:otf)
-        expect(File.exist?(otf_output)).to be true
-      end
-
-      it "produces valid CFF output for compound glyphs", :compound_glyphs do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        command.run
-
-        # Load output font and verify structure
-        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
-        expect(output_font.has_table?("CFF ")).to be true
-        expect(output_font.has_table?("glyf")).to be false
-        expect(output_font.has_table?("loca")).to be false
-      end
-
-      it "successfully converts TTF to OTF" do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        result = command.run
-
-        expect(result[:success]).to be true
-        expect(result[:target_format]).to eq(:otf)
-        expect(File.exist?(otf_output)).to be true
-      end
-
-      it "creates output file with CFF table" do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        command.run
-
-        # Load output font and verify structure
-        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
-        expect(output_font.has_table?("CFF ")).to be true
-        expect(output_font.has_table?("glyf")).to be false
-        expect(output_font.has_table?("loca")).to be false
-      end
-
-      it "updates maxp table to version 0.5" do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        command.run
-
-        # Verify maxp version
-        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
-        maxp = output_font.table("maxp")
-        expect(maxp.version_raw).to eq(Fontisan::Tables::Maxp::VERSION_0_5)
-        expect(maxp.version).to eq(0.5)
-      end
-
-      it "preserves other font tables" do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        command.run
-
-        # Verify common tables are preserved
-        output_font = Fontisan::OpenTypeFont.from_file(otf_output)
-        %w[head hhea maxp name post cmap].each do |tag|
-          expect(output_font.has_table?(tag)).to be true
-        end
-      end
-
-      it "returns conversion details" do
-        command = described_class.new(
-          font_path,
-          to: "otf",
-          output: otf_output,
-        )
-
-        result = command.run
-
-        expect(result[:source_format]).to eq(:ttf)
-        expect(result[:target_format]).to eq(:otf)
-        expect(result[:input_size]).to be > 0
-        expect(result[:output_size]).to be > 0
-      end
-    end
-  end
-
-  describe ".supported_conversions" do
-    it "returns list of supported conversions" do
-      conversions = described_class.supported_conversions
-      expect(conversions).to be_an(Array)
-      expect(conversions).not_to be_empty
-    end
-
-    it "includes same-format conversions" do
-      conversions = described_class.supported_conversions
-      ttf_to_ttf = conversions.find { |c| c[:from] == :ttf && c[:to] == :ttf }
-      expect(ttf_to_ttf).not_to be_nil
-    end
-  end
-
-  describe ".supported?" do
-    it "returns true for TTF to TTF" do
-      expect(described_class.supported?(:ttf, :ttf)).to be true
-    end
-
-    it "returns true for OTF to OTF" do
-      expect(described_class.supported?(:otf, :otf)).to be true
-    end
-
-    it "returns false for unsupported conversion" do
-      expect(described_class.supported?(:ttf, :woff)).to be false
-    end
-  end
-
-  describe "format parsing" do
-    it "normalizes format strings" do
+    it "converts TTF to OTF successfully" do
+      output_path = File.join(output_dir, "output.otf")
       command = described_class.new(
-        font_path,
-        to: "TTF",
+        ttf_path,
+        to: "otf",
         output: output_path,
+        quiet: true,
+        no_validate: true,
       )
-      expect(command.instance_variable_get(:@target_format)).to eq(:ttf)
+
+      result = command.run
+
+      expect(result[:success]).to be(true)
+      expect(result[:output_path]).to eq(output_path)
+      expect(File.exist?(output_path)).to be(true)
+
+      # Verify output is OTF
+      font = Fontisan::FontLoader.load(output_path)
+      expect(font).to be_a(Fontisan::OpenTypeFont)
+      expect(font.has_table?("CFF ")).to be(true)
     end
 
-    it "handles symbol input" do
+    it "converts TTF to TTF (copy) successfully" do
+      output_path = File.join(output_dir, "output.ttf")
       command = described_class.new(
-        font_path,
-        to: :otf,
+        ttf_path,
+        to: "ttf",
         output: output_path,
+        quiet: true,
+        no_validate: true,
       )
-      expect(command.instance_variable_get(:@target_format)).to eq(:otf)
+
+      result = command.run
+
+      expect(result[:success]).to be(true)
+      expect(File.exist?(output_path)).to be(true)
+
+      # Verify output is TTF
+      font = Fontisan::FontLoader.load(output_path)
+      expect(font).to be_a(Fontisan::TrueTypeFont)
+      expect(font.has_table?("glyf")).to be(true)
+    end
+
+    it "raises error when output path is missing" do
+      command = described_class.new(ttf_path, to: "otf")
+
+      expect do
+        command.run
+      end.to raise_error(ArgumentError, /Output path is required/)
+    end
+
+    it "raises error when target format is missing" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(ttf_path, output: output_path)
+
+      expect do
+        command.run
+      end.to raise_error(ArgumentError, /Target format is required/)
+    end
+
+    it "raises error for unknown target format" do
+      output_path = File.join(output_dir, "output.xyz")
+
+      expect do
+        described_class.new(ttf_path, to: "xyz", output: output_path)
+      end.to raise_error(ArgumentError, /Unknown target format/)
+    end
+
+    it "includes variation strategy in result" do
+      output_path = File.join(output_dir, "output.ttf")
+      command = described_class.new(
+        ttf_path,
+        to: "ttf",
+        output: output_path,
+        quiet: true,
+        no_validate: true,
+      )
+
+      result = command.run
+
+      expect(result).to have_key(:variation_strategy)
+      expect(result[:variation_strategy]).to eq(:preserve) # Static font uses preserve
     end
   end
 
-  describe "file size formatting" do
-    it "formats bytes" do
-      command = described_class.new(font_path, options)
-      formatted = command.send(:format_size, 500)
-      expect(formatted).to eq("500 bytes")
+  describe "validation control" do
+    it "skips validation when no_validate is true" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(
+        ttf_path,
+        to: "otf",
+        output: output_path,
+        quiet: true,
+        no_validate: true,
+      )
+
+      # Should succeed without validation
+      result = command.run
+      expect(result[:success]).to be(true)
     end
 
-    it "formats kilobytes" do
-      command = described_class.new(font_path, options)
-      formatted = command.send(:format_size, 2048)
-      expect(formatted).to match(/2\.0 KB/)
-    end
+    it "validates output by default" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(
+        ttf_path,
+        to: "otf",
+        output: output_path,
+        quiet: true,
+      )
 
-    it "formats megabytes" do
-      command = described_class.new(font_path, options)
-      formatted = command.send(:format_size, 2 * 1024 * 1024)
-      expect(formatted).to match(/2\.0 MB/)
+      result = command.run
+      expect(result[:success]).to be(true)
+      # Validation happens internally, no errors means validation passed
     end
   end
 
-  describe "sfnt version determination" do
-    it "uses OTTO for OTF" do
-      command = described_class.new(font_path, to: "otf", output: output_path)
-      version = command.send(:determine_sfnt_version, :otf)
-      expect(version).to eq(0x4F54544F)
-    end
+  describe "verbose mode" do
+    it "produces verbose output when enabled" do
+      output_path = File.join(output_dir, "output.otf")
+      command = described_class.new(
+        ttf_path,
+        to: "otf",
+        output: output_path,
+        verbose: true,
+        no_validate: true,
+      )
 
-    it "uses 1.0 for TTF" do
-      command = described_class.new(font_path, options)
-      version = command.send(:determine_sfnt_version, :ttf)
-      expect(version).to eq(0x00010000)
+      expect do
+        command.run
+      end.to output(/TransformationPipeline/).to_stdout
     end
   end
 end

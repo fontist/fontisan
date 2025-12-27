@@ -114,7 +114,7 @@ module Fontisan
         skip_tables = @checksum_config["skip_tables"] || []
 
         font.tables.each do |table_entry|
-          tag = table_entry.tag
+          tag = table_entry.tag.to_s  # Convert BinData field to string
 
           # Skip tables that are exempt from checksum validation
           next if skip_tables.include?(tag)
@@ -125,7 +125,7 @@ module Fontisan
 
           # Calculate checksum for the table
           calculated_checksum = calculate_table_checksum(table_data)
-          declared_checksum = table_entry.checksum
+          declared_checksum = table_entry.checksum.to_i  # Convert BinData field to integer
 
           # Special handling for head table (checksum adjustment field should be 0)
           if tag == Constants::HEAD_TAG
