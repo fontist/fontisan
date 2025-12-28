@@ -10,7 +10,8 @@ FIXTURES_DIR = File.join(__dir__, "fixtures")
 REQUIRED_FIXTURES = [
   File.join(FIXTURES_DIR, "fonts/NotoSans-Regular.ttf"),
   File.join(FIXTURES_DIR, "fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"),
-  File.join(FIXTURES_DIR, "fonts/MonaSans/MonaSans/variable/MonaSans[wdth,wght].ttf"),
+  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf"),
+  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/static/ttf/MonaSans-ExtraLightItalic.ttf"),
   File.join(FIXTURES_DIR, "fonts/NotoSerifCJK/NotoSerifCJK.ttc"),
   File.join(FIXTURES_DIR, "fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc"),
 ].freeze
@@ -18,7 +19,7 @@ REQUIRED_FIXTURES = [
 unless REQUIRED_FIXTURES.all? { |f| File.exist?(f) }
   warn "Test fixtures not found. Downloading..."
   require "rake"
-  Rake.application.rake_require "Rakefile", [File.expand_path("../../Rakefile", __dir__)]
+  Rake.application.rake_require "Rakefile", [File.expand_path("../Rakefile", __dir__)]
   Rake::Task["fixtures:download"].invoke
 end
 
