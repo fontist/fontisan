@@ -31,18 +31,25 @@ namespace :fixtures do
     require "open-uri"
     require "zip"
 
-    zip_file = "#{target_dir}/#{name}.zip"
-
     puts "[fixtures:download] Downloading #{name}..."
     FileUtils.mkdir_p(target_dir)
 
-    URI.open(url) do |remote|
-      File.binwrite(zip_file, remote.read)
+    # Create a manual temp file path - OS will clean up temp files automatically
+    temp_path = File.join(Dir.tmpdir, "fontisan_#{name}_#{Process.pid}_#{rand(10000)}.zip")
+
+    # Download using IO.copy_stream for better Windows compatibility
+    URI.open(url, "rb") do |remote|
+      File.open(temp_path, "wb") do |file|
+        IO.copy_stream(remote, file)
+      end
     end
 
     puts "[fixtures:download] Extracting #{name}..."
-    Zip::File.open(zip_file) do |zip|
-      zip.each do |entry|
+
+    # Open zip file and ensure it's fully closed before we're done
+    zip_file = Zip::File.open(temp_path)
+    begin
+      zip_file.each do |entry|
         # Skip macOS metadata files and directories
         next if entry.name.start_with?("__MACOSX/") || entry.name.include?("/._")
         next if entry.directory?
@@ -56,12 +63,18 @@ namespace :fixtures do
         # Skip if file already exists
         next if File.exist?(dest_path)
 
-        # Write the file content directly
-        File.binwrite(dest_path, entry.get_input_stream.read)
+        # Write the file content directly using binary mode
+        File.open(dest_path, "wb") do |file|
+          IO.copy_stream(entry.get_input_stream, file)
+        end
       end
+    ensure
+      # Explicitly close the zip file to release file handle on Windows
+      zip_file.close if zip_file
     end
 
-    FileUtils.rm(zip_file)
+    # Temp file left in Dir.tmpdir - OS will clean it up automatically
+
     puts "[fixtures:download] #{name} downloaded successfully"
   rescue LoadError => e
     warn "[fixtures:download] Error: Required gem not installed. Please run: gem install rubyzip"
