@@ -218,7 +218,7 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
   end
 
   describe "variation strategy selection" do
-    let(:variable_font) { File.join(fixture_path, "MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+    let(:variable_font) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
 
     context "with static font" do
       it "uses preserve strategy" do

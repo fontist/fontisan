@@ -4,8 +4,7 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Validation::Validator do
   let(:valid_font_path) do
-    File.join(__dir__, "..", "..", "fixtures", "fonts", "MonaSans", "fonts",
-              "static", "ttf", "MonaSans-ExtraLightItalic.ttf")
+    font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
   end
 
   describe ".new" do

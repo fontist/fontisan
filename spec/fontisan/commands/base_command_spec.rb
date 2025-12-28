@@ -56,7 +56,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
     end
 
     context "with a TTC file" do
-      let(:ttc_file) { "spec/fixtures/fonts/NotoSerifCJK/NotoSerifCJK.ttc" }
+      let(:ttc_file) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
 
       it "detects TTC files and uses default font_index" do
         skip "TTC fixture not downloaded" unless File.exist?(ttc_file)
@@ -83,7 +83,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
     context "with an OTC file" do
       let(:otc_file) do
-        "spec/fixtures/fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc"
+        font_fixture_path("NotoSerifCJK-VF", "Variable/OTC/NotoSerifCJK-VF.otf.ttc")
       end
 
       it "detects OTC files and loads OpenType fonts" do

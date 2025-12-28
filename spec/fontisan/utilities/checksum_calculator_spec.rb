@@ -6,7 +6,7 @@ require "tempfile"
 RSpec.describe Fontisan::Utilities::ChecksumCalculator do
   describe ".calculate_file_checksum" do
     it "calculates checksum for a font file" do
-      font_path = File.join(FIXTURES_DIR, "fonts", "noto-sans/NotoSans-Regular.ttf")
+      font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
       checksum = described_class.calculate_file_checksum(font_path)
 
       expect(checksum).to be_a(Integer)
@@ -167,7 +167,7 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
 
   describe "integration with font files" do
     it "calculates consistent checksums" do
-      font_path = File.join(FIXTURES_DIR, "fonts", "noto-sans/NotoSans-Regular.ttf")
+      font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
 
       # Calculate using direct file method
       checksum1 = described_class.calculate_file_checksum(font_path)

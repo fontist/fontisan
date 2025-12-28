@@ -8,8 +8,7 @@ require "tempfile"
 
 RSpec.describe "WOFF2 Conversion Integration", type: :integration do
   let(:test_font_path) do
-    File.join(File.dirname(__FILE__), "..", "fixtures", "fonts",
-              "NotoSans-Regular.ttf")
+    font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
   end
 
   let(:output_dir) do
@@ -207,8 +206,7 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
 
   describe "with different font types" do
     let(:cff_font_path) do
-      File.join(File.dirname(__FILE__), "..", "fixtures", "fonts",
-                "libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
+      font_fixture_path("libertinus", "Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
     end
 
     it "converts CFF/OTF font to WOFF2" do

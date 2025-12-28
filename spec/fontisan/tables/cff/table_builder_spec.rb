@@ -4,7 +4,7 @@ require "spec_helper"
 require "fontisan/tables/cff/table_builder"
 
 RSpec.describe Fontisan::Tables::Cff::TableBuilder do
-  let(:font_path) { "spec/fixtures/fonts/SourceSansPro-Regular.otf" }
+  let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
   let(:font) { Fontisan::FontLoader.load(font_path) }
   let(:source_cff) { font.table("CFF ") }
 

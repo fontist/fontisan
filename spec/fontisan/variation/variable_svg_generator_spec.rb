@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Variation::VariableSvgGenerator do
   let(:variable_ttf_path) do
-    fixture_path("fonts/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf")
+    font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
   end
   let(:variable_font) { Fontisan::FontLoader.load(variable_ttf_path) }
 
@@ -34,7 +34,7 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
 
     context "with non-variable font" do
       let(:static_font_path) do
-        fixture_path("fonts/MonaSans/fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
+        font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
       end
       let(:static_font) { Fontisan::FontLoader.load(static_font_path) }
 
