@@ -561,11 +561,11 @@ RSpec.describe Fontisan::Tables::Maxp do
 
   describe "integration with real fonts" do
     let(:libertinus_serif_ttf_path) do
-      font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
+      font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
     end
 
     let(:libertinus_serif_otf_path) do
-      font_fixture_path("libertinus", "Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
+      font_fixture_path("Libertinus", "static/OTF/LibertinusSerif-Regular.otf")
     end
 
     context "when reading from TrueType font" do

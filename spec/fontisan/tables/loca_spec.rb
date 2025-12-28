@@ -590,7 +590,7 @@ RSpec.describe Fontisan::Tables::Loca do
 
   describe "integration with real fonts" do
     let(:libertinus_serif_ttf_path) do
-      font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
+      font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
     end
 
     context "when reading from TrueType font" do

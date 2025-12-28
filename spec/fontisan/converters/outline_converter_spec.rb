@@ -210,7 +210,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
   describe "hint preservation" do
     context "TTF to OTF with preserve_hints: true", :slow do
       it "extracts, converts, and applies hints" do
-        font_path = font_fixture_path("noto-sans", "NotoSans-Regular.ttf")
+        font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new
@@ -228,7 +228,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "TTF to OTF with preserve_hints: false" do
       it "skips hint extraction and conversion" do
-        font_path = font_fixture_path("noto-sans", "NotoSans-Regular.ttf")
+        font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new
@@ -245,7 +245,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "OTF to TTF with preserve_hints: true", :slow do
       it "extracts, converts, and applies hints" do
-        font_path = font_fixture_path("SourceSans3", "SourceSansPro-Regular.otf")
+        font_path = font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new
@@ -264,7 +264,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "OTF to TTF with preserve_hints: false" do
       it "skips hint extraction and conversion" do
-        font_path = font_fixture_path("SourceSans3", "SourceSansPro-Regular.otf")
+        font_path = font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new
@@ -283,7 +283,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "error handling" do
       it "handles fonts without hints gracefully" do
-        font_path = font_fixture_path("noto-sans", "NotoSans-Regular.ttf")
+        font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new
@@ -295,7 +295,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       end
 
       it "handles hint extraction failures gracefully" do
-        font_path = font_fixture_path("noto-sans", "NotoSans-Regular.ttf")
+        font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
 
         font = Fontisan::FontLoader.load(font_path)
         converter = described_class.new

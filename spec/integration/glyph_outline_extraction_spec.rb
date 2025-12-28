@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "Glyph Outline Extraction Integration" do
   let(:font_path) do
-    font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
+    font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
   end
   let(:font) { Fontisan::FontLoader.load(font_path) }
   let(:accessor) { Fontisan::GlyphAccessor.new(font) }

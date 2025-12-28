@@ -22,14 +22,14 @@ module FixtureFonts
     },
     "NotoSans" => {
       url: "https://github.com/notofonts/notofonts.github.io/raw/refs/heads/main/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf",
-      target_dir: "noto-sans",
+      target_dir: "NotoSans",
       path_prefix: "", # Single file, no prefix needed
       single_file: true,
       markers: ["NotoSans-Regular.ttf"],
     },
     "Libertinus" => {
       url: "https://github.com/alerque/libertinus/releases/download/v7.051/Libertinus-7.051.zip",
-      target_dir: "libertinus",
+      target_dir: "Libertinus",
       path_prefix: "Libertinus-7.051", # Archive extracts to Libertinus-7.051/
       markers: ["Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"],
     },
