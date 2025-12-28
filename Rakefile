@@ -9,7 +9,8 @@ require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
 namespace :fixtures do
-  fixtures_dir = "spec/fixtures/fonts"
+  # Load centralized fixture configuration
+  require_relative "spec/support/fixture_fonts"
 
   # Helper method to download a single file
   def download_single_file(name, url, target_path)
@@ -42,9 +43,21 @@ namespace :fixtures do
     puts "[fixtures:download] Extracting #{name}..."
     Zip::File.open(zip_file) do |zip|
       zip.each do |entry|
-        dest_path = File.join(target_dir, entry.name)
+        # Skip macOS metadata files and directories
+        next if entry.name.start_with?("__MACOSX/") || entry.name.include?("/._")
+        next if entry.directory?
+
+        # Ensure entry.name is relative by stripping leading slashes
+        relative_name = entry.name.sub(%r{^/+}, "")
+
+        dest_path = File.join(target_dir, relative_name)
         FileUtils.mkdir_p(File.dirname(dest_path))
-        entry.extract(dest_path) unless File.exist?(dest_path)
+
+        # Skip if file already exists
+        next if File.exist?(dest_path)
+
+        # Write the file content directly
+        File.binwrite(dest_path, entry.get_input_stream.read)
       end
     end
 
@@ -55,36 +68,8 @@ namespace :fixtures do
     raise e
   end
 
-  # Font configurations with target directories and marker files
-  # All fonts are downloaded via Rake
-  fonts = {
-    "NotoSans" => {
-      url: "https://github.com/notofonts/notofonts.github.io/raw/refs/heads/main/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf",
-      target_dir: "#{fixtures_dir}/noto-sans",
-      marker: "#{fixtures_dir}/noto-sans/NotoSans-Regular.ttf",
-      single_file: true,
-    },
-    "Libertinus" => {
-      url: "https://github.com/alerque/libertinus/releases/download/v7.051/Libertinus-7.051.zip",
-      target_dir: "#{fixtures_dir}/libertinus",
-      marker: "#{fixtures_dir}/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf",
-    },
-    "MonaSans" => {
-      url: "https://github.com/github/mona-sans/releases/download/v2.0/MonaSans.zip",
-      target_dir: "#{fixtures_dir}/MonaSans",
-      marker: "#{fixtures_dir}/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf",
-    },
-    "NotoSerifCJK" => {
-      url: "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/01_NotoSerifCJK.ttc.zip",
-      target_dir: "#{fixtures_dir}/NotoSerifCJK",
-      marker: "#{fixtures_dir}/NotoSerifCJK/NotoSerifCJK.ttc",
-    },
-    "NotoSerifCJK-VF" => {
-      url: "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/02_NotoSerifCJK-OTF-VF.zip",
-      target_dir: "#{fixtures_dir}/NotoSerifCJK-VF",
-      marker: "#{fixtures_dir}/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc",
-    },
-  }
+  # Get font configurations from centralized source
+  fonts = FixtureFonts.rakefile_config
 
   # Create file tasks for each font
   fonts.each do |name, config|
@@ -103,11 +88,11 @@ namespace :fixtures do
   desc "Clean downloaded fixtures"
   task :clean do
     fonts.values.map { |config| config[:target_dir] }.each do |path|
+      next unless File.exist?(path)
+
       puts "[fixtures:clean] Removing #{path}..."
-      if File.exist?(path)
-        # FileUtils.rm_rf(path)
-        puts "[fixtures:clean] Removed #{path}"
-      end
+      FileUtils.rm_rf(path)
+      puts "[fixtures:clean] Removed #{path}"
     end
   end
 end

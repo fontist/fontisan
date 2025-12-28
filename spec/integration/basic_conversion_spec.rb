@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe "Basic format conversions", :integration do
   let(:fixtures_dir) { File.expand_path("../fixtures/fonts", __dir__) }
-  let(:ttf_path) { File.join(fixtures_dir, "noto-sans/NotoSans-Regular.ttf") }
-  let(:variable_ttf) { File.join(fixtures_dir, "MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+  let(:ttf_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
+  let(:variable_ttf) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
   let(:output_dir) { Dir.mktmpdir }
 
   after do
@@ -74,7 +74,7 @@ RSpec.describe "Basic format conversions", :integration do
   end
 
   describe "OTF to TTF conversion" do
-    let(:otf_path) { File.join(fixtures_dir, "MonaSans/fonts/static/otf/MonaSansCondensed-ExtraBoldItalic.otf") }
+    let(:otf_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSansCondensed-ExtraBoldItalic.otf") }
 
     it "produces valid TTF with glyf table" do
       output_path = File.join(output_dir, "output.ttf")

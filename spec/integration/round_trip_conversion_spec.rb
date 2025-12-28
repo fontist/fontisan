@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "Round-trip conversions", :integration do
   let(:fixtures_dir) { File.expand_path("../fixtures/fonts", __dir__) }
-  let(:ttf_path) { File.join(fixtures_dir, "noto-sans/NotoSans-Regular.ttf") }
+  let(:ttf_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
   let(:output_dir) { Dir.mktmpdir }
 
   after do

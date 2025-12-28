@@ -3,20 +3,14 @@
 require "fontisan"
 require "tempfile"
 
+# Load centralized fixture configuration
+require_relative "support/fixture_fonts"
+
 # Define the fixtures directory constant for test files
 FIXTURES_DIR = File.join(__dir__, "fixtures")
 
 # Check if test fixtures exist, download if missing
-REQUIRED_FIXTURES = [
-  File.join(FIXTURES_DIR, "fonts/noto-sans/NotoSans-Regular.ttf"),
-  File.join(FIXTURES_DIR, "fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"),
-  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf"),
-  File.join(FIXTURES_DIR, "fonts/MonaSans/fonts/static/ttf/MonaSans-ExtraLightItalic.ttf"),
-  File.join(FIXTURES_DIR, "fonts/NotoSerifCJK/NotoSerifCJK.ttc"),
-  File.join(FIXTURES_DIR, "fonts/NotoSerifCJK-VF/Variable/OTC/NotoSerifCJK-VF.otf.ttc"),
-].freeze
-
-unless REQUIRED_FIXTURES.all? { |f| File.exist?(f) }
+unless FixtureFonts.required_markers.all? { |f| File.exist?(f) }
   warn "Test fixtures not found. Downloading..."
   require "rake"
   rakefile_path = File.expand_path("../Rakefile", __dir__)
@@ -37,8 +31,22 @@ RSpec.configure do |config|
 
   # Add fixture_path helper method
   config.include(Module.new do
+    # Legacy helper - maintains backward compatibility
+    # @param relative_path [String] Path relative to fixtures/fonts/
     def fixture_path(relative_path)
       File.join(FIXTURES_DIR, relative_path)
+    end
+
+    # New helper - uses centralized configuration
+    # @param font_name [String] Font name (e.g., "MonaSans")
+    # @param relative_path [String] Logical path within font (e.g., "static/ttf/MonaSans-Bold.ttf")
+    # @return [String] Absolute path to font file
+    #
+    # @example
+    #   font_fixture_path("MonaSans", "static/ttf/MonaSans-ExtraLightItalic.ttf")
+    #   # => "/path/to/spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/static/ttf/MonaSans-ExtraLightItalic.ttf"
+    def font_fixture_path(font_name, relative_path)
+      FixtureFonts.path(font_name, relative_path)
     end
   end)
 end

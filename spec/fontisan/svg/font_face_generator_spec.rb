@@ -4,7 +4,7 @@ require "spec_helper"
 require "fontisan/svg/font_face_generator"
 
 RSpec.describe Fontisan::Svg::FontFaceGenerator do
-  let(:font) { Fontisan::FontLoader.load(fixture_path("fonts/MonaSans/fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")) }
+  let(:font) { Fontisan::FontLoader.load(font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")) }
   let(:generator) { described_class.new(font) }
 
   describe "#initialize" do

@@ -4,13 +4,8 @@ require "spec_helper"
 require "fontisan/pipeline/format_detector"
 
 RSpec.describe Fontisan::Pipeline::FormatDetector do
-  # Helper to get fixture path
-  def fixture_font_path(filename)
-    File.join(File.dirname(__FILE__), "../../fixtures/fonts", filename)
-  end
-
   describe "#initialize" do
-    let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+    let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
     let(:detector) { described_class.new(file_path) }
 
     it "initializes with file path" do
@@ -24,7 +19,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#detect_format" do
     context "with TrueType font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects TTF format" do
@@ -34,7 +29,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with OpenType font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects OTF format" do
@@ -44,7 +39,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with OpenType Collection" do
-      let(:file_path) { fixture_font_path("NotoSerifCJK/NotoSerifCJK.ttc") }
+      let(:file_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects OTC format" do
@@ -76,7 +71,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#detect_variation" do
     context "with static TTF font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects static variation type" do
@@ -86,7 +81,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with static OTF font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects static variation type" do
@@ -96,7 +91,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with TrueType variable font (gvar)" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects gvar variation type" do
@@ -106,7 +101,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with collection" do
-      let(:file_path) { fixture_font_path("NotoSerifCJK/NotoSerifCJK.ttc") }
+      let(:file_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects static for collection" do
@@ -118,7 +113,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#detect_capabilities" do
     context "with TrueType font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects truetype outline type" do
@@ -143,7 +138,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with OpenType/CFF font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects CFF outline type" do
@@ -158,7 +153,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with variable font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects variation support" do
@@ -173,7 +168,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with collection" do
-      let(:file_path) { fixture_font_path("NotoSerifCJK/NotoSerifCJK.ttc") }
+      let(:file_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
       let(:detector) { described_class.new(file_path) }
 
       it "detects collection support" do
@@ -185,7 +180,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#collection?" do
     context "with TrueType Collection" do
-      let(:file_path) { fixture_font_path("NotoSerifCJK/NotoSerifCJK.ttc") }
+      let(:file_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
       let(:detector) { described_class.new(file_path) }
 
       it "returns true" do
@@ -195,7 +190,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with single font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "returns false" do
@@ -207,7 +202,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#variable?" do
     context "with variable font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "returns true" do
@@ -217,7 +212,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with static font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "returns false" do
@@ -229,7 +224,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#compatible_with?" do
     context "with static TTF font" do
-      let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+      let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "is compatible with same format" do
@@ -247,7 +242,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with gvar variable font" do
-      let(:file_path) { fixture_font_path("MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
+      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
       let(:detector) { described_class.new(file_path) }
 
       it "is compatible with TrueType formats" do
@@ -265,7 +260,7 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
   end
 
   describe "#detect" do
-    let(:file_path) { fixture_font_path("NotoSans-Regular.ttf") }
+    let(:file_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
     let(:detector) { described_class.new(file_path) }
 
     it "returns hash with all detection results" do

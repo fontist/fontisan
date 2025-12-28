@@ -7,7 +7,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
   let(:tables) { {} }
 
   describe "#apply" do
-    let(:font_path) { fixture_path("fonts/SourceSansPro-Regular.otf") }
+    let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
     let(:font) { Fontisan::FontLoader.load(font_path) }
     let(:real_cff_table) { font.table("CFF ") }
 
@@ -366,7 +366,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
 
   # Integration tests with real CFF tables
   describe "CFF table modification (integration)" do
-    let(:font_path) { "spec/fixtures/fonts/SourceSansPro-Regular.otf" }
+    let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
     let(:font) { Fontisan::FontLoader.load(font_path) }
     let(:real_cff_table) { font.table("CFF ") }
     let(:tables) { { "CFF " => real_cff_table } }
@@ -428,7 +428,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
   end
 
   describe "per-glyph hint support" do
-    let(:cff_font_path) { fixture_path("fonts/SourceSansPro-Regular.otf") }
+    let(:cff_font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
     let(:cff_font) { Fontisan::FontLoader.load(cff_font_path) }
     let(:tables) { { "CFF " => cff_font.table("CFF ") } }
 
@@ -829,7 +829,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         end
 
         it "routes to CFF when only CFF table present" do
-          font_path = fixture_path("fonts/SourceSansPro-Regular.otf")
+          font_path = font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
           font = Fontisan::FontLoader.load(font_path)
           cff_table = font.table("CFF ")
 

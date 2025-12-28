@@ -5,8 +5,7 @@ require "fontisan"
 
 RSpec.describe "Round-Trip Validation (Simplified)" do
   let(:ttf_font_path) do
-    File.join(File.dirname(__FILE__), "..", "fixtures", "fonts",
-              "NotoSans-Regular.ttf")
+    font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
   end
 
   let(:converter) { Fontisan::Converters::OutlineConverter.new }

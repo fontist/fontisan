@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Subset::TableSubsetter do
-  let(:font_path) { fixture_path("fonts/noto-sans/NotoSans-Regular.ttf") }
+  let(:font_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
   let(:font) { Fontisan::TrueTypeFont.from_file(font_path) }
   let(:glyph_ids) { [0, 1, 65, 66, 67] } # .notdef, NULL, A, B, C
   let(:mapping) do

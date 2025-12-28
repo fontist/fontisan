@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Commands::SubsetCommand do
-  let(:font_path) { fixture_path("fonts/noto-sans/NotoSans-Regular.ttf") }
+  let(:font_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
   let(:output_path) { File.join(Dir.tmpdir, "subset_test.ttf") }
 
   after do
