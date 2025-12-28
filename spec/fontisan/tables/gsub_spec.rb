@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Tables::Gsub do
   let(:ttf_font_path) do
-    "spec/fixtures/fonts/NotoSans-Regular.ttf"
+    "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
   end
   let(:otf_font_path) do
     "spec/fixtures/fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"

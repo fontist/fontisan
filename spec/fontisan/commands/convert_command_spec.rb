@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Commands::ConvertCommand do
   let(:fixtures_dir) { File.expand_path("../../fixtures/fonts", __dir__) }
-  let(:ttf_path) { File.join(fixtures_dir, "NotoSans-Regular.ttf") }
+  let(:ttf_path) { File.join(fixtures_dir, "noto-sans/NotoSans-Regular.ttf") }
   let(:variable_ttf) { File.join(fixtures_dir, "MonaSans/fonts/variable/MonaSansVF[wdth,wght,opsz].ttf") }
   let(:output_dir) { Dir.mktmpdir }
 

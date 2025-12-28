@@ -170,7 +170,7 @@ RSpec.describe Fontisan::LoadingModes do
 end
 
 RSpec.describe "Loading Modes Integration" do
-  let(:ttf_path) { fixture_path("fonts/NotoSans-Regular.ttf") }
+  let(:ttf_path) { fixture_path("fonts/noto-sans/NotoSans-Regular.ttf") }
   let(:otf_path) { fixture_path("fonts/MonaSans/fonts/static/otf/MonaSans-Medium.otf") }
 
   describe "FontLoader" do

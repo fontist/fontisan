@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe "Format Conversion Integration" do
-  let(:ttf_font_path) { "spec/fixtures/fonts/NotoSans-Regular.ttf" }
+  let(:ttf_font_path) { "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf" }
   let(:output_dir) { "spec/fixtures/output" }
 
   before do

@@ -5,7 +5,7 @@ require "spec_helper"
 RSpec.describe Fontisan::Pipeline::TransformationPipeline do
   let(:fixture_path) { File.join(__dir__, "../../fixtures/fonts") }
   let(:output_dir) { File.join(__dir__, "../../tmp/pipeline_output") }
-  let(:input_font) { File.join(fixture_path, "NotoSans-Regular.ttf") }
+  let(:input_font) { File.join(fixture_path, "noto-sans/NotoSans-Regular.ttf") }
   let(:output_font) { File.join(output_dir, "output.otf") }
 
   before do
