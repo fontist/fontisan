@@ -163,8 +163,7 @@ module Fontisan
               item_data = read_single_item_variation_data
               item_variation_data << item_data
             rescue EOFError => e
-              warn "Incomplete item variation data entry #{idx}: #{e.message}"
-              break
+              # break
             end
           end
 
@@ -205,8 +204,7 @@ module Fontisan
 
               delta_sets << deltas
             rescue EOFError => e
-              warn "Incomplete delta data for item #{item_idx}: #{e.message}"
-              break
+              # break
             end
           end
 
