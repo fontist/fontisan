@@ -16,7 +16,6 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
   end
 
   before do
-    skip "Test font not available" unless File.exist?(test_font_path)
     FileUtils.mkdir_p(output_dir)
   end
 
@@ -206,12 +205,10 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
 
   describe "with different font types" do
     let(:cff_font_path) do
-      font_fixture_path("libertinus", "Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
+      font_fixture_path("Libertinus", "static/OTF/LibertinusSerif-Regular.otf")
     end
 
     it "converts CFF/OTF font to WOFF2" do
-      skip "CFF test font not available" unless File.exist?(cff_font_path)
-
       font = Fontisan::FontLoader.load(cff_font_path)
       encoder = Fontisan::Converters::Woff2Encoder.new
 

@@ -536,7 +536,7 @@ RSpec.describe Fontisan::MetricsCalculator do
 
   describe "integration with real fonts" do
     let(:libertinus_serif_path) do
-      "spec/fixtures/fonts/libertinus/Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf"
+      font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
     end
 
     context "when using TrueType font" do
@@ -608,7 +608,7 @@ RSpec.describe Fontisan::MetricsCalculator do
 
     context "when using OpenType/CFF font" do
       let(:libertinus_serif_otf_path) do
-        "spec/fixtures/fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"
+        font_fixture_path("libertinus", "Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
       end
 
       it "successfully calculates metrics from Libertinus Serif OTF" do

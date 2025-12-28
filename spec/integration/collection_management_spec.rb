@@ -5,9 +5,8 @@ require "tempfile"
 require "fileutils"
 
 RSpec.describe "Collection Management Integration", :integration do
-  let(:font_dir) { "spec/fixtures/fonts/MonaSans/fonts/static/ttf" }
-  let(:font1_path) { File.join(font_dir, "MonaSans-Regular.ttf") }
-  let(:font2_path) { File.join(font_dir, "MonaSans-Bold.ttf") }
+  let(:font1_path) { font_fixture_path("MonaSans", "MonaSans-Regular.ttf") }
+  let(:font2_path) { font_fixture_path("MonaSans", "MonaSans-Bold.ttf") }
   let(:temp_dir) { Dir.mktmpdir }
   let(:collection_path) { File.join(temp_dir, "test.ttc") }
   let(:extract_dir) { File.join(temp_dir, "extracted") }
@@ -69,10 +68,6 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "round-trip: pack then unpack" do
-    before do
-      skip "Test fonts not available" unless File.exist?(font1_path) && File.exist?(font2_path)
-    end
-
     it "preserves font integrity through pack/unpack cycle" do
       # Step 1: Pack fonts into collection
       font1 = Fontisan::FontLoader.load(font1_path)
@@ -169,7 +164,6 @@ RSpec.describe "Collection Management Integration", :integration do
   describe "validation" do
     it "rejects single font" do
       font1 = Fontisan::FontLoader.load(font1_path) if File.exist?(font1_path)
-      skip "Test font not available" unless font1
 
       expect do
         builder = Fontisan::Collection::Builder.new([font1])

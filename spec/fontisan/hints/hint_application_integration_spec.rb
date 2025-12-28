@@ -161,9 +161,8 @@ RSpec.describe "Hint Application Integration" do
 
   describe "PostScript hint application" do
     context "with valid hint parameters" do
-      let(:otf_font_path) { "spec/fixtures/fonts/SourceSansPro-Regular.otf" }
+      let(:otf_font_path) { font_fixture_path("SourceSans3", "SourceSansPro-Regular.otf") }
       let(:cff_table) do
-        skip "OTF test font not available" unless File.exist?(otf_font_path)
         font = Fontisan::FontLoader.load(otf_font_path)
         font.table("CFF ")
       end
@@ -249,8 +248,7 @@ RSpec.describe "Hint Application Integration" do
     context "TrueType font with hints" do
       # This test uses actual font if available
       it "extracts and re-applies hints maintaining integrity", :slow do
-        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
-        skip "Test font not available" unless File.exist?(font_path)
+        font_path = font_fixture_path("noto-sans", "NotoSans-Regular.ttf")
 
         # Load font with hints
         font = Fontisan::FontLoader.load(font_path)

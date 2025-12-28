@@ -9,12 +9,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
     context "with an OpenType/CFF font" do
       # Note: We need a test font with CFF outlines
       # Using SourceSansPro-Regular.otf if available
-      let(:font_path) { "spec/fixtures/fonts/SourceSansPro-Regular.otf" }
-
-      before do
-        skip "Test font not available" unless File.exist?(font_path)
-      end
-
+      let(:font_path) { font_fixture_path("SourceSans3", "SourceSansPro-Regular.otf") }
       let(:font) { Fontisan::FontLoader.load(font_path) }
 
       it "returns a HintSet" do
