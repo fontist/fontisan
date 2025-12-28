@@ -554,8 +554,6 @@ RSpec.describe Fontisan::Woff2Font do
       end
 
       it "provides access to font metadata" do
-        pending "Requires TrueTypeFont integration refactoring - see GitHub issue for WOFF2 table parsing"
-
         font = Fontisan::FontLoader.load(woff2_path, mode: Fontisan::LoadingModes::FULL)
 
         # Access maxp table to get glyph count
@@ -570,12 +568,10 @@ RSpec.describe Fontisan::Woff2Font do
       end
 
       it "allows conversion to TTF when TrueType flavored" do
-        pending "Requires TrueTypeFont integration refactoring - see GitHub issue for WOFF2 table parsing"
-
         font = Fontisan::FontLoader.load(woff2_path, mode: Fontisan::LoadingModes::FULL)
 
         if font.truetype?
-          expect(font.family_name).to eq("Mona Sans")
+          expect(font.family_name).to eq("Mona Sans VF")
           # Variable font will have different glyph count than the static font
           expect(font.table("maxp").num_glyphs).to be > 0
         end
