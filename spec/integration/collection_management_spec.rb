@@ -5,8 +5,8 @@ require "tempfile"
 require "fileutils"
 
 RSpec.describe "Collection Management Integration", :integration do
-  let(:font1_path) { font_fixture_path("MonaSans", "MonaSans-Regular.ttf") }
-  let(:font2_path) { font_fixture_path("MonaSans", "MonaSans-Bold.ttf") }
+  let(:font1_path) { font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-Regular.ttf") }
+  let(:font2_path) { font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-Bold.ttf") }
   let(:temp_dir) { Dir.mktmpdir }
   let(:collection_path) { File.join(temp_dir, "test.ttc") }
   let(:extract_dir) { File.join(temp_dir, "extracted") }

@@ -4,10 +4,10 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Tables::Gpos do
   let(:ttf_font_path) do
-    font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
+    font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
   end
   let(:otf_font_path) do
-    "spec/fixtures/fonts/libertinus/Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf"
+    font_fixture_path("Libertinus", "static/OTF/LibertinusSerif-Regular.otf")
   end
 
   describe "#scripts" do

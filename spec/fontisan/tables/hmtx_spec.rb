@@ -477,7 +477,7 @@ RSpec.describe Fontisan::Tables::Hmtx do
 
   describe "integration with real fonts" do
     let(:libertinus_serif_path) do
-      font_fixture_path("libertinus", "Libertinus-7.051/static/TTF/LibertinusSerif-Regular.ttf")
+      font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
     end
 
     context "when reading from TrueType font" do
@@ -515,7 +515,7 @@ RSpec.describe Fontisan::Tables::Hmtx do
 
     context "when reading from OpenType/CFF font" do
       let(:libertinus_serif_otf_path) do
-        font_fixture_path("libertinus", "Libertinus-7.051/static/OTF/LibertinusSerif-Regular.otf")
+        font_fixture_path("Libertinus", "static/OTF/LibertinusSerif-Regular.otf")
       end
 
       it "successfully parses hmtx table from Libertinus Serif OTF" do
