@@ -16,7 +16,7 @@ require "benchmark"
 #   ruby spec/benchmarks/subroutine_optimization_benchmark.rb
 
 RSpec.describe "Subroutine Optimization Performance" do
-  let(:ttf_font_path) { "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf" }
+  let(:ttf_font_path) { font_fixture_path("noto-sans", "NotoSans-Regular.ttf") }
   let(:converter) { Fontisan::Converters::OutlineConverter.new }
   let(:font) { Fontisan::FontLoader.load(ttf_font_path) }
 

@@ -517,7 +517,7 @@ RSpec.describe Fontisan::Woff2Font do
 
   describe "transformation reconstruction" do
     context "with real WOFF2 file containing transformations" do
-      let(:woff2_path) { "spec/fixtures/fonts/MonaSans/fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2" }
+      let(:woff2_path) { font_fixture_path("MonaSans", "fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2") }
 
       before do
         skip "MonaSans WOFF2 fixture not available" unless File.exist?(woff2_path)
