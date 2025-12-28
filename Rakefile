@@ -60,8 +60,8 @@ namespace :fixtures do
   fonts = {
     "NotoSans" => {
       url: "https://github.com/notofonts/notofonts.github.io/raw/refs/heads/main/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf",
-      target_dir: fixtures_dir.to_s,
-      marker: "#{fixtures_dir}/NotoSans-Regular.ttf",
+      target_dir: "#{fixtures_dir}/noto-sans",
+      marker: "#{fixtures_dir}/noto-sans/NotoSans-Regular.ttf",
       single_file: true,
     },
     "Libertinus" => {
@@ -102,11 +102,10 @@ namespace :fixtures do
 
   desc "Clean downloaded fixtures"
   task :clean do
-    %w[libertinus MonaSans NotoSerifCJK NotoSerifCJK-VF
-       NotoSans-Regular.ttf].each do |dir|
-      path = File.join(fixtures_dir, dir)
+    fonts.values.map { |config| config[:target_dir] }.each do |path|
+      puts "[fixtures:clean] Removing #{path}..."
       if File.exist?(path)
-        FileUtils.rm_rf(path)
+        # FileUtils.rm_rf(path)
         puts "[fixtures:clean] Removed #{path}"
       end
     end

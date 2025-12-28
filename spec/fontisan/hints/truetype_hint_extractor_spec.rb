@@ -7,7 +7,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
 
   describe "#extract_from_font" do
     context "with a font containing hint tables" do
-      let(:font) { Fontisan::FontLoader.load("spec/fixtures/fonts/NotoSans-Regular.ttf") }
+      let(:font) { Fontisan::FontLoader.load("spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf") }
 
       it "returns a HintSet" do
         result = extractor.extract_from_font(font)

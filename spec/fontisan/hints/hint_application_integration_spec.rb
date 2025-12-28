@@ -249,7 +249,7 @@ RSpec.describe "Hint Application Integration" do
     context "TrueType font with hints" do
       # This test uses actual font if available
       it "extracts and re-applies hints maintaining integrity", :slow do
-        font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         skip "Test font not available" unless File.exist?(font_path)
 
         # Load font with hints

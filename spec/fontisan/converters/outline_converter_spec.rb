@@ -210,7 +210,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
   describe "hint preservation" do
     context "TTF to OTF with preserve_hints: true", :slow do
       it "extracts, converts, and applies hints" do
-        font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         skip "Test font not available" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)
@@ -229,7 +229,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "TTF to OTF with preserve_hints: false" do
       it "skips hint extraction and conversion" do
-        font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         skip "Test font not available" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)
@@ -287,7 +287,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
     context "error handling" do
       it "handles fonts without hints gracefully" do
-        font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         skip "Test font not available" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)
@@ -300,7 +300,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       end
 
       it "handles hint extraction failures gracefully" do
-        font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         skip "Test font not available" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)

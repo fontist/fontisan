@@ -4,7 +4,7 @@ require "spec_helper"
 require "benchmark"
 
 RSpec.describe "Lazy Table Loading" do
-  let(:font_path) { fixture_path("fonts/NotoSans-Regular.ttf") }
+  let(:font_path) { fixture_path("fonts/noto-sans/NotoSans-Regular.ttf") }
 
   describe "lazy loading behavior" do
     it "does not load table data upfront with lazy: true" do

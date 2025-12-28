@@ -26,7 +26,7 @@ RSpec.describe "Outline Conversion Integration" do
     end
 
     it "validates source font has required tables" do
-      ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+      ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       expect do
@@ -37,7 +37,7 @@ RSpec.describe "Outline Conversion Integration" do
 
   describe "Compound glyph support" do
     context "with fonts containing compound glyphs" do
-      let(:ttf_font_path) { "spec/fixtures/fonts/NotoSans-Regular.ttf" }
+      let(:ttf_font_path) { "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf" }
       let(:converter) { Fontisan::Converters::OutlineConverter.new }
 
       it "successfully converts fonts with compound glyphs" do
@@ -93,7 +93,7 @@ RSpec.describe "Outline Conversion Integration" do
     end
 
     it "preserves non-outline tables during conversion" do
-      ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+      ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Get original table list
@@ -110,7 +110,7 @@ RSpec.describe "Outline Conversion Integration" do
 
     context "TTF to OTF conversion" do
       it "updates maxp table to version 0.5 (CFF)" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         tables = converter.convert(font, target_format: :otf)
@@ -122,7 +122,7 @@ RSpec.describe "Outline Conversion Integration" do
       end
 
       it "updates head table indexToLocFormat" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         tables = converter.convert(font, target_format: :otf)
@@ -134,7 +134,7 @@ RSpec.describe "Outline Conversion Integration" do
       end
 
       it "creates CFF table" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         tables = converter.convert(font, target_format: :otf)
@@ -152,7 +152,7 @@ RSpec.describe "Outline Conversion Integration" do
     context "OTF to TTF conversion" do
       it "updates maxp table to version 1.0 (TrueType)" do
         # We need an OTF font for this test - let's use a converted one
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         ttf_font = Fontisan::FontLoader.load(ttf_font_path)
 
         # First convert TTF to OTF
@@ -206,7 +206,7 @@ RSpec.describe "Outline Conversion Integration" do
       end
 
       it "creates glyf and loca tables" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         ttf_font = Fontisan::FontLoader.load(ttf_font_path)
 
         # First convert TTF to OTF
@@ -270,7 +270,7 @@ RSpec.describe "Outline Conversion Integration" do
 
     context "when compound glyph support is added" do
       it "preserves glyph metrics" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         # Get original metrics
@@ -287,7 +287,7 @@ RSpec.describe "Outline Conversion Integration" do
       end
 
       it "maintains glyph shapes with high fidelity" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         # Extract outlines from original font
@@ -306,7 +306,7 @@ RSpec.describe "Outline Conversion Integration" do
       end
 
       it "supports round-trip conversion" do
-        ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+        ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
         font = Fontisan::FontLoader.load(ttf_font_path)
 
         # Get original number of glyphs
@@ -401,7 +401,7 @@ RSpec.describe "Outline Conversion Integration" do
 
     it "supports compound glyphs" do
       # Compound glyph support is now implemented via CompoundGlyphResolver
-      ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+      ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Verify we can convert fonts with compound glyphs
@@ -411,7 +411,7 @@ RSpec.describe "Outline Conversion Integration" do
     end
 
     it "optimizes CFF with subroutines" do
-      ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+      ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Convert without optimization
@@ -436,7 +436,7 @@ RSpec.describe "Outline Conversion Integration" do
     end
 
     it "preserves hints during conversion" do
-      ttf_font_path = "spec/fixtures/fonts/NotoSans-Regular.ttf"
+      ttf_font_path = "spec/fixtures/fonts/noto-sans/NotoSans-Regular.ttf"
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Convert TTF to OTF with hint preservation
