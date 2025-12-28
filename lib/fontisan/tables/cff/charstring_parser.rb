@@ -117,7 +117,7 @@ module Fontisan
             if operator_byte?(byte)
               # Operator byte - read operator and create operation
               operator = read_operator(io, byte)
-              
+
               # Read hint mask data if needed
               hint_data = nil
               if HINTMASK_OPERATORS.include?(operator)
@@ -200,6 +200,8 @@ module Fontisan
             # 3-byte signed integer (16-bit)
             b1 = io.getbyte
             b2 = io.getbyte
+            raise CorruptedTableError, "Unexpected end of CharString reading shortint" if
+              b1.nil? || b2.nil?
             value = (b1 << 8) | b2
             value > 0x7FFF ? value - 0x10000 : value
           when 32..246
@@ -208,14 +210,20 @@ module Fontisan
           when 247..250
             # Positive 2-byte integer: +108 to +1131
             b2 = io.getbyte
+            raise CorruptedTableError, "Unexpected end of CharString reading positive integer" if
+              b2.nil?
             (byte - 247) * 256 + b2 + 108
           when 251..254
             # Negative 2-byte integer: -108 to -1131
             b2 = io.getbyte
+            raise CorruptedTableError, "Unexpected end of CharString reading negative integer" if
+              b2.nil?
             -(byte - 251) * 256 - b2 - 108
           when 255
             # 5-byte signed integer (32-bit) as fixed-point 16.16
             bytes = io.read(4)
+            raise CorruptedTableError, "Unexpected end of CharString reading fixed-point" if
+              bytes.nil? || bytes.length < 4
             value = bytes.unpack1("l>") # Signed 32-bit big-endian
             value / 65536.0 # Convert to float
           else

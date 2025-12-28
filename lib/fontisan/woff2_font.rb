@@ -86,7 +86,7 @@ module Fontisan
     IOSource = Struct.new(:path)
 
     attr_accessor :header, :table_entries, :decompressed_tables, :parsed_tables, :io_source
-    attr_writer :underlying_font  # Allow setting from class methods
+    attr_accessor :underlying_font  # Allow both reading and setting for table delegation
 
     def initialize
       @header = nil
@@ -636,8 +636,10 @@ module Fontisan
         sfnt_data << [record[:checksum]].pack("N")
         sfnt_data << [record[:offset]].pack("N")
         sfnt_data << [record[:length]].pack("N")
+      end
 
-        # Write table data with padding
+      # Write table data with padding
+      table_records.each do |record|
         sfnt_data << record[:data]
 
         # Add padding

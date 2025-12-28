@@ -134,6 +134,15 @@ module Fontisan
           require_relative "../tables/cff/table_builder"
           require_relative "../tables/cff/charstring_rebuilder"
           require_relative "../tables/cff/hint_operation_injector"
+          require_relative "../tables/cff"
+
+          # Parse CFF binary data into Cff object if needed
+          cff_data = tables["CFF "]
+          cff_table = if cff_data.is_a?(Tables::Cff)
+                        cff_data
+                      else
+                        Tables::Cff.read(cff_data)
+                      end
 
           # Prepare per-glyph hint data if present
           per_glyph_hints = if has_per_glyph_hints
@@ -143,7 +152,7 @@ module Fontisan
                             end
 
           new_cff_data = Tables::Cff::TableBuilder.rebuild(
-            tables["CFF "],
+            cff_table,
             private_dict_hints: hint_params,
             per_glyph_hints: per_glyph_hints
           )
