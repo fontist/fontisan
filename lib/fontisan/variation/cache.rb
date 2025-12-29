@@ -44,6 +44,7 @@ module Fontisan
         @ttl = ttl
         @cache = {}
         @access_times = {}
+        @access_counter = 0
         @stats = {
           hits: 0,
           misses: 0,
@@ -219,7 +220,8 @@ module Fontisan
       #
       # @param key [String] Cache key
       def touch(key)
-        @access_times[key] = Time.now
+        @access_counter += 1
+        @access_times[key] = @access_counter
       end
 
       # Evict entries if cache is full

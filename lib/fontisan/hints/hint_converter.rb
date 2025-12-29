@@ -230,7 +230,8 @@ module Fontisan
       # Convert TrueType font programs to PostScript Private dict
       #
       # Analyzes TrueType fpgm, prep, and cvt to extract semantic intent
-      # and generate corresponding PostScript hint parameters.
+      # and generate corresponding PostScript hint parameters using the
+      # TrueTypeInstructionAnalyzer.
       #
       # @param fpgm [String] Font program bytecode
       # @param prep [String] Control value program bytecode
@@ -239,8 +240,8 @@ module Fontisan
       def convert_tt_programs_to_ps_dict(fpgm, prep, cvt)
         hints = {}
 
-        # Extract stem widths from cvt if present
-        # CVT values typically contain standard widths
+        # Extract stem widths from CVT if present
+        # CVT values typically contain standard widths at the beginning
         if cvt && !cvt.empty?
           # First CVT value often represents standard horizontal stem
           hints[:std_hw] = cvt[0].abs if cvt.length > 0
@@ -248,14 +249,36 @@ module Fontisan
           hints[:std_vw] = cvt[1].abs if cvt.length > 1
         end
 
-        # Analyze control value program for alignment zones
-        # TrueType doesn't have exact Blue zones, so we use defaults
-        # These are standard values that work for most Latin fonts
-        hints[:blue_values] = [-20, 0, 706, 726]
+        # Use the instruction analyzer to extract additional hint parameters
+        analyzer = TrueTypeInstructionAnalyzer.new
 
-        # Optional: Add other_blues for descenders if we detect them
-        # This would require analyzing prep program, which is complex
-        # For now, use conservative defaults
+        # Analyze prep program if present
+        prep_hints = if prep && !prep.empty?
+                       analyzer.analyze_prep(prep, cvt)
+                     else
+                       {}
+                     end
+
+        # Analyze fpgm program complexity
+        fpgm_hints = if fpgm && !fpgm.empty?
+                       analyzer.analyze_fpgm(fpgm)
+                     else
+                       {}
+                     end
+
+        # Extract blue zones from CVT if present
+        blue_zones = if cvt && !cvt.empty?
+                       analyzer.extract_blue_zones_from_cvt(cvt)
+                     else
+                       {}
+                     end
+
+        # Merge all extracted hints (prep_hints and fpgm_hints override stem widths if present)
+        hints.merge!(prep_hints).merge!(fpgm_hints).merge!(blue_zones)
+
+        # Provide default blue_values if none were detected
+        # These are standard values that work for most Latin fonts
+        hints[:blue_values] ||= [-20, 0, 706, 726]
 
         hints
       rescue StandardError => e
@@ -266,44 +289,17 @@ module Fontisan
       # Convert PostScript Private dict to TrueType font programs
       #
       # Generates TrueType control values and programs from PostScript
-      # hint parameters.
+      # hint parameters using the TrueTypeInstructionGenerator.
       #
       # @param ps_dict [Hash] PostScript Private dict parameters
       # @return [Hash] TrueType programs ({ fpgm:, prep:, cvt: })
       def convert_ps_dict_to_tt_programs(ps_dict)
-        # Handle both string and symbol keys from JSON
-        ps_dict = ps_dict.transform_keys(&:to_sym) if ps_dict.keys.first.is_a?(String)
-
-        # Generate control values from PS parameters
-        cvt = []
-
-        # Add standard stem widths as CVT values
-        cvt << ps_dict[:std_hw] if ps_dict[:std_hw]
-        cvt << ps_dict[:std_vw] if ps_dict[:std_vw]
-
-        # Add stem snap values if present
-        if ps_dict[:stem_snap_h].is_a?(Array)
-          cvt.concat(ps_dict[:stem_snap_h])
-        end
-        if ps_dict[:stem_snap_v].is_a?(Array)
-          cvt.concat(ps_dict[:stem_snap_v])
-        end
-
-        # Remove duplicates and sort
-        cvt = cvt.uniq.sort
-
-        # Generate basic prep program (empty for converted fonts)
-        # A real implementation would generate instructions to set up CVT
-        prep = ""
-
-        # fpgm typically empty for converted fonts
-        # Functions would need to be synthesized from scratch
-        fpgm = ""
-
-        { fpgm: fpgm, prep: prep, cvt: cvt }
+        # Use the instruction generator to create real TrueType programs
+        generator = TrueTypeInstructionGenerator.new
+        generator.generate(ps_dict)
       rescue StandardError => e
         warn "Error converting PS dict to TT programs: #{e.message}"
-        { fpgm: "", prep: "", cvt: [] }
+        { fpgm: "".b, prep: "".b, cvt: [] }
       end
     end
   end

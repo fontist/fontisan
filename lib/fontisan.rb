@@ -170,6 +170,17 @@ require_relative "fontisan/optimizers/charstring_rewriter"
 require_relative "fontisan/optimizers/subroutine_optimizer"
 require_relative "fontisan/optimizers/subroutine_generator"
 
+# Hints infrastructure
+require_relative "fontisan/models/hint"
+require_relative "fontisan/hints/truetype_instruction_analyzer"
+require_relative "fontisan/hints/truetype_instruction_generator"
+require_relative "fontisan/hints/truetype_hint_extractor"
+require_relative "fontisan/hints/truetype_hint_applier"
+require_relative "fontisan/hints/postscript_hint_extractor"
+require_relative "fontisan/hints/postscript_hint_applier"
+require_relative "fontisan/hints/hint_converter"
+require_relative "fontisan/hints/hint_validator"
+
 # Commands
 require_relative "fontisan/commands/base_command"
 require_relative "fontisan/commands/info_command"
