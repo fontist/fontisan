@@ -1,0 +1,599 @@
+= Variable Font Operations Guide
+:toc:
+:toclevels: 3
+
+== Purpose
+
+This guide provides comprehensive documentation for working with variable fonts in Fontisan, covering all supported operations including instance generation, format conversion, SVG generation, collection management, and validation.
+
+== Variable Font Concepts
+
+=== General
+
+Variable fonts are OpenType fonts that contain multiple variations of a typeface in a single file. Instead of having separate font files for different weights, widths, or styles, a variable font uses variation axes to interpolate between different design extremes.
+
+Key components:
+
+fvar table:: Defines the variation axes and named instances
+gvar table:: (TrueType) Contains glyph variation data as delta tuples
+CFF2 table:: (OpenType) Contains variation data as blend operators
+avar table:: (Optional) Defines axis value mappings for non-linear interpolation
+STAT table:: (Optional) Provides style attributes and axis value names
+HVAR/VVAR/MVAR:: (Optional) Metrics variation tables
+
+=== Variation Axes
+
+Each axis represents a design dimension along which the font can vary:
+
+Common registered axes::
+* `wght` (Weight): 1-1000, typically 400 (Regular) to 700 (Bold)
+* `wdth` (Width): 1-1000, typically 75 (Condensed) to 125 (Expanded)
+* `slnt` (Slant): -90 to 90 degrees
+* `ital` (Italic): 0 (Roman) or 1 (Italic)
+* `opsz` (Optical Size): Point size for optical sizing
+
+Custom axes:: Four-character tags starting with uppercase letter (e.g., `GRAD`)
+
+=== Named Instances
+
+Variable fonts can define named instances - predefined points in the design space with specific names (e.g., "Bold", "Light", "Condensed Bold").
+
+== Instance Generation
+
+=== General
+
+Generate static font instances from variable fonts at specific variation coordinates.
+
+=== Using the CLI
+
+==== Generate instance at specific coordinates
+
+[source,bash]
+----
+# Generate bold instance
+fontisan instance variable.ttf --wght 700 --output bold.ttf
+
+# Generate condensed bold
+fontisan instance variable.ttf --wght 700 --wdth 75 --output condensed-bold.ttf
+
+# Generate with all axes
+fontisan instance variable.ttf --wght 600 --wdth 90 --slnt -12 --output custom.ttf
+----
+
+==== Use named instances
+
+[source,bash]
+----
+# List available instances
+fontisan instance variable.ttf --list-instances
+
+# Generate using named instance
+fontisan instance variable.ttf --named-instance 0 --output bold.ttf
+fontisan instance variable.ttf --named-instance "Bold" --output bold.ttf
+----
+
+==== Output format options
+
+[source,bash]
+----
+# Generate as TrueType (default)
+fontisan instance variable.ttf --wght 700 --output bold.ttf
+
+# Generate as OpenType/CFF
+fontisan instance variable.ttf --wght 700 --to otf --output bold.otf
+
+# Generate as WOFF2
+fontisan instance variable.ttf --wght 700 --to woff2 --output bold.woff2
+----
+
+=== Using the Ruby API
+
+==== Basic instance generation
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load variable font
+font = Fontisan::FontLoader.load('variable.ttf')
+
+# Generate instance at specific coordinates
+writer = Fontisan::Variation::InstanceWriter.new(font)
+instance_font = writer.generate_instance(wght: 700)
+
+# Write to file
+Fontisan::FontWriter.write_to_file(
+  instance_font.table_data,
+  'bold.ttf',
+  sfnt_version: 0x00010000
+)
+----
+
+==== Generate with multiple axes
+
+[source,ruby]
+----
+# Generate instance with multiple axis values
+instance_font = writer.generate_instance(
+  wght: 700,
+  wdth: 75,
+  slnt: -8
+)
+----
+
+==== Use named instances
+
+[source,ruby]
+----
+# Get named instance information
+fvar = font.table('fvar')
+instance = fvar.instances[0]
+
+# Extract coordinates from named instance
+coordinates = instance[:coordinates]
+axis_tags = fvar.axes.map(&:axis_tag)
+axis_values = Hash[axis_tags.zip(coordinates)]
+
+# Generate instance
+instance_font = writer.generate_instance(axis_values)
+----
+
+== Format Conversion
+
+=== General
+
+Convert variable fonts between formats while preserving or converting variation data.
+
+=== Variation Preservation Strategy
+
+Compatible formats (same outline)::
+* Variable TTF ↔ Variable TTF/WOFF/WOFF2: All variation tables preserved
+* Variable OTF ↔ Variable OTF/WOFF/WOFF2: All variation tables preserved
+
+Convertible formats (different outline)::
+* Variable TTF ↔ Variable OTF: Common tables preserved (fvar, avar, STAT, metrics)
+* Outline-specific tables require conversion (gvar ↔ CFF2 blend)
+
+Unsupported formats::
+* Variable fonts to SVG: Creates instance at default coordinates
+
+=== Using the CLI
+
+==== Convert with variation preservation
+
+[source,bash]
+----
+# Variable TTF to WOFF2 (preserves all variation)
+fontisan convert variable.ttf --to woff2 --output variable.woff2
+
+# Variable OTF to WOFF2 (preserves all variation)
+fontisan convert variable.otf --to woff2 --output variable.woff2
+----
+
+==== Convert between outline formats
+
+[source,bash]
+----
+# Variable TTF to OTF (preserves common variation tables)
+fontisan convert variable.ttf --to otf --output variable.otf
+
+# Shows warning about gvar → CFF2 conversion not yet implemented
+# Preserves: fvar, avar, STAT, HVAR, VVAR, MVAR
+# Does not preserve: gvar (requires conversion to CFF2 blend operators)
+----
+
+==== Create static font from variable
+
+[source,bash]
+----
+# Remove all variation data
+fontisan convert variable.ttf --to ttf --output static.ttf --no-preserve-variation
+
+# Creates static font at default variation coordinates
+----
+
+=== Using the Ruby API
+
+==== Preserve variation during conversion
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load variable font
+font = Fontisan::FontLoader.load('variable.ttf')
+
+# Convert with variation preservation (default)
+converter = Fontisan::Converters::FormatConverter.new
+tables = converter.convert(font, :woff2, preserve_variation: true)
+
+# Write output
+Fontisan::FontWriter.write_to_file(tables, 'variable.woff2')
+----
+
+==== Create static font
+
+[source,ruby]
+----
+# Convert without variation preservation
+tables = converter.convert(font, :ttf, preserve_variation: false)
+Fontisan::FontWriter.write_to_file(tables, 'static.ttf')
+----
+
+== SVG Generation from Variable Fonts
+
+=== General
+
+Generate SVG fonts from variable fonts at any point in the design space.
+
+=== Using the CLI
+
+==== Generate SVG at specific coordinates
+
+[source,bash]
+----
+# At default coordinates
+fontisan convert variable.ttf --to svg --output default.svg
+
+# At specific weight
+fontisan convert variable.ttf --to svg --output bold.svg --wght 700
+
+# With multiple axes
+fontisan convert variable.ttf --to svg --output custom.svg --wght 700 --wdth 75
+----
+
+==== Use named instance for SVG
+
+[source,bash]
+----
+# Generate from named instance
+fontisan convert variable.ttf --to svg --output bold.svg --instance-index 0
+----
+
+=== Using the Ruby API
+
+==== Basic SVG generation
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load variable font
+font = Fontisan::FontLoader.load('variable.ttf')
+
+# Generate instance at specific coordinates
+writer = Fontisan::Variation::InstanceWriter.new(font)
+instance_font = writer.generate_instance(wght: 700)
+
+# Convert to SVG
+svg_generator = Fontisan::Variation::VariableSvgGenerator.new
+svg_content = svg_generator.generate(instance_font)
+
+# Write to file
+File.write('bold.svg', svg_content)
+----
+
+== Collection Operations
+
+=== General
+
+Create variable font collections (TTC/OTC) with optimized table sharing.
+
+=== Validation Requirements
+
+All variable fonts in a collection must:
+
+. Have the same variation type (all TrueType or all CFF2)
+. Have the same variation axes (same tags, in same order)
+. Have compatible axis ranges (min/max/default values)
+
+=== Using the CLI
+
+==== Create variable font collection
+
+[source,bash]
+----
+# Merge variable TrueType fonts
+fontisan pack var-regular.ttf var-bold.ttf var-italic.ttf --output family-var.ttc
+
+# Merge variable OpenType fonts
+fontisan pack var-regular.otf var-bold.otf --output family-var.otc --format otc
+----
+
+==== Extract from variable collection
+
+[source,bash]
+----
+# Extract all fonts
+fontisan unpack family-var.ttc --output-dir extracted/
+
+# Extract specific font
+fontisan unpack family-var.ttc --font-index 0 --output extracted/regular.ttf
+----
+
+=== Using the Ruby API
+
+==== Build variable font collection
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load variable fonts
+fonts = [
+  Fontisan::FontLoader.load('var-regular.ttf'),
+  Fontisan::FontLoader.load('var-bold.ttf'),
+  Fontisan::FontLoader.load('var-italic.ttf')
+]
+
+# Create collection
+builder = Fontisan::Collection::Builder.new(fonts, format: :ttc)
+builder.validate!  # Validates variation compatibility
+result = builder.build_to_file('family-var.ttc')
+
+puts "Collection created: #{result[:output_path]}"
+puts "Fonts: #{result[:num_fonts]}"
+puts "Space saved: #{result[:space_savings]} bytes"
+----
+
+=== Table Sharing Strategy
+
+Common variation tables (shared if identical)::
+* fvar (Font Variations)
+* avar (Axis Variations)
+* STAT (Style Attributes)
+* HVAR (Horizontal Metrics Variations)
+* VVAR (Vertical Metrics Variations)
+* MVAR (Metrics Variations)
+
+Font-specific tables (always separate)::
+* gvar (Glyph Variations - TrueType)
+* CFF2 (with blend operators - OpenType)
+
+== Validation
+
+=== General
+
+Validate variable font structure, axes, instances, and variation tables.
+
+=== Using the CLI
+
+==== Basic validation
+
+[source,bash]
+----
+# Validate variable font
+fontisan validate variable.ttf
+
+# Verbose output
+fontisan validate variable.ttf --verbose
+----
+
+=== Validation Checks
+
+The validator performs the following checks:
+
+==== fvar Table Structure
+
+* Axes are defined
+* Axis count matches actual number of axes
+* Each axis has valid min/max/default values
+* Axis tags are valid (4 ASCII letters)
+
+==== Axis Validation
+
+* Minimum value ≤ maximum value
+* Default value within range [min, max]
+* Axis tags follow naming conventions
+
+==== Instance Validation
+
+* Coordinate count matches axis count
+* All coordinates within axis ranges
+* Named instances have valid data
+
+==== Variation Table Consistency
+
+* TrueType variable fonts have gvar table
+* CFF variable fonts have CFF2 table
+* Font doesn't have both gvar and CFF2 (incompatible)
+
+=== Using the Ruby API
+
+==== Validate variable font
+
+[source,ruby]
+----
+require 'fontisan'
+require 'fontisan/validation/variable_font_validator'
+
+# Load font
+font = Fontisan::FontLoader.load('variable.ttf')
+
+# Validate
+validator = Fontisan::Validation::VariableFontValidator.new(font)
+errors = validator.validate
+
+if errors.empty?
+  puts "✓ Variable font is valid"
+else
+  puts "✗ Found #{errors.length} errors:"
+  errors.each { |err| puts "  - #{err}" }
+end
+----
+
+== Performance Considerations
+
+=== Instance Generation
+
+* Instance generation creates a new static font with updated tables
+* Performance: ~100-500ms for typical variable fonts
+* Memory: Proportional to font size (usually 1-5 MB)
+
+=== Format Conversion
+
+* Variation-preserving conversions are fast (table copying)
+* Outline conversion (TTF ↔ OTF) is slower (glyph processing)
+* Optimization: Use batch processing for multiple conversions
+
+=== Collection Building
+
+* Table deduplication provides significant space savings
+* Analysis overhead: ~50-200ms per font
+* Recommended for font families with 3+ fonts
+
+== Troubleshooting
+
+=== Common Issues
+
+==== Error: Cannot mix TrueType and CFF2 variable fonts
+
+*Cause*: Attempting to create collection with mixed variation types
+
+*Solution*: Separate fonts into different collections:
+
+[source,bash]
+----
+# Create separate collections
+fontisan pack var-ttf1.ttf var-ttf2.ttf --output ttf-collection.ttc
+fontisan pack var-otf1.otf var-otf2.otf --output otf-collection.otc
+----
+
+==== Error: Variable fonts have different axes
+
+*Cause*: Fonts have incompatible axis definitions
+
+*Solution*: Verify all fonts have same axes:
+
+[source,bash]
+----
+# Check axes for each font
+fontisan variable font1.ttf
+fontisan variable font2.ttf
+
+# Ensure axes match: same tags, same order
+----
+
+==== Warning: Full variation conversion not yet implemented
+
+*Cause*: Converting between TTF and OTF outline formats
+
+*Impact*: Common variation tables preserved, but gvar/CFF2 not converted
+
+*Workaround*: Generate instances instead of converting:
+
+[source,bash]
+----
+# Instead of: fontisan convert var.ttf --to otf
+# Use: fontisan instance var.ttf --wght 400 --to otf --output regular.otf
+----
+
+==== Instance generation produces unexpected results
+
+*Cause*: Invalid axis coordinates
+
+*Solution*: Check valid axis ranges:
+
+[source,bash]
+----
+# List available axes and ranges
+fontisan variable font.ttf
+
+# Use coordinates within valid ranges
+fontisan instance font.ttf --wght 600  # If wght range is 400-900
+----
+
+== Best Practices
+
+=== Instance Generation
+
+. List named instances before generating custom coordinates
+. Validate coordinates are within axis ranges
+. Use named instances when available for better compatibility
+. Test generated instances before deployment
+
+=== Format Conversion
+
+. Always validate fonts after conversion
+. Use `--preserve-variation` explicitly for clarity
+. Check warning messages for conversion limitations
+. Test converted fonts in target environment
+
+=== Collection Building
+
+. Validate individual fonts before packing
+. Use `--analyze` flag to preview space savings
+. Keep font variations consistent (same axes, ranges)
+. Document shared vs. font-specific tables
+
+=== Validation
+
+. Run validation before distribution
+. Use `--verbose` mode during development
+. Fix errors before warnings
+. Validate after each operation (conversion, instance generation)
+
+== API Reference
+
+=== InstanceWriter
+
+[source,ruby]
+----
+# Initialize with variable font
+writer = Fontisan::Variation::InstanceWriter.new(font)
+
+# Generate instance
+instance = writer.generate_instance(axis_values)
+# axis_values: Hash of axis_tag => value
+
+# Returns: Font object with variation tables removed
+----
+
+=== VariableSvgGenerator
+
+[source,ruby]
+----
+# Initialize
+generator = Fontisan::Variation::VariableSvgGenerator.new
+
+# Generate SVG from font
+svg_content = generator.generate(font)
+# font: Can be variable or static font
+# Returns: String containing SVG XML
+----
+
+=== VariableFontValidator
+
+[source,ruby]
+----
+# Initialize with font
+validator = Fontisan::Validation::VariableFontValidator.new(font)
+
+# Validate
+errors = validator.validate
+# Returns: Array of error message strings
+----
+
+=== Collection::Builder
+
+[source,ruby]
+----
+# Initialize with fonts
+builder = Fontisan::Collection::Builder.new(fonts, options)
+# options:
+#   format: :ttc or :otc
+#   optimize: true/false
+
+# Validate before building
+builder.validate!
+
+# Build collection
+result = builder.build_to_file(output_path)
+# Returns: Hash with :binary, :space_savings, :statistics
+----
+
+== See Also
+
+* link:VARIABLE_FONTS_ARCHITECTURE.md[Variable Fonts Architecture]
+* link:VARIABLE_FONT_GUIDE.md[Variable Font Development Guide]
+* link:../README.adoc[Fontisan README]
