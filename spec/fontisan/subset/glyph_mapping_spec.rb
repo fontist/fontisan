@@ -251,7 +251,9 @@ RSpec.describe Fontisan::Subset::GlyphMapping do
       mapping = described_class.new([0, 5, 10])
       old_ids = []
 
+      # rubocop:disable Style/BlockDelimiters
       mapping.each { |old_id, _new_id| old_ids << old_id }
+      # rubocop:enable Style/BlockDelimiters
 
       expect(old_ids).to eq([0, 5, 10])
     end
