@@ -148,7 +148,7 @@ module Fontisan
               {
                 start: axis[:start_coord],
                 peak: axis[:peak_coord],
-                end: axis[:end_coord]
+                end: axis[:end_coord],
               }
             end
           end

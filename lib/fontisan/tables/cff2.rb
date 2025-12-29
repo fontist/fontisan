@@ -111,7 +111,7 @@ module Fontisan
           @num_axes,
           @global_subr_index,
           nil, # local subrs (CFF2 may not have them)
-          0    # vsindex
+          0, # vsindex
         ).parse
       end
 

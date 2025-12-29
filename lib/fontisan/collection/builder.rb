@@ -291,7 +291,8 @@ module Fontisan
         otf_count = variable_fonts.count { |f| f.has_table?("CFF2") }
 
         if ttf_count.positive? && otf_count.positive?
-          raise Error, "Cannot mix TrueType and CFF2 variable fonts in collection"
+          raise Error,
+                "Cannot mix TrueType and CFF2 variable fonts in collection"
         end
       end
 

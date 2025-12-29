@@ -515,7 +515,8 @@ RSpec.describe Fontisan::Tables::Hmtx do
 
     context "when reading from OpenType/CFF font" do
       let(:libertinus_serif_otf_path) do
-        font_fixture_path("Libertinus", "static/OTF/LibertinusSerif-Regular.otf")
+        font_fixture_path("Libertinus",
+                          "static/OTF/LibertinusSerif-Regular.otf")
       end
 
       it "successfully parses hmtx table from Libertinus Serif OTF" do

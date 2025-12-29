@@ -71,7 +71,8 @@ RSpec.describe Fontisan::Tables::Cff::OffsetRecalculator do
 
     it "returns hash with all required keys" do
       offsets = described_class.calculate_offsets(sections)
-      expect(offsets.keys).to include(:top_dict_start, :charstrings, :private, :private_size)
+      expect(offsets.keys).to include(:top_dict_start, :charstrings, :private,
+                                      :private_size)
     end
 
     it "offsets increase sequentially" do
@@ -166,7 +167,8 @@ RSpec.describe Fontisan::Tables::Cff::OffsetRecalculator do
       updated = described_class.update_top_dict(top_dict, offsets)
 
       expect(updated[:charstrings]).to eq(offsets[:charstrings])
-      expect(updated[:private]).to eq([offsets[:private_size], offsets[:private]])
+      expect(updated[:private]).to eq([offsets[:private_size],
+                                       offsets[:private]])
     end
 
     it "handles modified private dict size" do

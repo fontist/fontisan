@@ -61,7 +61,7 @@ module Fontisan
             major_version: read_uint8,
             minor_version: read_uint8,
             header_size: read_uint8,
-            top_dict_length: read_uint16
+            top_dict_length: read_uint16,
           }
 
           # Validate CFF2 version
@@ -105,7 +105,7 @@ module Fontisan
           # Parse Variable Store structure
           @variable_store = {
             regions: read_region_list,
-            item_variation_data: read_item_variation_data
+            item_variation_data: read_item_variation_data,
           }
 
           @variable_store
@@ -140,7 +140,7 @@ module Fontisan
             axes << {
               start_coord: read_f2dot14,
               peak_coord: read_f2dot14,
-              end_coord: read_f2dot14
+              end_coord: read_f2dot14,
             }
           end
 
@@ -158,13 +158,11 @@ module Fontisan
 
           item_variation_data = []
 
-          data_count.times do |idx|
-            begin
-              item_data = read_single_item_variation_data
-              item_variation_data << item_data
-            rescue EOFError => e
-              # break
-            end
+          data_count.times do |_idx|
+            item_data = read_single_item_variation_data
+            item_variation_data << item_data
+          rescue EOFError
+            # break
           end
 
           item_variation_data
@@ -186,32 +184,32 @@ module Fontisan
 
           # Read delta sets
           delta_sets = []
-          item_count.times do |item_idx|
-            begin
-              deltas = []
+          item_count.times do |_item_idx|
+            deltas = []
 
-              # Short deltas (16-bit)
-              short_delta_count.times do
-                break if @io.eof?
-                deltas << read_int16
-              end
+            # Short deltas (16-bit)
+            short_delta_count.times do
+              break if @io.eof?
 
-              # Long deltas (8-bit) for remaining regions
-              (region_index_count - short_delta_count).times do
-                break if @io.eof?
-                deltas << read_int8
-              end
-
-              delta_sets << deltas
-            rescue EOFError => e
-              # break
+              deltas << read_int16
             end
+
+            # Long deltas (8-bit) for remaining regions
+            (region_index_count - short_delta_count).times do
+              break if @io.eof?
+
+              deltas << read_int8
+            end
+
+            delta_sets << deltas
+          rescue EOFError
+            # break
           end
 
           {
             item_count: item_count,
             region_indices: region_indices,
-            delta_sets: delta_sets
+            delta_sets: delta_sets,
           }
         end
 
@@ -249,7 +247,10 @@ module Fontisan
         # @raise [EOFError] If not enough bytes available
         def read_safely(bytes, description)
           data = @io.read(bytes)
-          raise EOFError, "Unexpected EOF while reading #{description}" if data.nil? || data.bytesize < bytes
+          if data.nil? || data.bytesize < bytes
+            raise EOFError,
+                  "Unexpected EOF while reading #{description}"
+          end
 
           data
         end
@@ -269,7 +270,8 @@ module Fontisan
 
             if operator_byte?(byte)
               operator = read_dict_operator(io, byte)
-              dict[operator] = operands.size == 1 ? operands.first : operands.dup
+              dict[operator] =
+                operands.size == 1 ? operands.first : operands.dup
               operands.clear
             else
               # Operand (number)

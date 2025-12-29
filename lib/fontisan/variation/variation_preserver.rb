@@ -157,7 +157,10 @@ module Fontisan
                 "Source font must respond to :has_table? and :table_data"
         end
 
-        raise ArgumentError, "Target tables cannot be nil" if @target_tables.nil?
+        if @target_tables.nil?
+          raise ArgumentError,
+                "Target tables cannot be nil"
+        end
 
         unless @target_tables.is_a?(Hash)
           raise ArgumentError,

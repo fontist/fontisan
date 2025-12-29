@@ -248,7 +248,8 @@ module Fontisan
       # @param scalars [Array<Float>] Region scalars
       # @return [Hash] Interpolated point
       def interpolate_point(base_point, delta_points, scalars)
-        @context.interpolator.interpolate_point(base_point, delta_points, scalars)
+        @context.interpolator.interpolate_point(base_point, delta_points,
+                                                scalars)
       end
 
       private

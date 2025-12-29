@@ -11,14 +11,14 @@ RSpec.describe Fontisan::Variation::Interpolator do
         axis_tag: "wght",
         min_value: 400.0,
         default_value: 600.0,
-        max_value: 900.0
+        max_value: 900.0,
       ),
       double(
         "VariationAxisRecord",
         axis_tag: "wdth",
         min_value: 75.0,
         default_value: 100.0,
-        max_value: 125.0
+        max_value: 125.0,
       ),
     ]
   end

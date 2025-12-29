@@ -122,11 +122,11 @@ module Fontisan
         data = table.to_binary_s.dup
 
         # Calculate new numberOfHMetrics
-        new_num_h_metrics = if hmtx && hmtx.h_metrics
-                             hmtx.h_metrics.size
-                           else
-                             calculate_number_of_h_metrics
-                           end
+        new_num_h_metrics = if hmtx&.h_metrics
+                              hmtx.h_metrics.size
+                            else
+                              calculate_number_of_h_metrics
+                            end
 
         # Update numberOfHMetrics field (at offset 34, uint16)
         data[34, 2] = [new_num_h_metrics].pack("n")

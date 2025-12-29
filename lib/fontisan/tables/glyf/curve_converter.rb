@@ -119,7 +119,10 @@ module Fontisan
       # @raise [ArgumentError] If parameters are invalid
       def self.calculate_error(cubic, quadratics)
         validate_cubic_curve!(cubic)
-        raise ArgumentError, "quadratics must be Array" unless quadratics.is_a?(Array)
+        unless quadratics.is_a?(Array)
+          raise ArgumentError,
+                "quadratics must be Array"
+        end
         raise ArgumentError, "quadratics cannot be empty" if quadratics.empty?
 
         max_error = 0.0
@@ -305,7 +308,8 @@ module Fontisan
         required.each do |key|
           value = quad[key]
           unless value.is_a?(Numeric)
-            raise ArgumentError, "quad[:#{key}] must be Numeric, got: #{value.class}"
+            raise ArgumentError,
+                  "quad[:#{key}] must be Numeric, got: #{value.class}"
           end
         end
       end
@@ -324,14 +328,16 @@ module Fontisan
         required.each do |key|
           value = cubic[key]
           unless value.is_a?(Numeric)
-            raise ArgumentError, "cubic[:#{key}] must be Numeric, got: #{value.class}"
+            raise ArgumentError,
+                  "cubic[:#{key}] must be Numeric, got: #{value.class}"
           end
         end
       end
 
       private_class_method def self.validate_max_error!(max_error)
         unless max_error.is_a?(Numeric)
-          raise ArgumentError, "max_error must be Numeric, got: #{max_error.class}"
+          raise ArgumentError,
+                "max_error must be Numeric, got: #{max_error.class}"
         end
 
         if max_error <= 0

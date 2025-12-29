@@ -295,14 +295,16 @@ RSpec.describe Fontisan::Models::Outline do
       [
         { type: :move_to, x: 100.0, y: 0.0 },
         { type: :line_to, x: 200.0, y: 700.0 },
-        { type: :curve_to, x1: 250.0, y1: 650.0, x2: 280.0, y2: 550.0, x: 300.0, y: 0.0 },
+        { type: :curve_to, x1: 250.0, y1: 650.0, x2: 280.0, y2: 550.0,
+          x: 300.0, y: 0.0 },
       ]
     end
 
     let(:bbox_array) { [100, 0, 300, 700] }
 
     before do
-      allow(charstring).to receive_messages(path: cff_path, bounding_box: bbox_array)
+      allow(charstring).to receive_messages(path: cff_path,
+                                            bounding_box: bbox_array)
     end
 
     it "creates outline from CFF CharString" do
@@ -424,7 +426,8 @@ RSpec.describe Fontisan::Models::Outline do
           glyph_id: 65,
           commands: [
             { type: :move_to, x: 100, y: 0 },
-            { type: :curve_to, cx1: 120, cy1: 200, cx2: 180, cy2: 500, x: 200, y: 700 },
+            { type: :curve_to, cx1: 120, cy1: 200, cx2: 180, cy2: 500, x: 200,
+              y: 700 },
             { type: :close_path },
           ],
           bbox: { x_min: 100, y_min: 0, x_max: 200, y_max: 700 },
@@ -508,7 +511,8 @@ RSpec.describe Fontisan::Models::Outline do
           glyph_id: 65,
           commands: [
             { type: :move_to, x: 100, y: 0 },
-            { type: :curve_to, cx1: 120, cy1: 200, cx2: 180, cy2: 500, x: 200, y: 700 },
+            { type: :curve_to, cx1: 120, cy1: 200, cx2: 180, cy2: 500, x: 200,
+              y: 700 },
             { type: :close_path },
           ],
           bbox: { x_min: 100, y_min: 0, x_max: 200, y_max: 700 },

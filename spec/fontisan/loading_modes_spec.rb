@@ -50,9 +50,9 @@ RSpec.describe Fontisan::LoadingModes do
     end
 
     it "raises error for invalid mode" do
-      expect {
+      expect do
         described_class.tables_for(:invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
   end
 
@@ -126,9 +126,9 @@ RSpec.describe Fontisan::LoadingModes do
     end
 
     it "raises error for invalid mode" do
-      expect {
+      expect do
         described_class.table_allowed?(:invalid, "name")
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
   end
 
@@ -142,9 +142,9 @@ RSpec.describe Fontisan::LoadingModes do
     end
 
     it "raises error for invalid mode" do
-      expect {
+      expect do
         described_class.default_lazy?(:invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
   end
 
@@ -162,16 +162,18 @@ RSpec.describe Fontisan::LoadingModes do
     end
 
     it "raises error for invalid mode" do
-      expect {
+      expect do
         described_class.description(:invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
   end
 end
 
 RSpec.describe "Loading Modes Integration" do
   let(:ttf_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
-  let(:otf_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Medium.otf") }
+  let(:otf_path) do
+    font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Medium.otf")
+  end
 
   describe "FontLoader" do
     context "with metadata mode" do
@@ -536,14 +538,16 @@ RSpec.describe "Loading Modes Integration" do
       # Informational test - timing can vary significantly based on system load
       # We expect metadata to be faster, but allow up to 2x slower to account for variance
       expect(metadata_time).to be < (full_time * 2.0),
-        "Metadata mode should not be significantly slower than full mode (max 2x)"
+                               "Metadata mode should not be significantly slower than full mode (max 2x)"
     end
 
     it "uses less memory in metadata mode" do
       skip "No test fonts available" unless File.exist?(ttf_path)
 
-      metadata_font = Fontisan::TrueTypeFont.from_file(ttf_path, mode: :metadata, lazy: false)
-      full_font = Fontisan::TrueTypeFont.from_file(ttf_path, mode: :full, lazy: false)
+      metadata_font = Fontisan::TrueTypeFont.from_file(ttf_path,
+                                                       mode: :metadata, lazy: false)
+      full_font = Fontisan::TrueTypeFont.from_file(ttf_path, mode: :full,
+                                                             lazy: false)
 
       metadata_size = metadata_font.table_data.values.sum(&:bytesize)
       full_size = full_font.table_data.values.sum(&:bytesize)
@@ -602,27 +606,27 @@ RSpec.describe "Loading Modes Integration" do
 
   describe "error handling" do
     it "rejects invalid mode in FontLoader" do
-      expect {
+      expect do
         Fontisan::FontLoader.load(ttf_path, mode: :invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
 
     it "rejects invalid mode in TrueTypeFont" do
-      expect {
+      expect do
         Fontisan::TrueTypeFont.from_file(ttf_path, mode: :invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
 
     it "rejects invalid mode in OpenTypeFont" do
-      expect {
+      expect do
         Fontisan::OpenTypeFont.from_file(otf_path, mode: :invalid)
-      }.to raise_error(ArgumentError, /Invalid mode/)
+      end.to raise_error(ArgumentError, /Invalid mode/)
     end
 
     it "handles missing font files" do
-      expect {
+      expect do
         Fontisan::FontLoader.load("/nonexistent/font.ttf", mode: :metadata)
-      }.to raise_error(Errno::ENOENT)
+      end.to raise_error(Errno::ENOENT)
     end
 
     it "handles invalid font format" do
@@ -630,9 +634,9 @@ RSpec.describe "Loading Modes Integration" do
       temp_file.write("invalid font data")
       temp_file.close
 
-      expect {
+      expect do
         Fontisan::FontLoader.load(temp_file.path, mode: :metadata)
-      }.to raise_error(Fontisan::InvalidFontError)
+      end.to raise_error(Fontisan::InvalidFontError)
 
       temp_file.unlink
     end

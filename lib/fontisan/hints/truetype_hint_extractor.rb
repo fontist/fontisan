@@ -29,7 +29,7 @@ module Fontisan
       MDRP_MIN_RND_BLACK = 0xC0
       IUP_Y = 0x30
       IUP_X = 0x31
-      SHP = [0x32, 0x33]
+      SHP = [0x32, 0x33].freeze
       ALIGNRP = 0x3C
       DELTAP1 = 0x5D
       DELTAP2 = 0x71
@@ -104,7 +104,7 @@ module Fontisan
             hints << Models::Hint.new(
               type: :interpolate,
               data: { axis: opcode == IUP_Y ? :y : :x },
-              source_format: :truetype
+              source_format: :truetype,
             )
             i += 1
 
@@ -113,7 +113,7 @@ module Fontisan
             hints << Models::Hint.new(
               type: :shift,
               data: { instructions: [opcode] },
-              source_format: :truetype
+              source_format: :truetype,
             )
             i += 1
 
@@ -122,7 +122,7 @@ module Fontisan
             hints << Models::Hint.new(
               type: :align,
               data: {},
-              source_format: :truetype
+              source_format: :truetype,
             )
             i += 1
 
@@ -137,9 +137,9 @@ module Fontisan
                 type: :delta,
                 data: {
                   instructions: [opcode] + [count] + delta_data,
-                  count: count
+                  count: count,
                 },
-                source_format: :truetype
+                source_format: :truetype,
               )
               i += count * 2 + 1
             end
@@ -165,7 +165,7 @@ module Fontisan
 
         # Check if next instruction is MDRP (stem width)
         has_width = index + 1 < bytes.length &&
-                    bytes[index + 1] == MDRP_MIN_RND_BLACK
+          bytes[index + 1] == MDRP_MIN_RND_BLACK
 
         if has_width
           Models::Hint.new(
@@ -173,12 +173,10 @@ module Fontisan
             data: {
               position: 0, # Would be extracted from graphics state
               width: 0,    # Would be calculated from MDRP
-              orientation: :vertical # Inferred from instruction context
+              orientation: :vertical, # Inferred from instruction context
             },
-            source_format: :truetype
+            source_format: :truetype,
           )
-        else
-          nil
         end
       end
 
@@ -265,21 +263,19 @@ module Fontisan
 
         # Iterate through all glyphs
         (0...num_glyphs).each do |glyph_id|
-          begin
-            glyph = glyf_table.glyph_for(glyph_id)
-            next unless glyph
-            next if glyph.number_of_contours <= 0 # Skip compound glyphs and empty glyphs
+          glyph = glyf_table.glyph_for(glyph_id)
+          next unless glyph
+          next if glyph.number_of_contours <= 0 # Skip compound glyphs and empty glyphs
 
-            # Extract hints from simple glyph instructions
-            hints = extract(glyph)
-            next if hints.empty?
+          # Extract hints from simple glyph instructions
+          hints = extract(glyph)
+          next if hints.empty?
 
-            # Store glyph hints
-            hint_set.add_glyph_hints(glyph_id, hints)
-          rescue StandardError => e
-            # Skip glyphs that fail to parse
-            next
-          end
+          # Store glyph hints
+          hint_set.add_glyph_hints(glyph_id, hints)
+        rescue StandardError
+          # Skip glyphs that fail to parse
+          next
         end
       rescue StandardError => e
         warn "Failed to extract glyph hints: #{e.message}"

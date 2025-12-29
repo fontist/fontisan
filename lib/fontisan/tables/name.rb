@@ -173,13 +173,13 @@ module Fontisan
         record = find_name_record(
           name_id,
           platform: PLATFORM_WINDOWS,
-          language: WINDOWS_LANGUAGE_EN_US
+          language: WINDOWS_LANGUAGE_EN_US,
         )
 
         record ||= find_name_record(
           name_id,
           platform: PLATFORM_MACINTOSH,
-          language: MAC_LANGUAGE_ENGLISH
+          language: MAC_LANGUAGE_ENGLISH,
         )
 
         return nil unless record
@@ -236,10 +236,10 @@ module Fontisan
         decoded = case record.platform_id
                   when PLATFORM_WINDOWS, PLATFORM_UNICODE
                     string_data.dup.force_encoding("UTF-16BE")
-                               .encode("UTF-8", invalid: :replace, undef: :replace)
+                      .encode("UTF-8", invalid: :replace, undef: :replace)
                   when PLATFORM_MACINTOSH
                     string_data.dup.force_encoding("ASCII-8BIT")
-                               .encode("UTF-8", invalid: :replace, undef: :replace)
+                      .encode("UTF-8", invalid: :replace, undef: :replace)
                   else
                     string_data.dup.force_encoding("UTF-8")
                   end

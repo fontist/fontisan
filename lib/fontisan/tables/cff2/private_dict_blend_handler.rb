@@ -63,14 +63,14 @@ module Fontisan
 
             blends << {
               base: base,
-              deltas: deltas
+              deltas: deltas,
             }
           end
 
           {
             num_values: num_values,
             num_axes: num_axes,
-            blends: blends
+            blends: blends,
           }
         end
 
@@ -90,7 +90,7 @@ module Fontisan
           {
             base: value[0],
             deltas: value[1..num_axes],
-            num_axes: num_axes
+            num_axes: num_axes,
           }
         end
 
@@ -149,7 +149,8 @@ module Fontisan
               else
                 # Try as single blend value
                 blend_data = parse_blend_value(key, num_axes: num_axes)
-                result[key] = blend_data ? apply_blend(blend_data, scalars) : value
+                result[key] =
+                  blend_data ? apply_blend(blend_data, scalars) : value
               end
             else
               # Non-blend value, copy as-is
@@ -186,7 +187,7 @@ module Fontisan
               # Hint with blend data - normalize and flatten for DICT storage
               normalized_value = {
                 base: value[:base] || value["base"],
-                deltas: value[:deltas] || value["deltas"]
+                deltas: value[:deltas] || value["deltas"],
               }
               result[key] = flatten_blend(normalized_value, num_axes: num_axes)
             else

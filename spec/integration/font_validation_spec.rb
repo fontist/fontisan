@@ -4,7 +4,8 @@ require "spec_helper"
 
 RSpec.describe "Font Validation Integration" do
   let(:valid_font_path) do
-    font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
+    font_fixture_path("MonaSans",
+                      "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
   end
 
   describe "end-to-end validation" do

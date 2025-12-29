@@ -37,7 +37,9 @@ RSpec.describe "Outline Conversion Integration" do
 
   describe "Compound glyph support" do
     context "with fonts containing compound glyphs" do
-      let(:ttf_font_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
+      let(:ttf_font_path) do
+        font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
+      end
       let(:converter) { Fontisan::Converters::OutlineConverter.new }
 
       it "successfully converts fonts with compound glyphs" do
@@ -191,8 +193,6 @@ RSpec.describe "Outline Conversion Integration" do
             maxp_mock = double("maxp")
             allow(maxp_mock).to receive(:num_glyphs).and_return(ttf_font.table("maxp").num_glyphs)
             maxp_mock
-          else
-            nil
           end
         end
 
@@ -245,8 +245,6 @@ RSpec.describe "Outline Conversion Integration" do
             maxp_mock = double("maxp")
             allow(maxp_mock).to receive(:num_glyphs).and_return(ttf_font.table("maxp").num_glyphs)
             maxp_mock
-          else
-            nil
           end
         end
 
@@ -349,8 +347,6 @@ RSpec.describe "Outline Conversion Integration" do
             maxp_mock = double("maxp")
             allow(maxp_mock).to receive(:num_glyphs).and_return(original_num_glyphs)
             maxp_mock
-          else
-            nil
           end
         end
 
@@ -415,11 +411,13 @@ RSpec.describe "Outline Conversion Integration" do
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Convert without optimization
-      unoptimized_tables = converter.convert(font, target_format: :otf, optimize_cff: false)
+      unoptimized_tables = converter.convert(font, target_format: :otf,
+                                                   optimize_cff: false)
       unoptimized_size = unoptimized_tables["CFF "].bytesize
 
       # Convert with optimization
-      optimized_tables = converter.convert(font, target_format: :otf, optimize_cff: true)
+      optimized_tables = converter.convert(font, target_format: :otf,
+                                                 optimize_cff: true)
       optimized_size = optimized_tables["CFF "].bytesize
 
       # Verify optimization reduces size
@@ -440,7 +438,8 @@ RSpec.describe "Outline Conversion Integration" do
       font = Fontisan::FontLoader.load(ttf_font_path)
 
       # Convert TTF to OTF with hint preservation
-      tables = converter.convert(font, target_format: :otf, preserve_hints: true)
+      tables = converter.convert(font, target_format: :otf,
+                                       preserve_hints: true)
 
       # Verify conversion succeeded
       expect(tables["CFF "]).to be_a(String)
@@ -470,16 +469,17 @@ RSpec.describe "Outline Conversion Integration" do
       expect(defined?(Fontisan::Tables::Cff2)).to be_truthy
 
       # Use a real variable font for testing
-      variable_font_path = font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+      variable_font_path = font_fixture_path("MonaSans",
+                                             "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
       variable_font = Fontisan::FontLoader.load(variable_font_path)
 
       # Test 4: Verify converter accepts variation options
       expect do
         converter.convert(variable_font,
-                         target_format: :otf,
-                         preserve_variations: true,
-                         generate_instance: false,
-                         instance_coordinates: {})
+                          target_format: :otf,
+                          preserve_variations: true,
+                          generate_instance: false,
+                          instance_coordinates: {})
       end.not_to raise_error
 
       # Test 5: Verify DataExtractor can be instantiated with variable font

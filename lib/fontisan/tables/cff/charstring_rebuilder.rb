@@ -56,7 +56,7 @@ module Fontisan
         # @yield [operations] Block to modify operations
         # @yieldparam operations [Array<Hash>] Parsed operations
         # @yieldreturn [Array<Hash>] Modified operations
-        def modify_charstring(glyph_index, &block)
+        def modify_charstring(glyph_index)
           # Get original CharString data
           original_data = @source_index[glyph_index]
           return unless original_data
@@ -66,7 +66,7 @@ module Fontisan
           operations = parser.parse
 
           # Apply modification
-          modified_operations = block.call(operations)
+          modified_operations = yield(operations)
 
           # Build new CharString
           new_data = CharStringBuilder.build_from_operations(modified_operations)
@@ -86,13 +86,13 @@ module Fontisan
           charstrings = []
 
           (0...@source_index.count).each do |i|
-            if @modifications.key?(i)
-              # Use modified CharString
-              charstrings << @modifications[i]
-            else
-              # Use original CharString
-              charstrings << @source_index[i]
-            end
+            charstrings << if @modifications.key?(i)
+                             # Use modified CharString
+                             @modifications[i]
+                           else
+                             # Use original CharString
+                             @source_index[i]
+                           end
           end
 
           # Build INDEX
@@ -108,10 +108,10 @@ module Fontisan
         # @yieldparam glyph_index [Integer] Current glyph index
         # @yieldparam operations [Array<Hash>] Parsed operations
         # @yieldreturn [Array<Hash>] Modified operations
-        def batch_modify(glyph_indices, &block)
+        def batch_modify(glyph_indices)
           glyph_indices.each do |glyph_index|
             modify_charstring(glyph_index) do |operations|
-              block.call(glyph_index, operations)
+              yield(glyph_index, operations)
             end
           end
         end
@@ -124,10 +124,10 @@ module Fontisan
         # @yieldparam glyph_index [Integer] Current glyph index
         # @yieldparam operations [Array<Hash>] Parsed operations
         # @yieldreturn [Array<Hash>] Modified operations
-        def modify_all(&block)
+        def modify_all
           (0...@source_index.count).each do |i|
             modify_charstring(i) do |operations|
-              block.call(i, operations)
+              yield(i, operations)
             end
           end
         end

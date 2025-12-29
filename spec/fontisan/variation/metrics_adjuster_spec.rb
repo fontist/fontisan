@@ -152,7 +152,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
         expect(regions[0]["wght"]).to include(
           start: -0.5,
           peak: 0.0,
-          end: 0.5
+          end: 0.5,
         )
       end
 

@@ -310,7 +310,8 @@ RSpec.describe Fontisan::Woff2Font do
         woff2.header.meta_orig_length = 50
         woff2.io_source = double(path: "test.woff2")
 
-        allow(File).to receive(:open).and_raise(StandardError, "Decompression error")
+        allow(File).to receive(:open).and_raise(StandardError,
+                                                "Decompression error")
         expect { woff2.metadata }.to output(/Failed to decompress/).to_stderr
 
         expect(woff2.metadata).to be_nil
@@ -517,7 +518,10 @@ RSpec.describe Fontisan::Woff2Font do
 
   describe "transformation reconstruction" do
     context "with real WOFF2 file containing transformations" do
-      let(:woff2_path) { font_fixture_path("MonaSans", "fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2") }
+      let(:woff2_path) do
+        font_fixture_path("MonaSans",
+                          "fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2")
+      end
 
       before do
         skip "MonaSans WOFF2 fixture not available" unless File.exist?(woff2_path)

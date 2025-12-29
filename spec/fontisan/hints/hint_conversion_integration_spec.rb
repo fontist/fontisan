@@ -18,13 +18,13 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
+          source_format: :truetype,
         ),
         Fontisan::Models::Hint.new(
           type: :interpolate,
           data: { axis: :y },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
       tt_set.add_glyph_hints(0, glyph_hints)
 
@@ -50,8 +50,8 @@ RSpec.describe "Hint Conversion Integration" do
           Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 100 + i * 50, width: 50, orientation: :vertical },
-            source_format: :truetype
-          )
+            source_format: :truetype,
+          ),
         ]
         tt_set.add_glyph_hints(i, hints)
       end
@@ -73,7 +73,7 @@ RSpec.describe "Hint Conversion Integration" do
         "std_vw" => 88,
         "blue_values" => [-20, 0, 706, 726],
         "stem_snap_h" => [60, 68, 76],
-        "stem_snap_v" => [80, 88, 96]
+        "stem_snap_v" => [80, 88, 96],
       }
       ps_set.private_dict_hints = ps_dict.to_json
 
@@ -82,19 +82,19 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :postscript
+          source_format: :postscript,
         ),
         Fontisan::Models::Hint.new(
           type: :stem3,
           data: {
             stems: [
               { position: 200, width: 50 },
-              { position: 300, width: 50 }
+              { position: 300, width: 50 },
             ],
-            orientation: :horizontal
+            orientation: :horizontal,
           },
-          source_format: :postscript
-        )
+          source_format: :postscript,
+        ),
       ]
       ps_set.add_glyph_hints(0, glyph_hints)
 
@@ -115,7 +115,7 @@ RSpec.describe "Hint Conversion Integration" do
         "std_hw" => 50,
         "std_vw" => 60,
         "stem_snap_h" => [45, 50, 55],
-        "stem_snap_v" => [55, 60, 65]
+        "stem_snap_v" => [55, 60, 65],
       }
       ps_set.private_dict_hints = ps_dict.to_json
 
@@ -141,8 +141,8 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
       original.add_glyph_hints(0, hints)
 
@@ -168,8 +168,8 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :postscript
-        )
+          source_format: :postscript,
+        ),
       ]
       original.add_glyph_hints(0, hints)
 
@@ -195,23 +195,25 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
+          source_format: :truetype,
         ),
         Fontisan::Models::Hint.new(
           type: :delta,
           data: { instructions: [0x5D, 0x01] },
-          source_format: :truetype
+          source_format: :truetype,
         ),
         Fontisan::Models::Hint.new(
           type: :interpolate,
           data: { axis: :y },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
       tt_set.add_glyph_hints(0, mixed_hints)
 
       # Should convert without errors
-      expect { converter.convert_hint_set(tt_set, :postscript) }.not_to raise_error
+      expect do
+        converter.convert_hint_set(tt_set, :postscript)
+      end.not_to raise_error
     end
 
     it "handles empty glyph hints gracefully" do
@@ -233,19 +235,19 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
+          source_format: :truetype,
         ),
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
       tt_set.add_glyph_hints(0, duplicate_hints)
 
       ps_set = converter.convert_hint_set(tt_set, :postscript)
 
-     # Duplicates should be handled
+      # Duplicates should be handled
       glyph_hints = ps_set.get_glyph_hints("0")
       expect(glyph_hints).to be_an(Array)
     end
@@ -260,13 +262,15 @@ RSpec.describe "Hint Conversion Integration" do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: nil,
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
       tt_set.add_glyph_hints(0, bad_hints)
 
       # Should not crash
-      expect { converter.convert_hint_set(tt_set, :postscript) }.not_to raise_error
+      expect do
+        converter.convert_hint_set(tt_set, :postscript)
+      end.not_to raise_error
     end
 
     it "handles missing Private dict in PS set" do

@@ -84,7 +84,10 @@ quiet: false)
           errors.each do |error|
             puts "  ERROR: #{error}" if @verbose && !@quiet
             # Add to report if report supports adding errors
-            report.errors << { message: error, category: "variable_font" } if report.respond_to?(:errors)
+            if report.respond_to?(:errors)
+              report.errors << { message: error,
+                                 category: "variable_font" }
+            end
           end
         elsif @verbose && !@quiet
           puts "\n✓ Variable font structure valid"

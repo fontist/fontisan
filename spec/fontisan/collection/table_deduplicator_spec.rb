@@ -133,8 +133,10 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
     describe "font-specific variation tables" do
       it "keeps gvar tables separate even if identical" do
         gvar_data = "gvar_table_content"
-        font1 = create_variable_font_with_tables("fvar" => "fvar", "gvar" => gvar_data)
-        font2 = create_variable_font_with_tables("fvar" => "fvar", "gvar" => gvar_data)
+        font1 = create_variable_font_with_tables("fvar" => "fvar",
+                                                 "gvar" => gvar_data)
+        font2 = create_variable_font_with_tables("fvar" => "fvar",
+                                                 "gvar" => gvar_data)
 
         deduplicator = described_class.new([font1, font2])
         sharing_map = deduplicator.build_sharing_map
@@ -146,8 +148,10 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
 
       it "keeps CFF2 tables separate even if identical" do
         cff2_data = "cff2_table_content"
-        font1 = create_variable_font_with_tables("fvar" => "fvar", "CFF2" => cff2_data)
-        font2 = create_variable_font_with_tables("fvar" => "fvar", "CFF2" => cff2_data)
+        font1 = create_variable_font_with_tables("fvar" => "fvar",
+                                                 "CFF2" => cff2_data)
+        font2 = create_variable_font_with_tables("fvar" => "fvar",
+                                                 "CFF2" => cff2_data)
 
         deduplicator = described_class.new([font1, font2])
         sharing_map = deduplicator.build_sharing_map
@@ -460,7 +464,8 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
   # Helper methods
   def create_font_with_table(tag, data)
     font = instance_double(Fontisan::TrueTypeFont)
-    allow(font).to receive_messages(table_names: [tag], table_data: { tag => data }, has_table?: false)
+    allow(font).to receive_messages(table_names: [tag],
+                                    table_data: { tag => data }, has_table?: false)
     allow(font).to receive(:has_table?).with(tag).and_return(true)
     allow(font).to receive(:has_table?).with("fvar").and_return(tag == "fvar")
     font
@@ -470,7 +475,8 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
     font = instance_double(Fontisan::TrueTypeFont)
 
     # Default to false for all tables
-    allow(font).to receive_messages(table_names: tables.keys, table_data: tables, has_table?: false)
+    allow(font).to receive_messages(table_names: tables.keys,
+                                    table_data: tables, has_table?: false)
 
     # Set true for tables that exist
     tables.each_key do |tag|

@@ -41,7 +41,7 @@ module Fontisan
       WE_HAVE_INSTRUCTIONS = 0x0100
       USE_MY_METRICS = 0x0200
       OVERLAP_COMPOUND = 0x0400
-      HAVE_VARIATIONS = 0x1000  # Variable font variation data follows
+      HAVE_VARIATIONS = 0x1000 # Variable font variation data follows
 
       # Reconstruct glyf and loca tables from transformed data
       #
@@ -55,7 +55,8 @@ module Fontisan
 
         # Check minimum size for header
         if io.size < 8
-          raise InvalidFontError, "Transformed glyf data too small: #{io.size} bytes"
+          raise InvalidFontError,
+                "Transformed glyf data too small: #{io.size} bytes"
         end
 
         # Read header
@@ -69,28 +70,34 @@ module Fontisan
         end
 
         # Read nContour stream
-        n_contour_data = read_stream_safely(io, "nContour", variable_font: variable_font)
+        n_contour_data = read_stream_safely(io, "nContour",
+                                            variable_font: variable_font)
 
         # Read nPoints stream
-        n_points_data = read_stream_safely(io, "nPoints", variable_font: variable_font)
+        n_points_data = read_stream_safely(io, "nPoints",
+                                           variable_font: variable_font)
 
         # Read flag stream
         flag_data = read_stream_safely(io, "flag", variable_font: variable_font)
 
         # Read glyph stream (coordinates, instructions, composite data)
-        glyph_data = read_stream_safely(io, "glyph", variable_font: variable_font)
+        glyph_data = read_stream_safely(io, "glyph",
+                                        variable_font: variable_font)
 
         # Read composite stream
-        composite_data = read_stream_safely(io, "composite", variable_font: variable_font)
+        composite_data = read_stream_safely(io, "composite",
+                                            variable_font: variable_font)
 
         # Read bbox stream
         bbox_data = read_stream_safely(io, "bbox", variable_font: variable_font)
 
         # Read instruction stream
-        instruction_data = read_stream_safely(io, "instruction", variable_font: variable_font)
+        instruction_data = read_stream_safely(io, "instruction",
+                                              variable_font: variable_font)
 
         # Parse streams
-        n_contours = parse_n_contour_stream(StringIO.new(n_contour_data), num_glyphs)
+        n_contours = parse_n_contour_stream(StringIO.new(n_contour_data),
+                                            num_glyphs)
 
         # Reconstruct glyphs
         glyphs = reconstruct_glyphs(
@@ -101,7 +108,7 @@ module Fontisan
           StringIO.new(composite_data),
           StringIO.new(bbox_data),
           StringIO.new(instruction_data),
-          variable_font: variable_font
+          variable_font: variable_font,
         )
 
         # Build glyf and loca tables
@@ -114,7 +121,7 @@ module Fontisan
       # @param stream_name [String] Name of stream for error messages
       # @param variable_font [Boolean] Whether this is a variable font (allows incomplete streams)
       # @return [String] Stream data (empty if not available)
-      def self.read_stream_safely(io, stream_name, variable_font: false)
+      def self.read_stream_safely(io, _stream_name, variable_font: false)
         remaining = io.size - io.pos
         if remaining < 4
           # Not enough data for stream size - return empty stream
@@ -131,9 +138,9 @@ module Fontisan
         if remaining < stream_size
           # Stream size extends beyond available data
           # Read what we can
-          available = io.read(remaining) || ""
+          io.read(remaining) || ""
           # For variable fonts, we may have incomplete streams - just return what we have
-          available
+
         else
           io.read(stream_size) || ""
         end
@@ -160,18 +167,24 @@ module Fontisan
         case code
         when 255
           return 0 if io.eof? || (io.size - io.pos) < 2
+
           value_bytes = io.read(2)
           return 0 unless value_bytes && value_bytes.bytesize == 2
+
           759 + value_bytes.unpack1("n")  # 253 * 3 + value
         when 254
           return 0 if io.eof? || (io.size - io.pos) < 2
+
           value_bytes = io.read(2)
           return 0 unless value_bytes && value_bytes.bytesize == 2
+
           506 + value_bytes.unpack1("n")  # 253 * 2 + value
         when 253
           return 0 if io.eof? || (io.size - io.pos) < 2
+
           value_bytes = io.read(2)
           return 0 unless value_bytes && value_bytes.bytesize == 2
+
           253 + value_bytes.unpack1("n")
         else
           code
@@ -279,15 +292,15 @@ module Fontisan
           x_min = y_min = x_max = y_max = 0
         else
           bbox_bytes = bbox_io.read(8)
-          unless bbox_bytes && bbox_bytes.bytesize == 8
-            x_min = y_min = x_max = y_max = 0
-          else
+          if bbox_bytes && bbox_bytes.bytesize == 8
             x_min, y_min, x_max, y_max = bbox_bytes.unpack("n4")
             # Convert to signed
             x_min = x_min > 0x7FFF ? x_min - 0x10000 : x_min
             y_min = y_min > 0x7FFF ? y_min - 0x10000 : y_min
             x_max = x_max > 0x7FFF ? x_max - 0x10000 : x_max
             y_max = y_max > 0x7FFF ? y_max - 0x10000 : y_max
+          else
+            x_min = y_min = x_max = y_max = 0
           end
         end
 
@@ -302,12 +315,12 @@ module Fontisan
             instruction_length = inst_length_data
             if instruction_length.positive?
               inst_remaining = instruction_io.size - instruction_io.pos
-              if inst_remaining >= instruction_length
-                instructions = instruction_io.read(instruction_length) || ""
-              else
-                # Read what we can
-                instructions = instruction_io.read(inst_remaining) || ""
-              end
+              instructions = if inst_remaining >= instruction_length
+                               instruction_io.read(instruction_length) || ""
+                             else
+                               # Read what we can
+                               instruction_io.read(inst_remaining) || ""
+                             end
             end
           end
         end
@@ -325,7 +338,8 @@ module Fontisan
       # @param instruction_io [StringIO] Instruction stream
       # @param variable_font [Boolean] Whether this is a variable font
       # @return [String] Glyph data in standard format
-      def self.reconstruct_composite_glyph(composite_io, bbox_io, instruction_io, variable_font: false)
+      def self.reconstruct_composite_glyph(composite_io, bbox_io,
+instruction_io, variable_font: false)
         # Track available bytes to prevent EOF errors
         composite_size = composite_io.size - composite_io.pos
 
@@ -364,6 +378,7 @@ module Fontisan
           # Read flags and glyph_index safely
           component_header = composite_io.read(4)
           break unless component_header && component_header.bytesize == 4
+
           flags, glyph_index = component_header.unpack("n2")
 
           # Write flags and index
@@ -371,18 +386,21 @@ module Fontisan
           composite_data << [glyph_index].pack("n")
 
           # Read arguments (depend on flags)
+          remaining = composite_io.size - composite_io.pos
           if (flags & ARG_1_AND_2_ARE_WORDS).zero?
-            remaining = composite_io.size - composite_io.pos
             break if composite_io.eof? || remaining < 2
+
             arg_bytes = composite_io.read(2)
             break unless arg_bytes && arg_bytes.bytesize == 2
+
             arg1, arg2 = arg_bytes.unpack("c2")
             composite_data << [arg1, arg2].pack("c2")
           else
-            remaining = composite_io.size - composite_io.pos
             break if composite_io.eof? || remaining < 4
+
             arg_bytes = composite_io.read(4)
             break unless arg_bytes && arg_bytes.bytesize == 4
+
             arg1, arg2 = arg_bytes.unpack("n2")
             # Convert to signed
             arg1 = arg1 > 0x7FFF ? arg1 - 0x10000 : arg1
@@ -394,22 +412,28 @@ module Fontisan
           if (flags & WE_HAVE_A_SCALE) != 0
             remaining = composite_io.size - composite_io.pos
             break if composite_io.eof? || remaining < 2
+
             scale_bytes = composite_io.read(2)
             break unless scale_bytes && scale_bytes.bytesize == 2
+
             scale = scale_bytes.unpack1("n")
             composite_data << [scale].pack("n")
           elsif (flags & WE_HAVE_AN_X_AND_Y_SCALE) != 0
             remaining = composite_io.size - composite_io.pos
             break if composite_io.eof? || remaining < 4
+
             scale_bytes = composite_io.read(4)
             break unless scale_bytes && scale_bytes.bytesize == 4
+
             x_scale, y_scale = scale_bytes.unpack("n2")
             composite_data << [x_scale, y_scale].pack("n2")
           elsif (flags & WE_HAVE_A_TWO_BY_TWO) != 0
             remaining = composite_io.size - composite_io.pos
             break if composite_io.eof? || remaining < 8
+
             matrix_bytes = composite_io.read(8)
             break unless matrix_bytes && matrix_bytes.bytesize == 8
+
             x_scale, scale01, scale10, y_scale = matrix_bytes.unpack("n4")
             composite_data << [x_scale, scale01, scale10, y_scale].pack("n4")
           end
@@ -462,12 +486,12 @@ module Fontisan
               instruction_length = length_bytes.unpack1("n")
               if instruction_length.positive?
                 remaining = instruction_io.size - instruction_io.pos
-                if remaining >= instruction_length
-                  instructions = instruction_io.read(instruction_length) || ""
-                else
-                  # Read what we can
-                  instructions = instruction_io.read(remaining) || ""
-                end
+                instructions = if remaining >= instruction_length
+                                 instruction_io.read(instruction_length) || ""
+                               else
+                                 # Read what we can
+                                 instruction_io.read(remaining) || ""
+                               end
               end
             end
           end
@@ -501,6 +525,7 @@ module Fontisan
 
           if (flag & REPEAT_FLAG) != 0
             break if io.eof? || (io.size - io.pos) < 1
+
             repeat_count = read_uint8(io)
             repeat_count.times { flags << flag }
           end
@@ -529,6 +554,7 @@ module Fontisan
           # EOF protection
           if (flag & short_flag) != 0
             break if io.eof? || (io.size - io.pos) < 1
+
             # Short vector (one byte)
             delta = read_uint8(io)
             delta = -delta if (flag & same_or_positive_flag).zero?
@@ -537,6 +563,7 @@ module Fontisan
             delta = 0
           else
             break if io.eof? || (io.size - io.pos) < 2
+
             # Long vector (two bytes, signed)
             delta = read_int16(io)
           end

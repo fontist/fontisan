@@ -3,8 +3,12 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Commands::PackCommand do
-  let(:font_path1) { font_fixture_path("SourceSans3", "OTF/SourceSans3-Regular.otf") }
-  let(:font_path2) { font_fixture_path("SourceSans3", "OTF/SourceSans3-Bold.otf") }
+  let(:font_path1) do
+    font_fixture_path("SourceSans3", "OTF/SourceSans3-Regular.otf")
+  end
+  let(:font_path2) do
+    font_fixture_path("SourceSans3", "OTF/SourceSans3-Bold.otf")
+  end
   let(:font_paths) { [font_path1, font_path2] }
   let(:output_path) { "output.ttc" }
 

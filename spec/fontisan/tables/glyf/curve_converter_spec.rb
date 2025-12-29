@@ -134,7 +134,8 @@ RSpec.describe Fontisan::Tables::CurveConverter do
 
       it "raises ArgumentError for non-numeric values" do
         expect do
-          described_class.quadratic_to_cubic({ x0: 0, y0: 0, x1: "50", y1: 100, x2: 100, y2: 0 })
+          described_class.quadratic_to_cubic({ x0: 0, y0: 0, x1: "50", y1: 100,
+                                               x2: 100, y2: 0 })
         end.to raise_error(ArgumentError, /must be Numeric/)
       end
     end
@@ -243,7 +244,8 @@ RSpec.describe Fontisan::Tables::CurveConverter do
 
     context "with negative coordinates" do
       let(:cubic) do
-        { x0: -100, y0: -100, x1: -50, y1: 50, x2: 50, y2: 50, x3: 100, y3: -100 }
+        { x0: -100, y0: -100, x1: -50, y1: 50, x2: 50, y2: 50, x3: 100,
+          y3: -100 }
       end
 
       it "handles negative coordinates" do
@@ -298,7 +300,8 @@ RSpec.describe Fontisan::Tables::CurveConverter do
   describe ".calculate_error" do
     context "with matching curves" do
       let(:cubic) do
-        { x0: 0, y0: 0, x1: 33.33, y1: 66.67, x2: 66.67, y2: 66.67, x3: 100, y3: 0 }
+        { x0: 0, y0: 0, x1: 33.33, y1: 66.67, x2: 66.67, y2: 66.67, x3: 100,
+          y3: 0 }
       end
 
       let(:quad) do
@@ -352,13 +355,17 @@ RSpec.describe Fontisan::Tables::CurveConverter do
 
       it "raises ArgumentError for invalid cubic" do
         expect do
-          described_class.calculate_error({ x0: 0 }, [{ x0: 0, y0: 0, x1: 50, y1: 100, x2: 100, y2: 0 }])
+          described_class.calculate_error({ x0: 0 },
+                                          [{ x0: 0, y0: 0, x1: 50, y1: 100,
+                                             x2: 100, y2: 0 }])
         end.to raise_error(ArgumentError, /cubic missing keys/)
       end
 
       it "raises ArgumentError for non-Array quadratics" do
         expect do
-          described_class.calculate_error(cubic, { x0: 0, y0: 0, x1: 50, y1: 100, x2: 100, y2: 0 })
+          described_class.calculate_error(cubic,
+                                          { x0: 0, y0: 0, x1: 50, y1: 100,
+                                            x2: 100, y2: 0 })
         end.to raise_error(ArgumentError, /quadratics must be Array/)
       end
 
@@ -505,7 +512,8 @@ RSpec.describe Fontisan::Tables::CurveConverter do
         cubic = described_class.quadratic_to_cubic(original_quad)
 
         # Convert cubic back to quadratic (approximation)
-        recovered_quads = described_class.cubic_to_quadratic(cubic, max_error: 0.5)
+        recovered_quads = described_class.cubic_to_quadratic(cubic,
+                                                             max_error: 0.5)
 
         # Should result in single quadratic curve
         expect(recovered_quads.length).to eq(1)

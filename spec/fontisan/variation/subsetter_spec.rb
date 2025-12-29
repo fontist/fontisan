@@ -22,27 +22,23 @@ RSpec.describe Fontisan::Variation::Subsetter do
   # Helper to create mock fvar
   def create_mock_fvar(axes: ["wght", "wdth"])
     fvar = double("Fvar")
-    allow(fvar).to receive(:axis_count).and_return(axes.length)
 
     axis_objects = axes.map do |tag|
       axis = double("Axis")
-      allow(axis).to receive(:axis_tag).and_return(tag)
-      allow(axis).to receive(:min_value).and_return(100.0)
-      allow(axis).to receive(:default_value).and_return(400.0)
-      allow(axis).to receive(:max_value).and_return(900.0)
+      allow(axis).to receive_messages(axis_tag: tag, min_value: 100.0,
+                                      default_value: 400.0, max_value: 900.0)
       axis
     end
 
-    allow(fvar).to receive(:axes).and_return(axis_objects)
-    allow(fvar).to receive(:instances).and_return([])
+    allow(fvar).to receive_messages(axis_count: axes.length,
+                                    axes: axis_objects, instances: [])
 
     fvar
   end
 
   # Helper to create mock maxp
   def create_mock_maxp(num_glyphs: 100)
-    maxp = double("Maxp", num_glyphs: num_glyphs)
-    maxp
+    double("Maxp", num_glyphs: num_glyphs)
   end
 
   describe "#initialize" do
@@ -83,9 +79,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
       create_mock_font(
         table_data: {
           "fvar" => create_mock_fvar,
-          "maxp" => create_mock_maxp(num_glyphs: 100)
+          "maxp" => create_mock_maxp(num_glyphs: 100),
         },
-        all_tables: { "fvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "maxp" => "data" },
       )
     end
 
@@ -115,9 +111,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "gvar" => double("Gvar"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font_with_gvar, validate: false)
@@ -132,9 +128,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "CFF2" => double("CFF2"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font_with_cff2, validate: false)
@@ -147,7 +143,8 @@ RSpec.describe Fontisan::Variation::Subsetter do
       it "validates input font" do
         validator = instance_double(Fontisan::Variation::Validator)
         allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
-        allow(validator).to receive(:validate).and_return({ valid: true, errors: [], warnings: [] })
+        allow(validator).to receive(:validate).and_return({ valid: true,
+                                                            errors: [], warnings: [] })
 
         subsetter = described_class.new(font, validate: true)
         subsetter.subset_glyphs([0, 1])
@@ -160,14 +157,16 @@ RSpec.describe Fontisan::Variation::Subsetter do
         validator = instance_double(Fontisan::Variation::Validator)
         allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
         allow(validator).to receive(:validate).and_return({
-          valid: false,
-          errors: ["Missing fvar table"],
-          warnings: []
-        })
+                                                            valid: false,
+                                                            errors: ["Missing fvar table"],
+                                                            warnings: [],
+                                                          })
 
         subsetter = described_class.new(font, validate: true)
 
-        expect { subsetter.subset_glyphs([0, 1]) }.to raise_error(/Invalid input font/)
+        expect do
+          subsetter.subset_glyphs([0, 1])
+        end.to raise_error(/Invalid input font/)
       end
     end
   end
@@ -178,7 +177,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
       create_mock_font(
         tables: ["fvar"],
         table_data: { "fvar" => fvar },
-        all_tables: { "fvar" => "data" }
+        all_tables: { "fvar" => "data" },
       )
     end
 
@@ -207,7 +206,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
       font_no_fvar = create_mock_font(
         tables: [],
         table_data: {},
-        all_tables: {}
+        all_tables: {},
       )
 
       subsetter = described_class.new(font_no_fvar, validate: false)
@@ -222,9 +221,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "gvar"],
         table_data: {
           "fvar" => fvar,
-          "gvar" => double("Gvar")
+          "gvar" => double("Gvar"),
         },
-        all_tables: { "fvar" => "data", "gvar" => "data" }
+        all_tables: { "fvar" => "data", "gvar" => "data" },
       )
 
       subsetter = described_class.new(font_with_gvar, validate: false)
@@ -239,9 +238,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "CFF2"],
         table_data: {
           "fvar" => fvar,
-          "CFF2" => double("CFF2")
+          "CFF2" => double("CFF2"),
         },
-        all_tables: { "fvar" => "data", "CFF2" => "data" }
+        all_tables: { "fvar" => "data", "CFF2" => "data" },
       )
 
       subsetter = described_class.new(font_with_cff2, validate: false)
@@ -257,7 +256,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
       create_mock_font(
         tables: ["fvar"],
         table_data: { "fvar" => fvar },
-        all_tables: { "fvar" => "data" }
+        all_tables: { "fvar" => "data" },
       )
     end
 
@@ -272,7 +271,8 @@ RSpec.describe Fontisan::Variation::Subsetter do
     end
 
     it "uses default threshold from options" do
-      subsetter = described_class.new(font, validate: false, region_threshold: 0.001)
+      subsetter = described_class.new(font, validate: false,
+                                            region_threshold: 0.001)
 
       result = subsetter.simplify_regions
 
@@ -280,7 +280,8 @@ RSpec.describe Fontisan::Variation::Subsetter do
     end
 
     it "accepts custom threshold parameter" do
-      subsetter = described_class.new(font, validate: false, region_threshold: 0.01)
+      subsetter = described_class.new(font, validate: false,
+                                            region_threshold: 0.01)
 
       result = subsetter.simplify_regions(threshold: 0.005)
 
@@ -294,16 +295,16 @@ RSpec.describe Fontisan::Variation::Subsetter do
           tables: ["fvar", "CFF2"],
           table_data: {
             "fvar" => create_mock_fvar,
-            "CFF2" => cff2
+            "CFF2" => cff2,
           },
-          all_tables: { "fvar" => "data", "CFF2" => "data" }
+          all_tables: { "fvar" => "data", "CFF2" => "data" },
         )
 
         # Mock optimizer
         optimizer = instance_double(Fontisan::Variation::Optimizer)
         allow(Fontisan::Variation::Optimizer).to receive(:new).and_return(optimizer)
-        allow(optimizer).to receive(:optimize).and_return(cff2)
-        allow(optimizer).to receive(:stats).and_return({ regions_deduplicated: 5 })
+        allow(optimizer).to receive_messages(optimize: cff2,
+                                             stats: { regions_deduplicated: 5 })
 
         subsetter = described_class.new(font_with_cff2, validate: false)
         result = subsetter.simplify_regions
@@ -321,16 +322,17 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "maxp"],
         table_data: {
           "fvar" => fvar,
-          "maxp" => create_mock_maxp(num_glyphs: 100)
+          "maxp" => create_mock_maxp(num_glyphs: 100),
         },
-        all_tables: { "fvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "maxp" => "data" },
       )
     end
 
     it "performs combined subset operation" do
       subsetter = described_class.new(font, validate: false)
 
-      result = subsetter.subset(glyphs: [0, 1, 2], axes: ["wght"], simplify: false)
+      result = subsetter.subset(glyphs: [0, 1, 2], axes: ["wght"],
+                                simplify: false)
 
       expect(result).to have_key(:tables)
       expect(result).to have_key(:report)
@@ -415,12 +417,13 @@ RSpec.describe Fontisan::Variation::Subsetter do
     it "validates before subsetting when enabled" do
       font = create_mock_font(
         table_data: { "fvar" => create_mock_fvar },
-        all_tables: { "fvar" => "data" }
+        all_tables: { "fvar" => "data" },
       )
 
       validator = instance_double(Fontisan::Variation::Validator)
       allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
-      allow(validator).to receive(:validate).and_return({ valid: true, errors: [], warnings: [] })
+      allow(validator).to receive(:validate).and_return({ valid: true,
+                                                          errors: [], warnings: [] })
 
       subsetter = described_class.new(font, validate: true)
       subsetter.subset_glyphs([0, 1])
@@ -431,7 +434,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
     it "skips validation when disabled" do
       font = create_mock_font(
         table_data: { "maxp" => create_mock_maxp },
-        all_tables: { "maxp" => "data" }
+        all_tables: { "maxp" => "data" },
       )
 
       subsetter = described_class.new(font, validate: false)
@@ -445,7 +448,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
     let(:font) do
       create_mock_font(
         table_data: { "maxp" => create_mock_maxp },
-        all_tables: { "maxp" => "data" }
+        all_tables: { "maxp" => "data" },
       )
     end
 
@@ -478,9 +481,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "gvar" => double("Gvar"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font, validate: false)
@@ -495,9 +498,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "maxp" => "data" },
       )
     end
 
@@ -507,9 +510,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "gvar" => double("Gvar"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font_with_gvar, validate: false)
@@ -524,9 +527,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "CFF2" => double("CFF2"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font_with_cff2, validate: false)
@@ -541,9 +544,9 @@ RSpec.describe Fontisan::Variation::Subsetter do
         table_data: {
           "fvar" => create_mock_fvar,
           "HVAR" => double("HVAR"),
-          "maxp" => create_mock_maxp
+          "maxp" => create_mock_maxp,
         },
-        all_tables: { "fvar" => "data", "HVAR" => "data", "maxp" => "data" }
+        all_tables: { "fvar" => "data", "HVAR" => "data", "maxp" => "data" },
       )
 
       subsetter = described_class.new(font_with_hvar, validate: false)

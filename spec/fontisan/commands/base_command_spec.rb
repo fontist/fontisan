@@ -83,7 +83,8 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
     context "with an OTC file" do
       let(:otc_file) do
-        font_fixture_path("NotoSerifCJK-VF", "Variable/OTC/NotoSerifCJK-VF.otf.ttc")
+        font_fixture_path("NotoSerifCJK-VF",
+                          "Variable/OTC/NotoSerifCJK-VF.otf.ttc")
       end
 
       it "detects OTC files and loads OpenType fonts" do

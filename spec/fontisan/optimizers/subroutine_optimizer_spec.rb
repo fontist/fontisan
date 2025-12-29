@@ -188,7 +188,8 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "BBB", 3, [0], 1, 5,
           { 0 => [20] } # Far from pattern1 position at 0
         )
-        result = optimizer.send(:conflicts_with_selected?, non_overlap, [pattern1])
+        result = optimizer.send(:conflicts_with_selected?, non_overlap,
+                                [pattern1])
         expect(result).to be false
       end
     end
@@ -217,7 +218,8 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "CCC", 3, [0], 1, 5,
           { 0 => [3] } # Inside pattern1 (0-10)
         )
-        result = optimizer.send(:conflicts_with_selected?, contained, [pattern1])
+        result = optimizer.send(:conflicts_with_selected?, contained,
+                                [pattern1])
         expect(result).to be true
       end
     end

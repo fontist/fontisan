@@ -58,8 +58,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
       # Some fonts may not have hinting tables
       it "returns empty HintSet without errors" do
         font = instance_double(Fontisan::TrueTypeFont)
-        allow(font).to receive(:has_table?).and_return(false)
-        allow(font).to receive(:table).and_return(nil)
+        allow(font).to receive_messages(has_table?: false, table: nil)
 
         result = extractor.extract_from_font(font)
         expect(result).to be_a(Fontisan::Models::HintSet)
@@ -76,7 +75,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
         glyph = double(
           "glyph",
           instructions: [0x30], # IUP_Y
-          empty?: false
+          empty?: false,
         )
 
         hints = extractor.extract(glyph)
@@ -89,7 +88,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
         glyph = double(
           "glyph",
           instructions: [0x31], # IUP_X
-          empty?: false
+          empty?: false,
         )
 
         hints = extractor.extract(glyph)

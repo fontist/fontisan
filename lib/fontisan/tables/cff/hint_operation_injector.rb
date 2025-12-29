@@ -120,7 +120,7 @@ module Fontisan
             type: :operator,
             name: operator,
             operands: args,
-            hint_data: nil
+            hint_data: nil,
           }]
         end
 
@@ -144,7 +144,7 @@ module Fontisan
             type: :operator,
             name: :hintmask,
             operands: [],
-            hint_data: hint_data
+            hint_data: hint_data,
           }]
         end
 
@@ -168,7 +168,7 @@ module Fontisan
             type: :operator,
             name: :cntrmask,
             operands: [],
-            hint_data: hint_data
+            hint_data: hint_data,
           }]
         end
 
@@ -188,6 +188,7 @@ module Fontisan
             vvcurveto hhcurveto vhcurveto hvcurveto
           ]
 
+          # rubocop:disable Style/CombinableLoops
           # Find first path operator
           operations.each_with_index do |op, index|
             return index if path_operators.include?(op[:name])
@@ -197,6 +198,7 @@ module Fontisan
           operations.each_with_index do |op, index|
             return index if op[:name] == :endchar
           end
+          # rubocop:enable Style/CombinableLoops
 
           # Empty or malformed - inject at start
           0

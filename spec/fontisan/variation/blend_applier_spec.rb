@@ -5,15 +5,17 @@ require "fontisan/variation/blend_applier"
 require "fontisan/variation/interpolator"
 
 RSpec.describe Fontisan::Variation::BlendApplier do
+  subject(:applier) { described_class.new(interpolator) }
+
   let(:axes) do
     [
-      double("Axis", axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 900.0),
-      double("Axis", axis_tag: "wdth", min_value: 75.0, default_value: 100.0, max_value: 125.0)
+      double("Axis", axis_tag: "wght", min_value: 400.0, default_value: 400.0,
+                     max_value: 900.0),
+      double("Axis", axis_tag: "wdth", min_value: 75.0, default_value: 100.0,
+                     max_value: 125.0),
     ]
   end
   let(:interpolator) { Fontisan::Variation::Interpolator.new(axes) }
-
-  subject(:applier) { described_class.new(interpolator) }
 
   describe "#initialize" do
     it "initializes with interpolator" do
@@ -22,7 +24,8 @@ RSpec.describe Fontisan::Variation::BlendApplier do
     end
 
     it "accepts initial coordinates" do
-      applier_with_coords = described_class.new(interpolator, { "wght" => 700.0 })
+      applier_with_coords = described_class.new(interpolator,
+                                                { "wght" => 700.0 })
       expect(applier_with_coords.interpolator).to eq(interpolator)
     end
   end
@@ -98,7 +101,8 @@ RSpec.describe Fontisan::Variation::BlendApplier do
     it "warns on delta count mismatch" do
       expect do
         applier.apply_blend(base: 100, deltas: [10], num_axes: 2)
-      end.to raise_error(Fontisan::InvalidVariationDataError, /doesn't match axes/)
+      end.to raise_error(Fontisan::InvalidVariationDataError,
+                         /doesn't match axes/)
     end
 
     it "returns base on delta count mismatch" do
@@ -117,7 +121,7 @@ RSpec.describe Fontisan::Variation::BlendApplier do
       blends = [
         { base: 100, deltas: [10, 0] },
         { base: 200, deltas: [20, 0] },
-        { base: 50, deltas: [5, 0] }
+        { base: 50, deltas: [5, 0] },
       ]
 
       results = applier.apply_blends(blends, 2)
@@ -167,7 +171,8 @@ RSpec.describe Fontisan::Variation::BlendApplier do
 
       expect do
         applier.apply_blend_operands(operands, 2, 2)
-      end.to raise_error(Fontisan::InvalidVariationDataError, /operand count mismatch/)
+      end.to raise_error(Fontisan::InvalidVariationDataError,
+                         /operand count mismatch/)
     end
   end
 
@@ -222,9 +227,9 @@ RSpec.describe Fontisan::Variation::BlendApplier do
           num_axes: 2,
           blends: [
             { base: 100, deltas: [10, 0] },
-            { base: 200, deltas: [20, 0] }
-          ]
-        }
+            { base: 200, deltas: [20, 0] },
+          ],
+        },
       ]
 
       results = applier.blend_to_static(blend_data)
@@ -238,12 +243,12 @@ RSpec.describe Fontisan::Variation::BlendApplier do
       blend_data = [
         {
           num_axes: 2,
-          blends: [{ base: 100, deltas: [10, 0] }]
+          blends: [{ base: 100, deltas: [10, 0] }],
         },
         {
           num_axes: 2,
-          blends: [{ base: 200, deltas: [20, 0] }]
-        }
+          blends: [{ base: 200, deltas: [20, 0] }],
+        },
       ]
 
       results = applier.blend_to_static(blend_data)
@@ -268,8 +273,10 @@ RSpec.describe Fontisan::Variation::BlendApplier do
       # wdth: (112.5-100)/(125-100) = 12.5/25 = 0.5
 
       # Apply blend for a control point
-      x_base, y_base = 100.0, 200.0
-      x_deltas, y_deltas = [20, 10], [40, 20]
+      x_base = 100.0
+      y_base = 200.0
+      x_deltas = [20, 10]
+      y_deltas = [40, 20]
 
       x, y = applier.blend_point(x_base, y_base, x_deltas, y_deltas)
 

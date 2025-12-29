@@ -68,7 +68,8 @@ module Fontisan
         # @param global_subrs [Cff::Index, nil] Global subroutines INDEX
         # @param local_subrs [Cff::Index, nil] Local subroutines INDEX
         # @param vsindex [Integer] Variation store index (default 0)
-        def initialize(data, num_axes = 0, global_subrs = nil, local_subrs = nil, vsindex = 0)
+        def initialize(data, num_axes = 0, global_subrs = nil,
+local_subrs = nil, vsindex = 0)
           @data = data
           @num_axes = num_axes
           @global_subrs = global_subrs
@@ -123,7 +124,8 @@ module Fontisan
             when :line_to
               [:line_to, cmd[:x], cmd[:y]]
             when :curve_to
-              [:curve_to, cmd[:x1], cmd[:y1], cmd[:x2], cmd[:y2], cmd[:x], cmd[:y]]
+              [:curve_to, cmd[:x1], cmd[:y1], cmd[:x2], cmd[:y2], cmd[:x],
+               cmd[:y]]
             end
           end
         end
@@ -146,7 +148,8 @@ module Fontisan
             end
           end
         rescue StandardError => e
-          raise CorruptedTableError, "Failed to parse CFF2 CharString: #{e.message}"
+          raise CorruptedTableError,
+                "Failed to parse CFF2 CharString: #{e.message}"
         end
 
         # Check if byte is an operator
@@ -165,7 +168,10 @@ module Fontisan
           if first_byte == 12
             # Two-byte operator
             second_byte = @io.getbyte
-            raise CorruptedTableError, "Unexpected end of CharString" if second_byte.nil?
+            if second_byte.nil?
+              raise CorruptedTableError,
+                    "Unexpected end of CharString"
+            end
 
             [12, second_byte]
           else
@@ -305,7 +311,7 @@ module Fontisan
         # @param blend_op [Hash] Blend operation data
         # @param coordinates [Hash<String, Float>] Axis coordinates
         # @return [Array<Float>] Blended values
-        def apply_blend(blend_op, coordinates)
+        def apply_blend(blend_op, _coordinates)
           blend_op[:blends].map do |blend|
             base = blend[:base]
             deltas = blend[:deltas]
@@ -313,7 +319,7 @@ module Fontisan
             # Apply deltas based on coordinates
             # This will be enhanced when we have proper coordinate interpolation
             blended_value = base
-            deltas.each_with_index do |delta, axis_index|
+            deltas.each_with_index do |delta, _axis_index|
               # Placeholder: use normalized coordinate (will be replaced with proper interpolation)
               scalar = 0.0 # Will be calculated by interpolator
               blended_value += delta * scalar
@@ -573,7 +579,7 @@ module Fontisan
         def callsubr
           return if @local_subrs.nil? || @stack.empty?
 
-          subr_index = @stack.pop
+          @stack.pop
           # Implement subroutine call (placeholder)
           @stack.clear
         end
@@ -581,7 +587,7 @@ module Fontisan
         def callgsubr
           return if @global_subrs.nil? || @stack.empty?
 
-          subr_index = @stack.pop
+          @stack.pop
           # Implement global subroutine call (placeholder)
           @stack.clear
         end

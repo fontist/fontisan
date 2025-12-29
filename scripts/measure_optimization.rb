@@ -51,21 +51,26 @@ def measure_font(font_path, options = {})
   puts "RESULTS"
   puts "-" * 80
   puts "File Sizes:"
-  puts "  Without optimization: #{format('%10d', size_unopt)} bytes (#{size_per_glyph_unopt} bytes/glyph)"
-  puts "  With optimization:    #{format('%10d', size_opt)} bytes (#{size_per_glyph_opt} bytes/glyph)"
+  puts "  Without optimization: #{format('%10d',
+                                         size_unopt)} bytes (#{size_per_glyph_unopt} bytes/glyph)"
+  puts "  With optimization:    #{format('%10d',
+                                         size_opt)} bytes (#{size_per_glyph_opt} bytes/glyph)"
   puts "  Bytes saved:          #{format('%10d', savings)} bytes"
   puts "  Reduction:            #{format('%9.2f', reduction_percent)}%"
 
   puts "\nProcessing Time:"
   puts "  Without optimization: #{format('%.2f', time_unopt)} seconds"
   puts "  With optimization:    #{format('%.2f', time_opt)} seconds"
-  puts "  Overhead:             #{format('%.2f', time_opt - time_unopt)} seconds"
+  puts "  Overhead:             #{format('%.2f',
+                                         time_opt - time_unopt)} seconds"
 
   if opt_result
     puts "\nOptimization Details:"
     puts "  Patterns found:       #{format('%10d', opt_result[:pattern_count])}"
-    puts "  Patterns selected:    #{format('%10d', opt_result[:selected_count])}"
-    puts "  Subroutines:          #{format('%10d', opt_result[:local_subrs].length)}"
+    puts "  Patterns selected:    #{format('%10d',
+                                           opt_result[:selected_count])}"
+    puts "  Subroutines:          #{format('%10d',
+                                           opt_result[:local_subrs].length)}"
     puts "  CFF bias:             #{format('%10d', opt_result[:bias])}"
     puts "  Est. bytes saved:     #{format('%10d', opt_result[:savings])}"
   end
@@ -103,7 +108,9 @@ def print_summary(results)
   end
 
   # Calculate averages
-  avg_reduction = (results.sum { |r| r[:reduction_percent] } / results.length).round(2)
+  avg_reduction = (results.sum do |r|
+    r[:reduction_percent]
+  end / results.length).round(2)
   total_saved = results.sum { |r| r[:savings] }
 
   puts "-" * 80
@@ -118,7 +125,8 @@ if __FILE__ == $PROGRAM_NAME
 
   if font_paths.empty?
     # Use fixtures if no arguments provided
-    fixtures_dir = File.join(File.dirname(__FILE__), "..", "spec", "fixtures", "fonts")
+    fixtures_dir = File.join(File.dirname(__FILE__), "..", "spec", "fixtures",
+                             "fonts")
     font_paths = Dir.glob(File.join(fixtures_dir, "*.ttf"))
   end
 

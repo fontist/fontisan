@@ -162,7 +162,8 @@ module Fontisan
               # Note: CFF2 blend deltas are per-coordinate, we need to map to x/y
               # This is a simplified mapping - full implementation would track
               # which coordinates are being varied
-              regions_map[region_key][:deltas_per_point][idx / 2] ||= { x: 0, y: 0 }
+              regions_map[region_key][:deltas_per_point][idx / 2] ||= { x: 0,
+                                                                        y: 0 }
               if idx.even?
                 regions_map[region_key][:deltas_per_point][idx / 2][:x] = delta
               else

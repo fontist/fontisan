@@ -35,7 +35,8 @@ namespace :fixtures do
     FileUtils.mkdir_p(target_dir)
 
     # Create a manual temp file path - OS will clean up temp files automatically
-    temp_path = File.join(Dir.tmpdir, "fontisan_#{name}_#{Process.pid}_#{rand(10000)}.zip")
+    temp_path = File.join(Dir.tmpdir,
+                          "fontisan_#{name}_#{Process.pid}_#{rand(10000)}.zip")
 
     # Download using IO.copy_stream for better Windows compatibility
     URI.open(url, "rb") do |remote|
@@ -70,7 +71,7 @@ namespace :fixtures do
       end
     ensure
       # Explicitly close the zip file to release file handle on Windows
-      zip_file.close if zip_file
+      zip_file&.close
     end
 
     # Temp file left in Dir.tmpdir - OS will clean it up automatically

@@ -25,7 +25,7 @@ RSpec.describe Fontisan::Variation::Optimizer do
     [
       mock_region(0.0, 1.0, 1.0),
       mock_region(0.0, 0.5, 1.0),
-      mock_region(0.0, 1.0, 1.0) # Duplicate of first
+      mock_region(0.0, 1.0, 1.0), # Duplicate of first
     ]
   end
 
@@ -36,7 +36,7 @@ RSpec.describe Fontisan::Variation::Optimizer do
              double("RegionAxis",
                     start_coord: start_coord,
                     peak_coord: peak_coord,
-                    end_coord: end_coord)
+                    end_coord: end_coord),
            ])
   end
 
@@ -69,8 +69,8 @@ RSpec.describe Fontisan::Variation::Optimizer do
 
     before do
       allow(optimizer).to receive(:estimate_table_size).and_return(1000, 800)
-      allow(optimizer).to receive(:analyze_blend_patterns).and_return([])
-      allow(optimizer).to receive(:extract_blend_subroutines).and_return([])
+      allow(optimizer).to receive_messages(analyze_blend_patterns: [],
+                                           extract_blend_subroutines: [])
       allow(optimizer).to receive(:deduplicate_regions)
       allow(optimizer).to receive(:optimize_item_variation_store)
       allow(optimizer).to receive(:rebuild_charstrings)
@@ -105,10 +105,16 @@ RSpec.describe Fontisan::Variation::Optimizer do
 
     before do
       allow(optimizer).to receive(:extract_blend_sequences).and_return([
-                                                                          { sequence: [:blend1], frequency: 1 },
-                                                                          { sequence: [:blend1], frequency: 1 },
-                                                                          { sequence: [:blend2], frequency: 1 }
-                                                                        ])
+                                                                         {
+                                                                           sequence: [:blend1], frequency: 1
+                                                                         },
+                                                                         {
+                                                                           sequence: [:blend1], frequency: 1
+                                                                         },
+                                                                         {
+                                                                           sequence: [:blend2], frequency: 1
+                                                                         },
+                                                                       ])
     end
 
     it "analyzes blend patterns across glyphs" do
@@ -137,19 +143,19 @@ RSpec.describe Fontisan::Variation::Optimizer do
       [
         { sequence: [:blend1], frequency: 3, savings: 100 },
         { sequence: [:blend2], frequency: 2, savings: 50 },
-        { sequence: [:blend3], frequency: 1, savings: 20 } # Should be filtered
+        { sequence: [:blend3], frequency: 1, savings: 20 }, # Should be filtered
       ]
     end
 
     it "filters patterns by frequency" do
-      subroutines = optimizer.extract_blend_subroutines(patterns)
+      optimizer.extract_blend_subroutines(patterns)
 
       expect(optimizer.stats[:subroutines_created]).to be >= 0
     end
 
     it "respects max_subrs limit" do
       optimizer = described_class.new(mock_cff2, max_subrs: 1)
-      subroutines = optimizer.extract_blend_subroutines(patterns)
+      optimizer.extract_blend_subroutines(patterns)
 
       expect(optimizer.stats[:subroutines_created]).to be <= 1
     end
@@ -247,7 +253,9 @@ RSpec.describe Fontisan::Variation::Optimizer do
     it "does nothing if no variation store" do
       allow(mock_cff2).to receive(:variation_store).and_return(nil)
 
-      expect { optimizer.send(:optimize_item_variation_store) }.not_to raise_error
+      expect do
+        optimizer.send(:optimize_item_variation_store)
+      end.not_to raise_error
     end
   end
 
@@ -273,8 +281,10 @@ RSpec.describe Fontisan::Variation::Optimizer do
       it "optimizes CFF2 table successfully" do
         allow(optimizer).to receive(:estimate_table_size).and_return(1000, 750)
         allow(optimizer).to receive(:analyze_blend_patterns).and_return([
-                                                                           { sequence: [:blend], frequency: 5, savings: 100 }
-                                                                         ])
+                                                                          {
+                                                                            sequence: [:blend], frequency: 5, savings: 100
+                                                                          },
+                                                                        ])
 
         result = optimizer.optimize
 

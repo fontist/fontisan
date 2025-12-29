@@ -165,6 +165,7 @@ module Fontisan
           end
         end
 
+        # rubocop:disable Style/CombinableLoops
         # First, assign offsets to shared tables
         # Shared tables are stored once and referenced by multiple fonts
         canonical_tables.each do |canonical_id, info|
@@ -182,6 +183,7 @@ module Fontisan
           @offsets[:table_offsets][canonical_id] = current_offset
           current_offset = align_offset(current_offset + info[:size])
         end
+        # rubocop:enable Style/CombinableLoops
       end
 
       # Align offset to TABLE_ALIGNMENT boundary

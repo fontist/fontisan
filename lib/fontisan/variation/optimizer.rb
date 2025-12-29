@@ -209,9 +209,12 @@ module Fontisan
           coords2 = r2.region_axes[i]
 
           # Compare start, peak, end coordinates
-          return false unless coords_similar?(coords1.start_coord, coords2.start_coord)
-          return false unless coords_similar?(coords1.peak_coord, coords2.peak_coord)
-          return false unless coords_similar?(coords1.end_coord, coords2.end_coord)
+          return false unless coords_similar?(coords1.start_coord,
+                                              coords2.start_coord)
+          return false unless coords_similar?(coords1.peak_coord,
+                                              coords2.peak_coord)
+          return false unless coords_similar?(coords1.end_coord,
+                                              coords2.end_coord)
         end
 
         true

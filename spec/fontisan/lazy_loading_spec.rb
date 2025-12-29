@@ -258,9 +258,9 @@ RSpec.describe "Lazy Table Loading" do
 
   describe "edge cases" do
     it "handles invalid file path" do
-      expect {
+      expect do
         Fontisan::FontLoader.load("nonexistent.ttf", lazy: true)
-      }.to raise_error(Errno::ENOENT)
+      end.to raise_error(Errno::ENOENT)
     end
 
     it "handles accessing same table multiple times" do
