@@ -14,9 +14,9 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
     end
 
     it "raises error for non-existent file" do
-      expect {
+      expect do
         described_class.calculate_file_checksum("nonexistent.ttf")
-      }.to raise_error(Errno::ENOENT)
+      end.to raise_error(Errno::ENOENT)
     end
   end
 
@@ -80,7 +80,7 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
     end
 
     it "keeps tempfile alive until returned" do
-      checksum, tmpfile = described_class.calculate_checksum_from_io_with_tempfile(io)
+      _, tmpfile = described_class.calculate_checksum_from_io_with_tempfile(io)
 
       # Tempfile should exist and be readable
       expect(File.exist?(tmpfile.path)).to be true
@@ -95,10 +95,10 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
 
     it "allows tempfile to be GC'd when reference is released" do
       checksum, tmpfile = described_class.calculate_checksum_from_io_with_tempfile(io)
-      tmpfile_path = tmpfile.path
+      tmpfile.path
 
       # Release reference
-      tmpfile = nil
+      nil
       GC.start
 
       # Tempfile should eventually be deleted (may take a moment on some systems)
@@ -141,14 +141,14 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
 
         # All threads should complete successfully
         expect(checksums.length).to eq(5)
-        expect(checksums.all? { |c| c.is_a?(Integer) }).to be true
+        expect(checksums.all?(Integer)).to be true
       end
 
       it "allows concurrent checksum calculations" do
         # Multiple concurrent calculations should not interfere
         results = []
 
-        10.times.map do
+        Array.new(10) do
           Thread.new do
             io = StringIO.new(test_data)
             checksum, tmpfile = described_class.calculate_checksum_from_io_with_tempfile(io)

@@ -16,9 +16,8 @@ RSpec.describe Fontisan::Variation::ParallelGenerator do
 
   before do
     allow(font).to receive(:table).with("fvar").and_return(fvar)
-    allow(font).to receive(:table_data).and_return({})
     # Generic mock first, then specific override for fvar (order matters in RSpec)
-    allow(font).to receive(:has_table?).and_return(false)
+    allow(font).to receive_messages(table_data: {}, has_table?: false)
     allow(font).to receive(:has_table?).with("fvar").and_return(true)
   end
 
@@ -56,7 +55,7 @@ RSpec.describe Fontisan::Variation::ParallelGenerator do
       [
         { "wght" => 300.0 },
         { "wght" => 700.0 },
-        { "wght" => 900.0 }
+        { "wght" => 900.0 },
       ]
     end
 
@@ -118,7 +117,9 @@ RSpec.describe Fontisan::Variation::ParallelGenerator do
 
       expect(results.size).to eq(3)
       expect(results.all? { |r| !r[:success] }).to be true
-      expect(results.all? { |r| r[:error][:message] == "Test error" }).to be true
+      expect(results.all? do |r|
+        r[:error][:message] == "Test error"
+      end).to be true
     end
 
     it "includes error details in failed results" do
@@ -217,7 +218,7 @@ RSpec.describe Fontisan::Variation::ParallelGenerator do
     let(:generator) { described_class.new(font, threads: 4) }
 
     it "handles concurrent access safely" do
-      coordinates_list = 20.times.map { |i| { "wght" => 100.0 + (i * 40) } }
+      coordinates_list = Array.new(20) { |i| { "wght" => 100.0 + (i * 40) } }
 
       allow_any_instance_of(Fontisan::Variation::InstanceGenerator)
         .to receive(:generate).and_return({ "glyf" => "data" })
@@ -232,7 +233,11 @@ RSpec.describe Fontisan::Variation::ParallelGenerator do
   describe "performance" do
     let(:sequential_generator) { described_class.new(font, threads: 1) }
     let(:parallel_generator) { described_class.new(font, threads: 4) }
-    let(:coordinates_list) { 12.times.map { |i| { "wght" => 100.0 + (i * 60) } } }
+    let(:coordinates_list) do
+      Array.new(12) do |i|
+        { "wght" => 100.0 + (i * 60) }
+      end
+    end
 
     it "performs better than sequential for large batches" do
       allow_any_instance_of(Fontisan::Variation::InstanceGenerator)

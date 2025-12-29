@@ -8,7 +8,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts vertical stem hints to TrueType instructions" do
         hint = described_class.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
+          data: { position: 100, width: 50, orientation: :vertical },
         )
 
         instructions = hint.to_truetype
@@ -20,7 +20,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts horizontal stem hints to TrueType instructions" do
         hint = described_class.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         instructions = hint.to_truetype
@@ -38,10 +38,10 @@ RSpec.describe Fontisan::Models::Hint do
             stems: [
               { position: 100, width: 50 },
               { position: 200, width: 50 },
-              { position: 300, width: 50 }
+              { position: 300, width: 50 },
             ],
-            orientation: :vertical
-          }
+            orientation: :vertical,
+          },
         )
 
         instructions = hint.to_truetype
@@ -55,7 +55,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "returns empty array for flex hints" do
         hint = described_class.new(
           type: :flex,
-          data: { points: [] }
+          data: { points: [] },
         )
 
         instructions = hint.to_truetype
@@ -67,7 +67,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "returns empty array for counter hints" do
         hint = described_class.new(
           type: :counter,
-          data: { zones: [] }
+          data: { zones: [] },
         )
 
         instructions = hint.to_truetype
@@ -79,7 +79,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "returns empty array for hintmask" do
         hint = described_class.new(
           type: :hint_replacement,
-          data: { mask: [0xFF, 0x00] }
+          data: { mask: [0xFF, 0x00] },
         )
 
         instructions = hint.to_truetype
@@ -91,7 +91,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "preserves TrueType delta instructions" do
         hint = described_class.new(
           type: :delta,
-          data: { instructions: [0x5D, 0x01] }
+          data: { instructions: [0x5D, 0x01] },
         )
 
         instructions = hint.to_truetype
@@ -103,7 +103,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts to IUP[y] for y-axis" do
         hint = described_class.new(
           type: :interpolate,
-          data: { axis: :y }
+          data: { axis: :y },
         )
 
         instructions = hint.to_truetype
@@ -113,7 +113,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts to IUP[x] for x-axis" do
         hint = described_class.new(
           type: :interpolate,
-          data: { axis: :x }
+          data: { axis: :x },
         )
 
         instructions = hint.to_truetype
@@ -125,7 +125,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts to ALIGNRP instruction" do
         hint = described_class.new(
           type: :align,
-          data: {}
+          data: {},
         )
 
         instructions = hint.to_truetype
@@ -137,7 +137,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "returns empty array on conversion error" do
         hint = described_class.new(
           type: :stem,
-          data: nil # Invalid data
+          data: nil, # Invalid data
         )
 
         expect { hint.to_truetype }.not_to raise_error
@@ -151,7 +151,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts vertical stem to vstem operator" do
         hint = described_class.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
+          data: { position: 100, width: 50, orientation: :vertical },
         )
 
         ps_data = hint.to_postscript
@@ -163,7 +163,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts horizontal stem to hstem operator" do
         hint = described_class.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         ps_data = hint.to_postscript
@@ -180,10 +180,10 @@ RSpec.describe Fontisan::Models::Hint do
           data: {
             stems: [
               { position: 100, width: 50 },
-              { position: 200, width: 50 }
+              { position: 200, width: 50 },
             ],
-            orientation: :vertical
-          }
+            orientation: :vertical,
+          },
         )
 
         ps_data = hint.to_postscript
@@ -200,9 +200,9 @@ RSpec.describe Fontisan::Models::Hint do
           data: {
             points: [
               { x: 100, y: 200 },
-              { x: 150, y: 250 }
-            ]
-          }
+              { x: 150, y: 250 },
+            ],
+          },
         )
 
         ps_data = hint.to_postscript
@@ -216,7 +216,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts counter to counter operator" do
         hint = described_class.new(
           type: :counter,
-          data: { zones: [100, 200] }
+          data: { zones: [100, 200] },
         )
 
         ps_data = hint.to_postscript
@@ -230,7 +230,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "converts to hintmask operator" do
         hint = described_class.new(
           type: :hint_replacement,
-          data: { mask: [0xFF, 0x00] }
+          data: { mask: [0xFF, 0x00] },
         )
 
         ps_data = hint.to_postscript
@@ -244,7 +244,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "approximates delta hints as stem" do
         hint = described_class.new(
           type: :delta,
-          data: { position: 100, width: 50 }
+          data: { position: 100, width: 50 },
         )
 
         ps_data = hint.to_postscript
@@ -255,7 +255,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "approximates interpolate hints as stem" do
         hint = described_class.new(
           type: :interpolate,
-          data: { position: 100, width: 50 }
+          data: { position: 100, width: 50 },
         )
 
         ps_data = hint.to_postscript
@@ -268,7 +268,7 @@ RSpec.describe Fontisan::Models::Hint do
       it "returns empty hash on conversion error" do
         hint = described_class.new(
           type: :stem,
-          data: nil # Invalid data
+          data: nil, # Invalid data
         )
 
         expect { hint.to_postscript }.not_to raise_error

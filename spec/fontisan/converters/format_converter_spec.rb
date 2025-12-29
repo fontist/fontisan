@@ -39,14 +39,14 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     # Mock glyf table to handle glyph_for calls
     glyf_mock = double("glyf")
-    allow(glyf_mock).to receive(:glyph_for) do |glyph_id, _loca, _head|
+    allow(glyf_mock).to receive(:glyph_for) do |_glyph_id, _loca, _head|
       # Return empty glyph mock
       glyph_mock = double("glyph")
       allow(glyph_mock).to receive_messages(
         nil?: false,
         empty?: true,
         simple?: true,
-        compound?: false
+        compound?: false,
       )
       glyph_mock
     end
@@ -355,20 +355,20 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       # Mock tables
       allow(variable_ttf_font).to receive(:table).with("glyf").and_return(
         double("glyf", glyph_for: double(nil?: false, empty?: true,
-                                         simple?: true, compound?: false))
+                                         simple?: true, compound?: false)),
       )
       allow(variable_ttf_font).to receive(:table).with("loca").and_return(
-        double("loca", parse_with_context: nil)
+        double("loca", parse_with_context: nil),
       )
       allow(variable_ttf_font).to receive(:table).with("head").and_return(
-        double("head", units_per_em: 1000, index_to_loc_format: 1)
+        double("head", units_per_em: 1000, index_to_loc_format: 1),
       )
       allow(variable_ttf_font).to receive(:table).with("hhea").and_return(double("hhea"))
       allow(variable_ttf_font).to receive(:table).with("maxp").and_return(
-        double("maxp", num_glyphs: 100)
+        double("maxp", num_glyphs: 100),
       )
       allow(variable_ttf_font).to receive(:table).with("name").and_return(
-        double("name", english_name: "TestFont")
+        double("name", english_name: "TestFont"),
       )
       allow(variable_ttf_font).to receive_messages(table_data: {
                                                      "glyf" => "glyf_data",
@@ -393,17 +393,17 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       allow(variable_otf_font).to receive(:has_table?).with("cmap").and_return(false)
 
       allow(variable_otf_font).to receive(:table).with("CFF2").and_return(
-        double("cff2", glyph_count: 100, charstring_for_glyph: nil)
+        double("cff2", glyph_count: 100, charstring_for_glyph: nil),
       )
       allow(variable_otf_font).to receive(:table).with("CFF ").and_return(
-        double("cff", glyph_count: 100, charstring_for_glyph: nil)
+        double("cff", glyph_count: 100, charstring_for_glyph: nil),
       )
       allow(variable_otf_font).to receive(:table).with("head").and_return(
-        double("head", units_per_em: 1000)
+        double("head", units_per_em: 1000),
       )
       allow(variable_otf_font).to receive(:table).with("hhea").and_return(double("hhea"))
       allow(variable_otf_font).to receive(:table).with("maxp").and_return(
-        double("maxp", num_glyphs: 100)
+        double("maxp", num_glyphs: 100),
       )
       allow(variable_otf_font).to receive_messages(table_data: {
                                                      "CFF2" => "cff2_data",
@@ -515,8 +515,8 @@ RSpec.describe Fontisan::Converters::FormatConverter do
           anything,
           hash_including(
             preserve_format_specific: false,
-            preserve_metrics: true
-          )
+            preserve_metrics: true,
+          ),
         )
       end
     end
@@ -536,8 +536,8 @@ RSpec.describe Fontisan::Converters::FormatConverter do
           anything,
           hash_including(
             preserve_format_specific: false,
-            preserve_metrics: true
-          )
+            preserve_metrics: true,
+          ),
         )
       end
     end
@@ -545,26 +545,36 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     describe "unsupported variation preservation" do
       it "recognizes SVG as unsupported for variation preservation" do
         # Check that SVG is neither compatible nor convertible for variations
-        expect(converter.send(:compatible_variation_formats?, :ttf, :svg)).to be false
-        expect(converter.send(:convertible_variation_formats?, :ttf, :svg)).to be false
-        expect(converter.send(:compatible_variation_formats?, :otf, :svg)).to be false
-        expect(converter.send(:convertible_variation_formats?, :otf, :svg)).to be false
+        expect(converter.send(:compatible_variation_formats?, :ttf,
+                              :svg)).to be false
+        expect(converter.send(:convertible_variation_formats?, :ttf,
+                              :svg)).to be false
+        expect(converter.send(:compatible_variation_formats?, :otf,
+                              :svg)).to be false
+        expect(converter.send(:convertible_variation_formats?, :otf,
+                              :svg)).to be false
       end
 
       it "recognizes compatible variation formats" do
         # Same format
-        expect(converter.send(:compatible_variation_formats?, :ttf, :ttf)).to be true
-        expect(converter.send(:compatible_variation_formats?, :otf, :otf)).to be true
+        expect(converter.send(:compatible_variation_formats?, :ttf,
+                              :ttf)).to be true
+        expect(converter.send(:compatible_variation_formats?, :otf,
+                              :otf)).to be true
 
         # Format wrapping (TTF/OTF → WOFF/WOFF2)
-        expect(converter.send(:compatible_variation_formats?, :ttf, :woff2)).to be true
-        expect(converter.send(:compatible_variation_formats?, :otf, :woff2)).to be true
+        expect(converter.send(:compatible_variation_formats?, :ttf,
+                              :woff2)).to be true
+        expect(converter.send(:compatible_variation_formats?, :otf,
+                              :woff2)).to be true
       end
 
       it "recognizes convertible variation formats" do
         # TTF ↔ OTF require variation conversion
-        expect(converter.send(:convertible_variation_formats?, :ttf, :otf)).to be true
-        expect(converter.send(:convertible_variation_formats?, :otf, :ttf)).to be true
+        expect(converter.send(:convertible_variation_formats?, :ttf,
+                              :otf)).to be true
+        expect(converter.send(:convertible_variation_formats?, :otf,
+                              :ttf)).to be true
       end
     end
   end

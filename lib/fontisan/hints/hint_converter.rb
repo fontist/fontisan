@@ -82,11 +82,11 @@ module Fontisan
         when :postscript
           # Convert font-level TT → PS
           if hint_set.font_program || hint_set.control_value_program ||
-             hint_set.control_values&.any?
+              hint_set.control_values&.any?
             ps_dict = convert_tt_programs_to_ps_dict(
               hint_set.font_program,
               hint_set.control_value_program,
-              hint_set.control_values
+              hint_set.control_values,
             )
             result.private_dict_hints = ps_dict.to_json
           end
@@ -102,7 +102,7 @@ module Fontisan
           # Convert font-level PS → TT
           if hint_set.private_dict_hints && hint_set.private_dict_hints != "{}"
             tt_programs = convert_ps_dict_to_tt_programs(
-              JSON.parse(hint_set.private_dict_hints)
+              JSON.parse(hint_set.private_dict_hints),
             )
             result.font_program = tt_programs[:fpgm]
             result.control_value_program = tt_programs[:prep]
@@ -137,7 +137,7 @@ module Fontisan
         Models::Hint.new(
           type: hint.type,
           data: ps_data,
-          source_format: :postscript
+          source_format: :postscript,
         )
       rescue StandardError => e
         warn "Failed to convert hint to PostScript: #{e.message}"
@@ -158,7 +158,7 @@ module Fontisan
         Models::Hint.new(
           type: hint.type,
           data: { instructions: tt_instructions },
-          source_format: :truetype
+          source_format: :truetype,
         )
       rescue StandardError => e
         warn "Failed to convert hint to TrueType: #{e.message}"
@@ -282,10 +282,10 @@ module Fontisan
         cvt << ps_dict[:std_vw] if ps_dict[:std_vw]
 
         # Add stem snap values if present
-        if ps_dict[:stem_snap_h]&.is_a?(Array)
+        if ps_dict[:stem_snap_h].is_a?(Array)
           cvt.concat(ps_dict[:stem_snap_h])
         end
-        if ps_dict[:stem_snap_v]&.is_a?(Array)
+        if ps_dict[:stem_snap_v].is_a?(Array)
           cvt.concat(ps_dict[:stem_snap_v])
         end
 

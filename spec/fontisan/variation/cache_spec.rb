@@ -63,7 +63,7 @@ RSpec.describe Fontisan::Variation::Cache do
     let(:axes) do
       [
         double("Axis", axis_tag: "wght"),
-        double("Axis", axis_tag: "wdth")
+        double("Axis", axis_tag: "wdth"),
       ]
     end
 
@@ -356,7 +356,7 @@ RSpec.describe Fontisan::Variation::ThreadSafeCache do
 
   describe "thread safety" do
     it "handles concurrent access safely" do
-      threads = 10.times.map do |i|
+      threads = Array.new(10) do |i|
         Thread.new do
           100.times do |j|
             key = "key#{i % 10}"
@@ -372,7 +372,7 @@ RSpec.describe Fontisan::Variation::ThreadSafeCache do
     end
 
     it "maintains consistent statistics" do
-      threads = 5.times.map do
+      threads = Array.new(5) do
         Thread.new do
           50.times do |i|
             cache.fetch("key#{i % 10}") { "value" }

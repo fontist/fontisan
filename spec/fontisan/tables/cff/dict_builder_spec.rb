@@ -507,7 +507,8 @@ RSpec.describe Fontisan::Tables::Cff::DictBuilder do
       expect(dict.empty?).to be false
       expect(dict.has_key?(:version)).to be true
       expect(dict.has_key?(:copyright)).to be true
-      expect(dict.keys).to include(:version, :notice, :family_name, :copyright, :italic_angle)
+      expect(dict.keys).to include(:version, :notice, :family_name, :copyright,
+                                   :italic_angle)
       expect(dict.values).to include(391, 392, 394, 395, -12)
     end
   end

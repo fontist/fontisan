@@ -107,7 +107,8 @@ module Fontisan
             index: index,
             name: instance_name(instance[:subfamily_name_id]),
             postscript_name: instance_name(instance[:postscript_name_id]),
-            coordinates: instance_coordinates(instance[:coordinates], @context.axes),
+            coordinates: instance_coordinates(instance[:coordinates],
+                                              @context.axes),
           }
         end
       end

@@ -103,7 +103,8 @@ module Fontisan
         end
 
         strategy = select_strategy(source_format, target_format)
-        tables = strategy.convert(font, options.merge(target_format: target_format))
+        tables = strategy.convert(font,
+                                  options.merge(target_format: target_format))
 
         # Preserve variation data if requested and font is variable
         if options.fetch(:preserve_variation, true) && variable_font?(font)
@@ -204,7 +205,8 @@ module Fontisan
       # @param target_format [Symbol] Target format
       # @param options [Hash] Preservation options
       # @return [Hash<String, String>] Tables with variation preserved
-      def preserve_variation_data(font, tables, source_format, target_format, options)
+      def preserve_variation_data(font, tables, source_format, target_format,
+options)
         # Case 1: Compatible formats (same outline format) - just copy tables
         if compatible_variation_formats?(source_format, target_format)
           require_relative "../variation/variation_preserver"
@@ -212,7 +214,8 @@ module Fontisan
 
         # Case 2: Different outline formats - convert variation data
         elsif convertible_variation_formats?(source_format, target_format)
-          convert_variation_data(font, tables, source_format, target_format, options)
+          convert_variation_data(font, tables, source_format, target_format,
+                                 options)
 
         # Case 3: Unsupported conversion
         else
@@ -268,7 +271,8 @@ module Fontisan
       # @param target_format [Symbol] Target format
       # @param options [Hash] Conversion options
       # @return [Hash<String, String>] Tables with converted variation
-      def convert_variation_data(font, tables, source_format, target_format, _options)
+      def convert_variation_data(font, tables, source_format, target_format,
+_options)
         require_relative "../variation/variation_preserver"
         require_relative "../variation/converter"
 

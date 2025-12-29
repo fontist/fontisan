@@ -77,7 +77,8 @@ RSpec.describe Fontisan::Tables::GlyphBuilder do
         )
 
         instructions = [0xB0, 0x40].pack("C*")
-        data = described_class.build_simple_glyph(outline, instructions: instructions)
+        data = described_class.build_simple_glyph(outline,
+                                                  instructions: instructions)
 
         expect(data).to be_a(String)
         expect(data).to include(instructions)
@@ -141,7 +142,8 @@ RSpec.describe Fontisan::Tables::GlyphBuilder do
 
       it "builds compound glyph with separate x,y scale" do
         components = [
-          { glyph_index: 25, x_offset: 0, y_offset: 0, scale_x: 1.5, scale_y: 0.8 },
+          { glyph_index: 25, x_offset: 0, y_offset: 0, scale_x: 1.5,
+            scale_y: 0.8 },
         ]
         bbox = { x_min: 0, y_min: 0, x_max: 300, y_max: 400 }
 
@@ -202,7 +204,8 @@ RSpec.describe Fontisan::Tables::GlyphBuilder do
         bbox = { x_min: 0, y_min: 0, x_max: 300, y_max: 400 }
         instructions = [0xB0, 0x80].pack("C*")
 
-        data = described_class.build_compound_glyph(components, bbox, instructions: instructions)
+        data = described_class.build_compound_glyph(components, bbox,
+                                                    instructions: instructions)
 
         expect(data).to be_a(String)
         expect(data).to include(instructions)

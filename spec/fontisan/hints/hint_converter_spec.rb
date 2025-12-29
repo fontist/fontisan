@@ -11,8 +11,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
 
       result = converter.to_postscript(hints)
@@ -26,8 +26,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { operator: :vstem, args: [100, 50] },
-          source_format: :postscript
-        )
+          source_format: :postscript,
+        ),
       ]
 
       result = converter.to_postscript(hints)
@@ -49,13 +49,13 @@ RSpec.describe Fontisan::Hints::HintConverter do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :truetype
+          source_format: :truetype,
         ),
         Fontisan::Models::Hint.new(
           type: :unknown_type,
           data: {},
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
 
       result = converter.to_postscript(hints)
@@ -70,8 +70,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :vertical },
-          source_format: :postscript
-        )
+          source_format: :postscript,
+        ),
       ]
 
       result = converter.to_truetype(hints)
@@ -85,8 +85,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { instructions: [0x2E, 0xC0] },
-          source_format: :truetype
-        )
+          source_format: :truetype,
+        ),
       ]
 
       result = converter.to_truetype(hints)
@@ -109,12 +109,12 @@ RSpec.describe Fontisan::Hints::HintConverter do
       hints = [
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
+          data: { position: 100, width: 50, orientation: :vertical },
         ),
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
-        )
+          data: { position: 100, width: 50, orientation: :vertical },
+        ),
       ]
 
       result = converter.optimize(hints)
@@ -125,12 +125,12 @@ RSpec.describe Fontisan::Hints::HintConverter do
       hints = [
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
+          data: { position: 100, width: 50, orientation: :vertical },
         ),
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 120, width: 50, orientation: :vertical }
-        )
+          data: { position: 120, width: 50, orientation: :vertical },
+        ),
       ]
 
       result = converter.optimize(hints)
@@ -143,12 +143,12 @@ RSpec.describe Fontisan::Hints::HintConverter do
       hints = [
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :vertical }
+          data: { position: 100, width: 50, orientation: :vertical },
         ),
         Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 200, width: 50, orientation: :vertical }
-        )
+          data: { position: 200, width: 50, orientation: :vertical },
+        ),
       ]
 
       result = converter.optimize(hints)
@@ -174,8 +174,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
           Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 100, width: 50, orientation: :vertical },
-            source_format: :truetype
-          )
+            source_format: :truetype,
+          ),
         ]
         hint_set.add_glyph_hints(0, glyph_hints)
         hint_set
@@ -227,8 +227,8 @@ RSpec.describe Fontisan::Hints::HintConverter do
           Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 100, width: 50, orientation: :vertical },
-            source_format: :postscript
-          )
+            source_format: :postscript,
+          ),
         ]
         hint_set.add_glyph_hints(0, glyph_hints)
         hint_set

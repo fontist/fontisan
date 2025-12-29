@@ -669,7 +669,8 @@ y_coords:)
 
   describe "integration with real fonts" do
     let(:libertinus_serif_ttf_path) do
-        font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
+      font_fixture_path("Libertinus",
+                        "static/TTF/LibertinusSerif-Regular.ttf")
     end
 
     context "when reading from TrueType font" do

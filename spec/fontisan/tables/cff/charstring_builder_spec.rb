@@ -445,7 +445,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
     context "with simple operations" do
       it "builds CharString from endchar operation" do
         operations = [
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -455,7 +455,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       it "builds CharString from rmoveto operation" do
         operations = [
           { type: :operator, name: :rmoveto, operands: [100, 200] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -466,7 +466,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       it "builds CharString from rlineto operation" do
         operations = [
           { type: :operator, name: :rlineto, operands: [50, 100] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -478,7 +478,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       it "builds CharString with hstem" do
         operations = [
           { type: :operator, name: :hstem, operands: [10, 20] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -488,8 +488,9 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       it "builds CharString with hintmask and hint data" do
         operations = [
           { type: :operator, name: :hstem, operands: [10, 20] },
-          { type: :operator, name: :hintmask, operands: [], hint_data: [0xFF].pack("C") },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :hintmask, operands: [],
+            hint_data: [0xFF].pack("C") },
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -505,7 +506,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
           { type: :operator, name: :hmoveto, operands: [100] },
           { type: :operator, name: :vlineto, operands: [200] },
           { type: :operator, name: :hlineto, operands: [150] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -518,8 +519,9 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
       it "builds CharString with curves" do
         operations = [
           { type: :operator, name: :rmoveto, operands: [0, 0] },
-          { type: :operator, name: :rrcurveto, operands: [10, 20, 30, 40, 50, 60] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :rrcurveto,
+            operands: [10, 20, 30, 40, 50, 60] },
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -530,8 +532,9 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
     context "with two-byte operators" do
       it "builds CharString with flex operator" do
         operations = [
-          { type: :operator, name: :flex, operands: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 50] },
-          { type: :operator, name: :endchar, operands: [] }
+          { type: :operator, name: :flex,
+            operands: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 50] },
+          { type: :operator, name: :endchar, operands: [] },
         ]
         charstring = described_class.build_from_operations(operations)
 
@@ -570,11 +573,12 @@ RSpec.describe Fontisan::Tables::Cff::CharStringBuilder do
         original << 1   # hstem
         original << 19  # hintmask
         original << 0xFF # hint data
-        original << 14  # endchar
+        original << 14 # endchar
         original_data = original.pack("C*")
 
         # Parse
-        parser = Fontisan::Tables::Cff::CharStringParser.new(original_data, stem_count: 8)
+        parser = Fontisan::Tables::Cff::CharStringParser.new(original_data,
+                                                             stem_count: 8)
         operations = parser.parse
 
         # Rebuild

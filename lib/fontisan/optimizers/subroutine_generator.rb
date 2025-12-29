@@ -74,7 +74,7 @@ module Fontisan
         # 2. Analyze patterns
         analyzer = PatternAnalyzer.new(
           min_length: @min_pattern_length,
-          stack_aware: true
+          stack_aware: true,
         )
         patterns = analyzer.analyze(charstrings)
 

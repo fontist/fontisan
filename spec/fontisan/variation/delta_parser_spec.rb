@@ -11,21 +11,21 @@ RSpec.describe Fontisan::Variation::DeltaParser do
       it "returns array of zero deltas for nil data" do
         deltas = parser.parse(nil, 5)
         expect(deltas).to eq([
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 }
-        ])
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                             ])
       end
 
       it "returns array of zero deltas for empty data" do
         deltas = parser.parse("", 3)
         expect(deltas).to eq([
-          { x: 0, y: 0 },
-          { x: 0, y: 0 },
-          { x: 0, y: 0 }
-        ])
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                               { x: 0, y: 0 },
+                             ])
       end
     end
 
@@ -36,10 +36,10 @@ RSpec.describe Fontisan::Variation::DeltaParser do
         deltas = parser.parse(data, 3)
 
         expect(deltas).to eq([
-          { x: 10, y: 2 },
-          { x: -5, y: -1 },
-          { x: 3, y: 4 }
-        ])
+                               { x: 10, y: 2 },
+                               { x: -5, y: -1 },
+                               { x: 3, y: 4 },
+                             ])
       end
 
       it "handles signed byte conversion" do
@@ -71,7 +71,7 @@ RSpec.describe Fontisan::Variation::DeltaParser do
       it "handles large signed word values" do
         # 0xFFFF should be -1 when signed
         x_data = [0x40, 0xFF, 0xFF].pack("C*")
-        y_data = [0x40, 0x80, 0x00].pack("C*")  # 0x8000 = -32768
+        y_data = [0x40, 0x80, 0x00].pack("C*") # 0x8000 = -32768
         data = x_data + y_data
 
         deltas = parser.parse(data, 1)
@@ -87,7 +87,7 @@ RSpec.describe Fontisan::Variation::DeltaParser do
         # Point numbers: 0, 2, 4 stored as deltas (0, +2, +2)
         # X deltas: 10, 20, 30
         # Y deltas: 5, 15, 25
-        point_data = [3, 0x02, 0, 2, 2].pack("C*")  # Deltas: 0, +2, +2 → points 0, 2, 4
+        point_data = [3, 0x02, 0, 2, 2].pack("C*") # Deltas: 0, +2, +2 → points 0, 2, 4
         x_data = [0x00, 10, 20, 30].pack("C*")
         y_data = [0x00, 5, 15, 25].pack("C*")
         data = point_data + x_data + y_data
@@ -95,13 +95,13 @@ RSpec.describe Fontisan::Variation::DeltaParser do
         deltas = parser.parse(data, 6, private_points: true)
 
         expect(deltas).to eq([
-          { x: 10, y: 5 },   # Point 0
-          { x: 0, y: 0 },    # Point 1 (untouched)
-          { x: 20, y: 15 },  # Point 2
-          { x: 0, y: 0 },    # Point 3 (untouched)
-          { x: 30, y: 25 },  # Point 4
-          { x: 0, y: 0 }     # Point 5 (untouched)
-        ])
+                               { x: 10, y: 5 }, # Point 0
+                               { x: 0, y: 0 },    # Point 1 (untouched)
+                               { x: 20, y: 15 },  # Point 2
+                               { x: 0, y: 0 },    # Point 3 (untouched)
+                               { x: 30, y: 25 },  # Point 4
+                               { x: 0, y: 0 }, # Point 5 (untouched)
+                             ])
       end
     end
 
@@ -115,14 +115,14 @@ RSpec.describe Fontisan::Variation::DeltaParser do
         deltas = parser.parse(data, 7, shared_points: shared_points)
 
         expect(deltas).to eq([
-          { x: 0, y: 0 },    # Point 0
-          { x: 10, y: 5 },   # Point 1
-          { x: 0, y: 0 },    # Point 2
-          { x: 20, y: 15 },  # Point 3
-          { x: 0, y: 0 },    # Point 4
-          { x: 30, y: 25 },  # Point 5
-          { x: 0, y: 0 }     # Point 6
-        ])
+                               { x: 0, y: 0 }, # Point 0
+                               { x: 10, y: 5 },   # Point 1
+                               { x: 0, y: 0 },    # Point 2
+                               { x: 20, y: 15 },  # Point 3
+                               { x: 0, y: 0 },    # Point 4
+                               { x: 30, y: 25 },  # Point 5
+                               { x: 0, y: 0 }, # Point 6
+                             ])
       end
     end
   end
@@ -133,11 +133,11 @@ RSpec.describe Fontisan::Variation::DeltaParser do
       deltas = parser.parse_with_flags("dummy_data", 4, flags)
 
       expect(deltas).to eq([
-        { x: 0, y: 0 },
-        { x: 0, y: 0 },
-        { x: 0, y: 0 },
-        { x: 0, y: 0 }
-      ])
+                             { x: 0, y: 0 },
+                             { x: 0, y: 0 },
+                             { x: 0, y: 0 },
+                             { x: 0, y: 0 },
+                           ])
     end
 
     it "parses normally when flag not set" do
@@ -164,7 +164,7 @@ RSpec.describe Fontisan::Variation::DeltaParser do
 
     it "handles truncated data gracefully" do
       # Control byte indicating words but insufficient data
-      data = [0x40, 0x00].pack("C*")  # Only 1 byte of word data
+      data = [0x40, 0x00].pack("C*") # Only 1 byte of word data
 
       deltas = parser.parse(data, 5)
       expect(deltas.length).to eq(5)
@@ -192,10 +192,10 @@ RSpec.describe Fontisan::Variation::DeltaParser do
       deltas = parser.parse(data, 3)
 
       expect(deltas).to eq([
-        { x: 10, y: 5 },
-        { x: 10, y: 5 },
-        { x: 10, y: 5 }
-      ])
+                             { x: 10, y: 5 },
+                             { x: 10, y: 5 },
+                             { x: 10, y: 5 },
+                           ])
     end
   end
 end

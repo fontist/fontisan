@@ -103,7 +103,8 @@ RSpec.describe Fontisan::Optimizers::StackTracker do
     it "identifies stack-neutral patterns" do
       # Pattern: 10 20 add (push 10, push 20, add)
       # Start depth 0, end depth 1 - NOT stack-neutral
-      charstring = encode_cff_int(10) + encode_cff_int(20) + [12, 10].pack("C*") +
+      charstring = encode_cff_int(10) + encode_cff_int(20) + [12,
+                                                              10].pack("C*") +
         encode_cff_int(30) + [21].pack("C")
 
       tracker = described_class.new(charstring)
@@ -127,7 +128,8 @@ RSpec.describe Fontisan::Optimizers::StackTracker do
     it "handles patterns that produce net zero stack change" do
       # 10 20 add drop (10, 20, add, drop)
       # Push 2, add (2->1), drop (1->0) = neutral
-      charstring = encode_cff_int(10) + encode_cff_int(20) + [12, 10, 18].pack("C*")
+      charstring = encode_cff_int(10) + encode_cff_int(20) + [12, 10,
+                                                              18].pack("C*")
 
       tracker = described_class.new(charstring)
       tracker.track

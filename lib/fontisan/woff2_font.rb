@@ -85,8 +85,7 @@ module Fontisan
     # Simple struct for storing file path
     IOSource = Struct.new(:path)
 
-    attr_accessor :header, :table_entries, :decompressed_tables, :parsed_tables, :io_source
-    attr_accessor :underlying_font  # Allow both reading and setting for table delegation
+    attr_accessor :header, :table_entries, :decompressed_tables, :parsed_tables, :io_source, :underlying_font # Allow both reading and setting for table delegation
 
     def initialize
       @header = nil
@@ -94,7 +93,7 @@ module Fontisan
       @decompressed_tables = {}
       @parsed_tables = {}
       @io_source = nil
-      @underlying_font = nil  # Store the actual TrueTypeFont/OpenTypeFont
+      @underlying_font = nil # Store the actual TrueTypeFont/OpenTypeFont
     end
 
     # Initialize storage hashes
@@ -159,7 +158,7 @@ module Fontisan
     # Get decompressed table data
     def table_data(tag)
       # First try underlying font's table data if available
-      if @underlying_font && @underlying_font.respond_to?(:table_data)
+      if @underlying_font.respond_to?(:table_data)
         underlying_data = @underlying_font.table_data[tag]
         return underlying_data if underlying_data
       end
@@ -183,11 +182,13 @@ module Fontisan
     # Convert to TTF
     def to_ttf(output_path)
       unless truetype?
-        raise InvalidFontError, "Cannot convert to TTF: font is not TrueType flavored"
+        raise InvalidFontError,
+              "Cannot convert to TTF: font is not TrueType flavored"
       end
 
       # Build SFNT and create TrueTypeFont
-      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries, @decompressed_tables)
+      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries,
+                                                  @decompressed_tables)
       sfnt_io = StringIO.new(sfnt_data)
 
       # Create actual TrueTypeFont and save for table delegation
@@ -201,11 +202,13 @@ module Fontisan
     # Convert to OTF
     def to_otf(output_path)
       unless cff?
-        raise InvalidFontError, "Cannot convert to OTF: font is not CFF flavored"
+        raise InvalidFontError,
+              "Cannot convert to OTF: font is not CFF flavored"
       end
 
       # Build SFNT and create OpenTypeFont
-      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries, @decompressed_tables)
+      sfnt_data = self.class.build_sfnt_in_memory(@header, @table_entries,
+                                                  @decompressed_tables)
       sfnt_io = StringIO.new(sfnt_data)
 
       # Create actual OpenTypeFont and save for table delegation
@@ -310,13 +313,15 @@ module Fontisan
         woff2.table_entries = read_table_directory_from_io(io, woff2.header)
 
         # Decompress table data
-        woff2.decompressed_tables = decompress_tables(io, woff2.header, woff2.table_entries)
+        woff2.decompressed_tables = decompress_tables(io, woff2.header,
+                                                      woff2.table_entries)
 
         # Apply table transformations if present
         apply_transformations!(woff2.table_entries, woff2.decompressed_tables)
 
         # Build SFNT structure in memory
-        sfnt_data = build_sfnt_in_memory(woff2.header, woff2.table_entries, woff2.decompressed_tables)
+        sfnt_data = build_sfnt_in_memory(woff2.header, woff2.table_entries,
+                                         woff2.decompressed_tables)
 
         # Create StringIO for reading
         sfnt_io = StringIO.new(sfnt_data)
@@ -373,7 +378,10 @@ module Fontisan
 
         # Read flags byte with nil check
         flags_data = io.read(1)
-        raise EOFError, "Unexpected EOF while reading table directory flags" if flags_data.nil?
+        if flags_data.nil?
+          raise EOFError,
+                "Unexpected EOF while reading table directory flags"
+        end
 
         flags = flags_data.unpack1("C")
         entry.flags = flags
@@ -383,7 +391,11 @@ module Fontisan
         if tag_index == 0x3F
           # Custom tag (4 bytes)
           tag_data = io.read(4)
-          raise EOFError, "Unexpected EOF while reading custom tag" if tag_data.nil? || tag_data.bytesize < 4
+          if tag_data.nil? || tag_data.bytesize < 4
+            raise EOFError,
+                  "Unexpected EOF while reading custom tag"
+          end
+
           entry.tag = tag_data.force_encoding("UTF-8")
         else
           # Known tag from table
@@ -402,7 +414,8 @@ module Fontisan
         # - hmtx with non-zero version: TRANSFORMED (transformLength present)
         # - all other tables: transformation version is 0 (no transformLength)
         transform_version = (flags >> 6) & 0x03
-        has_transform_length = if ["glyf", "loca"].include?(entry.tag) && transform_version.zero?
+        has_transform_length = if ["glyf",
+                                   "loca"].include?(entry.tag) && transform_version.zero?
                                  true
                                elsif entry.tag == "hmtx" && transform_version != 0
                                  true
@@ -429,7 +442,10 @@ module Fontisan
       result = 0
       5.times do
         byte_data = io.read(1)
-        raise EOFError, "Unexpected EOF while reading UIntBase128" if byte_data.nil?
+        if byte_data.nil?
+          raise EOFError,
+                "Unexpected EOF while reading UIntBase128"
+        end
 
         byte = byte_data.unpack1("C")
 
@@ -512,7 +528,7 @@ module Fontisan
           result = Woff2::GlyfTransformer.reconstruct(
             transformed_glyf,
             num_glyphs,
-            variable_font: variable_font
+            variable_font: variable_font,
           )
           decompressed_tables["glyf"] = result[:glyf]
           decompressed_tables["loca"] = result[:loca]

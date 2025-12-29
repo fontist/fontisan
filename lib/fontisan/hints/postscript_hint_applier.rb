@@ -147,14 +147,12 @@ module Fontisan
           # Prepare per-glyph hint data if present
           per_glyph_hints = if has_per_glyph_hints
                               extract_per_glyph_hints(hint_set)
-                            else
-                              nil
                             end
 
           new_cff_data = Tables::Cff::TableBuilder.rebuild(
             cff_table,
             private_dict_hints: hint_params,
-            per_glyph_hints: per_glyph_hints
+            per_glyph_hints: per_glyph_hints,
           )
 
           tables["CFF "] = new_cff_data

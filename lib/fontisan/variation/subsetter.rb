@@ -112,7 +112,10 @@ module Fontisan
         validate_input if @options[:validate]
 
         fvar = variation_table("fvar")
-        return { tables: @font.table_data.dup, report: { error: "No fvar table" } } unless fvar
+        unless fvar
+          return { tables: @font.table_data.dup,
+                   report: { error: "No fvar table" } }
+        end
 
         # Find axes to keep
         all_axes = fvar.axes
@@ -175,7 +178,8 @@ module Fontisan
           optimizer = Optimizer.new(cff2, region_threshold: threshold)
           optimizer.optimize
 
-          @report[:regions_deduplicated] = optimizer.stats[:regions_deduplicated]
+          @report[:regions_deduplicated] =
+            optimizer.stats[:regions_deduplicated]
           @report[:cff2_optimized] = true
         end
 
@@ -316,8 +320,14 @@ module Fontisan
       # @param tables [Hash] Font tables
       # @param glyph_ids [Array<Integer>] Glyph IDs to keep
       def subset_metrics_variations(tables, glyph_ids)
-        subset_metrics_table(tables, "HVAR", glyph_ids) if has_variation_table?("HVAR")
-        subset_metrics_table(tables, "VVAR", glyph_ids) if has_variation_table?("VVAR")
+        if has_variation_table?("HVAR")
+          subset_metrics_table(tables, "HVAR",
+                               glyph_ids)
+        end
+        if has_variation_table?("VVAR")
+          subset_metrics_table(tables, "VVAR",
+                               glyph_ids)
+        end
         # MVAR is font-wide, no glyph subsetting needed
       end
 
@@ -333,7 +343,8 @@ module Fontisan
         # 3. Remove unused ItemVariationData
         # 4. Rebuild and serialize
 
-        @report[:"#{table_tag.downcase}_note"] = "#{table_tag} subsetting not yet implemented"
+        @report[:"#{table_tag.downcase}_note"] =
+          "#{table_tag} subsetting not yet implemented"
       end
 
       # Update non-variation glyph tables
@@ -396,9 +407,18 @@ module Fontisan
       # @param tables [Hash] Font tables
       # @param keep_indices [Array<Integer>] Axis indices to keep
       def subset_metrics_axes(tables, keep_indices)
-        subset_metrics_table_axes(tables, "HVAR", keep_indices) if has_variation_table?("HVAR")
-        subset_metrics_table_axes(tables, "VVAR", keep_indices) if has_variation_table?("VVAR")
-        subset_metrics_table_axes(tables, "MVAR", keep_indices) if has_variation_table?("MVAR")
+        if has_variation_table?("HVAR")
+          subset_metrics_table_axes(tables, "HVAR",
+                                    keep_indices)
+        end
+        if has_variation_table?("VVAR")
+          subset_metrics_table_axes(tables, "VVAR",
+                                    keep_indices)
+        end
+        if has_variation_table?("MVAR")
+          subset_metrics_table_axes(tables, "MVAR",
+                                    keep_indices)
+        end
       end
 
       # Subset a single metrics table's axes
@@ -412,7 +432,8 @@ module Fontisan
         # 2. Filter ItemVariationStore regions to keep axis indices
         # 3. Rebuild and serialize
 
-        @report[:"#{table_tag.downcase}_axes_note"] = "#{table_tag} axis subsetting not yet implemented"
+        @report[:"#{table_tag.downcase}_axes_note"] =
+          "#{table_tag} axis subsetting not yet implemented"
       end
 
       # Simplify metrics table regions
@@ -426,7 +447,8 @@ module Fontisan
         # 3. Update delta set indices
         # 4. Serialize back to binary
 
-        @report[:metrics_simplify_note] = "Metrics region simplification not yet implemented"
+        @report[:metrics_simplify_note] =
+          "Metrics region simplification not yet implemented"
       end
 
       # Create temporary font wrapper for validation

@@ -9,7 +9,9 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
     context "with an OpenType/CFF font" do
       # Note: We need a test font with CFF outlines
       # Using SourceSans3-Regular.otf if available
-      let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
+      let(:font_path) do
+        font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+      end
       let(:font) { Fontisan::FontLoader.load(font_path) }
 
       it "returns a HintSet" do
@@ -57,9 +59,10 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
         charstring_bytes = [
           100 + 139, # position = 100 (single byte encoding)
           50 + 139,  # width = 50
-          1          # hstem operator
+          1, # hstem operator
         ]
-        charstring = double("charstring", data: charstring_bytes, bytes: charstring_bytes)
+        charstring = double("charstring", data: charstring_bytes,
+                                          bytes: charstring_bytes)
 
         hints = extractor.extract(charstring)
         expect(hints).not_to be_empty
@@ -72,9 +75,10 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
         charstring_bytes = [
           100 + 139, # position = 100
           50 + 139,  # width = 50
-          3          # vstem operator
+          3, # vstem operator
         ]
-        charstring = double("charstring", data: charstring_bytes, bytes: charstring_bytes)
+        charstring = double("charstring", data: charstring_bytes,
+                                          bytes: charstring_bytes)
 
         hints = extractor.extract(charstring)
         expect(hints).not_to be_empty
@@ -104,24 +108,13 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
         private_dict = double("private_dict")
         # Set up respond_to? to return true for supported methods
         allow(private_dict).to receive(:respond_to?) do |method|
-          [:blue_values, :std_hw, :std_vw, :other_blues, :family_blues,
-           :family_other_blues, :blue_scale, :blue_shift, :blue_fuzz,
-           :stem_snap_h, :stem_snap_v, :force_bold, :language_group].include?(method)
+          %i[blue_values std_hw std_vw other_blues family_blues
+             family_other_blues blue_scale blue_shift blue_fuzz
+             stem_snap_h stem_snap_v force_bold language_group].include?(method)
         end
         # Set up actual methods
-        allow(private_dict).to receive(:blue_values).and_return([-20, 0, 450, 470])
-        allow(private_dict).to receive(:std_hw).and_return(68)
-        allow(private_dict).to receive(:std_vw).and_return(88)
-        allow(private_dict).to receive(:other_blues).and_return(nil)
-        allow(private_dict).to receive(:family_blues).and_return(nil)
-        allow(private_dict).to receive(:family_other_blues).and_return(nil)
-        allow(private_dict).to receive(:blue_scale).and_return(nil)
-        allow(private_dict).to receive(:blue_shift).and_return(nil)
-        allow(private_dict).to receive(:blue_fuzz).and_return(nil)
-        allow(private_dict).to receive(:stem_snap_h).and_return(nil)
-        allow(private_dict).to receive(:stem_snap_v).and_return(nil)
-        allow(private_dict).to receive(:force_bold).and_return(nil)
-        allow(private_dict).to receive(:language_group).and_return(nil)
+        allow(private_dict).to receive_messages(blue_values: [-20, 0, 450,
+                                                              470], std_hw: 68, std_vw: 88, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil)
 
         cff_table = double("cff_table")
         allow(cff_table).to receive(:private_dict).with(0).and_return(private_dict)

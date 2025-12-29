@@ -10,9 +10,9 @@ RSpec.describe Fontisan::Hints::TrueTypeHintApplier do
     context "with TrueType HintSet containing all font-level hints" do
       let(:hint_set) do
         set = Fontisan::Models::HintSet.new(format: :truetype)
-        set.font_program = "\x00\x01\x02\x03"  # Sample fpgm bytecode
-        set.control_value_program = "\x10\x11\x12"  # Sample prep bytecode
-        set.control_values = [100, 200, 300, 400]  # Sample cvt values
+        set.font_program = "\x00\x01\x02\x03" # Sample fpgm bytecode
+        set.control_value_program = "\x10\x11\x12" # Sample prep bytecode
+        set.control_values = [100, 200, 300, 400] # Sample cvt values
         set
       end
 
@@ -64,7 +64,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintApplier do
     context "with HintSet containing only fpgm" do
       let(:hint_set) do
         set = Fontisan::Models::HintSet.new(format: :truetype)
-        set.font_program = "\xB0\x01\xB8"  # Sample fpgm bytecode
+        set.font_program = "\xB0\x01\xB8" # Sample fpgm bytecode
         set
       end
 

@@ -76,7 +76,7 @@ module Fontisan
           {
             type: h.type,
             data: h.data,
-            source_format: h.source_format
+            source_format: h.source_format,
           }
         end
         glyph_hints_hash[glyph_id.to_s] = hints_data
@@ -124,6 +124,7 @@ module Fontisan
       # Parse glyph hints JSON
       def parse_glyph_hints
         return {} if @glyph_hints.nil? || @glyph_hints.empty? || @glyph_hints == "{}"
+
         JSON.parse(@glyph_hints)
       rescue JSON::ParserError
         {}
@@ -202,7 +203,7 @@ module Fontisan
         when :interpolate
           # IUP instruction
           axis = data[:axis] || :y
-          axis == :x ? [0x31] : [0x30]  # IUP[x] or IUP[y]
+          axis == :x ? [0x31] : [0x30] # IUP[x] or IUP[y]
         when :shift
           # SHP instruction
           data[:instructions] || []
@@ -268,23 +269,22 @@ module Fontisan
 
       # Convert stem hint to TrueType instructions
       def convert_stem_to_truetype
-        position = data[:position] || 0
-        width = data[:width] || 0
+        data[:position] || 0
+        data[:width] || 0
         orientation = data[:orientation] || :vertical
 
         # TrueType uses MDAP (Move Direct Absolute Point) and MDRP (Move Direct Relative Point)
         # to control stem positioning
         instructions = []
 
-        if orientation == :vertical
-          # Vertical stem: use Y-axis instructions
-          instructions << 0x2E # MDAP[rnd] - mark reference point
-          instructions << 0xC0 # MDRP[min,rnd,black] - move relative point
-        else
-          # Horizontal stem: use X-axis instructions
-          instructions << 0x2F # MDAP[rnd]
-          instructions << 0xC0 # MDRP[min,rnd,black]
-        end
+        instructions << if orientation == :vertical
+                          # Vertical stem: use Y-axis instructions
+                          0x2E # MDAP[rnd] - mark reference point
+                        else
+                          # Horizontal stem: use X-axis instructions
+                          0x2F # MDAP[rnd]
+                        end
+        instructions << 0xC0 # MDRP[min,rnd,black] - move relative point
 
         instructions
       end
@@ -313,16 +313,15 @@ module Fontisan
         # Generate MDAP/MDRP pairs for each stem
         instructions = []
 
-        stems.each do |stem|
-          if orientation == :vertical
-            # Vertical stem: use Y-axis instructions
-            instructions << 0x2E # MDAP[rnd] - mark reference point
-            instructions << 0xC0 # MDRP[min,rnd,black] - move relative point
-          else
-            # Horizontal stem: use X-axis instructions
-            instructions << 0x2F # MDAP[rnd]
-            instructions << 0xC0 # MDRP[min,rnd,black]
-          end
+        stems.each do |_stem|
+          instructions << if orientation == :vertical
+                            # Vertical stem: use Y-axis instructions
+                            0x2E # MDAP[rnd] - mark reference point
+                          else
+                            # Horizontal stem: use X-axis instructions
+                            0x2F # MDAP[rnd]
+                          end
+          instructions << 0xC0 # MDRP[min,rnd,black] - move relative point
         end
 
         instructions

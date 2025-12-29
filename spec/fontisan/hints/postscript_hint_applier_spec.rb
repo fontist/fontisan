@@ -7,7 +7,9 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
   let(:tables) { {} }
 
   describe "#apply" do
-    let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
+    let(:font_path) do
+      font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+    end
     let(:font) { Fontisan::FontLoader.load(font_path) }
     let(:real_cff_table) { font.table("CFF ") }
 
@@ -129,7 +131,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "rejects blue_values with odd count (must be pairs)" do
           hint_set = Fontisan::Models::HintSet.new(format: :postscript)
           hint_set.private_dict_hints = {
-            "blue_values" => [-20, 0, 706],  # Odd count
+            "blue_values" => [-20, 0, 706], # Odd count
           }.to_json
 
           result = applier.apply(hint_set, tables)
@@ -140,7 +142,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "rejects blue_values exceeding 14 values" do
           hint_set = Fontisan::Models::HintSet.new(format: :postscript)
           hint_set.private_dict_hints = {
-            "blue_values" => Array.new(16, 0),  # Too many
+            "blue_values" => Array.new(16, 0), # Too many
           }.to_json
 
           result = applier.apply(hint_set, tables)
@@ -164,7 +166,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "rejects other_blues with odd count" do
           hint_set = Fontisan::Models::HintSet.new(format: :postscript)
           hint_set.private_dict_hints = {
-            "other_blues" => [-250, -230, -200],  # Odd count
+            "other_blues" => [-250, -230, -200], # Odd count
           }.to_json
 
           result = applier.apply(hint_set, tables)
@@ -366,7 +368,9 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
 
   # Integration tests with real CFF tables
   describe "CFF table modification (integration)" do
-    let(:font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
+    let(:font_path) do
+      font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+    end
     let(:font) { Fontisan::FontLoader.load(font_path) }
     let(:real_cff_table) { font.table("CFF ") }
     let(:tables) { { "CFF " => real_cff_table } }
@@ -374,7 +378,8 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
     context "with real CFF table" do
       it "rebuilds CFF table with hints" do
         hint_set = Fontisan::Models::HintSet.new(format: :postscript)
-        hint_set.private_dict_hints = { blue_values: [-15, 0], std_hw: 70 }.to_json
+        hint_set.private_dict_hints = { blue_values: [-15, 0],
+                                        std_hw: 70 }.to_json
 
         result = applier.apply(hint_set, tables)
         expect(result["CFF "]).to be_a(String)
@@ -383,7 +388,8 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
 
       it "produces valid CFF after hint application" do
         hint_set = Fontisan::Models::HintSet.new(format: :postscript)
-        hint_set.private_dict_hints = { blue_values: [-15, 0], std_hw: 70 }.to_json
+        hint_set.private_dict_hints = { blue_values: [-15, 0],
+                                        std_hw: 70 }.to_json
 
         result = applier.apply(hint_set, tables)
         rebuilt_cff = Fontisan::Tables::Cff.read(result["CFF "])
@@ -418,7 +424,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
       it "handles errors gracefully" do
         # Invalid hint that should be caught
         hint_set = Fontisan::Models::HintSet.new(format: :postscript)
-        hint_set.private_dict_hints = { blue_values: [1, 2, 3] }.to_json  # Odd length
+        hint_set.private_dict_hints = { blue_values: [1, 2, 3] }.to_json # Odd length
 
         result = applier.apply(hint_set, tables)
         # Should return original table unchanged
@@ -428,7 +434,9 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
   end
 
   describe "per-glyph hint support" do
-    let(:cff_font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
+    let(:cff_font_path) do
+      font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+    end
     let(:cff_font) { Fontisan::FontLoader.load(cff_font_path) }
     let(:tables) { { "CFF " => cff_font.table("CFF ") } }
 
@@ -436,11 +444,11 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 100, width: 50, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
-      hint_set.add_glyph_hints(1, [hint])  # Add hint to glyph 1
+      hint_set.add_glyph_hints(1, [hint]) # Add hint to glyph 1
 
       # Capture original data
       original_cff = tables["CFF "].dup
@@ -456,13 +464,13 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
       hint1 = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 100, width: 50, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint2 = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 200, width: 60, orientation: :vertical },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -482,19 +490,19 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
       # Font-level hints
       private_dict_hints = {
         blue_values: [-15, 0, 450, 460, 600, 610],
-        std_hw: 70
+        std_hw: 70,
       }
 
       # Per-glyph hint
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 100, width: 50, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
-        private_dict_hints: private_dict_hints.to_json
+        private_dict_hints: private_dict_hints.to_json,
       )
       hint_set.add_glyph_hints(1, [hint])
 
@@ -512,13 +520,13 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         Fontisan::Models::Hint.new(
           type: :stem,
           data: { position: 100, width: 50, orientation: :horizontal },
-          source_format: :postscript
+          source_format: :postscript,
         ),
         Fontisan::Models::Hint.new(
           type: :hint_replacement,
           data: { mask: [0b11000000] },
-          source_format: :postscript
-        )
+          source_format: :postscript,
+        ),
       ]
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -544,7 +552,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
     it "handles errors gracefully during per-glyph hint application" do
       # Create invalid hint that might cause errors
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
-      hint_set.add_glyph_hints(999999, [])  # Invalid glyph index
+      hint_set.add_glyph_hints(999999, []) # Invalid glyph index
 
       # Should not raise error, should return original
       expect { applier.apply(hint_set, tables) }.not_to raise_error
@@ -601,7 +609,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "applies hints to CFF2 variable font" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20, 30, 40] }.to_json
+            private_dict_hints: { blue_values: [10, 20, 30, 40] }.to_json,
           )
 
           tables = { "CFF2 " => cff2_data }
@@ -616,7 +624,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "preserves Variable Store during hint application" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_scale: 0.039625 }.to_json
+            private_dict_hints: { blue_scale: 0.039625 }.to_json,
           )
 
           tables = { "CFF2 " => cff2_data }
@@ -632,22 +640,22 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
 
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
 
           tables = { "CFF2 " => invalid_cff2 }
 
           # Should handle gracefully
-          expect {
+          expect do
             result = applier.apply(hint_set, tables)
             expect(result["CFF2 "]).to eq(invalid_cff2) # Unchanged
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it "handles CFF2 table with trailing space key" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { std_hw: 50 }.to_json
+            private_dict_hints: { std_hw: 50 }.to_json,
           )
 
           tables = { "CFF2 " => cff2_data }
@@ -659,7 +667,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "handles CFF2 table without trailing space key" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { std_vw: 60 }.to_json
+            private_dict_hints: { std_vw: 60 }.to_json,
           )
 
           tables = { "CFF2" => cff2_data }
@@ -674,7 +682,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
           hint = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 10, width: 20, orientation: :horizontal },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -690,7 +698,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
           hint = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 15, width: 25, orientation: :vertical },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -707,13 +715,13 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
           hint1 = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 10, width: 20, orientation: :horizontal },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint2 = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 30, width: 40, orientation: :vertical },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -731,12 +739,12 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
           hint = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 10, width: 20, orientation: :horizontal },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
           hint_set.add_glyph_hints(1, [hint])
 
@@ -750,12 +758,12 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
           hint = Fontisan::Models::Hint.new(
             type: :stem,
             data: { position: 5, width: 10, orientation: :horizontal },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { std_hw: 50, std_vw: 60 }.to_json
+            private_dict_hints: { std_hw: 50, std_vw: 60 }.to_json,
           )
           hint_set.add_glyph_hints(0, [hint])
 
@@ -771,7 +779,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "handles missing CFF2 table gracefully" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
 
           tables = { "head" => "data" }
@@ -783,22 +791,22 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "handles corrupted CFF2 data gracefully" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
 
           tables = { "CFF2 " => "corrupted".b }
 
-          expect {
+          expect do
             result = applier.apply(hint_set, tables)
             # Should return original on error
             expect(result["CFF2 "]).to eq("corrupted".b)
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it "handles invalid hint data gracefully" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: "invalid json"
+            private_dict_hints: "invalid json",
           )
 
           tables = { "CFF2 " => cff2_data }
@@ -813,12 +821,12 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         it "routes to CFF2 when CFF2 table present" do
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
 
           tables = {
             "CFF2 " => cff2_data,
-            "CFF " => "cff_data" # Both present, should use CFF2
+            "CFF " => "cff_data", # Both present, should use CFF2
           }
 
           result = applier.apply(hint_set, tables)
@@ -829,13 +837,14 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
         end
 
         it "routes to CFF when only CFF table present" do
-          font_path = font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+          font_path = font_fixture_path("SourceSans3",
+                                        "SourceSans3-Regular.otf")
           font = Fontisan::FontLoader.load(font_path)
           cff_table = font.table("CFF ")
 
           hint_set = Fontisan::Models::HintSet.new(
             format: "postscript",
-            private_dict_hints: { blue_values: [10, 20] }.to_json
+            private_dict_hints: { blue_values: [10, 20] }.to_json,
           )
 
           tables = { "CFF " => cff_table }

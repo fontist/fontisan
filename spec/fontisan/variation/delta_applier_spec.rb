@@ -6,19 +6,21 @@ require "fontisan/variation/interpolator"
 require "fontisan/variation/region_matcher"
 
 RSpec.describe Fontisan::Variation::DeltaApplier do
+  subject(:applier) { described_class.new(font, interpolator, region_matcher) }
+
   let(:font) { double("Font") }
   let(:axes) do
     [
-      double("Axis", axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 900.0),
-      double("Axis", axis_tag: "wdth", min_value: 75.0, default_value: 100.0, max_value: 125.0)
+      double("Axis", axis_tag: "wght", min_value: 400.0, default_value: 400.0,
+                     max_value: 900.0),
+      double("Axis", axis_tag: "wdth", min_value: 75.0, default_value: 100.0,
+                     max_value: 125.0),
     ]
   end
   let(:interpolator) { Fontisan::Variation::Interpolator.new(axes) }
   let(:region_matcher) { Fontisan::Variation::RegionMatcher.new(axes) }
   let(:gvar) { double("Gvar") }
   let(:glyf) { double("Glyf") }
-
-  subject(:applier) { described_class.new(font, interpolator, region_matcher) }
 
   before do
     allow(font).to receive(:table).with("gvar").and_return(gvar)
@@ -73,7 +75,7 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
         [
           { x: 100.0, y: 200.0, on_curve: true },
           { x: 150.0, y: 250.0, on_curve: false },
-          { x: 200.0, y: 200.0, on_curve: true }
+          { x: 200.0, y: 200.0, on_curve: true },
         ]
       end
 
@@ -96,8 +98,10 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
       it "returns base points when no tuples match" do
         allow(applier).to receive(:extract_glyph_points).and_return(base_points)
         allow(gvar).to receive(:glyph_tuple_variations).and_return({
-          tuples: [{ peak: [1.0, 0.0] }]
-        })
+                                                                     tuples: [{ peak: [
+                                                                       1.0, 0.0
+                                                                     ] }],
+                                                                   })
         allow(region_matcher).to receive(:match_tuples).and_return([])
 
         result = applier.apply_deltas(0, { "wght" => 400.0 })
@@ -110,16 +114,16 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
         [
           { x: 100.0, y: 200.0, on_curve: true },
           { x: 150.0, y: 250.0, on_curve: false },
-          { x: 200.0, y: 200.0, on_curve: true }
+          { x: 200.0, y: 200.0, on_curve: true },
         ]
       end
 
       let(:tuple_data) do
         {
           tuples: [
-            { peak: [0.6, 0.0], private_points: false }
+            { peak: [0.6, 0.0], private_points: false },
           ],
-          has_shared_points: false
+          has_shared_points: false,
         }
       end
 
@@ -129,16 +133,22 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
 
         # Mock matched tuple with scalar
         matches = [
-          { tuple: tuple_data[:tuples][0], scalar: 0.8 }
+          { tuple: tuple_data[:tuples][0], scalar: 0.8 },
         ]
         allow(region_matcher).to receive(:match_tuples).and_return(matches)
 
         # Mock delta parsing to return simple deltas
         allow_any_instance_of(Fontisan::Variation::DeltaParser).to receive(:parse).and_return([
-          { x: 10, y: 5 },
-          { x: -5, y: 10 },
-          { x: 10, y: -5 }
-        ])
+                                                                                                {
+                                                                                                  x: 10, y: 5
+                                                                                                },
+                                                                                                {
+                                                                                                  x: -5, y: 10
+                                                                                                },
+                                                                                                {
+                                                                                                  x: 10, y: -5
+                                                                                                },
+                                                                                              ])
 
         result = applier.apply_deltas(0, { "wght" => 700.0 })
 
@@ -155,9 +165,9 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
         tuple_data_multi = {
           tuples: [
             { peak: [0.6, 0.0], private_points: false },
-            { peak: [0.0, 0.5], private_points: false }
+            { peak: [0.0, 0.5], private_points: false },
           ],
-          has_shared_points: false
+          has_shared_points: false,
         }
 
         allow(applier).to receive(:extract_glyph_points).and_return(base_points)
@@ -165,7 +175,7 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
 
         matches = [
           { tuple: tuple_data_multi[:tuples][0], scalar: 0.8 },
-          { tuple: tuple_data_multi[:tuples][1], scalar: 0.5 }
+          { tuple: tuple_data_multi[:tuples][1], scalar: 0.5 },
         ]
         allow(region_matcher).to receive(:match_tuples).and_return(matches)
 
@@ -193,7 +203,7 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
         allow(gvar).to receive(:glyph_tuple_variations).and_return(tuple_data)
 
         matches = [
-          { tuple: tuple_data[:tuples][0], scalar: 0.0 }
+          { tuple: tuple_data[:tuples][0], scalar: 0.0 },
         ]
         allow(region_matcher).to receive(:match_tuples).and_return(matches)
 
@@ -227,9 +237,9 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
     let(:tuple_data) do
       {
         tuples: [
-          { peak: [1.0, 0.0], private_points: true }
+          { peak: [1.0, 0.0], private_points: true },
         ],
-        has_shared_points: false
+        has_shared_points: false,
       }
     end
 
@@ -240,7 +250,7 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
       allow(gvar).to receive(:glyph_tuple_variations).and_return(tuple_data)
 
       matches = [
-        { tuple: tuple_data[:tuples][0], scalar: 1.0 }
+        { tuple: tuple_data[:tuples][0], scalar: 1.0 },
       ]
       allow(region_matcher).to receive(:match_tuples).and_return(matches)
 
@@ -272,7 +282,8 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
 
   describe "error handling" do
     it "handles exceptions gracefully" do
-      allow(applier).to receive(:extract_glyph_points).and_raise(StandardError, "Test error")
+      allow(applier).to receive(:extract_glyph_points).and_raise(StandardError,
+                                                                 "Test error")
 
       expect do
         result = applier.apply_deltas(0, { "wght" => 700.0 })

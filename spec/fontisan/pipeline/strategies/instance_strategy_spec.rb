@@ -4,7 +4,10 @@ require "spec_helper"
 require "fontisan/pipeline/strategies/instance_strategy"
 
 RSpec.describe Fontisan::Pipeline::Strategies::InstanceStrategy do
-  let(:variable_ttf_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+  let(:variable_ttf_path) do
+    font_fixture_path("MonaSans",
+                      "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+  end
   let(:variable_font) { Fontisan::FontLoader.load(variable_ttf_path, mode: :full) }
 
   describe "#initialize" do

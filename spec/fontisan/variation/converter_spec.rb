@@ -12,7 +12,7 @@ RSpec.describe Fontisan::Variation::Converter do
         axis_tag: "wght",
         min_value: 400.0,
         default_value: 400.0,
-        max_value: 700.0
+        max_value: 700.0,
       ),
     ]
   end
@@ -438,7 +438,7 @@ RSpec.describe Fontisan::Variation::Converter do
             tuple_count: 1,
             tuples: [{ peak: [0.5], deltas: [{ x: 10, y: 20 }] }],
             point_count: 1,
-          }
+          },
         )
 
         # Glyph 1: no variations
@@ -450,7 +450,7 @@ RSpec.describe Fontisan::Variation::Converter do
             tuple_count: 1,
             tuples: [{ peak: [1.0], deltas: [{ x: 5, y: 10 }] }],
             point_count: 1,
-          }
+          },
         )
       end
 
@@ -471,9 +471,10 @@ RSpec.describe Fontisan::Variation::Converter do
           allow(gvar_table).to receive(:glyph_tuple_variations).with(glyph_id).and_return(
             {
               tuple_count: 1,
-              tuples: [{ peak: [0.5], deltas: [{ x: glyph_id * 10, y: glyph_id * 20 }] }],
+              tuples: [{ peak: [0.5],
+                         deltas: [{ x: glyph_id * 10, y: glyph_id * 20 }] }],
               point_count: 1,
-            }
+            },
           )
         end
       end
@@ -646,7 +647,7 @@ RSpec.describe Fontisan::Variation::Converter do
           :build_tuple_from_region,
           region,
           point_deltas,
-          0
+          0,
         )
 
         expect(tuple[:peak]).to eq([0.5])
@@ -659,7 +660,7 @@ RSpec.describe Fontisan::Variation::Converter do
           :build_tuple_from_region,
           region,
           point_deltas,
-          0
+          0,
         )
 
         expect(tuple[:deltas]).to eq([

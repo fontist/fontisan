@@ -74,7 +74,8 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
       io = StringIO.new(data)
       result = described_class.send(:read_flags, io, 4)
       # Should return: original flag, then 3 repeats (total 4 flags)
-      expect(result).to eq([flag_with_repeat, flag_with_repeat, flag_with_repeat, flag_with_repeat])
+      expect(result).to eq([flag_with_repeat, flag_with_repeat,
+                            flag_with_repeat, flag_with_repeat])
     end
 
     it "handles multiple repeats in sequence" do
@@ -90,13 +91,17 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
 
   describe ".read_coordinates" do
     let(:short_flag) { described_class::X_SHORT_VECTOR }
-    let(:same_or_positive_flag) { described_class::X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR }
+    let(:same_or_positive_flag) do
+      described_class::X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR
+    end
 
     it "reads short positive deltas" do
-      flags = [short_flag | same_or_positive_flag, short_flag | same_or_positive_flag]
+      flags = [short_flag | same_or_positive_flag,
+               short_flag | same_or_positive_flag]
       data = [10, 20].pack("C2") # Two positive deltas
       io = StringIO.new(data)
-      result = described_class.send(:read_coordinates, io, flags, short_flag, same_or_positive_flag)
+      result = described_class.send(:read_coordinates, io, flags, short_flag,
+                                    same_or_positive_flag)
       expect(result).to eq([10, 30]) # Cumulative: 10, 10+20
     end
 
@@ -104,15 +109,18 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
       flags = [short_flag, short_flag]  # Short but not positive
       data = [10, 20].pack("C2")
       io = StringIO.new(data)
-      result = described_class.send(:read_coordinates, io, flags, short_flag, same_or_positive_flag)
+      result = described_class.send(:read_coordinates, io, flags, short_flag,
+                                    same_or_positive_flag)
       expect(result).to eq([-10, -30])  # Cumulative: -10, -10-20
     end
 
     it "handles same-as-previous (delta = 0)" do
-      flags = [short_flag | same_or_positive_flag, same_or_positive_flag, short_flag | same_or_positive_flag]
+      flags = [short_flag | same_or_positive_flag, same_or_positive_flag,
+               short_flag | same_or_positive_flag]
       data = [10, 5].pack("C2") # Only two values needed
       io = StringIO.new(data)
-      result = described_class.send(:read_coordinates, io, flags, short_flag, same_or_positive_flag)
+      result = described_class.send(:read_coordinates, io, flags, short_flag,
+                                    same_or_positive_flag)
       expect(result).to eq([10, 10, 15]) # 10, same (10), 10+5
     end
 
@@ -120,7 +128,8 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
       flags = [0, 0] # Neither short nor same flags set
       data = [100, -50].pack("n2") # Two 16-bit signed values
       io = StringIO.new(data)
-      result = described_class.send(:read_coordinates, io, flags, short_flag, same_or_positive_flag)
+      result = described_class.send(:read_coordinates, io, flags, short_flag,
+                                    same_or_positive_flag)
       # read_int16 converts: 100 stays 100, -50 as two's complement
       expect(result.first).to eq(100)
       expect(result.last).to eq(50) # 100 + (-50)
@@ -322,7 +331,8 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
 
         expect do
           described_class.reconstruct(data, 1)
-        end.to raise_error(Fontisan::InvalidFontError, /Invalid nContours value/)
+        end.to raise_error(Fontisan::InvalidFontError,
+                           /Invalid nContours value/)
       end
 
       it "raises InvalidFontError on truncated data" do

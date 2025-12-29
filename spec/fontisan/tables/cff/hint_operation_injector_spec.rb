@@ -11,8 +11,9 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
     context "with no hints" do
       it "returns original operations unchanged when hints array is empty" do
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([], operations)
@@ -21,8 +22,9 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
 
       it "returns original operations unchanged when hints is nil" do
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject(nil, operations)
@@ -34,13 +36,15 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects horizontal stem hint before moveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :rlineto, operands: [50, 0], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :rlineto, operands: [50, 0],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -54,12 +58,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects vertical stem hint before moveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 200, width: 60, orientation: :vertical }
+          data: { position: 200, width: 60, orientation: :vertical },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -73,17 +78,18 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100, width: 50, orientation: :horizontal }
+            data: { position: 100, width: 50, orientation: :horizontal },
           ),
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 200, width: 60, orientation: :vertical }
-          )
+            data: { position: 200, width: 60, orientation: :vertical },
+          ),
         ]
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject(hints, operations)
@@ -98,17 +104,18 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100, width: 50, orientation: :horizontal }
+            data: { position: 100, width: 50, orientation: :horizontal },
           ),
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 200, width: 60, orientation: :vertical }
-          )
+            data: { position: 200, width: 60, orientation: :vertical },
+          ),
         ]
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         injector.inject(hints, operations)
@@ -120,12 +127,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects hintmask operation with mask data" do
         hint = Fontisan::Models::Hint.new(
           type: :hint_replacement,
-          data: { mask: [0b11000000] }
+          data: { mask: [0b11000000] },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -139,12 +147,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "handles string mask data" do
         hint = Fontisan::Models::Hint.new(
           type: :hint_replacement,
-          data: { mask: "\xC0" }
+          data: { mask: "\xC0" },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -156,12 +165,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "handles empty mask data" do
         hint = Fontisan::Models::Hint.new(
           type: :hint_replacement,
-          data: { mask: [] }
+          data: { mask: [] },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -175,12 +185,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects cntrmask operation with zone data" do
         hint = Fontisan::Models::Hint.new(
           type: :counter,
-          data: { zones: [0b10100000] }
+          data: { zones: [0b10100000] },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -197,17 +208,18 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100, width: 50, orientation: :horizontal }
+            data: { position: 100, width: 50, orientation: :horizontal },
           ),
           Fontisan::Models::Hint.new(
             type: :hint_replacement,
-            data: { mask: [0b11000000] }
-          )
+            data: { mask: [0b11000000] },
+          ),
         ]
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject(hints, operations)
@@ -223,12 +235,12 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before hmoveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
           { type: :operator, name: :hmoveto, operands: [100], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -240,12 +252,12 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before vmoveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
           { type: :operator, name: :vmoveto, operands: [200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -257,12 +269,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before rlineto if no moveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rlineto, operands: [50, 0], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rlineto, operands: [50, 0],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -274,12 +287,12 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before hlineto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
           { type: :operator, name: :hlineto, operands: [50], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -291,12 +304,12 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before vlineto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
           { type: :operator, name: :vlineto, operands: [50], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -308,12 +321,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before rrcurveto" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rrcurveto, operands: [10, 20, 30, 40, 50, 60], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rrcurveto,
+            operands: [10, 20, 30, 40, 50, 60], hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -327,11 +341,11 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects before endchar when only endchar present" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -343,7 +357,7 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects at start when operations empty" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = []
@@ -359,15 +373,19 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "injects hints before first moveto in multi-path glyph" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :rlineto, operands: [50, 0], hint_data: nil },
-          { type: :operator, name: :rmoveto, operands: [10, 10], hint_data: nil },
-          { type: :operator, name: :rlineto, operands: [30, 0], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :rlineto, operands: [50, 0],
+            hint_data: nil },
+          { type: :operator, name: :rmoveto, operands: [10, 10],
+            hint_data: nil },
+          { type: :operator, name: :rlineto, operands: [30, 0],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -380,14 +398,17 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "preserves original operations after injection point" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :rlineto, operands: [50, 0], hint_data: nil },
-          { type: :operator, name: :rrcurveto, operands: [10, 20, 30, 40, 50, 60], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :rlineto, operands: [50, 0],
+            hint_data: nil },
+          { type: :operator, name: :rrcurveto,
+            operands: [10, 20, 30, 40, 50, 60], hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         result = injector.inject([hint], operations)
@@ -403,12 +424,13 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
       it "counts single stem" do
         hint = Fontisan::Models::Hint.new(
           type: :stem,
-          data: { position: 100, width: 50, orientation: :horizontal }
+          data: { position: 100, width: 50, orientation: :horizontal },
         )
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         injector.inject([hint], operations)
@@ -419,21 +441,22 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100, width: 50, orientation: :horizontal }
+            data: { position: 100, width: 50, orientation: :horizontal },
           ),
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 200, width: 60, orientation: :vertical }
+            data: { position: 200, width: 60, orientation: :vertical },
           ),
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 300, width: 70, orientation: :horizontal }
-          )
+            data: { position: 300, width: 70, orientation: :horizontal },
+          ),
         ]
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         injector.inject(hints, operations)
@@ -444,17 +467,18 @@ RSpec.describe Fontisan::Tables::Cff::HintOperationInjector do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100, width: 50, orientation: :horizontal }
+            data: { position: 100, width: 50, orientation: :horizontal },
           ),
           Fontisan::Models::Hint.new(
             type: :hint_replacement,
-            data: { mask: [0b11000000] }
-          )
+            data: { mask: [0b11000000] },
+          ),
         ]
 
         operations = [
-          { type: :operator, name: :rmoveto, operands: [100, 200], hint_data: nil },
-          { type: :operator, name: :endchar, operands: [], hint_data: nil }
+          { type: :operator, name: :rmoveto, operands: [100, 200],
+            hint_data: nil },
+          { type: :operator, name: :endchar, operands: [], hint_data: nil },
         ]
 
         injector.inject(hints, operations)

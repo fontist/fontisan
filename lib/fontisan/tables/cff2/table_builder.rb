@@ -79,7 +79,7 @@ module Fontisan
             top_dict: top_dict_hash,
             charstrings: charstrings_data,
             private_dict: private_dict_data,
-            vstore: vstore_data
+            vstore: vstore_data,
           )
         end
 
@@ -134,7 +134,8 @@ module Fontisan
 
           # Create rebuilder with stem count
           stem_count = calculate_stem_count
-          rebuilder = Cff::CharStringRebuilder.new(charstrings_index, stem_count: stem_count)
+          rebuilder = Cff::CharStringRebuilder.new(charstrings_index,
+                                                   stem_count: stem_count)
 
           # Modify each glyph with hints
           hinted_glyph_ids.each do |glyph_id|
@@ -179,14 +180,14 @@ module Fontisan
           # Count stems from blue zones (hstem)
           hstem_count = 0
           blue_values = font_hints["blue_values"] || font_hints[:blue_values]
-          if blue_values && blue_values.is_a?(Array)
+          if blue_values.is_a?(Array)
             hstem_count = blue_values.size / 2
           end
 
           # Count stems from stem snap (vstem)
           vstem_count = 0
           stem_snap_h = font_hints["stem_snap_h"] || font_hints[:stem_snap_h]
-          if stem_snap_h && stem_snap_h.is_a?(Array)
+          if stem_snap_h.is_a?(Array)
             vstem_count = stem_snap_h.size
           end
 
@@ -365,7 +366,7 @@ module Fontisan
           # Extract Variable Store bytes unchanged
           # For simplicity, extract from vstore_offset to end of table
           # In production, we'd parse structure to get exact size
-          @reader.data[vstore_offset..-1]
+          @reader.data[vstore_offset..]
         end
 
         # Rebuild complete CFF2 table
@@ -376,7 +377,8 @@ module Fontisan
         # @param private_dict [String, nil] Private DICT
         # @param vstore [String, nil] Variable Store
         # @return [String] Complete CFF2 table binary
-        def rebuild_cff2_table(header:, top_dict:, charstrings:, private_dict:, vstore:)
+        def rebuild_cff2_table(header:, top_dict:, charstrings:, private_dict:,
+vstore:)
           output = StringIO.new("".b)
 
           # 1. Write Header
@@ -387,7 +389,7 @@ module Fontisan
             header_size: header.size,
             charstrings: charstrings,
             private_dict: private_dict,
-            vstore: vstore
+            vstore: vstore,
           )
 
           # 3. Build Top DICT with updated offsets
@@ -416,7 +418,8 @@ module Fontisan
         # @param private_dict [String, nil] Private DICT data
         # @param vstore [String, nil] Variable Store data
         # @return [Hash] Section offsets
-        def calculate_cff2_offsets(header_size:, charstrings:, private_dict:, vstore:)
+        def calculate_cff2_offsets(header_size:, charstrings:, private_dict:,
+vstore:)
           # Start after header
           offset = header_size
 
@@ -446,7 +449,7 @@ module Fontisan
             charstrings: charstrings_offset,
             private_dict: private_dict_offset,
             private_dict_size: private_dict_size,
-            vstore: vstore_offset
+            vstore: vstore_offset,
           }
         end
 
@@ -531,23 +534,23 @@ module Fontisan
             18 => :private,
             19 => :subrs,
             20 => :default_width_x,
-            21 => :nominal_width_x
-          # Note: operator 24 (vstore) is CFF2-specific and handled separately
+            21 => :nominal_width_x,
+            # Note: operator 24 (vstore) is CFF2-specific and handled separately
           }
 
           result = {}
           dict.each do |key, value|
             # Skip vstore (operator 24) - CFF2 specific, not in CFF DictBuilder
-            next if key == 24 || key == :vstore
+            next if [24, :vstore].include?(key)
 
             # Convert string keys to symbols for DictBuilder
-            if key.is_a?(String)
-              symbol_key = key.to_sym
-            elsif key.is_a?(Integer)
-              symbol_key = operator_map[key] || key
-            else
-              symbol_key = key
-            end
+            symbol_key = if key.is_a?(String)
+                           key.to_sym
+                         elsif key.is_a?(Integer)
+                           operator_map[key] || key
+                         else
+                           key
+                         end
 
             result[symbol_key] = value
           end

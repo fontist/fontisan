@@ -37,7 +37,8 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
       num_h_metrics = 3
       num_glyphs = 3
 
-      result = described_class.send(:build_hmtx_table, advance_widths, lsbs, num_h_metrics, num_glyphs)
+      result = described_class.send(:build_hmtx_table, advance_widths, lsbs,
+                                    num_h_metrics, num_glyphs)
 
       expect(result).to be_a(String)
 
@@ -62,7 +63,8 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
       num_h_metrics = 2
       num_glyphs = 4
 
-      result = described_class.send(:build_hmtx_table, advance_widths, lsbs, num_h_metrics, num_glyphs)
+      result = described_class.send(:build_hmtx_table, advance_widths, lsbs,
+                                    num_h_metrics, num_glyphs)
 
       io = StringIO.new(result)
 
@@ -87,7 +89,8 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
       num_h_metrics = 1
       num_glyphs = 3
 
-      result = described_class.send(:build_hmtx_table, advance_widths, lsbs, num_h_metrics, num_glyphs)
+      result = described_class.send(:build_hmtx_table, advance_widths, lsbs,
+                                    num_h_metrics, num_glyphs)
 
       io = StringIO.new(result)
 
@@ -110,7 +113,8 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
       num_h_metrics = 2
       num_glyphs = 2
 
-      result = described_class.send(:build_hmtx_table, advance_widths, lsbs, num_h_metrics, num_glyphs)
+      result = described_class.send(:build_hmtx_table, advance_widths, lsbs,
+                                    num_h_metrics, num_glyphs)
 
       io = StringIO.new(result)
 

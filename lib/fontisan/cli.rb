@@ -33,7 +33,7 @@ module Fontisan
       command = Commands::InfoCommand.new(path, options)
       info = command.run
       output_result(info) unless options[:quiet]
-    rescue Errno::ENOENT => e
+    rescue Errno::ENOENT
       if options[:verbose]
         raise
       else
@@ -270,7 +270,10 @@ module Fontisan
 
       # Merge coordinates into options
       convert_options = options.to_h.dup
-      convert_options[:instance_coordinates] = instance_coords if instance_coords.any?
+      if instance_coords.any?
+        convert_options[:instance_coordinates] =
+          instance_coords
+      end
 
       command = Commands::ConvertCommand.new(font_file, convert_options)
       command.run
@@ -348,7 +351,8 @@ module Fontisan
     option :verbose, type: :boolean, default: false,
                      desc: "Show detailed validation information"
     def validate(font_file)
-      command = Commands::ValidateCommand.new(font_file, verbose: options[:verbose])
+      command = Commands::ValidateCommand.new(font_file,
+                                              verbose: options[:verbose])
       exit command.run
     end
 

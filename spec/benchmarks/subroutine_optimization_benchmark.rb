@@ -29,7 +29,8 @@ RSpec.describe "Subroutine Optimization Performance" do
       times = []
       5.times do |i|
         time = Benchmark.realtime do
-          converter.convert(font, target_format: :otf, optimize_subroutines: false)
+          converter.convert(font, target_format: :otf,
+                                  optimize_subroutines: false)
         end
         times << time
         puts "Run #{i + 1}: #{(time * 1000).round(2)}ms"
@@ -55,7 +56,8 @@ RSpec.describe "Subroutine Optimization Performance" do
       times = []
       5.times do |i|
         time = Benchmark.realtime do
-          converter.convert(font, target_format: :otf, optimize_subroutines: true)
+          converter.convert(font, target_format: :otf,
+                                  optimize_subroutines: true)
         end
         times << time
         puts "Run #{i + 1}: #{(time * 1000).round(2)}ms"
@@ -82,7 +84,8 @@ RSpec.describe "Subroutine Optimization Performance" do
       baseline_times = []
       3.times do
         time = Benchmark.realtime do
-          converter.convert(font, target_format: :otf, optimize_subroutines: false)
+          converter.convert(font, target_format: :otf,
+                                  optimize_subroutines: false)
         end
         baseline_times << time
       end
@@ -92,7 +95,8 @@ RSpec.describe "Subroutine Optimization Performance" do
       optimized_times = []
       3.times do
         time = Benchmark.realtime do
-          converter.convert(font, target_format: :otf, optimize_subroutines: true)
+          converter.convert(font, target_format: :otf,
+                                  optimize_subroutines: true)
         end
         optimized_times << time
       end
@@ -172,7 +176,8 @@ RSpec.describe "Subroutine Optimization Performance" do
       GC.start
       before_memory = GC.stat(:heap_allocated_pages)
 
-      result = converter.convert(font, target_format: :otf, optimize_subroutines: true)
+      result = converter.convert(font, target_format: :otf,
+                                       optimize_subroutines: true)
 
       after_optimized = GC.stat(:heap_allocated_pages)
       optimized_pages = after_optimized - before_memory
