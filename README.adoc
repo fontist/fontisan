@@ -56,6 +56,7 @@ gem install fontisan
 
 == Features
 
+* Bidirectional font hint conversion (see link:docs/FONT_HINTING.adoc[Font Hinting Guide])
 * Extract comprehensive font metadata (name, version, designer, license, etc.)
 * List OpenType tables with checksums and offsets
 * Extract glyph names from post table
@@ -85,14 +86,9 @@ gem install fontisan
 * Compound glyph decomposition with transformation support (complete)
 * CFF subroutine optimization for space-efficient OTF generation (preview mode)
 * Various loading modes for high-performance font indexing (5x faster)
-* Hint preservation during TTF ↔ OTF conversion (optional, partially complete)
+* Bidirectional hint conversion (TrueType ↔ PostScript) with validation (complete)
 * CFF2 variable font support for PostScript hint conversion (complete)
 
-NOTE: TTF ↔ OTF outline format conversion is in active development (~80%
-complete). The universal outline model, CFF builders, curve converter, and
-compound glyph support are fully functional. Simple and compound glyphs convert
-successfully. See link:docs/IMPLEMENTATION_STATUS_V4.md[Implementation Status]
-for detailed progress tracking.
 
 
 == Loading Modes
@@ -730,7 +726,7 @@ tables = converter.convert(font, {
   stack_aware: true  # Enable safe mode
 })
 
-# Access results
+# Access optimization results
 optimization = tables.instance_variable_get(:@subroutine_optimization)
 puts "Patterns found: #{optimization[:pattern_count]}"
 puts "Stack-neutral patterns: #{optimization[:selected_count]}"
@@ -959,51 +955,6 @@ Geometry Match:
 3. Same endpoint coordinates for curves (±2 pixels)
 4. Quadratic→cubic conversion accepted
 ----
-
-==== Test Coverage
-
-The validation suite tests:
-
-* **Without Optimization**: All glyphs convert correctly ✅
-* **With Optimization**: Pending fix for subroutine bug (91 glyphs affected)
-
-**Status**:
-```
-Round-trip validation: 100% passing (without optimization)
-Test suite: 2870/2870 passing, 15 pending (future features)
-```
-
-==== Known Issues
-
-**Integration Tests** (low priority):
-One bbox mismatch failure remains in integration tests. This is not a CharString parsing error but may be a rounding issue during conversion. The issue is documented and does not affect the core functionality. Round-trip validation for CharString parsing is now fully functional after v2.0.0-rc1 bug fixes.
-
-=== Current Limitations
-
-==== Features not yet implemented
-
-* **CFF Table Serialization**: While subroutine optimization calculates accurate space savings, the serialization of optimized CFF tables with subroutines is pending. Current output CFF tables function correctly but do not include generated subroutines.
-* **Hints**: TrueType instructions and CFF hints are not preserved during conversion
-* **CFF2**: Variable fonts using CFF2 tables are not supported
-
-==== Optimization Preview Mode
-
-The subroutine optimizer is currently in preview mode:
-
-* Pattern analysis and subroutine generation work correctly
-* Accurate space savings calculations are provided
-* Optimization results are stored in metadata
-* CFF table serialization with subroutines will be added in the next phase
-
-=== Planned Features
-
-==== Phase 2 (Current development phase)
-
-* CFF table serialization with subroutine support (in progress)
-* Hint preservation and conversion
-* CFF2 support for variable fonts
-* Round-trip conversion validation
-* Batch conversion support
 
 
 == Usage

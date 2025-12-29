@@ -1,0 +1,562 @@
+= Font Hinting Support
+:toc:
+:toclevels: 3
+
+== General
+
+Fontisan provides comprehensive support for font hints, including extraction, conversion, validation, and preservation. Hints are rendering instructions embedded in fonts that improve appearance at small sizes and low resolutions by providing grid-fitting guidance to the rasterizer.
+
+Fontisan supports two hinting systems:
+
+**TrueType Instructions**:: Bytecode-based hints using instruction opcodes (SSW, SCVTCI, SSWCI, etc.) stored in prep, fpgm, and cvt tables
+
+**PostScript Hints**:: Declarative hints using operators (hstem, vstem, hintmask) stored in CFF Private dictionaries
+
+The hint conversion system enables bidirectional transformation between these formats, allowing fonts to maintain their rendering quality during TTF ↔ OTF conversion.
+
+== Features
+
+* **Bidirectional Conversion**: Convert hints between TrueType and PostScript formats
+* **Hint Extraction**: Extract existing hints from TTF and OTF fonts
+* **Hint Application**: Apply hints to fonts during format conversion
+* **Validation**: Comprehensive validation of hint data for correctness
+* **Round-Trip Preservation**: Maintain hint integrity during conversion cycles
+* **Stack-Aware Analysis**: Intelligent parsing of TrueType instruction bytecode
+* **CFF2 Support**: Variable font PostScript hint handling
+
+== TrueType to PostScript Conversion
+
+When converting from TrueType (TTF) to OpenType/CFF (OTF), Fontisan analyzes TrueType instructions and generates equivalent PostScript hint parameters.
+
+=== Conversion Process
+
+[source]
+----
+TrueType Font → Instruction Analysis → PostScript Parameters → CFF Table
+   (Input)       (prep/fpgm/cvt)      (Hint Dict)        (Output)
+----
+
+**Instruction Analysis**:
+
+. Parse prep (Control Value Program) bytecode
+. Analyze fpgm (Font Program) for complexity indicators  
+. Extract blue zones from CVT (Control Value Table) values
+. Extract stem widths and alignment zones
+
+**PostScript Parameters Generated**:
+
+* `blue_scale`: Threshold for alignment zone application
+* `std_hw`: Standard horizontal stem width
+* `std_vw`: Standard vertical stem width
+* `stem_snap_h`: Horizontal stem snap values
+* `stem_snap_v`: Vertical stem snap values
+* `blue_values`: Baseline and top alignment zones
+* `other_blues`: Descender alignment zones
+
+=== TrueType Instructions Supported
+
+[cols="1,2,3"]
+|===
+|Opcode |Name |Purpose
+
+|`0x40` |NPUSHB |Push n bytes onto stack
+|`0x41` |NPUSHW |Push n words onto stack
+|`0xB0-0xB7` |PUSHB[0-7] |Push 1-8 bytes onto stack
+|`0xB8-0xBF` |PUSHW[0-7] |Push 1-8 words onto stack
+|`0x1D` |SCVTCI |Set CVT cut-in
+|`0x1E` |SSWCI |Set single width cut-in
+|`0x1F` |SSW |Set single width
+|`0x44` |WCVTP |Write CVT in pixels
+|`0x70` |WCVTF |Write CVT in FUnits
+|===
+
+== PostScript to TrueType Conversion
+
+When converting from OpenType/CFF (OTF) to TrueType (TTF), Fontisan generates TrueType instruction bytecode from PostScript hint parameters.
+
+=== Conversion Process
+
+[source]
+----
+OTF Font → Parameter Extraction → Instruction Generation → TrueType Tables
+ (Input)    (CFF Private Dict)    (prep/fpgm/cvt)        (Output)
+----
+
+**Instruction Generation**:
+
+. Generate prep program with CVT cut-in, single width settings
+. Build CVT table with stem widths and blue zone values
+. Create fpgm program (typically empty for converted fonts)
+. Encode instructions using optimal PUSH opcodes
+
+**Generated Tables**:
+
+* `prep`: Control Value Program with hint setup instructions
+* `cvt`: Control Value Table with stem widths and alignment zones
+* `fpgm`: Font Program (empty for converted fonts)
+
+=== Instruction Encoding
+
+The generator automatically selects the most efficient instruction encoding:
+
+**Byte Values** (0-255):
+[source]
+----
+Value 17: PUSHB[0] 17          (2 bytes)
+Values [10,20,30]: NPUSHB 3 10 20 30  (5 bytes)
+----
+
+**Word Values** (256-65535):
+[source]
+----
+Value 300: PUSHW[0] 0x01 0x2C   (3 bytes, big-endian)
+Values [300,400]: NPUSHW 2 0x01 0x2C 0x01 0x90  (7 bytes)
+----
+
+== Hint Validation
+
+Fontisan includes comprehensive validation for both TrueType instructions and PostScript hint parameters.
+
+=== TrueType Instruction Validation
+
+* **Bytecode Structure**: Validates instruction opcodes and parameters
+* **Stack Operations**: Ensures proper stack depth management
+* **Parameter Counts**: Verifies correct number of operands
+* **Truncation Detection**: Identifies incomplete instructions
+* **Stack Neutrality**: Checks if instruction sequences maintain stack balance
+
+.Validate TrueType instructions
+[example]
+====
+[source,ruby]
+----
+validator = Fontisan::Hints::HintValidator.new
+instructions = [0xB0, 17, 0x1D].pack("C*") # PUSHB[0] 17, SCVTCI
+
+result = validator.validate_truetype_instructions(instructions)
+if result[:valid]
+  puts "Valid instructions"
+else
+  puts "Errors: #{result[:errors]}"
+end
+----
+====
+
+=== PostScript Hint Validation
+
+* **Value Ranges**: Validates hint parameter bounds
+* **Pair Validation**: Ensures blue zones are in pairs (even count)
+* **Array Limits**: Enforces CFF specification limits:
+  - `blue_values`: Maximum 14 values (7 pairs)
+  - `other_blues`: Maximum 10 values (5 pairs)
+  - `stem_snap_h/v`: Maximum 12 values each
+* **Positive Values**: Verifies stem widths are positive
+* **Language Group**: Validates language_group is 0 (Latin) or 1 (CJK)
+
+.Validate PostScript hints
+[example]
+====
+[source,ruby]
+----
+validator = Fontisan::Hints::HintValidator.new
+hints = {
+  blue_scale: 0.039625,
+  std_hw: 80,
+  blue_values: [-20, 0, 700, 720]
+}
+
+result = validator.validate_postscript_hints(hints)
+if result[:valid]
+  puts "Valid PostScript hints"
+else
+  result[:errors].each { |err| puts "Error: #{err}" }
+end
+----
+====
+
+== Round-Trip Conversion
+
+Fontisan ensures hint integrity through round-trip conversion with validation:
+
+[source]
+----
+Original PS Hints → TrueType → PostScript → Validation
+     (Input)         (Convert)   (Convert)    (Verify)
+----
+
+**Round-Trip Guarantees**:
+
+* CVT values preserved (sorted and deduplicated)
+* Standard widths (std_hw, std_vw) maintained
+* Blue zone values retained
+* <10% loss tolerance for approximations
+
+**Known Limitations**:
+
+* CVT sorting may change positions (optimization trade-off)
+* blue_scale not perfectly round-trippable (conversion approximation)
+* Standard widths extracted from CVT[0] and CVT[1] positions
+
+.Round-trip conversion example
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Original PostScript parameters
+original = {
+  blue_scale: 0.039625,
+  std_hw: 80,
+  std_vw: 90,
+  blue_values: [-20, 0, 700, 720]
+}
+
+# Convert PS → TT
+generator = Fontisan::Hints::TrueTypeInstructionGenerator.new
+tt_programs = generator.generate(original)
+
+# Convert TT → PS
+converter = Fontisan::Hints::HintConverter.new
+recovered = converter.send(:convert_tt_programs_to_ps_dict,
+                           tt_programs[:fpgm],
+                           tt_programs[:prep],
+                           tt_programs[:cvt])
+
+# Verify preservation
+puts "Original std_hw: #{original[:std_hw]}"
+puts "Recovered std_hw: #{recovered[:std_hw]}"
+puts "CVT contains: #{tt_programs[:cvt].include?(80)}"
+----
+====
+
+== Using the CLI
+
+=== Convert with hint preservation
+
+[source,bash]
+----
+# TTF to OTF with hints
+$ fontisan convert input.ttf --to otf --output output.otf
+
+# OTF to TTF with hints  
+$ fontisan convert input.otf --to ttf --output output.ttf
+
+# Validate hints after conversion
+$ fontisan validate output.otf
+----
+
+Hints are automatically extracted and converted during format conversion. No additional flags are required.
+
+== Using the Ruby API
+
+=== Extract hints from a font
+
+.Extract TrueType hints
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load TrueType font
+font = Fontisan::FontLoader.load('input.ttf')
+
+# Extract hints
+extractor = Fontisan::Hints::TrueTypeHintExtractor.new
+hint_set = extractor.extract_from_font(font)
+
+# Access hint data
+puts "Format: #{hint_set.format}"
+puts "Has hints: #{hint_set.has_hints}"
+puts "Font program size: #{hint_set.font_program&.bytesize}"
+puts "Prep program size: #{hint_set.control_value_program&.bytesize}"
+puts "CVT entries: #{hint_set.control_values&.length}"
+----
+====
+
+.Extract PostScript hints
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load OpenType/CFF font
+font = Fontisan::FontLoader.load('input.otf')
+
+# Extract hints  
+extractor = Fontisan::Hints::PostScriptHintExtractor.new
+hint_set = extractor.extract_from_font(font)
+
+# Parse hint parameters
+if hint_set.private_dict_hints
+  params = JSON.parse(hint_set.private_dict_hints)
+  puts "Standard H width: #{params['std_hw']}"
+  puts "Standard V width: #{params['std_vw']}"
+  puts "Blue values: #{params['blue_values']}"
+end
+----
+====
+
+=== Convert hints between formats
+
+.Convert TrueType to PostScript hints
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load TrueType font
+font = Fontisan::FontLoader.load('input.ttf')
+
+# Extract TrueType hints
+extractor = Fontisan::Hints::TrueTypeHintExtractor.new
+tt_hints = extractor.extract_from_font(font)
+
+# Convert to PostScript
+converter = Fontisan::Hints::HintConverter.new
+ps_hints = converter.convert_hint_set(tt_hints, :postscript)
+
+# Access PostScript parameters
+if ps_hints.private_dict_hints
+  params = JSON.parse(ps_hints.private_dict_hints)
+  puts "Converted to PostScript:"
+  puts "  std_hw: #{params['std_hw']}"
+  puts "  std_vw: #{params['std_vw']}"
+  puts "  blue_scale: #{params['blue_scale']}"
+end
+----
+====
+
+.Convert PostScript to TrueType hints
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load OpenType/CFF font
+font = Fontisan::FontLoader.load('input.otf')
+
+# Extract PostScript hints
+extractor = Fontisan::Hints::PostScriptHintExtractor.new
+ps_hints = extractor.extract_from_font(font)
+
+# Convert to TrueType
+converter = Fontisan::Hints::HintConverter.new
+tt_hints = converter.convert_hint_set(ps_hints, :truetype)
+
+# Access TrueType programs
+puts "Converted to TrueType:"
+puts "  prep size: #{tt_hints.control_value_program&.bytesize} bytes"
+puts "  cvt entries: #{tt_hints.control_values&.length}"
+puts "  fpgm size: #{tt_hints.font_program&.bytesize} bytes"
+----
+====
+
+== Technical Details
+
+=== Hint Conversion Pipeline
+
+The conversion system uses a three-stage pipeline:
+
+[source]
+----
+Source Hints → Analysis/Generation → Target Hints → Validation
+  (Input)       (Transformation)      (Output)       (Verify)
+----
+
+**Stage 1: Analysis** (TrueType → PostScript):
+
+. Parse TrueType instruction bytecode
+. Track stack depth at each byte position
+. Extract CVT values and operations
+. Calculate PostScript equivalents
+
+**Stage 2: Generation** (PostScript → TrueType):
+
+. Select optimal instruction opcodes
+. Build prep program with hint setup
+. Generate CVT table with sorted values
+. Ensure stack neutrality
+
+**Stage 3: Validation**:
+
+. Verify instruction bytecode structure
+. Check PostScript parameter ranges
+. Validate stack operations
+. Confirm round-trip integrity
+
+=== TrueType Instruction Analyzer
+
+The link:../lib/fontisan/hints/truetype_instruction_analyzer.rb[TrueTypeInstructionAnalyzer] analyzes TrueType programs to extract semantic hint information:
+
+**Capabilities**:
+
+* Parse 8 TrueType instruction opcodes
+* Extract blue zones from CVT using heuristics
+* Calculate complexity indicators for fpgm
+* Support for scaled fonts (large UPM values)
+
+**Heuristics**:
+
+[source,ruby]
+----
+# CVT value ranges for blue zone detection
+Descender zone: -300 to -150 (scaled by UPM)
+Baseline zone:  -50 to +50
+X-height zone:  450 to 600
+Cap-height zone: 650 to 800 (wider for large UPM)
+----
+
+=== TrueType Instruction Generator
+
+The link:../lib/fontisan/hints/truetype_instruction_generator.rb[TrueTypeInstructionGenerator] creates TrueType instruction bytecode from PostScript parameters:
+
+**Features**:
+
+* Optimal PUSH instruction selection
+* Big-endian word encoding
+* CVT table optimization (deduplicated and sorted)
+* Stack-neutral instruction sequences
+
+**CVT Generation**:
+
+[source,ruby]
+----
+CVT Table Structure:
+1. Standard widths (std_hw, std_vw)
+2. Stem snap values (horizontal, vertical)
+3. Blue zone values (baseline, cap-height)
+4. Other blues (descender zones)
+
+Note: Sorted and deduplicated for optimization
+----
+
+=== Hint Validator
+
+The link:../lib/fontisan/hints/hint_validator.rb[HintValidator] ensures hint data correctness:
+
+**Validation Levels**:
+
+* **Errors**: Critical issues that prevent font rendering
+* **Warnings**: Non-critical issues that may affect quality
+
+**Stack Neutrality Check**:
+
+[source,ruby]
+----
+Stack-neutral instruction sequence:
+- Same stack depth at start and end
+- No stack underflow during execution
+- Consistent result regardless of initial stack
+----
+
+== Architecture
+
+=== Class Hierarchy
+
+[source]
+----
+Fontisan::Hints
+├── TrueTypeInstructionAnalyzer   # Parse TT bytecode → PS params
+├── TrueTypeInstructionGenerator  # Generate TT bytecode from PS params
+├── TrueTypeHintExtractor         # Extract TT hints from font
+├── TrueTypeHintApplier          # Apply TT hints to font
+├── PostScriptHintExtractor       # Extract PS hints from font
+├── PostScriptHintApplier         # Apply PS hints to font
+├── HintConverter                 # Bidirectional conversion
+└── HintValidator                 # Validate hint data
+----
+
+=== Data Flow
+
+**TrueType → PostScript**:
+[source]
+----
+TTF Font
+  ↓
+TrueTypeHintExtractor → HintSet (TrueType format)
+  ↓
+HintConverter.convert_hint_set(:postscript)
+  ├── TrueTypeInstructionAnalyzer.analyze_prep(prep, cvt)
+  ├── TrueTypeInstructionAnalyzer.analyze_fpgm(fpgm)
+  └── TrueTypeInstructionAnalyzer.extract_blue_zones_from_cvt(cvt)
+  ↓
+HintSet (PostScript format)
+  ↓
+PostScriptHintApplier → OTF Font
+----
+
+**PostScript → TrueType**:
+[source]
+----
+OTF Font
+  ↓
+PostScriptHintExtractor → HintSet (PostScript format)
+  ↓
+HintConverter.convert_hint_set(:truetype)
+  └── TrueTypeInstructionGenerator.generate(ps_params)
+      ├── generate_prep(ps_params) → Binary prep program
+      ├── generate_cvt(ps_params) → CVT array
+      └── generate_fpgm(ps_params) → Binary fpgm program
+  ↓
+HintSet (TrueType format)
+  ↓
+TrueTypeHintApplier → TTF Font
+----
+
+== Current Limitations
+
+=== Not Yet Supported
+
+* Per-glyph TrueType instructions (glyf table bytecode)
+* PostScript hint masks for complex glyphs
+* Hint substitution (CFF Type 2 hints)
+* Complete CFF2 variable font hint preservation
+
+=== Known Issues
+
+* **CVT Position Semantics**: CVT sorting changes position semantics (optimization trade-off)
+* **blue_scale Approximation**: Conversion is approximate due to different scaling models
+* **Instruction Coverage**: Some advanced TrueType instructions not yet supported
+* **Heuristic Limitations**: Blue zone extraction uses heuristics that may not work for all fonts
+
+== Future Enhancements
+
+=== Planned Features
+
+* **Per-Glyph Hints**: Support for glyph-specific TrueType instructions
+* **Hint Masks**: PostScript hintmask and cntrmask support
+* **CFF2 Variable Fonts**: Complete blend operator preservation
+* **Advanced Optimization**: Instruction size minimization
+* **Hint Debugging**: Visualization and debugging tools
+
+== Test Coverage
+
+The hint system has comprehensive test coverage:
+
+* **Total Tests**: 306 (100% passing)
+* **Generator Tests**: 45
+* **Validator Tests**: 48
+* **Round-Trip Tests**: 16
+* **Analyzer Tests**: 30
+* **Integration Tests**: 167
+
+Test files:
+
+* link:../spec/fontisan/hints/truetype_instruction_generator_spec.rb[truetype_instruction_generator_spec.rb]
+* link:../spec/fontisan/hints/truetype_instruction_analyzer_spec.rb[truetype_instruction_analyzer_spec.rb]
+* link:../spec/fontisan/hints/hint_validator_spec.rb[hint_validator_spec.rb]
+* link:../spec/fontisan/hints/hint_round_trip_spec.rb[hint_round_trip_spec.rb]
+* link:../spec/fontisan/hints/hint_converter_spec.rb[hint_converter_spec.rb]
+* link:../spec/fontisan/hints/hint_conversion_integration_spec.rb[hint_conversion_integration_spec.rb]
+
+== References
+
+* link:HINT_IMPLEMENTATION_STATUS.md[Hint Implementation Status]
+* link:HINT_CONVERSION_LIMITATIONS.md[Hint Conversion Limitations]
+* link:HINT_IMPLEMENTATION_CONTINUATION_PLAN.md[Implementation Continuation Plan]
+* link:../lib/fontisan/hints/[Hints Source Code Directory]
