@@ -79,7 +79,8 @@ module Fontisan
         # Apply each active tuple's deltas
         adjusted_points = base_points.dup
         matches.each do |match|
-          apply_tuple_deltas(adjusted_points, match, tuple_data, base_points.length)
+          apply_tuple_deltas(adjusted_points, match, tuple_data,
+                             base_points.length)
         end
 
         adjusted_points

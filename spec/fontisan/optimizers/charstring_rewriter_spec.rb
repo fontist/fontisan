@@ -27,7 +27,8 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
 
   let(:patterns) { [pattern1, pattern2] }
   let(:builder) do
-    builder = Fontisan::Optimizers::SubroutineBuilder.new(patterns, type: :local)
+    builder = Fontisan::Optimizers::SubroutineBuilder.new(patterns,
+                                                          type: :local)
     builder.build
     builder
   end
@@ -287,7 +288,9 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
 
         # Should keep both since they don't overlap
         expect(result.length).to eq(2)
-        expect(result.map { |r| r[1] }).to contain_exactly(high_savings_pattern, medium_savings_pattern)
+        expect(result.map do |r|
+          r[1]
+        end).to contain_exactly(high_savings_pattern, medium_savings_pattern)
       end
 
       it "handles multiple overlaps by keeping highest savings" do

@@ -33,7 +33,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
 
       expect { reader.read_header }.to raise_error(
         Fontisan::CorruptedTableError,
-        /Invalid CFF2 version/
+        /Invalid CFF2 version/,
       )
     end
   end
@@ -91,7 +91,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
       it "parses item variation data correctly" do
         data = build_cff2_with_variable_store(
           num_regions: 2,
-          num_items: 3
+          num_items: 3,
         )
         reader = described_class.new(data)
         vstore = reader.read_variable_store
@@ -150,7 +150,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     it "reads delta sets for all items" do
       data = build_cff2_with_variable_store(
         num_regions: 2,
-        num_items: 4
+        num_items: 4,
       )
       reader = described_class.new(data)
       vstore = reader.read_variable_store
@@ -226,13 +226,13 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
 
   def build_minimal_cff2_data
     # Minimal Top DICT (just endchar for .notdef)
-    top_dict = [14].pack("C")  # endchar operator
+    top_dict = [14].pack("C") # endchar operator
 
     header = [
       2,    # major version
       0,    # minor version
       5,    # header size
-      0, top_dict.bytesize  # top dict length (2 bytes, big-endian)
+      0, top_dict.bytesize # top dict length (2 bytes, big-endian)
     ].pack("C5")
 
     header + top_dict
@@ -241,8 +241,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
   def build_cff2_with_top_dict
     # Top DICT with CharStrings offset using small integer
     top_dict = [
-      100 + 139,  # operand (100)
-      17          # CharStrings operator
+      100 + 139, # operand (100)
+      17, # CharStrings operator
     ].pack("C*")
 
     header = [2, 0, 5, 0, top_dict.bytesize].pack("C5")
@@ -288,13 +288,13 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     end
 
     # Item Variation Data
-    item_var_data = [1].pack("n")  # data count
+    item_var_data = [1].pack("n") # data count
 
     # Single Item Variation Data entry
     item_var_data << [
       num_items,      # item count
       num_regions,    # short delta count
-      num_regions     # region index count
+      num_regions, # region index count
     ].pack("n*")
 
     # Region indices
@@ -305,7 +305,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     # Delta sets (16-bit deltas)
     num_items.times do
       num_regions.times do
-        item_var_data << [10].pack("s>")  # delta value: 10
+        item_var_data << [10].pack("s>") # delta value: 10
       end
     end
 
@@ -328,14 +328,15 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
 
     # Region List (1 region, 1 axis)
     region_list = [1, 1].pack("n*")
-    region_list << [(-0.5 * 16384).to_i, (1.0 * 16384).to_i, (1.0 * 16384).to_i].pack("s>*")
+    region_list << [(-0.5 * 16384).to_i, (1.0 * 16384).to_i,
+                    (1.0 * 16384).to_i].pack("s>*")
 
     # Item Variation Data with mixed deltas
-    item_var_data = [1].pack("n")  # data count
+    item_var_data = [1].pack("n") # data count
     item_var_data << [
       2,    # item count
       1,    # short delta count (1 short, rest are long)
-      2     # total region indices
+      2, # total region indices
     ].pack("n*")
 
     # Region indices
@@ -360,7 +361,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     # Format: size offset 18
     top_dict = [
       private_size + 139,
-      29
+      29,
     ].pack("C*") + [private_offset].pack("N") + [18].pack("C")
 
     header = [2, 0, 5, 0, top_dict.bytesize].pack("C5")
@@ -369,7 +370,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     padding = "\x00" * (private_offset - header.bytesize - top_dict.bytesize)
 
     # Private DICT (minimal)
-    private_dict = [14].pack("C")  # endchar
+    private_dict = [14].pack("C") # endchar
 
     header + top_dict + padding + private_dict
   end
@@ -380,7 +381,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
 
     top_dict = [
       private_size + 139,
-      29
+      29,
     ].pack("C*") + [private_offset].pack("N") + [18].pack("C")
 
     header = [2, 0, 5, 0, top_dict.bytesize].pack("C5")
@@ -418,7 +419,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableReader do
     charstrings_index << [1, 2, 3].pack("C*")
 
     # Data: two minimal CharStrings
-    charstrings_index << [14, 14].pack("C*")  # endchar, endchar
+    charstrings_index << [14, 14].pack("C*") # endchar, endchar
 
     header + top_dict + padding + charstrings_index
   end

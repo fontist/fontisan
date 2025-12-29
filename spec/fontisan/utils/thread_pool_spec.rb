@@ -22,7 +22,7 @@ RSpec.describe Fontisan::Utils::ThreadPool do
 
     it "executes multiple jobs in parallel" do
       pool = described_class.new(4)
-      futures = 10.times.map do |i|
+      futures = Array.new(10) do |i|
         pool.schedule { i * 2 }
       end
 
@@ -46,7 +46,7 @@ RSpec.describe Fontisan::Utils::ThreadPool do
       results = []
       mutex = Mutex.new
 
-      futures = 5.times.map do |i|
+      Array.new(5) do |i|
         pool.schedule do
           sleep 0.01
           mutex.synchronize { results << i }

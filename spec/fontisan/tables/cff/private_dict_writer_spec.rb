@@ -26,7 +26,8 @@ RSpec.describe Fontisan::Tables::Cff::PrivateDictWriter do
 
       it "updates blue_values with 14 values (max)" do
         writer = described_class.new
-        writer.update_hints(blue_values: [-15, 0, 721, 736, 470, 485, 520, 535, 560, 575, 610, 625, 640, 655])
+        writer.update_hints(blue_values: [-15, 0, 721, 736, 470, 485, 520, 535,
+                                          560, 575, 610, 625, 640, 655])
         expect(writer.serialize).not_to be_empty
       end
     end
@@ -196,7 +197,7 @@ RSpec.describe Fontisan::Tables::Cff::PrivateDictWriter do
           std_hw: 70,
           std_vw: 85,
           stem_snap_h: [70, 75],
-          blue_scale: 0.039625
+          blue_scale: 0.039625,
         )
         expect(writer.size).to be > 20
       end

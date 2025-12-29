@@ -5,7 +5,8 @@
 # When font versions change, only update this file - tests remain unchanged.
 
 module FixtureFonts
-  FIXTURES_BASE = File.expand_path(File.join(__dir__, "..", "fixtures", "fonts"))
+  FIXTURES_BASE = File.expand_path(File.join(__dir__, "..", "fixtures",
+                                             "fonts"))
 
   # Font fixture configuration
   # Each font has:

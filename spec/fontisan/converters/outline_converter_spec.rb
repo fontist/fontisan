@@ -20,11 +20,9 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       case tag
       when "glyf", "loca", "head", "hhea", "maxp" then double(tag)
       when "CFF ", "CFF2" then nil
-      else nil
       end
     end
-    allow(ttf_font).to receive(:tables).and_return({})
-    allow(ttf_font).to receive(:table_data).and_return({})
+    allow(ttf_font).to receive_messages(tables: {}, table_data: {})
 
     # Setup OTF font mock with dynamic has_table? response
     allow(otf_font).to receive(:has_table?) do |tag|
@@ -38,11 +36,9 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       case tag
       when "CFF ", "head", "hhea", "maxp" then double(tag)
       when "glyf", "CFF2" then nil
-      else nil
       end
     end
-    allow(otf_font).to receive(:tables).and_return({})
-    allow(otf_font).to receive(:table_data).and_return({})
+    allow(otf_font).to receive_messages(tables: {}, table_data: {})
   end
 
   describe "#convert" do
@@ -216,7 +212,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         converter = described_class.new
 
         # Convert with hint preservation
-        result = converter.convert(font, target_format: :otf, preserve_hints: true)
+        result = converter.convert(font, target_format: :otf,
+                                         preserve_hints: true)
 
         # Should have CFF table
         expect(result["CFF "]).not_to be_nil
@@ -234,7 +231,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         converter = described_class.new
 
         # Convert without hint preservation (default)
-        result = converter.convert(font, target_format: :otf, preserve_hints: false)
+        result = converter.convert(font, target_format: :otf,
+                                         preserve_hints: false)
 
         # Should have CFF table
         expect(result["CFF "]).not_to be_nil
@@ -251,7 +249,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         converter = described_class.new
 
         # Convert with hint preservation
-        result = converter.convert(font, target_format: :ttf, preserve_hints: true)
+        result = converter.convert(font, target_format: :ttf,
+                                         preserve_hints: true)
 
         # Should have TrueType tables
         expect(result["glyf"]).not_to be_nil
@@ -270,7 +269,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         converter = described_class.new
 
         # Convert without hint preservation
-        result = converter.convert(font, target_format: :ttf, preserve_hints: false)
+        result = converter.convert(font, target_format: :ttf,
+                                         preserve_hints: false)
 
         # Should have TrueType tables
         expect(result["glyf"]).not_to be_nil
@@ -306,7 +306,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
         # Should complete conversion despite hint extraction returning empty set
         expect do
-          result = converter.convert(font, target_format: :otf, preserve_hints: true)
+          result = converter.convert(font, target_format: :otf,
+                                           preserve_hints: true)
           expect(result["CFF "]).not_to be_nil
         end.not_to raise_error
       end

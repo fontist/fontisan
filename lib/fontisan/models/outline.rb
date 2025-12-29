@@ -121,7 +121,10 @@ module Fontisan
 
         # Get path from CharString
         path = charstring.path
-        raise ArgumentError, "CharString has no path data" if path.nil? || path.empty?
+        if path.nil? || path.empty?
+          raise ArgumentError,
+                "CharString has no path data"
+        end
 
         commands = convert_cff_path_to_commands(path)
 

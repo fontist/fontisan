@@ -131,7 +131,7 @@ module Fontisan
       # @param font [TrueTypeFont] Source font
       # @param options [Hash] Conversion options (currently unused)
       # @return [Hash<String, String>] Target tables
-      def convert_ttf_to_otf(font, options = {})
+      def convert_ttf_to_otf(font, _options = {})
         # Extract all glyphs from glyf table
         outlines = extract_ttf_outlines(font)
 
@@ -184,7 +184,8 @@ module Fontisan
         hints_per_glyph = @preserve_hints ? extract_cff_hints(font) : {}
 
         # Build glyf and loca tables
-        glyf_data, loca_data, loca_format = build_glyf_loca_tables(outlines, hints_per_glyph)
+        glyf_data, loca_data, loca_format = build_glyf_loca_tables(outlines,
+                                                                   hints_per_glyph)
 
         # Copy all tables except CFF
         tables = copy_tables(font, ["CFF ", "CFF2"])
@@ -357,7 +358,7 @@ module Fontisan
       # @param outlines [Array<Outline>] Glyph outlines
       # @param font [TrueTypeFont] Source font (for metadata)
       # @return [String] CFF table binary data
-      def build_cff_table(outlines, font, hints_per_glyph)
+      def build_cff_table(outlines, font, _hints_per_glyph)
         # Build CharStrings INDEX from outlines
         begin
           charstrings = outlines.map do |outline|
@@ -478,7 +479,8 @@ module Fontisan
           top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
           top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
         rescue StandardError => e
-          raise Fontisan::Error, "Failed to calculate CFF table offsets: #{e.message}"
+          raise Fontisan::Error,
+                "Failed to calculate CFF table offsets: #{e.message}"
         end
 
         # Build CFF Header
@@ -512,7 +514,7 @@ module Fontisan
       #
       # @param outlines [Array<Outline>] Glyph outlines
       # @return [Array<String, String, Integer>] [glyf_data, loca_data, loca_format]
-      def build_glyf_loca_tables(outlines, hints_per_glyph)
+      def build_glyf_loca_tables(outlines, _hints_per_glyph)
         glyf_data = "".b
         offsets = []
 
@@ -687,7 +689,7 @@ module Fontisan
         # Analyze patterns
         analyzer = Optimizers::PatternAnalyzer.new(
           min_length: 10,
-          stack_aware: true
+          stack_aware: true,
         )
         patterns = analyzer.analyze(charstrings_hash)
 
@@ -695,7 +697,8 @@ module Fontisan
         return [charstrings, []] if patterns.empty?
 
         # Optimize selection
-        optimizer = Optimizers::SubroutineOptimizer.new(patterns, max_subrs: 65_535)
+        optimizer = Optimizers::SubroutineOptimizer.new(patterns,
+                                                        max_subrs: 65_535)
         selected_patterns = optimizer.optimize_selection
 
         # Optimize ordering
@@ -705,7 +708,8 @@ module Fontisan
         return [charstrings, []] if selected_patterns.empty?
 
         # Build subroutines
-        builder = Optimizers::SubroutineBuilder.new(selected_patterns, type: :local)
+        builder = Optimizers::SubroutineBuilder.new(selected_patterns,
+                                                    type: :local)
         local_subrs = builder.build
 
         # Build subroutine map
@@ -718,7 +722,9 @@ module Fontisan
         rewriter = Optimizers::CharstringRewriter.new(subroutine_map, builder)
         optimized_charstrings = charstrings.map.with_index do |charstring, glyph_id|
           # Find patterns for this glyph
-          glyph_patterns = selected_patterns.select { |p| p.glyphs.include?(glyph_id) }
+          glyph_patterns = selected_patterns.select do |p|
+            p.glyphs.include?(glyph_id)
+          end
 
           if glyph_patterns.empty?
             charstring
@@ -743,13 +749,16 @@ module Fontisan
       def generate_static_instance(font, source_format, target_format)
         # Generate instance at specified coordinates
         fvar = font.table("fvar")
-        axes = fvar ? fvar.axes : []
+        fvar ? fvar.axes : []
 
-        generator = Variation::InstanceGenerator.new(font, @instance_coordinates)
+        generator = Variation::InstanceGenerator.new(font,
+                                                     @instance_coordinates)
         instance_tables = generator.generate
 
         # If target format differs from source, convert outlines
-        if source_format != target_format
+        if source_format == target_format
+          instance_tables
+        else
           # Create temporary font with instance tables
           temp_font = font.class.new
           temp_font.instance_variable_set(:@table_data, instance_tables)
@@ -763,8 +772,6 @@ module Fontisan
           else
             instance_tables
           end
-        else
-          instance_tables
         end
       end
 
@@ -801,8 +808,6 @@ module Fontisan
                  when %i[otf ttf], %i[cff2 ttf]
                    # blend → gvar
                    converter.blend_to_gvar(glyph_id)
-                 else
-                   nil
                  end
 
           variation_data[glyph_id] = data if data

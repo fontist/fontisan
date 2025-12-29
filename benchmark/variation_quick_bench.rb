@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'benchmark'
-require 'fontisan'
+require "benchmark"
+require "fontisan"
 
 # Load variable font
-FONT_PATH = 'spec/fixtures/SourceSans3VF-Roman.otf'
+FONT_PATH = "spec/fixtures/SourceSans3VF-Roman.otf"
 
 unless File.exist?(FONT_PATH)
   puts "Error: Test font not found at #{FONT_PATH}"
@@ -18,7 +18,7 @@ puts "Font: #{FONT_PATH}"
 puts
 
 # Test coordinates
-coords = 4.times.map { |i| { "wght" => 300 + i * 200 } }
+coords = Array.new(4) { |i| { "wght" => 300 + i * 200 } }
 puts "Generating #{coords.size} instances"
 puts
 

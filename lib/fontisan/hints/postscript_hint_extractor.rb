@@ -91,12 +91,12 @@ module Fontisan
           if operator?(byte)
             # Process operator
             operator = if byte == 12
-                        # Two-byte operator
-                        i += 1
-                        (12 << 8) | bytes[i]
-                      else
-                        byte
-                      end
+                         # Two-byte operator
+                         i += 1
+                         (12 << 8) | bytes[i]
+                       else
+                         byte
+                       end
 
             hint = process_operator(operator, stack)
             hints << hint if hint
@@ -165,7 +165,7 @@ module Fontisan
           # 5-byte signed integer
           if index + 4 < bytes.length
             num = (bytes[index + 1] << 24) | (bytes[index + 2] << 16) |
-                  (bytes[index + 3] << 8) | bytes[index + 4]
+              (bytes[index + 3] << 8) | bytes[index + 4]
             num = num - 4294967296 if num > 2147483647
             [num, 5]
           else
@@ -204,7 +204,7 @@ module Fontisan
           Models::Hint.new(
             type: :hint_replacement,
             data: { mask: stack.dup },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
         when CNTRMASK
@@ -212,11 +212,9 @@ module Fontisan
           Models::Hint.new(
             type: :counter,
             data: { zones: stack.dup },
-            source_format: :postscript
+            source_format: :postscript,
           )
 
-        else
-          nil
         end
       end
 
@@ -238,9 +236,9 @@ module Fontisan
           data: {
             position: position,
             width: width,
-            orientation: orientation
+            orientation: orientation,
           },
-          source_format: :postscript
+          source_format: :postscript,
         )
       end
 
@@ -258,7 +256,7 @@ module Fontisan
           pos_idx = i * 2
           stems << {
             position: stack[pos_idx],
-            width: stack[pos_idx + 1]
+            width: stack[pos_idx + 1],
           }
         end
 
@@ -266,9 +264,9 @@ module Fontisan
           type: :stem3,
           data: {
             stems: stems,
-            orientation: orientation
+            orientation: orientation,
           },
-          source_format: :postscript
+          source_format: :postscript,
         )
       end
 
@@ -293,19 +291,58 @@ module Fontisan
 
         # Extract hint-related parameters from Private DICT
         # These are the key hinting parameters in CFF
-        hints[:blue_values] = private_dict.blue_values if private_dict.respond_to?(:blue_values)
-        hints[:other_blues] = private_dict.other_blues if private_dict.respond_to?(:other_blues)
-        hints[:family_blues] = private_dict.family_blues if private_dict.respond_to?(:family_blues)
-        hints[:family_other_blues] = private_dict.family_other_blues if private_dict.respond_to?(:family_other_blues)
-        hints[:blue_scale] = private_dict.blue_scale if private_dict.respond_to?(:blue_scale)
-        hints[:blue_shift] = private_dict.blue_shift if private_dict.respond_to?(:blue_shift)
-        hints[:blue_fuzz] = private_dict.blue_fuzz if private_dict.respond_to?(:blue_fuzz)
-        hints[:std_hw] = private_dict.std_hw if private_dict.respond_to?(:std_hw)
-        hints[:std_vw] = private_dict.std_vw if private_dict.respond_to?(:std_vw)
-        hints[:stem_snap_h] = private_dict.stem_snap_h if private_dict.respond_to?(:stem_snap_h)
-        hints[:stem_snap_v] = private_dict.stem_snap_v if private_dict.respond_to?(:stem_snap_v)
-        hints[:force_bold] = private_dict.force_bold if private_dict.respond_to?(:force_bold)
-        hints[:language_group] = private_dict.language_group if private_dict.respond_to?(:language_group)
+        if private_dict.respond_to?(:blue_values)
+          hints[:blue_values] =
+            private_dict.blue_values
+        end
+        if private_dict.respond_to?(:other_blues)
+          hints[:other_blues] =
+            private_dict.other_blues
+        end
+        if private_dict.respond_to?(:family_blues)
+          hints[:family_blues] =
+            private_dict.family_blues
+        end
+        if private_dict.respond_to?(:family_other_blues)
+          hints[:family_other_blues] =
+            private_dict.family_other_blues
+        end
+        if private_dict.respond_to?(:blue_scale)
+          hints[:blue_scale] =
+            private_dict.blue_scale
+        end
+        if private_dict.respond_to?(:blue_shift)
+          hints[:blue_shift] =
+            private_dict.blue_shift
+        end
+        if private_dict.respond_to?(:blue_fuzz)
+          hints[:blue_fuzz] =
+            private_dict.blue_fuzz
+        end
+        if private_dict.respond_to?(:std_hw)
+          hints[:std_hw] =
+            private_dict.std_hw
+        end
+        if private_dict.respond_to?(:std_vw)
+          hints[:std_vw] =
+            private_dict.std_vw
+        end
+        if private_dict.respond_to?(:stem_snap_h)
+          hints[:stem_snap_h] =
+            private_dict.stem_snap_h
+        end
+        if private_dict.respond_to?(:stem_snap_v)
+          hints[:stem_snap_v] =
+            private_dict.stem_snap_v
+        end
+        if private_dict.respond_to?(:force_bold)
+          hints[:force_bold] =
+            private_dict.force_bold
+        end
+        if private_dict.respond_to?(:language_group)
+          hints[:language_group] =
+            private_dict.language_group
+        end
 
         hints.compact
       rescue StandardError => e
@@ -331,20 +368,18 @@ module Fontisan
         # Iterate through all glyphs
         glyph_count = cff_table.glyph_count(0)
         (0...glyph_count).each do |glyph_id|
-          begin
-            # Get CharString for this glyph
-            charstring = cff_table.charstring_for_glyph(glyph_id, 0)
-            next unless charstring
+          # Get CharString for this glyph
+          charstring = cff_table.charstring_for_glyph(glyph_id, 0)
+          next unless charstring
 
-            # Extract hints from CharString
-            hints = extract(charstring)
-            next if hints.empty?
+          # Extract hints from CharString
+          hints = extract(charstring)
+          next if hints.empty?
 
-            # Store glyph hints
-            hint_set.add_glyph_hints(glyph_id, hints)
-          rescue StandardError => e
-            warn "Failed to extract hints for glyph #{glyph_id}: #{e.message}"
-          end
+          # Store glyph hints
+          hint_set.add_glyph_hints(glyph_id, hints)
+        rescue StandardError => e
+          warn "Failed to extract hints for glyph #{glyph_id}: #{e.message}"
         end
       rescue StandardError => e
         warn "Failed to extract CharString hints: #{e.message}"

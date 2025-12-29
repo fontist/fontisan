@@ -239,8 +239,11 @@ module Fontisan
             # 3-byte signed integer (16-bit)
             b1 = io.getbyte
             b2 = io.getbyte
-            raise CorruptedTableError, "Unexpected end of CharString reading shortint" if
-              b1.nil? || b2.nil?
+            if b1.nil? || b2.nil?
+              raise CorruptedTableError,
+                    "Unexpected end of CharString reading shortint"
+            end
+
             value = (b1 << 8) | b2
             value > 0x7FFF ? value - 0x10000 : value
           when 32..246
@@ -249,20 +252,29 @@ module Fontisan
           when 247..250
             # Positive 2-byte integer: +108 to +1131
             b2 = io.getbyte
-            raise CorruptedTableError, "Unexpected end of CharString reading positive integer" if
-              b2.nil?
+            if b2.nil?
+              raise CorruptedTableError,
+                    "Unexpected end of CharString reading positive integer"
+            end
+
             (byte - 247) * 256 + b2 + 108
           when 251..254
             # Negative 2-byte integer: -108 to -1131
             b2 = io.getbyte
-            raise CorruptedTableError, "Unexpected end of CharString reading negative integer" if
-              b2.nil?
+            if b2.nil?
+              raise CorruptedTableError,
+                    "Unexpected end of CharString reading negative integer"
+            end
+
             -(byte - 251) * 256 - b2 - 108
           when 255
             # 5-byte signed integer (32-bit) as fixed-point 16.16
             bytes = io.read(4)
-            raise CorruptedTableError, "Unexpected end of CharString reading fixed-point" if
-              bytes.nil? || bytes.length < 4
+            if bytes.nil? || bytes.length < 4
+              raise CorruptedTableError,
+                    "Unexpected end of CharString reading fixed-point"
+            end
+
             value = bytes.unpack1("l>") # Signed 32-bit big-endian
             value / 65536.0 # Convert to float
           else
@@ -368,7 +380,8 @@ module Fontisan
           # rmoveto takes 2 operands, so if stack has 3 and width not parsed,
           # first is width
           parse_width_for_operator(width_parsed, 2)
-          return if @stack.size < 2  # Need at least 2 values
+          return if @stack.size < 2 # Need at least 2 values
+
           dy = @stack.pop
           dx = @stack.pop
           @x += dx
@@ -383,7 +396,8 @@ module Fontisan
           # hmoveto takes 1 operand, so if stack has 2 and width not parsed,
           # first is width
           parse_width_for_operator(width_parsed, 1)
-          return if @stack.empty?  # Need at least 1 value
+          return if @stack.empty? # Need at least 1 value
+
           dx = @stack.pop || 0
           @x += dx
           @path << { type: :move_to, x: @x, y: @y }
@@ -396,7 +410,8 @@ module Fontisan
           # vmoveto takes 1 operand, so if stack has 2 and width not parsed,
           # first is width
           parse_width_for_operator(width_parsed, 1)
-          return if @stack.empty?  # Need at least 1 value
+          return if @stack.empty? # Need at least 1 value
+
           dy = @stack.pop || 0
           @y += dy
           @path << { type: :move_to, x: @x, y: @y }
@@ -688,7 +703,7 @@ module Fontisan
             dy3 = @stack.shift
 
             x1 = @x + dx1
-            y1 = @y +dy1
+            y1 = @y + dy1
             x2 = x1 + dx2
             y2 = y1 + dy2
             @x = x2 + dx3
@@ -785,6 +800,7 @@ module Fontisan
         # Call local subroutine
         def callsubr
           return if @stack.empty?
+
           subr_num = @stack.pop
           return unless subr_num # Guard against empty stack
 
@@ -798,6 +814,7 @@ module Fontisan
         # Call global subroutine
         def callgsubr
           return if @stack.empty?
+
           subr_num = @stack.pop
           return unless subr_num # Guard against empty stack
 
@@ -838,6 +855,7 @@ module Fontisan
         # Arithmetic operators
         def arithmetic_add
           return if @stack.size < 2
+
           b = @stack.pop
           a = @stack.pop
           @stack << (a + b)
@@ -845,6 +863,7 @@ module Fontisan
 
         def arithmetic_sub
           return if @stack.size < 2
+
           b = @stack.pop
           a = @stack.pop
           @stack << (a - b)
@@ -852,6 +871,7 @@ module Fontisan
 
         def arithmetic_mul
           return if @stack.size < 2
+
           b = @stack.pop
           a = @stack.pop
           @stack << (a * b)
@@ -859,26 +879,32 @@ module Fontisan
 
         def arithmetic_div
           return if @stack.size < 2
+
           b = @stack.pop
           a = @stack.pop
           return if b.zero?
+
           @stack << (a / b.to_f)
         end
 
         def arithmetic_neg
           return if @stack.empty?
+
           @stack << -@stack.pop
         end
 
         def arithmetic_abs
           return if @stack.empty?
+
           @stack << @stack.pop.abs
         end
 
         def arithmetic_sqrt
           return if @stack.empty?
+
           val = @stack.pop
           return if val.negative?
+
           @stack << Math.sqrt(val)
         end
 

@@ -46,7 +46,11 @@ module Fontisan
 
       # Resolve mode and lazy parameters with environment variables
       resolved_mode = mode || env_mode || LoadingModes::FULL
-      resolved_lazy = lazy.nil? ? (env_lazy.nil? ? false : env_lazy) : lazy
+      resolved_lazy = if lazy.nil?
+                        env_lazy.nil? ? false : env_lazy
+                      else
+                        lazy
+                      end
 
       # Validate mode
       LoadingModes.validate_mode!(resolved_mode)
@@ -57,7 +61,8 @@ module Fontisan
 
         case signature
         when Constants::TTC_TAG
-          load_from_collection(io, path, font_index, mode: resolved_mode, lazy: resolved_lazy)
+          load_from_collection(io, path, font_index, mode: resolved_mode,
+                                                     lazy: resolved_lazy)
         when pack_uint32(Constants::SFNT_VERSION_TRUETYPE)
           TrueTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "OTTO"
@@ -169,7 +174,8 @@ module Fontisan
     # @param lazy [Boolean] If true, load tables on demand
     # @return [TrueTypeFont, OpenTypeFont] The loaded font object
     # @raise [InvalidFontError] if collection type cannot be determined
-    def self.load_from_collection(io, path, font_index, mode: LoadingModes::FULL, lazy: true)
+    def self.load_from_collection(io, path, font_index,
+mode: LoadingModes::FULL, lazy: true)
       # Read collection header to get font offsets
       io.seek(12) # Skip tag (4) + major_version (2) + minor_version (2) + num_fonts marker (4)
       num_fonts = io.read(4).unpack1("N")
@@ -211,6 +217,7 @@ module Fontisan
       [value].pack("N")
     end
 
-    private_class_method :load_from_collection, :pack_uint32, :env_mode, :env_lazy
+    private_class_method :load_from_collection, :pack_uint32, :env_mode,
+                         :env_lazy
   end
 end

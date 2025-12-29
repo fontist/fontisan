@@ -128,7 +128,8 @@ module Fontisan
       # @raise [ArgumentError] if compression level is invalid
       def validate_compression_level!
         unless @compression_level.between?(0, 9)
-          raise ArgumentError, "Compression level must be between 0 and 9, got #{@compression_level}"
+          raise ArgumentError,
+                "Compression level must be between 0 and 9, got #{@compression_level}"
         end
       end
 
@@ -235,7 +236,9 @@ module Fontisan
         metadata_size = compressed_metadata ? compressed_metadata[:compressed_length] : 0
 
         # Calculate total compressed data size
-        total_compressed_size = compressed_tables.values.sum { |table| table[:compressed_length] }
+        total_compressed_size = compressed_tables.values.sum do |table|
+          table[:compressed_length]
+        end
 
         # Calculate private data offset (after table data + metadata)
         private_offset = data_offset + total_compressed_size + metadata_size
@@ -245,7 +248,9 @@ module Fontisan
         total_size = private_offset + private_size
 
         # Calculate total SFNT size (uncompressed)
-        total_sfnt_size = compressed_tables.values.sum { |table| table[:original_length] } +
+        total_sfnt_size = compressed_tables.values.sum do |table|
+          table[:original_length]
+        end +
           header_size + table_dir_size
 
         # Write WOFF header

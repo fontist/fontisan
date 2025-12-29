@@ -121,7 +121,7 @@ RSpec.describe Fontisan::Tables::Cff2::BlendOperator do
         "VariationAxisRecord",
         min_value: 400.0,
         default_value: 600.0,
-        max_value: 900.0
+        max_value: 900.0,
       )
     end
 

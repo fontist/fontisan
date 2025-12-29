@@ -88,7 +88,7 @@ module Fontisan
           @font_path,
           font_index: @options[:font_index] || 0,
           mode: @options[:mode] || LoadingModes::FULL,
-          lazy: @options.key?(:lazy) ? @options[:lazy] : false
+          lazy: @options.key?(:lazy) ? @options[:lazy] : false,
         )
       rescue Errno::ENOENT
         # Re-raise file not found as-is

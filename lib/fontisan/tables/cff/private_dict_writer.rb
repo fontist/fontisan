@@ -99,7 +99,11 @@ module Fontisan
           # Check array limits
           if HINT_LIMITS[key]
             raise ArgumentError, "#{key} invalid" unless value.is_a?(Array)
-            raise ArgumentError, "#{key} too long" if value.length > HINT_LIMITS[key][:max]
+
+            if value.length > HINT_LIMITS[key][:max]
+              raise ArgumentError,
+                    "#{key} too long"
+            end
             if HINT_LIMITS[key][:pairs] && value.length.odd?
               raise ArgumentError, "#{key} must be pairs"
             end
@@ -114,9 +118,11 @@ module Fontisan
           when :blue_shift, :blue_fuzz
             raise ArgumentError, "#{key} invalid" unless value.is_a?(Numeric)
           when :force_bold
-            raise ArgumentError, "#{key} must be 0 or 1" unless [0, 1].include?(value)
+            raise ArgumentError, "#{key} must be 0 or 1" unless [0,
+                                                                 1].include?(value)
           when :language_group
-            raise ArgumentError, "#{key} must be 0 or 1" unless [0, 1].include?(value)
+            raise ArgumentError, "#{key} must be 0 or 1" unless [0,
+                                                                 1].include?(value)
           end
         end
       end

@@ -9,7 +9,9 @@ RSpec.describe Fontisan::Variation::Validator do
     font = double("Font")
 
     # Setup default responses
-    allow(font).to receive(:has_table?) { |tag| options[:tables]&.include?(tag) || false }
+    allow(font).to receive(:has_table?) { |tag|
+      options[:tables]&.include?(tag) || false
+    }
     allow(font).to receive(:table) { |tag| options[:table_data]&.[](tag) }
 
     font
@@ -18,27 +20,24 @@ RSpec.describe Fontisan::Variation::Validator do
   # Helper to create mock fvar table
   def create_mock_fvar(axis_count: 2, instance_count: 0)
     fvar = double("Fvar")
-    allow(fvar).to receive(:axis_count).and_return(axis_count)
 
     axes = Array.new(axis_count) do |i|
       axis = double("Axis")
-      allow(axis).to receive(:axis_tag).and_return("ax#{i}")
-      allow(axis).to receive(:min_value).and_return(100.0)
-      allow(axis).to receive(:default_value).and_return(400.0)
-      allow(axis).to receive(:max_value).and_return(900.0)
+      allow(axis).to receive_messages(axis_tag: "ax#{i}", min_value: 100.0,
+                                      default_value: 400.0, max_value: 900.0)
       axis
     end
-    allow(fvar).to receive(:axes).and_return(axes)
 
     instances = Array.new(instance_count) do |i|
       {
         name_id: i + 256,
         flags: 0,
         coordinates: Array.new(axis_count) { 400.0 + (i * 100.0) },
-        postscript_name_id: nil
+        postscript_name_id: nil,
       }
     end
-    allow(fvar).to receive(:instances).and_return(instances)
+    allow(fvar).to receive_messages(axis_count: axis_count, axes: axes,
+                                    instances: instances)
 
     fvar
   end
@@ -46,10 +45,11 @@ RSpec.describe Fontisan::Variation::Validator do
   # Helper to create mock gvar table
   def create_mock_gvar(axis_count: 2, glyph_count: 100)
     gvar = double("Gvar")
-    allow(gvar).to receive(:axis_count).and_return(axis_count)
-    allow(gvar).to receive(:glyph_count).and_return(glyph_count)
-    allow(gvar).to receive(:shared_tuples).and_return([])
-    allow(gvar).to receive(:glyph_variation_data) { |gid| gid < glyph_count ? "data" : nil }
+    allow(gvar).to receive_messages(axis_count: axis_count,
+                                    glyph_count: glyph_count, shared_tuples: [])
+    allow(gvar).to receive(:glyph_variation_data) { |gid|
+      gid < glyph_count ? "data" : nil
+    }
     gvar
   end
 
@@ -82,7 +82,7 @@ RSpec.describe Fontisan::Variation::Validator do
         fvar = create_mock_fvar(axis_count: 0)
         font = create_mock_font(
           tables: ["fvar"],
-          table_data: { "fvar" => fvar }
+          table_data: { "fvar" => fvar },
         )
         validator = described_class.new(font)
 
@@ -101,7 +101,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar", "maxp"],
-          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
 
@@ -118,7 +118,7 @@ RSpec.describe Fontisan::Variation::Validator do
       fvar = create_mock_fvar
       font = create_mock_font(
         tables: ["fvar"],
-        table_data: { "fvar" => fvar }
+        table_data: { "fvar" => fvar },
       )
       validator = described_class.new(font)
 
@@ -141,7 +141,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar"],
-          table_data: { "fvar" => fvar, "gvar" => gvar }
+          table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
 
@@ -157,7 +157,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar"],
-          table_data: { "fvar" => fvar, "gvar" => gvar }
+          table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
 
@@ -174,7 +174,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "CFF2"],
-          table_data: { "fvar" => fvar, "CFF2" => cff2 }
+          table_data: { "fvar" => fvar, "CFF2" => cff2 },
         )
         validator = described_class.new(font)
 
@@ -191,7 +191,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar"],
-          table_data: { "fvar" => fvar }
+          table_data: { "fvar" => fvar },
         )
         validator = described_class.new(font)
 
@@ -213,7 +213,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
       font = create_mock_font(
         tables: ["fvar", "HVAR"],
-        table_data: { "fvar" => fvar, "HVAR" => hvar }
+        table_data: { "fvar" => fvar, "HVAR" => hvar },
       )
       validator = described_class.new(font)
 
@@ -230,7 +230,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
       font = create_mock_font(
         tables: ["fvar", "HVAR"],
-        table_data: { "fvar" => fvar, "HVAR" => hvar }
+        table_data: { "fvar" => fvar, "HVAR" => hvar },
       )
       validator = described_class.new(font)
 
@@ -249,7 +249,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar", "maxp"],
-          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
 
@@ -267,7 +267,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar", "maxp"],
-          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
 
@@ -284,7 +284,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "gvar", "maxp"],
-          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+          table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
 
@@ -301,7 +301,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "HVAR"],
-          table_data: { "fvar" => fvar, "HVAR" => hvar }
+          table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
 
@@ -317,7 +317,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "HVAR"],
-          table_data: { "fvar" => fvar, "HVAR" => hvar }
+          table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
 
@@ -336,13 +336,13 @@ RSpec.describe Fontisan::Variation::Validator do
 
         # Create out-of-range tuples (normalized coords should be [-1, 1])
         allow(gvar).to receive(:shared_tuples).and_return([
-          [1.5, 0.5],  # First coord out of range
-          [0.5, -1.5]  # Second coord out of range
-        ])
+                                                            [1.5, 0.5], # First coord out of range
+                                                            [0.5, -1.5], # Second coord out of range
+                                                          ])
 
         font = create_mock_font(
           tables: ["fvar", "gvar"],
-          table_data: { "fvar" => fvar, "gvar" => gvar }
+          table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
 
@@ -356,13 +356,13 @@ RSpec.describe Fontisan::Variation::Validator do
         gvar = create_mock_gvar(axis_count: 2)
 
         allow(gvar).to receive(:shared_tuples).and_return([
-          [0.5, 0.8],
-          [-0.5, 1.0]
-        ])
+                                                            [0.5, 0.8],
+                                                            [-0.5, 1.0],
+                                                          ])
 
         font = create_mock_font(
           tables: ["fvar", "gvar"],
-          table_data: { "fvar" => fvar, "gvar" => gvar }
+          table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
 
@@ -377,10 +377,9 @@ RSpec.describe Fontisan::Variation::Validator do
         fvar = create_mock_fvar(axis_count: 1)
 
         region_axis = double("RegionAxis",
-          start_coord: -1.5,
-          peak_coord: 0.0,
-          end_coord: 1.0
-        )
+                             start_coord: -1.5,
+                             peak_coord: 0.0,
+                             end_coord: 1.0)
         region = double("Region", region_axes: [region_axis])
         region_list = double("RegionList", axis_count: 1, regions: [region])
         store = double("ItemVariationStore", region_list: region_list)
@@ -388,7 +387,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         font = create_mock_font(
           tables: ["fvar", "HVAR"],
-          table_data: { "fvar" => fvar, "HVAR" => hvar }
+          table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
 
@@ -407,14 +406,14 @@ RSpec.describe Fontisan::Variation::Validator do
       instances = [{
         name_id: 256,
         flags: 0,
-        coordinates: [400.0],  # Only 1 coord, but 2 axes
-        postscript_name_id: nil
+        coordinates: [400.0], # Only 1 coord, but 2 axes
+        postscript_name_id: nil,
       }]
       allow(fvar).to receive(:instances).and_return(instances)
 
       font = create_mock_font(
         tables: ["fvar"],
-        table_data: { "fvar" => fvar }
+        table_data: { "fvar" => fvar },
       )
       validator = described_class.new(font)
 
@@ -431,14 +430,14 @@ RSpec.describe Fontisan::Variation::Validator do
       instances = [{
         name_id: 256,
         flags: 0,
-        coordinates: [1000.0],  # Axis range is 100-900
-        postscript_name_id: nil
+        coordinates: [1000.0], # Axis range is 100-900
+        postscript_name_id: nil,
       }]
       allow(fvar).to receive(:instances).and_return(instances)
 
       font = create_mock_font(
         tables: ["fvar"],
-        table_data: { "fvar" => fvar }
+        table_data: { "fvar" => fvar },
       )
       validator = described_class.new(font)
 
@@ -452,8 +451,8 @@ RSpec.describe Fontisan::Variation::Validator do
       validator = described_class.new(
         create_mock_font(
           tables: ["fvar"],
-          table_data: { "fvar" => fvar }
-        )
+          table_data: { "fvar" => fvar },
+        ),
       )
 
       result = validator.validate
@@ -473,13 +472,13 @@ RSpec.describe Fontisan::Variation::Validator do
         name_id: 256,
         flags: 0,
         coordinates: [400.0],
-        postscript_name_id: nil
+        postscript_name_id: nil,
       }]
       allow(fvar).to receive(:instances).and_return(instances)
 
       font = create_mock_font(
         tables: ["fvar", "gvar", "maxp"],
-        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
       )
       validator = described_class.new(font)
 
@@ -502,13 +501,13 @@ RSpec.describe Fontisan::Variation::Validator do
         name_id: 256,
         flags: 0,
         coordinates: [1000.0],
-        postscript_name_id: nil
+        postscript_name_id: nil,
       }]
       allow(fvar).to receive(:instances).and_return(instances)
 
       font = create_mock_font(
         tables: ["fvar", "gvar", "maxp"],
-        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp }
+        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
       )
       validator = described_class.new(font)
 
@@ -522,7 +521,7 @@ RSpec.describe Fontisan::Variation::Validator do
     it "returns hash with valid, errors, and warnings keys" do
       font = create_mock_font(
         tables: ["fvar"],
-        table_data: { "fvar" => create_mock_fvar }
+        table_data: { "fvar" => create_mock_fvar },
       )
       validator = described_class.new(font)
 

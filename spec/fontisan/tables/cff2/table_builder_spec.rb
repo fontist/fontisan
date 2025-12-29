@@ -4,7 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
   let(:cff2_font_path) do
-    File.join(File.dirname(__FILE__), "../../../fixtures/fonts/NotoSerifCJK-VF/Variable/OTF/NotoSerifCJKsc-VF.otf")
+    File.join(File.dirname(__FILE__),
+              "../../../fixtures/fonts/NotoSerifCJK-VF/Variable/OTF/NotoSerifCJKsc-VF.otf")
   end
 
   let(:cff2_font) { Fontisan::FontLoader.load(cff2_font_path) }
@@ -36,7 +37,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "reads CFF2 header during initialization" do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data_basic)
-      builder = described_class.new(reader)
+      described_class.new(reader)
 
       expect(reader.header).not_to be_nil
       expect(reader.header[:major_version]).to eq(2)
@@ -133,12 +134,12 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "detects invalid version" do
       # Create CFF (version 1) data with complete header (5 bytes minimum)
-      cff_data = [1, 0, 5, 0, 0].pack("CCCCC")  # CFF version 1 with header
+      cff_data = [1, 0, 5, 0, 0].pack("CCCCC") # CFF version 1 with header
       reader = Fontisan::Tables::Cff2::TableReader.new(cff_data)
 
       # This should raise during initialization due to version check
       expect { described_class.new(reader) }.to raise_error(
-        Fontisan::CorruptedTableError
+        Fontisan::CorruptedTableError,
       )
     end
 
@@ -172,12 +173,9 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "extracts CharStrings offset from Top DICT" do
       # Create CFF2 with CharStrings offset in Top DICT
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 17 => 100 })  # operator 17 = CharStrings
+      allow(reader).to receive_messages(data: cff2_data, read_variable_store: nil, header: { major_version: 2 }, top_dict: { 17 => 100 }) # operator 17 = CharStrings
 
       builder = described_class.new(reader)
       offset = builder.send(:extract_charstrings_offset)
@@ -187,12 +185,10 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "returns nil when no CharStrings offset" do
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({})
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader)
       offset = builder.send(:extract_charstrings_offset)
@@ -204,25 +200,24 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
   describe "#calculate_stem_count" do
     it "calculates stem count from font-level hints" do
       hint_set = double("hint_set")
-      allow(hint_set).to receive(:font_level_hints).and_return({
-        blue_values: [10, 20, 30, 40],  # 2 hstem
-        stem_snap_h: [50, 60, 70]       # 3 vstem
-      })
-      allow(hint_set).to receive(:per_glyph_hints).and_return({})
+      allow(hint_set).to receive_messages(font_level_hints: {
+                                            blue_values: [10, 20, 30, 40], # 2 hstem
+                                            stem_snap_h: [50, 60, 70], # 3 vstem
+                                          }, per_glyph_hints: {})
 
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          blue_values: [10, 20, 30, 40],  # 2 hstem
-          stem_snap_h: [50, 60, 70]       # 3 vstem
-        }.to_json
+          blue_values: [10, 20, 30, 40], # 2 hstem
+          stem_snap_h: [50, 60, 70], # 3 vstem
+        }.to_json,
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
       stem_count = builder.send(:calculate_stem_count)
-      expect(stem_count).to eq(5)  # 2 + 3
+      expect(stem_count).to eq(5) # 2 + 3
     end
 
     it "returns 0 when no hints" do
@@ -235,16 +230,15 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "handles missing blue_values" do
       hint_set = double("hint_set")
-      allow(hint_set).to receive(:font_level_hints).and_return({
-        stem_snap_h: [50, 60]  # 2 vstem
-      })
-      allow(hint_set).to receive(:per_glyph_hints).and_return({})
+      allow(hint_set).to receive_messages(font_level_hints: {
+                                            stem_snap_h: [50, 60], # 2 vstem
+                                          }, per_glyph_hints: {})
 
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          stem_snap_h: [50, 60]  # 2 vstem
-        }.to_json
+          stem_snap_h: [50, 60], # 2 vstem
+        }.to_json,
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
@@ -256,16 +250,15 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "handles missing stem_snap_h" do
       hint_set = double("hint_set")
-      allow(hint_set).to receive(:font_level_hints).and_return({
-        blue_values: [10, 20]  # 1 hstem
-      })
-      allow(hint_set).to receive(:per_glyph_hints).and_return({})
+      allow(hint_set).to receive_messages(font_level_hints: {
+                                            blue_values: [10, 20], # 1 hstem
+                                          }, per_glyph_hints: {})
 
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          blue_values: [10, 20]  # 1 hstem
-        }.to_json
+          blue_values: [10, 20], # 1 hstem
+        }.to_json,
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
@@ -281,24 +274,23 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       # Mock CharStrings INDEX
       index = double("charstrings_index")
       allow(index).to receive(:count).and_return(2)
-      allow(index).to receive(:[]).with(0).and_return("\x00\x0e".b)  # .notdef (endchar)
-      allow(index).to receive(:[]).with(1).and_return("\x64\x96\x0e".b)  # glyph 1
+      allow(index).to receive(:[]).with(0).and_return("\x00\x0e".b) # .notdef (endchar)
+      allow(index).to receive(:[]).with(1).and_return("\x64\x96\x0e".b) # glyph 1
       index
     end
 
     it "modifies CharStrings with per-glyph hints" do
       hint_set = double("hint_set")
       hint = double("hint")
-      allow(hint).to receive(:type).and_return(:hstem)
-      allow(hint).to receive(:values).and_return([10, 20])
+      allow(hint).to receive_messages(type: :hstem, values: [10, 20])
 
-      allow(hint_set).to receive(:per_glyph_hints).and_return({ 1 => [hint] })
-      allow(hint_set).to receive(:font_level_hints).and_return({})
+      allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint] },
+                                          font_level_hints: {})
 
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 10, width: 20, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -318,7 +310,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       # CharString with blend operator
       # Format: operands blend_operator other_operators
       # Use simple valid CharString instead (just endchar)
-      charstring_simple = "\x0e".b  # endchar operator
+      charstring_simple = "\x0e".b # endchar operator
 
       index = double("charstrings_index")
       allow(index).to receive(:count).and_return(1)
@@ -327,7 +319,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 10, width: 20, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -355,8 +347,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "returns nil when per_glyph_hints is empty" do
       hint_set = double("hint_set")
-      allow(hint_set).to receive(:per_glyph_hints).and_return({})
-      allow(hint_set).to receive(:font_level_hints).and_return({})
+      allow(hint_set).to receive_messages(per_glyph_hints: {},
+                                          font_level_hints: {})
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
       # No hints added
@@ -371,26 +363,24 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "handles multiple hints per glyph" do
       hint_set = double("hint_set")
       hint1 = double("hint1")
-      allow(hint1).to receive(:type).and_return(:hstem)
-      allow(hint1).to receive(:values).and_return([10, 20])
+      allow(hint1).to receive_messages(type: :hstem, values: [10, 20])
 
       hint2 = double("hint2")
-      allow(hint2).to receive(:type).and_return(:vstem)
-      allow(hint2).to receive(:values).and_return([30, 40])
+      allow(hint2).to receive_messages(type: :vstem, values: [30, 40])
 
-      allow(hint_set).to receive(:per_glyph_hints).and_return({ 1 => [hint1, hint2] })
-      allow(hint_set).to receive(:font_level_hints).and_return({})
+      allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint1,
+                                                                   hint2] }, font_level_hints: {})
 
       hint1 = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 10, width: 20, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint2 = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 30, width: 40, orientation: :vertical },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -409,16 +399,15 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       # This is verified by CharStringBuilder which validates operations
       hint_set = double("hint_set")
       hint = double("hint")
-      allow(hint).to receive(:type).and_return(:hstem)
-      allow(hint).to receive(:values).and_return([10, 20])
+      allow(hint).to receive_messages(type: :hstem, values: [10, 20])
 
-      allow(hint_set).to receive(:per_glyph_hints).and_return({ 1 => [hint] })
-      allow(hint_set).to receive(:font_level_hints).and_return({})
+      allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint] },
+                                          font_level_hints: {})
 
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 10, width: 20, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
 
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
@@ -428,9 +417,9 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       builder = described_class.new(reader, hint_set)
 
       # Should not raise - stack neutrality maintained
-      expect {
+      expect do
         builder.send(:modify_charstrings, charstrings_index)
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 
@@ -439,8 +428,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          blue_values: [10, 20]
-        }.to_json
+          blue_values: [10, 20],
+        }.to_json,
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
@@ -459,7 +448,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "returns false when empty hints" do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
-        private_dict_hints: "{}"
+        private_dict_hints: "{}",
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
@@ -471,8 +460,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "handles invalid JSON gracefully" do
       hint_set = double("hint_set")
       allow(hint_set).to receive(:respond_to?).with(:private_dict_hints).and_return(true)
-      allow(hint_set).to receive(:private_dict_hints).and_return("invalid json")
-      allow(hint_set).to receive(:hinted_glyph_ids).and_return([])
+      allow(hint_set).to receive_messages(private_dict_hints: "invalid json",
+                                          hinted_glyph_ids: [])
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
@@ -484,12 +473,10 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
   describe "#extract_private_dict_info" do
     it "extracts Private DICT offset and size from Top DICT" do
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 18 => [100, 500] })
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [100, 500] })
 
       builder = described_class.new(reader)
       info = builder.send(:extract_private_dict_info)
@@ -499,12 +486,10 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "returns nil when no Private DICT in Top DICT" do
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({})
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader)
       info = builder.send(:extract_private_dict_info)
@@ -518,48 +503,43 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          blue_values: [10, 20, 30, 40]
-        }.to_json
+          blue_values: [10, 20, 30, 40],
+        }.to_json,
       )
 
       # Create mock reader with Private DICT
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 18 => [50, 100] })
-      allow(reader).to receive(:read_private_dict).and_return({})
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: {})
 
       builder = described_class.new(reader, hint_set)
       result = builder.send(:modify_private_dict)
 
       expect(result).to be_a(Hash)
-      expect(result["blue_values"] || result[:blue_values]).to eq([10, 20, 30, 40])
+      expect(result["blue_values"] || result[:blue_values]).to eq([10, 20, 30,
+                                                                   40])
     end
 
     it "preserves blend operators in Private DICT" do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          blue_scale: 0.039625
-        }.to_json
+          blue_scale: 0.039625,
+        }.to_json,
       )
 
       # Create Private DICT with blend
       private_dict_with_blend = {
-        6 => [500, 10, 5]  # BlueValues with blend (2 axes)
+        6 => [500, 10, 5], # BlueValues with blend (2 axes)
       }
 
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 18 => [50, 100] })
-      allow(reader).to receive(:read_private_dict).and_return(private_dict_with_blend)
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: private_dict_with_blend)
 
       builder = described_class.new(reader, hint_set)
       result = builder.send(:modify_private_dict)
@@ -575,20 +555,16 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
         private_dict_hints: {
-          std_hw: { base: 50, deltas: [10, 5] }
-        }.to_json
+          std_hw: { base: 50, deltas: [10, 5] },
+        }.to_json,
       )
 
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return({
-        regions: [{ axis_count: 2 }]
-      })
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 18 => [50, 100] })
-      allow(reader).to receive(:read_private_dict).and_return({})
+      allow(reader).to receive_messages(data: cff2_data, read_variable_store: {
+                                          regions: [{ axis_count: 2 }],
+                                        }, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: {})
 
       builder = described_class.new(reader, hint_set)
       result = builder.send(:modify_private_dict)
@@ -602,16 +578,14 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "returns nil when no Private DICT" do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
-        private_dict_hints: { blue_values: [10, 20] }.to_json
+        private_dict_hints: { blue_values: [10, 20] }.to_json,
       )
 
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({})
+      allow(reader).to receive_messages(data: cff2_data,
+                                        read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader, hint_set)
       result = builder.send(:modify_private_dict)
@@ -625,7 +599,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       hint = Fontisan::Models::Hint.new(
         type: :stem,
         data: { position: 10, width: 20, orientation: :horizontal },
-        source_format: :postscript
+        source_format: :postscript,
       )
       hint_set = Fontisan::Models::HintSet.new(format: "postscript")
       hint_set.add_glyph_hints(1, [hint])
@@ -639,7 +613,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "returns true when font-level hints present" do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
-        private_dict_hints: { blue_values: [10, 20] }.to_json
+        private_dict_hints: { blue_values: [10, 20] }.to_json,
       )
 
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
@@ -663,14 +637,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       full_data = cff2_data + vstore_data
 
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(full_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return({
-        regions: [{ axis_count: 1 }]
-      })
-      allow(reader).to receive(:header).and_return({ major_version: 2 })
-      allow(reader).to receive(:top_dict).and_return({ 24 => cff2_data.size })
+      allow(reader).to receive_messages(data: full_data, read_variable_store: {
+                                          regions: [{ axis_count: 1 }],
+                                        }, header: { major_version: 2 }, top_dict: { 24 => cff2_data.size })
 
       builder = described_class.new(reader)
       vstore = builder.send(:extract_variable_store)
@@ -694,12 +665,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       builder = described_class.new(reader)
 
       result = builder.send(:rebuild_cff2_table,
-        header: cff2_data[0, 5],
-        top_dict: { charstrings: 100 },  # Use symbol key
-        charstrings: "\x00\x00".b,
-        private_dict: nil,
-        vstore: nil
-      )
+                            header: cff2_data[0, 5],
+                            top_dict: { charstrings: 100 }, # Use symbol key
+                            charstrings: "\x00\x00".b,
+                            private_dict: nil,
+                            vstore: nil)
 
       expect(result).to be_a(String)
       expect(result.encoding).to eq(Encoding::BINARY)
@@ -714,15 +684,14 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       builder = described_class.new(reader)
 
       result = builder.send(:rebuild_cff2_table,
-        header: cff2_data[0, 5],
-        top_dict: { charstrings: 100 },  # Use symbol key
-        charstrings: "\x00\x00".b,
-        private_dict: nil,
-        vstore: vstore_data
-      )
+                            header: cff2_data[0, 5],
+                            top_dict: { charstrings: 100 }, # Use symbol key
+                            charstrings: "\x00\x00".b,
+                            private_dict: nil,
+                            vstore: vstore_data)
 
       # Variable Store should be at end, unchanged
-      expect(result[-4..-1]).to eq(vstore_data)
+      expect(result[-4..]).to eq(vstore_data)
     end
 
     it "updates offsets in Top DICT correctly" do
@@ -730,12 +699,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       builder = described_class.new(reader)
 
       result = builder.send(:rebuild_cff2_table,
-        header: cff2_data[0, 5],
-        top_dict: { charstrings: 50, private: [10, 60] },  # Use symbol keys
-        charstrings: "\x00\x00".b,
-        private_dict: "\x00\x00\x00\x00\x00".b,
-        vstore: nil
-      )
+                            header: cff2_data[0, 5],
+                            top_dict: { charstrings: 50, private: [10, 60] }, # Use symbol keys
+                            charstrings: "\x00\x00".b,
+                            private_dict: "\x00\x00\x00\x00\x00".b,
+                            vstore: nil)
 
       expect(result).to be_a(String)
       # Offsets should be recalculated based on actual positions
@@ -754,36 +722,32 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     it "rebuilds table when hints are present" do
       hint_set = Fontisan::Models::HintSet.new(
         format: "postscript",
-        private_dict_hints: { blue_values: [10, 20] }.to_json
+        private_dict_hints: { blue_values: [10, 20] }.to_json,
       )
 
       # Create a simple valid CharStrings INDEX
-      charstrings_data = [1].pack("n") + [1].pack("C") + [1, 3].pack("CC") + "\x0e".b
+      charstrings_data = [1].pack("n") + [1].pack("C") + [1,
+                                                          3].pack("CC") + "\x0e".b
       full_cff2_data = cff2_data + charstrings_data
 
       # Need a more complete CFF2 with Private DICT for full rebuild
       reader = double("reader")
-      allow(reader).to receive(:data).and_return(full_cff2_data)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
-      allow(reader).to receive(:read_variable_store).and_return(nil)
-      allow(reader).to receive(:header).and_return({
-        major_version: 2,
-        minor_version: 0,
-        header_size: 5,
-        top_dict_length: 20
-      })
-      allow(reader).to receive(:top_dict).and_return({
-        17 => cff2_data.size,  # CharStrings offset
-        18 => [10, cff2_data.size + charstrings_data.size]  # Private DICT [size, offset]
-      })
-      allow(reader).to receive(:read_private_dict).and_return({})
 
       # Mock charstrings index
       charstrings_index = double("charstrings_index")
       allow(charstrings_index).to receive(:count).and_return(1)
       allow(charstrings_index).to receive(:[]).with(0).and_return("\x0e".b)
-      allow(reader).to receive(:read_charstrings).and_return(charstrings_index)
+      allow(reader).to receive_messages(data: full_cff2_data, read_variable_store: nil, header: {
+                                          major_version: 2,
+                                          minor_version: 0,
+                                          header_size: 5,
+                                          top_dict_length: 20,
+                                        }, top_dict: {
+                                          17 => cff2_data.size, # CharStrings offset
+                                          18 => [10, cff2_data.size + charstrings_data.size], # Private DICT [size, offset]
+                                        }, read_private_dict: {}, read_charstrings: charstrings_index)
 
       builder = described_class.new(reader, hint_set)
       result = builder.build

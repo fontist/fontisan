@@ -294,7 +294,8 @@ module Fontisan
         when ".woff" then :woff
         when ".woff2" then :woff2
         else
-          raise ArgumentError, "Cannot determine target format from extension: #{ext}"
+          raise ArgumentError,
+                "Cannot determine target format from extension: #{ext}"
         end
       end
 
@@ -304,7 +305,10 @@ module Fontisan
       def variation_options
         opts = {}
         opts[:coordinates] = @options[:coordinates] if @options[:coordinates]
-        opts[:instance_index] = @options[:instance_index] if @options[:instance_index]
+        if @options[:instance_index]
+          opts[:instance_index] =
+            @options[:instance_index]
+        end
         opts
       end
 
@@ -344,7 +348,8 @@ module Fontisan
           when :otf
             OpenTypeFont.from_tables(tables)
           else
-            raise ArgumentError, "Cannot determine font type: format=#{format}, has_cff=#{has_cff}, has_glyf=#{has_glyf}"
+            raise ArgumentError,
+                  "Cannot determine font type: format=#{format}, has_cff=#{has_cff}, has_glyf=#{has_glyf}"
           end
         end
       end

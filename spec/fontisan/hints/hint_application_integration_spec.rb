@@ -8,7 +8,7 @@ RSpec.describe "Hint Application Integration" do
       it "applies fpgm table without corrupting font structure" do
         # Create hint set with fpgm
         hint_set = Fontisan::Models::HintSet.new(format: :truetype)
-        hint_set.font_program = "\xB0\x01\xB8\x02\xFF"  # Sample bytecode
+        hint_set.font_program = "\xB0\x01\xB8\x02\xFF" # Sample bytecode
 
         # Apply to tables
         applier = Fontisan::Hints::TrueTypeHintApplier.new
@@ -147,7 +147,7 @@ RSpec.describe "Hint Application Integration" do
         applier = Fontisan::Hints::TrueTypeHintApplier.new
 
         # Apply multiple times
-        results = 3.times.map do
+        results = Array.new(3) do
           tables = {}
           applier.apply(hint_set, tables)
         end
@@ -161,7 +161,9 @@ RSpec.describe "Hint Application Integration" do
 
   describe "PostScript hint application" do
     context "with valid hint parameters" do
-      let(:otf_font_path) { font_fixture_path("SourceSans3", "SourceSans3-Regular.otf") }
+      let(:otf_font_path) do
+        font_fixture_path("SourceSans3", "SourceSans3-Regular.otf")
+      end
       let(:cff_table) do
         font = Fontisan::FontLoader.load(otf_font_path)
         font.table("CFF ")
@@ -221,7 +223,7 @@ RSpec.describe "Hint Application Integration" do
         # Invalid: too many blue_values
         hint_set = Fontisan::Models::HintSet.new(format: :postscript)
         hint_set.private_dict_hints = {
-          "blue_values" => Array.new(16, 0),  # Max is 14
+          "blue_values" => Array.new(16, 0), # Max is 14
         }.to_json
 
         result = applier.apply(hint_set, tables)

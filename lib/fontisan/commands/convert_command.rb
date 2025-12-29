@@ -89,7 +89,10 @@ module Fontisan
         # Add variation options if specified
         pipeline_options[:coordinates] = @coordinates if @coordinates
         pipeline_options[:instance_index] = @instance_index if @instance_index
-        pipeline_options[:preserve_variation] = @preserve_variation unless @preserve_variation.nil?
+        unless @preserve_variation.nil?
+          pipeline_options[:preserve_variation] =
+            @preserve_variation
+        end
 
         # Add hint preservation option
         pipeline_options[:preserve_hints] = @preserve_hints if @preserve_hints
@@ -155,7 +158,8 @@ module Fontisan
         end
         coords
       rescue StandardError => e
-        raise ArgumentError, "Invalid coordinates format '#{coord_string}': #{e.message}"
+        raise ArgumentError,
+              "Invalid coordinates format '#{coord_string}': #{e.message}"
       end
 
       # Validate command options

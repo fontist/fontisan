@@ -14,7 +14,8 @@ RSpec.describe "Round-Trip Validation" do
     context "without optimization" do
       it "produces identical glyph outlines" do
         # Load original font
-        font = Fontisan::FontLoader.load(ttf_font_path, mode: :full, lazy: false)
+        font = Fontisan::FontLoader.load(ttf_font_path, mode: :full,
+                                                        lazy: false)
 
         # Extract original outlines
         original_outlines = converter.extract_ttf_outlines(font)
@@ -55,8 +56,12 @@ RSpec.describe "Round-Trip Validation" do
           # Filter out close_path commands for comparison
           # CFF doesn't have explicit closepath - contours are implicitly closed
           # So we compare the path commands without closepath
-          orig_path_commands = orig.commands.reject { |c| c[:type] == :close_path }
-          cff_path_commands = cff.commands.reject { |c| c[:type] == :close_path }
+          orig_path_commands = orig.commands.reject do |c|
+            c[:type] == :close_path
+          end
+          cff_path_commands = cff.commands.reject do |c|
+            c[:type] == :close_path
+          end
 
           # Compare command counts (excluding closepath)
           expect(cff_path_commands.length).to eq(orig_path_commands.length),
@@ -71,7 +76,8 @@ RSpec.describe "Round-Trip Validation" do
 
             # Handle curve type differences between TTF (quadratic) and CFF (cubic)
             case [orig_cmd[:type], cff_cmd[:type]]
-            when %i[move_to move_to], %i[line_to line_to], %i[close_path close_path]
+            when %i[move_to
+                    move_to], %i[line_to line_to], %i[close_path close_path]
               # Direct match - compare coordinates
               if orig_cmd[:type] == :close_path
                 # close_path has no coordinates

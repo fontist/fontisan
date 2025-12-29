@@ -20,7 +20,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     it "creates rebuilder with CharStrings INDEX" do
       charstrings = [
         [14].pack("C"), # .notdef: endchar
-        [239, 22, 14].pack("C*") # glyph 1: 100 hmoveto endchar
+        [239, 22, 14].pack("C*"), # glyph 1: 100 hmoveto endchar
       ]
       index_data = create_mock_index(charstrings)
       io = StringIO.new(index_data)
@@ -46,7 +46,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
       [
         [14].pack("C"), # .notdef: endchar
         [239, 22, 14].pack("C*"), # glyph 1: 100 hmoveto endchar
-        [200, 4, 14].pack("C*") # glyph 2: 61 vmoveto endchar
+        [200, 4, 14].pack("C*"), # glyph 2: 61 vmoveto endchar
       ]
     end
 
@@ -102,9 +102,9 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     end
 
     it "handles invalid glyph index gracefully" do
-      expect {
+      expect do
         rebuilder.modify_charstring(999) { |ops| ops }
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 
@@ -113,7 +113,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
       [
         [14].pack("C"), # .notdef
         [239, 22, 14].pack("C*"), # glyph 1
-        [200, 4, 14].pack("C*") # glyph 2
+        [200, 4, 14].pack("C*"), # glyph 2
       ]
     end
 
@@ -189,7 +189,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
         [14].pack("C"), # .notdef
         [239, 22, 14].pack("C*"), # glyph 1
         [200, 4, 14].pack("C*"), # glyph 2
-        [139, 21, 14].pack("C*") # glyph 3: 0,0 rmoveto endchar
+        [139, 21, 14].pack("C*"), # glyph 3: 0,0 rmoveto endchar
       ]
     end
 
@@ -204,7 +204,8 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     it "modifies multiple glyphs at once" do
       rebuilder.batch_modify([1, 2, 3]) do |glyph_index, operations|
         # Add hstem to each
-        hint = { type: :operator, name: :hstem, operands: [glyph_index * 10, 20] }
+        hint = { type: :operator, name: :hstem,
+                 operands: [glyph_index * 10, 20] }
         [hint] + operations
       end
 
@@ -218,11 +219,10 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
       rebuilder.batch_modify([1, 2]) do |glyph_index, operations|
         if glyph_index == 1
           # Different modification for glyph 1
-          operations
         else
           # Different modification for glyph 2
-          operations
         end
+        operations
       end
 
       expect(rebuilder.modification_count).to eq(2)
@@ -234,7 +234,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
       [
         [14].pack("C"),
         [239, 22, 14].pack("C*"),
-        [200, 4, 14].pack("C*")
+        [200, 4, 14].pack("C*"),
       ]
     end
 
@@ -247,7 +247,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     let(:rebuilder) { described_class.new(index) }
 
     it "modifies all CharStrings" do
-      rebuilder.modify_all do |glyph_index, operations|
+      rebuilder.modify_all do |_glyph_index, operations|
         # Add comment (no-op for CharStrings but tests the mechanism)
         operations
       end
@@ -284,7 +284,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     let(:charstrings) do
       [
         [14].pack("C"),
-        [239, 22, 14].pack("C*")
+        [239, 22, 14].pack("C*"),
       ]
     end
 
@@ -333,7 +333,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
       [
         [14].pack("C"),
         [239, 22, 14].pack("C*"),
-        [200, 4, 14].pack("C*")
+        [200, 4, 14].pack("C*"),
       ]
     end
 
@@ -391,9 +391,9 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
     it "updates stem count" do
       rebuilder.stem_count = 8
       # Verify it works (implicitly through successful modification)
-      expect {
+      expect do
         rebuilder.modify_charstring(0) { |ops| ops }
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 end

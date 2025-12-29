@@ -60,8 +60,8 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
       it "returns product of axis scalars" do
         # Midway on both axes
         scalars = matcher.calculate_scalars([0.25, 0.1])
-        axis1_scalar = (0.25 - (-0.5)) / (1.0 - (-0.5)) # ~0.5
-        axis2_scalar = (0.1 - (-0.3)) / (0.5 - (-0.3))  # ~0.5
+        axis1_scalar = (0.25 - -0.5) / (1.0 - -0.5) # ~0.5
+        axis2_scalar = (0.1 - -0.3) / (0.5 - -0.3)  # ~0.5
         expect(scalars.first).to be_within(0.01).of(axis1_scalar * axis2_scalar)
       end
 
@@ -75,8 +75,8 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
     context "with multiple regions" do
       let(:regions) do
         [
-          build_region(1, [[-1.0, 0.0, 0.0]]),   # Region for negative coordinates
-          build_region(1, [[0.0, 1.0, 1.0]])     # Region for positive coordinates
+          build_region(1, [[-1.0, 0.0, 0.0]]), # Region for negative coordinates
+          build_region(1, [[0.0, 1.0, 1.0]]), # Region for positive coordinates
         ]
       end
       let(:matcher) { described_class.new(regions) }
@@ -163,7 +163,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
     let(:regions) do
       [
         build_region(1, [[-1.0, 0.0, 0.0]]),
-        build_region(1, [[0.0, 1.0, 1.0]])
+        build_region(1, [[0.0, 1.0, 1.0]]),
       ]
     end
     let(:matcher) { described_class.new(regions) }
@@ -213,7 +213,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
     it "detects invalid coordinate ordering" do
       regions = [{
         axis_count: 1,
-        axes: [{ start_coord: 1.0, peak_coord: 0.5, end_coord: 0.0 }]
+        axes: [{ start_coord: 1.0, peak_coord: 0.5, end_coord: 0.0 }],
       }]
       matcher = described_class.new(regions)
       errors = matcher.validate
@@ -225,7 +225,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
     it "detects missing required keys" do
       regions = [{
         axis_count: 1,
-        axes: [{ start_coord: 0.0 }]  # Missing peak_coord and end_coord
+        axes: [{ start_coord: 0.0 }], # Missing peak_coord and end_coord
       }]
       matcher = described_class.new(regions)
       errors = matcher.validate
@@ -236,7 +236,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
     it "detects invalid axes structure" do
       regions = [{
         axis_count: 1,
-        axes: "not an array"
+        axes: "not an array",
       }]
       matcher = described_class.new(regions)
       errors = matcher.validate
@@ -280,7 +280,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
                {
                  start_coord: coords[0],
                  peak_coord: coords[1],
-                 end_coord: coords[2]
+                 end_coord: coords[2],
                }
              end
            else
@@ -291,7 +291,7 @@ RSpec.describe Fontisan::Tables::Cff2::RegionMatcher do
 
     {
       axis_count: num_axes,
-      axes: axes
+      axes: axes,
     }
   end
 end

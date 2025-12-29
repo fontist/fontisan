@@ -69,7 +69,10 @@ module Fontisan
       # @return [Integer] Number of bytes written
       def write_svg(result)
         svg_xml = result[:svg_xml] || result["svg_xml"]
-        raise ArgumentError, "SVG result must contain :svg_xml key" unless svg_xml
+        unless svg_xml
+          raise ArgumentError,
+                "SVG result must contain :svg_xml key"
+        end
 
         File.write(@output_path, svg_xml)
       end
@@ -80,7 +83,8 @@ module Fontisan
       # @return [Integer] Number of bytes written
       def write_sfnt(tables)
         sfnt_version = determine_sfnt_version
-        FontWriter.write_to_file(tables, @output_path, sfnt_version: sfnt_version)
+        FontWriter.write_to_file(tables, @output_path,
+                                 sfnt_version: sfnt_version)
       end
 
       # Write WOFF format
@@ -145,7 +149,8 @@ module Fontisan
           when :otf
             OpenTypeFont.from_tables(tables)
           else
-            raise ArgumentError, "Cannot determine font type for format: #{@format}"
+            raise ArgumentError,
+                  "Cannot determine font type for format: #{@format}"
           end
         end
       end

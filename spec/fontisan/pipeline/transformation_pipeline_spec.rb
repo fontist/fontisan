@@ -177,7 +177,9 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
 
         pipeline = described_class.new(invalid_input, output_font)
 
-        expect { pipeline.transform }.to raise_error(Fontisan::Error, /Transformation failed/)
+        expect do
+          pipeline.transform
+        end.to raise_error(Fontisan::Error, /Transformation failed/)
 
         File.delete(invalid_input)
       end
@@ -218,7 +220,10 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
   end
 
   describe "variation strategy selection" do
-    let(:variable_font) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+    let(:variable_font) do
+      font_fixture_path("MonaSans",
+                        "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+    end
 
     context "with static font" do
       it "uses preserve strategy" do

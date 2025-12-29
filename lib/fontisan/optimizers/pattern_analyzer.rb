@@ -222,7 +222,8 @@ module Fontisan
                 if @stack_aware
                   tracker = @stack_trackers[glyph_id]
                   next unless tracker
-                  next unless tracker.stack_neutral?(start_pos, start_pos + length)
+                  next unless tracker.stack_neutral?(start_pos,
+                                                     start_pos + length)
                 end
 
                 pattern_bytes = charstring[start_pos, length]

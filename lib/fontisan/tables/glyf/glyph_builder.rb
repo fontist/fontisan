@@ -106,7 +106,11 @@ module Fontisan
       # @raise [ArgumentError] If parameters are invalid
       def self.build_compound_glyph(components, bbox, instructions: "".b)
         raise ArgumentError, "components cannot be nil" if components.nil?
-        raise ArgumentError, "components must be Array" unless components.is_a?(Array)
+
+        unless components.is_a?(Array)
+          raise ArgumentError,
+                "components must be Array"
+        end
         raise ArgumentError, "components cannot be empty" if components.empty?
 
         validate_bbox!(bbox)
@@ -114,7 +118,8 @@ module Fontisan
         build_compound_glyph_data(components, bbox, instructions)
       end
 
-      private_class_method def self.build_simple_glyph_data(contours, bbox, instructions)
+      private_class_method def self.build_simple_glyph_data(contours, bbox,
+instructions)
         num_contours = contours.length
 
         # Build endPtsOfContours array
@@ -136,7 +141,8 @@ module Fontisan
 
         # Header (10 bytes)
         data << [num_contours].pack("n") # numberOfContours
-        data << [bbox[:x_min], bbox[:y_min], bbox[:x_max], bbox[:y_max]].pack("n4")
+        data << [bbox[:x_min], bbox[:y_min], bbox[:x_max],
+                 bbox[:y_max]].pack("n4")
 
         # endPtsOfContours
         data << end_pts_of_contours.pack("n*")
@@ -155,18 +161,21 @@ module Fontisan
         data
       end
 
-      private_class_method def self.build_compound_glyph_data(components, bbox, instructions)
+      private_class_method def self.build_compound_glyph_data(components, bbox,
+instructions)
         data = (+"").force_encoding(Encoding::BINARY)
 
         # Header (10 bytes) - numberOfContours = -1 for compound
         data << [-1].pack("n") # Use signed pack, will convert to 0xFFFF
-        data << [bbox[:x_min], bbox[:y_min], bbox[:x_max], bbox[:y_max]].pack("n4")
+        data << [bbox[:x_min], bbox[:y_min], bbox[:x_max],
+                 bbox[:y_max]].pack("n4")
 
         # Encode components
         has_instructions = instructions.bytesize.positive?
         components.each_with_index do |component, index|
           is_last = (index == components.length - 1)
-          component_data = encode_component(component, is_last, has_instructions)
+          component_data = encode_component(component, is_last,
+                                            has_instructions)
           data << component_data
         end
 
@@ -179,7 +188,8 @@ module Fontisan
         data
       end
 
-      private_class_method def self.encode_component(component, is_last, has_instructions)
+      private_class_method def self.encode_component(component, is_last,
+has_instructions)
         validate_component!(component)
 
         glyph_index = component[:glyph_index]
@@ -344,7 +354,8 @@ module Fontisan
         data
       end
 
-      private_class_method def self.encode_coordinate_values(flags, deltas, axis)
+      private_class_method def self.encode_coordinate_values(flags, deltas,
+axis)
         data = (+"").force_encoding(Encoding::BINARY)
         short_flag = axis == :x ? X_SHORT_VECTOR : Y_SHORT_VECTOR
         same_flag = axis == :x ? X_IS_SAME_OR_POSITIVE_X_SHORT : Y_IS_SAME_OR_POSITIVE_Y_SHORT
@@ -400,7 +411,10 @@ module Fontisan
         # Convert float to F2DOT14 fixed-point format
         # F2DOT14: 2 bits integer, 14 bits fractional
         # Range: -2.0 to ~1.99993896484375
-        raise ArgumentError, "value out of F2DOT14 range" if value < -2.0 || value > 2.0
+        if value < -2.0 || value > 2.0
+          raise ArgumentError,
+                "value out of F2DOT14 range"
+        end
 
         fixed = (value * 16_384.0).round
         # Convert to unsigned 16-bit
@@ -434,7 +448,10 @@ module Fontisan
       end
 
       private_class_method def self.validate_component!(component)
-        raise ArgumentError, "component must be Hash" unless component.is_a?(Hash)
+        unless component.is_a?(Hash)
+          raise ArgumentError,
+                "component must be Hash"
+        end
         unless component[:glyph_index]
           raise ArgumentError, "component must have :glyph_index"
         end

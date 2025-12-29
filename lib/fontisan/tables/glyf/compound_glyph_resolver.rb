@@ -118,7 +118,8 @@ module Fontisan
                                 resolve(component_glyph, visited, depth + 1)
                               else
                                 # Convert simple glyph to outline
-                                Models::Outline.from_truetype(component_glyph, component.glyph_index)
+                                Models::Outline.from_truetype(component_glyph,
+                                                              component.glyph_index)
                               end
 
           # Apply transformation matrix

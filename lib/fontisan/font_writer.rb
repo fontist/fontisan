@@ -113,6 +113,7 @@ module Fontisan
       # Write offset table (sfnt header)
       font_data << write_offset_table(table_entries.size)
 
+      # rubocop:disable Style/CombinableLoops
       # Write table directory (ALL entries first)
       table_entries.each do |entry|
         font_data << write_table_entry(entry)
@@ -123,6 +124,7 @@ module Fontisan
         font_data << entry[:data]
         font_data << entry[:padding]
       end
+      # rubocop:enable Style/CombinableLoops
 
       # Calculate and update head table checksum adjustment
       update_checksum_adjustment!(font_data, table_entries)

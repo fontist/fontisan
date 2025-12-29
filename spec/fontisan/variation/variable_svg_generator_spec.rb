@@ -4,7 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Variation::VariableSvgGenerator do
   let(:variable_ttf_path) do
-    font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+    font_fixture_path("MonaSans",
+                      "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
   end
   let(:variable_font) { Fontisan::FontLoader.load(variable_ttf_path) }
 
@@ -34,7 +35,8 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
 
     context "with non-variable font" do
       let(:static_font_path) do
-        font_fixture_path("MonaSans", "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
+        font_fixture_path("MonaSans",
+                          "fonts/static/ttf/MonaSans-ExtraLightItalic.ttf")
       end
       let(:static_font) { Fontisan::FontLoader.load(static_font_path) }
 
@@ -237,7 +239,8 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
 
     it "handles font with invalid coordinates gracefully" do
       # Invalid axis tag
-      generator_invalid = described_class.new(variable_font, { "XXXX" => 999.0 })
+      generator_invalid = described_class.new(variable_font,
+                                              { "XXXX" => 999.0 })
 
       expect do
         generator_invalid.generate
@@ -246,7 +249,8 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
 
     it "handles out-of-range coordinate values" do
       # Extreme weight value
-      generator_extreme = described_class.new(variable_font, { "wght" => 9999.0 })
+      generator_extreme = described_class.new(variable_font,
+                                              { "wght" => 9999.0 })
 
       expect do
         generator_extreme.generate

@@ -19,7 +19,8 @@ RSpec.describe Fontisan::Variation::VariationPreserver do
   let(:mvar_data) { "mvar_data".b }
 
   before do
-    allow(source_font).to receive_messages(has_table?: false, table_data: {}, table: nil)
+    allow(source_font).to receive_messages(has_table?: false, table_data: {},
+                                           table: nil)
   end
 
   describe ".preserve" do

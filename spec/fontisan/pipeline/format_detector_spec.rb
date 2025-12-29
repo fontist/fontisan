@@ -29,7 +29,9 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with OpenType font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "detects OTF format" do
@@ -81,7 +83,9 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with static OTF font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "detects static variation type" do
@@ -91,7 +95,10 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with TrueType variable font (gvar)" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans",
+                          "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "detects gvar variation type" do
@@ -133,12 +140,15 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
       it "lists available tables" do
         result = detector.detect
-        expect(result[:capabilities][:tables]).to include("glyf", "head", "name")
+        expect(result[:capabilities][:tables]).to include("glyf", "head",
+                                                          "name")
       end
     end
 
     context "with OpenType/CFF font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "detects CFF outline type" do
@@ -153,7 +163,10 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with variable font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans",
+                          "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "detects variation support" do
@@ -202,7 +215,10 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
 
   describe "#variable?" do
     context "with variable font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans",
+                          "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "returns true" do
@@ -242,7 +258,10 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
     end
 
     context "with gvar variable font" do
-      let(:file_path) { font_fixture_path("MonaSans", "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf") }
+      let(:file_path) do
+        font_fixture_path("MonaSans",
+                          "fonts/variable/MonaSansVF[wdth,wght,opsz,ital].ttf")
+      end
       let(:detector) { described_class.new(file_path) }
 
       it "is compatible with TrueType formats" do

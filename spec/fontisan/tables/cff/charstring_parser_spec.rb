@@ -400,7 +400,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringParser do
 
         expect { parser.parse }.to raise_error(
           Fontisan::CorruptedTableError,
-          /Failed to parse CharString/
+          /Failed to parse CharString/,
         )
       end
 
@@ -410,7 +410,7 @@ RSpec.describe Fontisan::Tables::Cff::CharStringParser do
         parser = described_class.new(data)
 
         expect { parser.parse }.to raise_error(
-          Fontisan::CorruptedTableError
+          Fontisan::CorruptedTableError,
         )
       end
     end

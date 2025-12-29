@@ -67,11 +67,11 @@ module Fontisan
 
         puts "Static font instance written to: #{output_path}"
       rescue VariationError => e
-        $stderr.puts "Variation Error: #{e.detailed_message}"
+        warn "Variation Error: #{e.detailed_message}"
         exit 1
       rescue StandardError => e
-        $stderr.puts "Error: #{e.message}"
-        $stderr.puts e.backtrace.first(5).join("\n") if options[:verbose]
+        warn "Error: #{e.message}"
+        warn e.backtrace.first(5).join("\n") if options[:verbose]
         exit 1
       end
 
@@ -87,9 +87,9 @@ module Fontisan
         errors = validator.validate
 
         if errors.any?
-          $stderr.puts "Validation errors found:"
+          warn "Validation errors found:"
           errors.each do |error|
-            $stderr.puts "  - #{error}"
+            warn "  - #{error}"
           end
           exit 1
         end
@@ -102,7 +102,7 @@ module Fontisan
       # @param font [Object] Font object
       # @param input_path [String] Input file path
       # @param options [Hash] Command options
-      def preview_instance(font, input_path, options)
+      def preview_instance(_font, input_path, options)
         coords = extract_coordinates(options)
 
         if coords.empty?
@@ -117,7 +117,8 @@ module Fontisan
           puts "  #{axis}: #{value}"
         end
         puts
-        puts "Output would be written to: #{determine_output_path(input_path, options)}"
+        puts "Output would be written to: #{determine_output_path(input_path,
+                                                                  options)}"
         puts "Output format: #{options[:to] || 'same as input'}"
         puts
         puts "Use without --dry-run to actually generate the instance."

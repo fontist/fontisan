@@ -121,7 +121,7 @@ module Fontisan
         def active_regions(coordinates)
           scalars = calculate_scalars(coordinates)
           scalars.each_with_index.select { |scalar, _| scalar.positive? }
-                 .map(&:last)
+            .map(&:last)
         end
 
         # Get scalar for specific region index

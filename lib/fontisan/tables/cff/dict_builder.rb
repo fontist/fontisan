@@ -93,7 +93,10 @@ module Fontisan
           dict_hash.each do |operator_name, value|
             # Get operator bytes
             operator_bytes = operator_for_name(operator_name)
-            raise ArgumentError, "Unknown operator: #{operator_name}" unless operator_bytes
+            unless operator_bytes
+              raise ArgumentError,
+                    "Unknown operator: #{operator_name}"
+            end
 
             # Write operands (value can be single value or array)
             if value.is_a?(Array)

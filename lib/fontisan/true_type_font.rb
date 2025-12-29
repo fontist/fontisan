@@ -233,7 +233,8 @@ module Fontisan
           batch_entries.each do |entry|
             relative_offset = entry.offset - batch_offset
             tag_key = entry.tag.dup.force_encoding("UTF-8")
-            @table_data[tag_key] = batch_data[relative_offset, entry.table_length]
+            @table_data[tag_key] =
+              batch_data[relative_offset, entry.table_length]
           end
         end
 
@@ -307,6 +308,7 @@ module Fontisan
     # @return [Boolean] true if table is available in current mode
     def table_available?(tag)
       return false unless has_table?(tag)
+
       LoadingModes.table_allowed?(@loading_mode, tag)
     end
 

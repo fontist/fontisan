@@ -28,12 +28,12 @@ module Fontisan
     MODES = {
       METADATA => {
         tables: %w[name head hhea maxp OS/2 post].freeze,
-        description: "Metadata mode - loads only identification and metrics tables (otfinfo-equivalent)"
+        description: "Metadata mode - loads only identification and metrics tables (otfinfo-equivalent)",
       }.freeze,
       FULL => {
         tables: :all,
-        description: "Full mode - loads all tables in the font"
-      }.freeze
+        description: "Full mode - loads all tables in the font",
+      }.freeze,
     }.freeze
 
     # Pre-computed Set for O(1) lookup of metadata tables
@@ -80,7 +80,7 @@ module Fontisan
     # @raise [ArgumentError] if mode is invalid
     def self.default_lazy?(mode)
       validate_mode!(mode)
-      true  # Lazy loading is recommended for all modes
+      true # Lazy loading is recommended for all modes
     end
 
     # Get mode description
