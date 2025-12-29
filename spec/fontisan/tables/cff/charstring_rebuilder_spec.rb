@@ -217,12 +217,14 @@ RSpec.describe Fontisan::Tables::Cff::CharStringRebuilder do
 
     it "allows glyph-specific modifications" do
       rebuilder.batch_modify([1, 2]) do |glyph_index, operations|
-        if glyph_index == 1
-          # Different modification for glyph 1
-        else
-          # Different modification for glyph 2
-        end
-        operations
+        hint = if glyph_index == 1
+                 # Add hstem hint for glyph 1
+                 { type: :operator, name: :hstem, operands: [10, 20] }
+               else
+                 # Add vstem hint for glyph 2
+                 { type: :operator, name: :vstem, operands: [15, 25] }
+               end
+        [hint] + operations
       end
 
       expect(rebuilder.modification_count).to eq(2)

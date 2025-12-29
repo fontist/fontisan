@@ -31,6 +31,9 @@ module Fontisan
       #   builder = CFF2TableBuilder.new(reader, hint_set)
       #   new_cff2 = builder.build
       class TableBuilder < Tables::Cff::TableBuilder
+        # CFF2-specific operators not supported by CFF DictBuilder
+        INVALID_CFF_KEYS = [24].freeze # operator 24 = vstore (CFF2 only)
+
         # @return [CFF2TableReader] CFF2 table reader
         attr_reader :reader
 
@@ -541,7 +544,7 @@ vstore:)
           result = {}
           dict.each do |key, value|
             # Skip vstore (operator 24) - CFF2 specific, not in CFF DictBuilder
-            next if [24, :vstore].include?(key)
+            next if INVALID_CFF_KEYS.include?(key)
 
             # Convert string keys to symbols for DictBuilder
             symbol_key = if key.is_a?(String)
