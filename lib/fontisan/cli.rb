@@ -26,6 +26,9 @@ module Fontisan
                          aliases: "-q"
 
     desc "info PATH", "Display font information"
+    option :brief, type: :boolean, default: false,
+                   desc: "Brief mode - only essential info (5x faster, uses metadata loading)",
+                   aliases: "-b"
     # Extract and display comprehensive font metadata.
     #
     # @param path [String] Path to the font file or collection
