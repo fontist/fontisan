@@ -285,4 +285,93 @@ RSpec.describe Fontisan::Commands::InfoCommand do
                           0x204)).to eq("Preview & Print, Bitmap only")
     end
   end
+
+  describe "brief mode" do
+    let(:brief_command) { described_class.new(temp_font_file.path, brief: true) }
+
+    it "returns FontInfo model" do
+      result = brief_command.run
+      expect(result).to be_a(Fontisan::Models::FontInfo)
+    end
+
+    it "populates essential fields only" do
+      result = brief_command.run
+
+      # Essential fields populated
+      expect(result.font_format).to eq("truetype")
+      expect(result.is_variable).to be false
+      expect(result.family_name).to eq("Test Family")
+      expect(result.subfamily_name).to eq("Regular")
+      expect(result.full_name).to eq("Test Family Regular")
+      expect(result.postscript_name).to eq("TestFamily-Regular")
+      expect(result.version).to eq("Version 1.0")
+      expect(result.font_revision).to be_within(0.01).of(1.5)
+      expect(result.units_per_em).to eq(2048)
+      expect(result.vendor_id).to eq("TEST")
+    end
+
+    it "does not populate non-essential fields" do
+      result = brief_command.run
+
+      # Non-essential fields not populated
+      expect(result.copyright).to be_nil
+      expect(result.trademark).to be_nil
+      expect(result.designer).to be_nil
+      expect(result.designer_url).to be_nil
+      expect(result.manufacturer).to be_nil
+      expect(result.vendor_url).to be_nil
+      expect(result.license_description).to be_nil
+      expect(result.license_url).to be_nil
+      expect(result.description).to be_nil
+      expect(result.sample_text).to be_nil
+      expect(result.unique_id).to be_nil
+      expect(result.postscript_cid_name).to be_nil
+      expect(result.preferred_family).to be_nil
+      expect(result.preferred_subfamily).to be_nil
+      expect(result.mac_font_menu_name).to be_nil
+      expect(result.permissions).to be_nil
+    end
+
+    it "serializes to YAML correctly" do
+      result = brief_command.run
+      yaml = result.to_yaml
+
+      expect(yaml).to include("family_name:")
+      expect(yaml).to include("font_format:")
+      expect(yaml).to include("Test Family")
+    end
+
+    it "serializes to JSON correctly" do
+      result = brief_command.run
+      json = JSON.parse(result.to_json)
+
+      expect(json).to have_key("family_name")
+      expect(json).to have_key("font_format")
+      expect(json["family_name"]).to eq("Test Family")
+      expect(json["font_format"]).to eq("truetype")
+    end
+
+    context "with variable font" do
+      let(:font_data) do
+        build_font_data(
+          "name" => build_name_table(
+            1 => "Variable Family",
+            2 => "Regular",
+            4 => "Variable Family Regular",
+            6 => "VariableFamily-Regular",
+            5 => "Version 2.0",
+          ),
+          "OS/2" => build_os2_table(vendor_id: "VARI"),
+          "head" => build_head_table(font_revision: 2.0, units_per_em: 1000),
+          "fvar" => build_fvar_table,
+        )
+      end
+
+      it "detects variable font in brief mode" do
+        result = brief_command.run
+        expect(result.is_variable).to be true
+        expect(result.font_format).to eq("truetype")
+      end
+    end
+  end
 end

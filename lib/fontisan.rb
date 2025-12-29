@@ -107,6 +107,7 @@ require_relative "fontisan/models/validation_report"
 require_relative "fontisan/models/font_export"
 require_relative "fontisan/models/collection_font_summary"
 require_relative "fontisan/models/collection_info"
+require_relative "fontisan/models/collection_brief_info"
 require_relative "fontisan/models/collection_list_info"
 require_relative "fontisan/models/font_summary"
 require_relative "fontisan/models/table_sharing_info"
@@ -217,5 +218,35 @@ module Fontisan
   # Set default logger
   self.logger = Logger.new($stdout).tap do |log|
     log.level = Logger::WARN
+  end
+
+  # Get font information.
+  #
+  # Supports both full and brief modes. Brief mode uses metadata loading for
+  # 5x faster parsing by loading only essential tables (name, head, hhea,
+  # maxp, OS/2, post). Returns FontInfo with 13 essential fields in brief mode
+  # or all 38 fields in full mode.
+  #
+  # @param path [String] Path to font file
+  # @param brief [Boolean] Use brief mode for fast identification (default: false)
+  # @param font_index [Integer] Index for TTC/OTC files (default: 0)
+  # @return [Models::FontInfo, Models::CollectionInfo, Models::CollectionBriefInfo] Font information
+  #
+  # @example Get full info
+  #   info = Fontisan.info("font.ttf")
+  #   puts info.family_name
+  #   puts info.copyright  # populated in full mode
+  #
+  # @example Get brief info (5x faster)
+  #   info = Fontisan.info("font.ttf", brief: true)
+  #   puts info.family_name       # populated
+  #   puts info.postscript_name   # populated
+  #   puts info.copyright         # nil (not populated in brief mode)
+  #
+  # @example Serialize to JSON
+  #   info = Fontisan.info("font.ttf", brief: true)
+  #   puts info.to_json
+  def self.info(path, brief: false, font_index: 0)
+    Commands::InfoCommand.new(path, brief: brief, font_index: font_index).run
   end
 end

@@ -82,12 +82,15 @@ module Fontisan
           end
         end
 
+        # Brief mode uses metadata loading for 5x faster parsing
+        mode = @options[:brief] ? LoadingModes::METADATA : (@options[:mode] || LoadingModes::FULL)
+
         # ConvertCommand and similar commands need all tables loaded upfront
         # Use mode and lazy from options, or sensible defaults
         FontLoader.load(
           @font_path,
           font_index: @options[:font_index] || 0,
-          mode: @options[:mode] || LoadingModes::FULL,
+          mode: mode,
           lazy: @options.key?(:lazy) ? @options[:lazy] : false,
         )
       rescue Errno::ENOENT

@@ -42,6 +42,8 @@ module Fontisan
           format_font_summary(model)
         when Models::CollectionInfo
           format_collection_info(model)
+        when Models::CollectionBriefInfo
+          format_collection_brief_info(model)
         else
           model.to_s
         end
@@ -312,7 +314,8 @@ module Fontisan
                  font_format
                end
 
-        type += " (Variable)" if is_variable
+        # Always show variable status explicitly
+        type += is_variable ? " (Variable)" : " (Not Variable)"
         type
       end
 
@@ -391,6 +394,47 @@ module Fontisan
           lines << "Unique tables: #{info.table_sharing.unique_tables}"
           lines << "Sharing: #{format_float(info.table_sharing.sharing_percentage)}%"
           lines << "Space saved: #{format_bytes(info.table_sharing.space_saved_bytes)}"
+        end
+
+        lines.join("\n")
+      end
+
+      # Format CollectionBriefInfo as human-readable text.
+      #
+      # @param info [Models::CollectionBriefInfo] Collection brief information to format
+      # @return [String] Formatted text with collection header and each font's brief info
+      def format_collection_brief_info(info)
+        lines = []
+
+        # Collection header
+        lines << "Collection: #{info.collection_path}"
+        lines << "Fonts: #{info.num_fonts}"
+        lines << ""
+
+        # Each font's brief info
+        info.fonts.each_with_index do |font_info, index|
+          # Show font index with offset
+          if font_info.collection_offset
+            lines << "Font #{index} (offset: #{font_info.collection_offset}):"
+          else
+            lines << "Font #{index}:"
+          end
+          lines << ""
+
+          # Format each font using same structure as individual fonts
+          font_type_display = format_font_type_display(font_info.font_format, font_info.is_variable)
+          add_line(lines, "Font type", font_type_display)
+          add_line(lines, "Family", font_info.family_name)
+          add_line(lines, "Subfamily", font_info.subfamily_name)
+          add_line(lines, "Full name", font_info.full_name)
+          add_line(lines, "PostScript name", font_info.postscript_name)
+          add_line(lines, "Version", font_info.version)
+          add_line(lines, "Vendor ID", font_info.vendor_id)
+          add_line(lines, "Font revision", format_float(font_info.font_revision))
+          add_line(lines, "Units per em", font_info.units_per_em)
+
+          # Blank line between fonts (except after last)
+          lines << "" unless index == info.num_fonts - 1
         end
 
         lines.join("\n")
