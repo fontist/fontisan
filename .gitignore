@@ -23,9 +23,10 @@ Gemfile.lock
 *.log
 
 # Downloaded test fixtures (use rake fixtures:download)
+/spec/fixtures/fonts/DinaRemasterII/
 /spec/fixtures/fonts/libertinus/
 /spec/fixtures/fonts/MonaSans/
+/spec/fixtures/fonts/NotoSans/
 /spec/fixtures/fonts/NotoSerifCJK/
 /spec/fixtures/fonts/NotoSerifCJK-VF/
 /spec/fixtures/fonts/SourceSans3/
-/spec/fixtures/fonts/NotoSans/

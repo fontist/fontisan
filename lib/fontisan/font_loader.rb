@@ -102,6 +102,37 @@ module Fontisan
     # without extracting individual fonts. Useful for inspecting collection
     # metadata and structure.
     #
+    # = Collection Format Understanding
+    #
+    # Both TTC (TrueType Collection) and OTC (OpenType Collection) files use
+    # the same "ttcf" signature. The distinction between TTC and OTC is NOT
+    # in the collection format itself, but in the fonts contained within:
+    #
+    # - TTC typically contains TrueType fonts (glyf outlines)
+    # - OTC typically contains OpenType fonts (CFF/CFF2 outlines)
+    # - Mixed collections are possible (both TTF and OTF in same collection)
+    #
+    # Each collection can contain multiple SFNT-format font files, with table
+    # deduplication to save space. Individual fonts within a collection are
+    # stored at different offsets within the file, each with their own table
+    # directory and data tables.
+    #
+    # = Detection Strategy
+    #
+    # This method scans ALL fonts in the collection to determine the collection
+    # type accurately:
+    #
+    # 1. Reads all font offsets from the collection header
+    # 2. Examines the sfnt_version of each font in the collection
+    # 3. Counts TrueType fonts (0x00010000 or 0x74727565 "true") vs OpenType fonts (0x4F54544F "OTTO")
+    # 4. If ANY font is OpenType (CFF), returns OpenTypeCollection
+    # 5. Only returns TrueTypeCollection if ALL fonts are TrueType
+    #
+    # This approach correctly handles:
+    # - Homogeneous collections (all TTF or all OTF)
+    # - Mixed collections (both TTF and OTF fonts) - uses OpenTypeCollection
+    # - Large collections with many fonts (like NotoSerifCJK.ttc with 35 fonts)
+    #
     # @param path [String] Path to the collection file
     # @return [TrueTypeCollection, OpenTypeCollection] The collection object
     # @raise [Errno::ENOENT] if file does not exist
@@ -121,23 +152,43 @@ module Fontisan
                 "File is not a collection (TTC/OTC). Use FontLoader.load instead."
         end
 
-        # Read first font offset to detect collection type
-        io.seek(12) # Skip tag (4) + versions (4) + num_fonts (4)
-        first_offset = io.read(4).unpack1("N")
+        # Read version and num_fonts
+        io.seek(8) # Skip tag (4) + version (4)
+        num_fonts = io.read(4).unpack1("N")
 
-        # Peek at first font's sfnt_version
-        io.seek(first_offset)
-        sfnt_version = io.read(4).unpack1("N")
+        # Read all font offsets
+        font_offsets = num_fonts.times.map { io.read(4).unpack1("N") }
+
+        # Scan all fonts to determine collection type (not just first)
+        truetype_count = 0
+        opentype_count = 0
+
+        font_offsets.each do |offset|
+          io.rewind
+          io.seek(offset)
+          sfnt_version = io.read(4).unpack1("N")
+
+          case sfnt_version
+          when Constants::SFNT_VERSION_TRUETYPE, 0x74727565 # 0x74727565 = 'true'
+            truetype_count += 1
+          when Constants::SFNT_VERSION_OTTO
+            opentype_count += 1
+          else
+            raise InvalidFontError,
+                  "Unknown font type in collection at offset #{offset} (sfnt version: 0x#{sfnt_version.to_s(16)})"
+          end
+        end
+
         io.rewind
 
-        case sfnt_version
-        when Constants::SFNT_VERSION_TRUETYPE
-          TrueTypeCollection.from_file(path)
-        when Constants::SFNT_VERSION_OTTO
+        # Determine collection type based on what fonts are inside
+        # If ANY font is OpenType, use OpenTypeCollection (more general format)
+        # Only use TrueTypeCollection if ALL fonts are TrueType
+        if opentype_count > 0
           OpenTypeCollection.from_file(path)
         else
-          raise InvalidFontError,
-                "Unknown font type in collection (sfnt version: 0x#{sfnt_version.to_s(16)})"
+          # All fonts are TrueType
+          TrueTypeCollection.from_file(path)
         end
       end
     end
@@ -167,6 +218,23 @@ module Fontisan
 
     # Load from a collection file (TTC or OTC)
     #
+    # This is the internal method that handles loading individual fonts from
+    # collection files. It reads the collection header to determine the type
+    # (TTC vs OTC) and extracts the requested font.
+    #
+    # = Collection Header Structure
+    #
+    # TTC/OTC files start with:
+    # - Bytes 0-3: "ttcf" tag (4 bytes)
+    # - Bytes 4-7: version (2 bytes major + 2 bytes minor)
+    # - Bytes 8-11: num_fonts (4 bytes, big-endian uint32)
+    # - Bytes 12+: font offset array (4 bytes per font, big-endian uint32)
+    #
+    # CRITICAL: The method seeks to position 8 (after tag and version) to read
+    # num_fonts, NOT position 12 which is where the offset array starts. This
+    # was a bug that caused "Unknown font type" errors when the first offset
+    # was misread as num_fonts.
+    #
     # @param io [IO] Open file handle
     # @param path [String] Path to the collection file
     # @param font_index [Integer] Index of font to extract
@@ -177,7 +245,7 @@ module Fontisan
     def self.load_from_collection(io, path, font_index,
 mode: LoadingModes::FULL, lazy: true)
       # Read collection header to get font offsets
-      io.seek(12) # Skip tag (4) + major_version (2) + minor_version (2) + num_fonts marker (4)
+      io.seek(8) # Skip tag (4) + version (4)
       num_fonts = io.read(4).unpack1("N")
 
       if font_index >= num_fonts
@@ -185,26 +253,41 @@ mode: LoadingModes::FULL, lazy: true)
               "Font index #{font_index} out of range (collection has #{num_fonts} fonts)"
       end
 
-      # Read first offset to detect collection type
-      first_offset = io.read(4).unpack1("N")
+      # Read all font offsets
+      font_offsets = num_fonts.times.map { io.read(4).unpack1("N") }
 
-      # Peek at first font's sfnt_version to determine TTC vs OTC
-      io.seek(first_offset)
-      sfnt_version = io.read(4).unpack1("N")
+      # Scan all fonts to determine collection type (not just first)
+      truetype_count = 0
+      opentype_count = 0
+
+      font_offsets.each do |offset|
+        io.rewind
+        io.seek(offset)
+        sfnt_version = io.read(4).unpack1("N")
+
+        case sfnt_version
+        when Constants::SFNT_VERSION_TRUETYPE, 0x74727565 # 0x74727565 = 'true'
+          truetype_count += 1
+        when Constants::SFNT_VERSION_OTTO
+          opentype_count += 1
+        else
+          raise InvalidFontError,
+                "Unknown font type in collection at offset #{offset} (sfnt version: 0x#{sfnt_version.to_s(16)})"
+        end
+      end
+
       io.rewind
 
-      case sfnt_version
-      when Constants::SFNT_VERSION_TRUETYPE
-        # TrueType Collection
-        ttc = TrueTypeCollection.from_file(path)
-        File.open(path, "rb") { |f| ttc.font(font_index, f, mode: mode) }
-      when Constants::SFNT_VERSION_OTTO
+      # If ANY font is OpenType, use OpenTypeCollection (more general format)
+      # Only use TrueTypeCollection if ALL fonts are TrueType
+      if opentype_count > 0
         # OpenType Collection
         otc = OpenTypeCollection.from_file(path)
         File.open(path, "rb") { |f| otc.font(font_index, f, mode: mode) }
       else
-        raise InvalidFontError,
-              "Unknown font type in collection (sfnt version: 0x#{sfnt_version.to_s(16)})"
+        # TrueType Collection (all fonts are TrueType)
+        ttc = TrueTypeCollection.from_file(path)
+        File.open(path, "rb") { |f| ttc.font(font_index, f, mode: mode) }
       end
     end
 

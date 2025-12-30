@@ -224,4 +224,91 @@ RSpec.describe "Collection Management Integration", :integration do
       end
     end
   end
+
+  describe "loading TTC collections with multiple fonts" do
+    let(:dina_path) { font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc") }
+
+    before do
+      skip "DinaRemasterII.ttc not available" unless File.exist?(dina_path)
+    end
+
+    it "loads DinaRemasterII.ttc collection successfully" do
+      collection = Fontisan::FontLoader.load_collection(dina_path)
+
+      expect(collection).to be_a(Fontisan::TrueTypeCollection)
+      expect(collection.num_fonts).to eq(2)
+      expect(collection.valid?).to be true
+    end
+
+    it "loads individual fonts from DinaRemasterII.ttc" do
+      # Load first font (Medium)
+      font0 = Fontisan::FontLoader.load(dina_path, font_index: 0)
+      expect(font0).to be_a(Fontisan::TrueTypeFont)
+      expect(font0.valid?).to be true
+
+      name_table = font0.table("name")
+      expect(name_table.english_name(1)).to eq("DinaRemasterII") # Family
+
+      # Load second font (Bold)
+      font1 = Fontisan::FontLoader.load(dina_path, font_index: 1)
+      expect(font1).to be_a(Fontisan::TrueTypeFont)
+      expect(font1.valid?).to be true
+    end
+
+    it "lists fonts in DinaRemasterII.ttc collection" do
+      File.open(dina_path, "rb") do |io|
+        ttc = Fontisan::TrueTypeCollection.read(io)
+        list = ttc.list_fonts(io)
+
+        expect(list.num_fonts).to eq(2)
+        expect(list.fonts.size).to eq(2)
+        expect(list.fonts[0].family_name).to eq("DinaRemasterII")
+        expect(list.fonts[0].font_format).to eq("TrueType")
+        expect(list.fonts[1].font_format).to eq("TrueType")
+      end
+    end
+  end
+
+  describe "loading OpenType Collection with many fonts" do
+    let(:noto_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
+
+    before do
+      skip "NotoSerifCJK.ttc not available" unless File.exist?(noto_path)
+    end
+
+    it "loads NotoSerifCJK.ttc collection with proper type detection" do
+      collection = Fontisan::FontLoader.load_collection(noto_path)
+
+      expect(collection).to be_a(Fontisan::OpenTypeCollection)
+      expect(collection.num_fonts).to eq(35)
+      expect(collection.valid?).to be true
+    end
+
+    it "loads individual OpenType fonts from large collection" do
+      # Test first font
+      font0 = Fontisan::FontLoader.load(noto_path, font_index: 0)
+      expect(font0).to be_a(Fontisan::OpenTypeFont)
+      expect(font0.valid?).to be true
+
+      # Test last font
+      font34 = Fontisan::FontLoader.load(noto_path, font_index: 34)
+      expect(font34).to be_a(Fontisan::OpenTypeFont)
+      expect(font34.valid?).to be true
+    end
+
+    it "scans all 35 fonts for correct type detection" do
+      File.open(noto_path, "rb") do |io|
+        otc = Fontisan::OpenTypeCollection.read(io)
+        list = otc.list_fonts(io)
+
+        expect(list.num_fonts).to eq(35)
+        expect(list.fonts.size).to eq(35)
+
+        # All fonts should be OpenType format
+        list.fonts.each do |font_summary|
+          expect(font_summary.font_format).to eq("OpenType")
+        end
+      end
+    end
+  end
 end

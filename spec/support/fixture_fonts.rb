@@ -55,6 +55,13 @@ module FixtureFonts
       path_prefix: "", # Extracts directly
       markers: ["Variable/OTC/NotoSerifCJK-VF.otf.ttc"],
     },
+    "DinaRemasterII" => {
+      url: "https://github.com/zshoals/Dina-Font-TTF-Remastered/raw/refs/heads/master/Fonts/DinaRemasterII.ttc",
+      target_dir: "DinaRemasterII",
+      path_prefix: "", # Single file, no prefix
+      single_file: true,
+      markers: ["DinaRemasterII.ttc"],
+    },
   }.freeze
 
   # Get absolute path to a font fixture file

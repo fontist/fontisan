@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
-require "bindata"
-require_relative "constants"
+require_relative "base_collection"
 
 module Fontisan
-  # TrueType Collection domain object using BinData
+  # TrueType Collection domain object
   #
-  # Represents a complete TrueType Collection file using BinData's declarative
-  # DSL for binary structure definition. The structure definition IS the
-  # documentation, and BinData handles all low-level reading/writing.
+  # Represents a complete TrueType Collection file. Inherits all shared
+  # functionality from BaseCollection and implements TTC-specific behavior.
   #
   # @example Reading and extracting fonts
   #   File.open("Helvetica.ttc", "rb") do |io|
@@ -16,51 +14,25 @@ module Fontisan
   #     puts ttc.num_fonts  # => 6
   #     fonts = ttc.extract_fonts(io)  # => [TrueTypeFont, TrueTypeFont, ...]
   #   end
-  class TrueTypeCollection < BinData::Record
-    endian :big
-
-    string :tag, length: 4, assert: "ttcf"
-    uint16 :major_version
-    uint16 :minor_version
-    uint32 :num_fonts
-    array :font_offsets, type: :uint32, initial_length: :num_fonts
-
-    # Read TrueType Collection from a file
+  class TrueTypeCollection < BaseCollection
+    # Get the font class for TrueType collections
     #
-    # @param path [String] Path to the TTC file
-    # @return [TrueTypeCollection] A new instance
-    # @raise [ArgumentError] if path is nil or empty
-    # @raise [Errno::ENOENT] if file does not exist
-    # @raise [RuntimeError] if file format is invalid
-    def self.from_file(path)
-      if path.nil? || path.to_s.empty?
-        raise ArgumentError,
-              "path cannot be nil or empty"
-      end
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      File.open(path, "rb") { |io| read(io) }
-    rescue BinData::ValidityError => e
-      raise "Invalid TTC file: #{e.message}"
-    rescue EOFError => e
-      raise "Invalid TTC file: unexpected end of file - #{e.message}"
-    end
-
-    # Extract fonts as TrueTypeFont objects
-    #
-    # Reads each font from the TTC file and returns them as TrueTypeFont objects.
-    #
-    # @param io [IO] Open file handle to read fonts from
-    # @return [Array<TrueTypeFont>] Array of font objects
-    def extract_fonts(io)
+    # @return [Class] TrueTypeFont class
+    def self.font_class
       require_relative "true_type_font"
-
-      font_offsets.map do |offset|
-        TrueTypeFont.from_ttc(io, offset)
-      end
+      TrueTypeFont
     end
 
-    # Get a single font from the collection (Fontisan extension)
+    # Get the collection format identifier
+    #
+    # @return [String] "TTC" for TrueType Collection
+    def self.collection_format
+      "TTC"
+    end
+
+    # Get a single font from the collection
+    #
+    # Overrides BaseCollection to use TrueType-specific from_ttc method.
     #
     # @param index [Integer] Index of the font (0-based)
     # @param io [IO] Open file handle
@@ -73,43 +45,27 @@ module Fontisan
       TrueTypeFont.from_ttc(io, font_offsets[index], mode: mode)
     end
 
-    # Get font count (Fontisan extension)
+    # Extract fonts as TrueTypeFont objects
     #
-    # @return [Integer] Number of fonts in collection
-    def font_count
-      num_fonts
-    end
+    # Reads each font from the TTC file and returns them as TrueTypeFont objects.
+    # This method uses the TTC-specific from_ttc method.
+    #
+    # @param io [IO] Open file handle to read fonts from
+    # @return [Array<TrueTypeFont>] Array of font objects
+    def extract_fonts(io)
+      require_relative "true_type_font"
 
-    # Validate format correctness
-    #
-    # @return [Boolean] true if the format is valid, false otherwise
-    def valid?
-      tag == Constants::TTC_TAG && num_fonts.positive? && font_offsets.length == num_fonts
-    rescue StandardError
-      false
-    end
-
-    # Get the TTC version as a single integer
-    #
-    #  @return [Integer] Version number (e.g., 0x00010000 for version 1.0)
-    def version
-      (major_version << 16) | minor_version
+      font_offsets.map do |offset|
+        TrueTypeFont.from_ttc(io, offset)
+      end
     end
 
     # List all fonts in the collection with basic metadata
     #
-    # Returns a CollectionListInfo model containing summaries of all fonts.
-    # This is the API method used by the `ls` command for collections.
+    # Overrides BaseCollection to use TrueType-specific from_ttc method.
     #
     # @param io [IO] Open file handle to read fonts from
     # @return [CollectionListInfo] List of fonts with metadata
-    #
-    # @example List fonts in collection
-    #   File.open("fonts.ttc", "rb") do |io|
-    #     ttc = TrueTypeCollection.read(io)
-    #     list = ttc.list_fonts(io)
-    #     list.fonts.each { |f| puts "#{f.index}: #{f.family_name}" }
-    #   end
     def list_fonts(io)
       require_relative "models/collection_list_info"
       require_relative "models/collection_font_summary"
@@ -159,51 +115,11 @@ module Fontisan
       )
     end
 
-    # Get comprehensive collection metadata
-    #
-    # Returns a CollectionInfo model with header information, offsets,
-    # and table sharing statistics.
-    # This is the API method used by the `info` command for collections.
-    #
-    # @param io [IO] Open file handle to read fonts from
-    # @param path [String] Collection file path (for file size)
-    # @return [CollectionInfo] Collection metadata
-    #
-    # @example Get collection info
-    #   File.open("fonts.ttc", "rb") do |io|
-    #     ttc = TrueTypeCollection.read(io)
-    #     info = ttc.collection_info(io, "fonts.ttc")
-    #     puts "Version: #{info.version_string}"
-    #   end
-    def collection_info(io, path)
-      require_relative "models/collection_info"
-      require_relative "models/table_sharing_info"
-
-      # Calculate table sharing statistics
-      table_sharing = calculate_table_sharing(io)
-
-      # Get file size
-      file_size = path ? File.size(path) : 0
-
-      Models::CollectionInfo.new(
-        collection_path: path,
-        collection_format: "TTC",
-        ttc_tag: tag,
-        major_version: major_version,
-        minor_version: minor_version,
-        num_fonts: num_fonts,
-        font_offsets: font_offsets.to_a,
-        file_size_bytes: file_size,
-        table_sharing: table_sharing,
-      )
-    end
-
     private
 
     # Calculate table sharing statistics
     #
-    # Analyzes which tables are shared between fonts and calculates
-    # space savings from deduplication.
+    # Overrides BaseCollection to use TrueType-specific from_ttc method.
     #
     # @param io [IO] Open file handle
     # @return [TableSharingInfo] Sharing statistics
