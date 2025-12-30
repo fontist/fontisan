@@ -2,6 +2,7 @@
 
 require "lutaml/model"
 require_relative "table_sharing_info"
+require_relative "font_info"
 
 module Fontisan
   module Models
@@ -20,7 +21,8 @@ module Fontisan
     #     num_fonts: 6,
     #     font_offsets: [48, 380, 712, 1044, 1376, 1676],
     #     file_size_bytes: 2240000,
-    #     table_sharing: table_sharing_obj
+    #     table_sharing: table_sharing_obj,
+    #     fonts: [font_info1, font_info2, ...]
     #   )
     class CollectionInfo < Lutaml::Model::Serializable
       attribute :collection_path, :string
@@ -32,6 +34,7 @@ module Fontisan
       attribute :font_offsets, :integer, collection: true
       attribute :file_size_bytes, :integer
       attribute :table_sharing, TableSharingInfo
+      attribute :fonts, FontInfo, collection: true
 
       yaml do
         map "collection_path", to: :collection_path
@@ -43,6 +46,7 @@ module Fontisan
         map "font_offsets", to: :font_offsets
         map "file_size_bytes", to: :file_size_bytes
         map "table_sharing", to: :table_sharing
+        map "fonts", to: :fonts
       end
 
       json do
@@ -55,6 +59,7 @@ module Fontisan
         map "font_offsets", to: :font_offsets
         map "file_size_bytes", to: :file_size_bytes
         map "table_sharing", to: :table_sharing
+        map "fonts", to: :fonts
       end
 
       # Get version as a formatted string

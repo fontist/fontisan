@@ -364,27 +364,25 @@ module Fontisan
       def format_collection_info(info)
         lines = []
 
-        # Header section
-        lines << "=== Collection Information ==="
-        lines << ""
-        lines << "File: #{info.collection_path}"
-        lines << "Format: #{info.collection_format}"
-        lines << "Size: #{format_bytes(info.file_size_bytes)}"
-        lines << ""
+        # Header section with type and version (like brief mode)
+        lines << "Collection: #{info.collection_path}"
 
-        # Header details
-        lines << "=== Header ==="
-        lines << "Tag: #{info.ttc_tag}"
-        lines << "Version: #{info.version_string} (#{info.version_hex})"
-        lines << "Number of fonts: #{info.num_fonts}"
-        lines << ""
-
-        # Font offsets
-        lines << "=== Font Offsets ==="
-        info.font_offsets.each_with_index do |offset, index|
-          lines << Kernel.format("  %d. Offset: %8d (0x%08X)",
-                                 index, offset, offset)
+        # Format collection type for display with OpenType version
+        if info.collection_format
+          collection_type_display = case info.collection_format
+                                    when "TTC"
+                                      "TrueType Collection (OpenType 1.4)"
+                                    when "OTC"
+                                      "OpenType Collection (OpenType 1.8)"
+                                    else
+                                      info.collection_format
+                                    end
+          lines << "Type: #{collection_type_display}"
         end
+
+        lines << "Version: #{info.version_string}"
+        lines << "Size: #{format_bytes(info.file_size_bytes)}"
+        lines << "Fonts: #{info.num_fonts}"
         lines << ""
 
         # Table sharing statistics
@@ -394,6 +392,46 @@ module Fontisan
           lines << "Unique tables: #{info.table_sharing.unique_tables}"
           lines << "Sharing: #{format_float(info.table_sharing.sharing_percentage)}%"
           lines << "Space saved: #{format_bytes(info.table_sharing.space_saved_bytes)}"
+          lines << ""
+        end
+
+        # Font offsets
+        lines << "=== Font Offsets ==="
+        info.font_offsets.each_with_index do |offset, index|
+          lines << Kernel.format("  %d. Offset: %8d (0x%08X)",
+                                 index, offset, offset)
+        end
+        lines << ""
+
+        # Individual font information (like brief mode)
+        if info.fonts && !info.fonts.empty?
+          lines << "=== Fonts ==="
+          lines << ""
+
+          info.fonts.each_with_index do |font_info, index|
+            # Show font index with offset
+            if font_info.collection_offset
+              lines << "Font #{index} (offset: #{font_info.collection_offset}):"
+            else
+              lines << "Font #{index}:"
+            end
+            lines << ""
+
+            # Format each font using same structure as brief mode
+            font_type_display = format_font_type_display(font_info.font_format, font_info.is_variable)
+            add_line(lines, "Font type", font_type_display)
+            add_line(lines, "Family", font_info.family_name)
+            add_line(lines, "Subfamily", font_info.subfamily_name)
+            add_line(lines, "Full name", font_info.full_name)
+            add_line(lines, "PostScript name", font_info.postscript_name)
+            add_line(lines, "Version", font_info.version)
+            add_line(lines, "Vendor ID", font_info.vendor_id)
+            add_line(lines, "Font revision", format_float(font_info.font_revision))
+            add_line(lines, "Units per em", font_info.units_per_em)
+
+            # Blank line between fonts (except after last)
+            lines << "" unless index == info.num_fonts - 1
+          end
         end
 
         lines.join("\n")
@@ -406,8 +444,23 @@ module Fontisan
       def format_collection_brief_info(info)
         lines = []
 
-        # Collection header
+        # Collection header with type and version
         lines << "Collection: #{info.collection_path}"
+
+        # Format collection type for display with OpenType version
+        if info.collection_type
+          collection_type_display = case info.collection_type
+                                    when "TTC"
+                                      "TrueType Collection (OpenType 1.4)"
+                                    when "OTC"
+                                      "OpenType Collection (OpenType 1.8)"
+                                    else
+                                      info.collection_type
+                                    end
+          lines << "Type: #{collection_type_display}"
+        end
+
+        lines << "Version: #{info.collection_version}" if info.collection_version
         lines << "Fonts: #{info.num_fonts}"
         lines << ""
 

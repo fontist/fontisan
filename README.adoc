@@ -1043,6 +1043,37 @@ Fontisan provides comprehensive tools for managing TrueType Collections (TTC)
 and OpenType Collections (OTC). You can list fonts in a collection, extract
 individual fonts, unpack entire collections, and validate collection integrity.
 
+Both TTC and OTC files use the same `ttcf` tag in their binary format, but
+differ in the type of font data they contain:
+
+TTC (TrueType Collection):: Supported since OpenType 1.4. Contains fonts with
+TrueType outlines (glyf table). Multiple fonts can share identical tables for
+efficient storage. File extension: `.ttc`
+
+OTC (OpenType Collection):: Supported since OpenType 1.8. Contains fonts with
+CFF-format outlines (CFF table). Provides the same storage benefits and
+glyph-count advantages as TTC but for CFF fonts. File extension: `.otc`
+
+The collection format allows:
+
+Table sharing::
+Identical tables are stored once and referenced by multiple fonts
+
+Gap mode::
+Overcomes the 65,535 glyph limit per font by distributing glyphs across multiple
+fonts in a single file
+
+Efficient storage::
+Significant size reduction, especially for CJK fonts (e.g., Noto CJK OTC is ~10
+MB smaller than separate OTF files)
+
+Fontist returns the appropriate collection type based on the font data:
+
+* Examines font data within collection to determine type (TTC vs OTC)
+* TTC contains fonts with TrueType outlines (glyf table)
+* OTC contains fonts with CFF outlines (CFF table)
+* If ANY font in the collection has CFF outlines, use OpenTypeCollection
+* Only use TrueTypeCollection if ALL fonts have TrueType outlines
 
 === List fonts
 

@@ -50,62 +50,80 @@ module Fontisan
             # Brief mode: load each font and populate brief info
             brief_info = Models::CollectionBriefInfo.new
             brief_info.collection_path = @font_path
+            brief_info.collection_type = collection.class.collection_format
+            brief_info.collection_version = collection.version_string
             brief_info.num_fonts = collection.num_fonts
-            brief_info.fonts = []
-
-            collection.num_fonts.times do |index|
-              # Load individual font from collection
-              font = FontLoader.load(@font_path, font_index: index, mode: LoadingModes::METADATA)
-
-              # Populate brief info for this font
-              info = Models::FontInfo.new
-
-              # Font format and variable status
-              info.font_format = case font
-                                 when TrueTypeFont
-                                   "truetype"
-                                 when OpenTypeFont
-                                   "cff"
-                                 else
-                                   "unknown"
-                                 end
-              info.is_variable = font.has_table?(Constants::FVAR_TAG)
-
-              # Collection offset (only populated for fonts in collections)
-              info.collection_offset = collection.font_offsets[index]
-
-              # Essential names
-              if font.has_table?(Constants::NAME_TAG)
-                name_table = font.table(Constants::NAME_TAG)
-                info.family_name = name_table.english_name(Tables::Name::FAMILY)
-                info.subfamily_name = name_table.english_name(Tables::Name::SUBFAMILY)
-                info.full_name = name_table.english_name(Tables::Name::FULL_NAME)
-                info.postscript_name = name_table.english_name(Tables::Name::POSTSCRIPT_NAME)
-                info.version = name_table.english_name(Tables::Name::VERSION)
-              end
-
-              # Essential metrics
-              if font.has_table?(Constants::HEAD_TAG)
-                head = font.table(Constants::HEAD_TAG)
-                info.font_revision = head.font_revision
-                info.units_per_em = head.units_per_em
-              end
-
-              # Vendor ID
-              if font.has_table?(Constants::OS2_TAG)
-                os2_table = font.table(Constants::OS2_TAG)
-                info.vendor_id = os2_table.vendor_id
-              end
-
-              brief_info.fonts << info
-            end
+            brief_info.fonts = load_collection_fonts(collection, @font_path)
 
             brief_info
           else
-            # Full mode: show detailed sharing statistics
-            collection.collection_info(io, @font_path)
+            # Full mode: show detailed sharing statistics AND font information
+            full_info = collection.collection_info(io, @font_path)
+
+            # Add font information to full mode
+            full_info.fonts = load_collection_fonts(collection, @font_path)
+
+            full_info
           end
         end
+      end
+
+      # Load font information for all fonts in a collection
+      #
+      # @param collection [TrueTypeCollection, OpenTypeCollection] The collection
+      # @param collection_path [String] Path to the collection file
+      # @return [Array<Models::FontInfo>] Array of font info objects
+      def load_collection_fonts(collection, collection_path)
+        fonts = []
+
+        collection.num_fonts.times do |index|
+          # Load individual font from collection
+          font = FontLoader.load(collection_path, font_index: index, mode: LoadingModes::METADATA)
+
+          # Populate font info
+          info = Models::FontInfo.new
+
+          # Font format and variable status
+          info.font_format = case font
+                             when TrueTypeFont
+                               "truetype"
+                             when OpenTypeFont
+                               "cff"
+                             else
+                               "unknown"
+                             end
+          info.is_variable = font.has_table?(Constants::FVAR_TAG)
+
+          # Collection offset (only populated for fonts in collections)
+          info.collection_offset = collection.font_offsets[index]
+
+          # Essential names
+          if font.has_table?(Constants::NAME_TAG)
+            name_table = font.table(Constants::NAME_TAG)
+            info.family_name = name_table.english_name(Tables::Name::FAMILY)
+            info.subfamily_name = name_table.english_name(Tables::Name::SUBFAMILY)
+            info.full_name = name_table.english_name(Tables::Name::FULL_NAME)
+            info.postscript_name = name_table.english_name(Tables::Name::POSTSCRIPT_NAME)
+            info.version = name_table.english_name(Tables::Name::VERSION)
+          end
+
+          # Essential metrics
+          if font.has_table?(Constants::HEAD_TAG)
+            head = font.table(Constants::HEAD_TAG)
+            info.font_revision = head.font_revision
+            info.units_per_em = head.units_per_em
+          end
+
+          # Vendor ID
+          if font.has_table?(Constants::OS2_TAG)
+            os2_table = font.table(Constants::OS2_TAG)
+            info.vendor_id = os2_table.vendor_id
+          end
+
+          fonts << info
+        end
+
+        fonts
       end
 
       # Get individual font information
