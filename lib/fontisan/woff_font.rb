@@ -78,11 +78,13 @@ module Fontisan
     # Read WOFF font from a file
     #
     # @param path [String] Path to the WOFF file
+    # @param mode [Symbol] Loading mode (:metadata or :full) - currently ignored, loads all tables
+    # @param lazy [Boolean] Lazy loading flag - currently ignored, always eager
     # @return [WoffFont] A new instance
     # @raise [ArgumentError] if path is nil or empty
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [InvalidFontError] if file format is invalid
-    def self.from_file(path)
+    def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
       if path.nil? || path.to_s.empty?
         raise ArgumentError,
               "path cannot be nil or empty"
@@ -158,9 +160,20 @@ module Fontisan
     #
     # Decompresses table data on first access and caches result
     #
-    # @param tag [String] The table tag
-    # @return [String, nil] Decompressed table data or nil if not found
-    def table_data(tag)
+    # @param tag [String, nil] The table tag (optional)
+    # @return [String, Hash, nil] Decompressed table data, hash of all tables, or nil if not found
+    def table_data(tag = nil)
+      # If no tag provided, return all tables
+      if tag.nil?
+        # Decompress all tables and return as hash
+        result = {}
+        @compressed_table_data.each_key do |table_tag|
+          result[table_tag] = table_data(table_tag)
+        end
+        return result
+      end
+
+      # Tag provided - return specific table
       return @decompressed_tables[tag] if @decompressed_tables.key?(tag)
 
       compressed_data = @compressed_table_data[tag]
