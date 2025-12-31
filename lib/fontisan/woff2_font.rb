@@ -156,7 +156,22 @@ module Fontisan
     end
 
     # Get decompressed table data
-    def table_data(tag)
+    #
+    # @param tag [String, nil] The table tag (optional)
+    # @return [String, Hash, nil] Table data if tag provided, or hash of all tables if no tag
+    def table_data(tag = nil)
+      # If no tag provided, return all tables
+      if tag.nil?
+        # First try underlying font's table data if available
+        if @underlying_font.respond_to?(:table_data)
+          return @underlying_font.table_data
+        end
+
+        # Fallback to decompressed_tables
+        return @decompressed_tables.dup
+      end
+
+      # Tag provided - return specific table
       # First try underlying font's table data if available
       if @underlying_font.respond_to?(:table_data)
         underlying_data = @underlying_font.table_data[tag]

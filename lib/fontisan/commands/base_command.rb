@@ -58,30 +58,13 @@ module Fontisan
       # Load the font using FontLoader.
       #
       # Uses FontLoader for automatic format detection and loading.
-      # Returns either TrueTypeFont or OpenTypeFont depending on file format.
+      # Returns TrueTypeFont, OpenTypeFont, WoffFont, or Woff2Font depending on file format.
       #
-      # @return [TrueTypeFont, OpenTypeFont] The loaded font
+      # @return [TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font] The loaded font
       # @raise [Errno::ENOENT] if file does not exist
-      # @raise [UnsupportedFormatError] for WOFF/WOFF2 or other unsupported formats
       # @raise [InvalidFontError] for corrupted or unknown formats
       # @raise [Error] for other loading failures
       def load_font
-        # BaseCommand is for inspection - reject compressed formats first
-        # Check file signature before attempting to load
-        File.open(@font_path, "rb") do |io|
-          signature = io.read(4)
-
-          if signature == "wOFF"
-            raise UnsupportedFormatError,
-                  "Unsupported font format: WOFF files must be decompressed first. " \
-                  "Use ConvertCommand to convert WOFF to TTF/OTF."
-          elsif signature == "wOF2"
-            raise UnsupportedFormatError,
-                  "Unsupported font format: WOFF2 files must be decompressed first. " \
-                  "Use ConvertCommand to convert WOFF2 to TTF/OTF."
-          end
-        end
-
         # Brief mode uses metadata loading for 5x faster parsing
         mode = @options[:brief] ? LoadingModes::METADATA : (@options[:mode] || LoadingModes::FULL)
 
