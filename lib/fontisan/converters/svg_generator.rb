@@ -99,6 +99,51 @@ module Fontisan
 
       private
 
+      # Generate SVG for a color glyph from COLR/CPAL tables
+      #
+      # @param glyph_id [Integer] Glyph ID
+      # @param colr_table [Tables::Colr] COLR table
+      # @param cpal_table [Tables::Cpal] CPAL table
+      # @param extractor [OutlineExtractor] Outline extractor for layer glyphs
+      # @param palette_index [Integer] Palette index to use (default: 0)
+      # @return [String, nil] SVG path data with color layers, or nil if not color glyph
+      def generate_color_glyph(glyph_id, colr_table, cpal_table, extractor, palette_index: 0)
+        # Get layers for this glyph
+        layers = colr_table.layers_for_glyph(glyph_id)
+        return nil if layers.empty?
+
+        # Get palette colors
+        palette = cpal_table.palette(palette_index)
+        return nil unless palette
+
+        # Generate SVG for each layer
+        svg_paths = []
+        layers.each do |layer|
+          # Get outline for layer glyph
+          outline = extractor.extract(layer.glyph_id)
+          next unless outline
+
+          # Get color for this layer
+          color = if layer.uses_foreground_color?
+                    "currentColor" # Use CSS currentColor for foreground
+                  else
+                    palette[layer.palette_index] || "#000000FF"
+                  end
+
+          # Convert outline to SVG path
+          path_data = outline.to_svg_path
+          next if path_data.empty?
+
+          # Create colored path element
+          svg_paths << %(<path d="#{path_data}" fill="#{color}" />)
+        end
+
+        svg_paths.empty? ? nil : svg_paths.join("\n")
+      rescue StandardError => e
+        warn "Failed to generate color glyph #{glyph_id}: #{e.message}"
+        nil
+      end
+
       # Extract glyph data from font
       #
       # @param font [TrueTypeFont, OpenTypeFont] Source font

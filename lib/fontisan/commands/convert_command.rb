@@ -51,22 +51,26 @@ module Fontisan
       # @option options [Boolean] :verbose Verbose output
       def initialize(font_path, options = {})
         super(font_path, options)
-        @output_path = options[:output]
+
+        # Convert string keys to symbols for Thor compatibility
+        opts = options.transform_keys(&:to_sym)
+
+        @output_path = opts[:output]
 
         # Parse target format
-        @target_format = parse_target_format(options[:to])
+        @target_format = parse_target_format(opts[:to])
 
         # Parse coordinates if string provided
-        @coordinates = if options[:coordinates]
-                         parse_coordinates(options[:coordinates])
-                       elsif options[:instance_coordinates]
-                         options[:instance_coordinates]
+        @coordinates = if opts[:coordinates]
+                         parse_coordinates(opts[:coordinates])
+                       elsif opts[:instance_coordinates]
+                         opts[:instance_coordinates]
                        end
 
-        @instance_index = options[:instance_index]
-        @preserve_variation = options[:preserve_variation]
-        @preserve_hints = options.fetch(:preserve_hints, false)
-        @validate = !options[:no_validate]
+        @instance_index = opts[:instance_index]
+        @preserve_variation = opts[:preserve_variation]
+        @preserve_hints = opts.fetch(:preserve_hints, false)
+        @validate = !opts[:no_validate]
       end
 
       # Execute the conversion
@@ -193,14 +197,13 @@ module Fontisan
         when "svg"
           :svg
         when "woff"
-          raise ArgumentError,
-                "WOFF format conversion is not supported yet. Use woff2 instead."
+          :woff
         when "woff2"
           :woff2
         else
           raise ArgumentError,
                 "Unknown target format: #{format}. " \
-                "Supported: ttf, otf, svg, woff2"
+                "Supported: ttf, otf, svg, woff, woff2"
         end
       end
 

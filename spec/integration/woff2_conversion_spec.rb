@@ -183,16 +183,6 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
   end
 
   describe "error handling" do
-    it "raises error for unsupported format" do
-      expect do
-        Fontisan::Commands::ConvertCommand.new(
-          test_font_path,
-          to: "woff", # Not implemented (only woff2 is)
-          output: File.join(output_dir, "test.woff"),
-        ).run
-      end.to raise_error(ArgumentError, /not supported/)
-    end
-
     it "raises error for missing output path" do
       expect do
         Fontisan::Commands::ConvertCommand.new(

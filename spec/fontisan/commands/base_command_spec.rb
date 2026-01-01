@@ -128,36 +128,6 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
         file.unlink
       end
-
-      it "raises UnsupportedFormatError for WOFF files" do
-        # Create WOFF signature file
-        file = Tempfile.new(["test", ".woff"])
-        file.binmode
-        file.write("wOFF#{"\x00" * 100}")
-        file.close
-
-        expect do
-          described_class.new(file.path)
-        end.to raise_error(Fontisan::UnsupportedFormatError,
-                           /Unsupported font format: WOFF/)
-
-        file.unlink
-      end
-
-      it "raises UnsupportedFormatError for WOFF2 files" do
-        # Create WOFF2 signature file
-        file = Tempfile.new(["test", ".woff2"])
-        file.binmode
-        file.write("wOF2#{"\x00" * 100}")
-        file.close
-
-        expect do
-          described_class.new(file.path)
-        end.to raise_error(Fontisan::UnsupportedFormatError,
-                           /Unsupported font format: WOFF2/)
-
-        file.unlink
-      end
     end
   end
 

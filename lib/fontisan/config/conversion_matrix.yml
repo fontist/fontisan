@@ -78,26 +78,34 @@ conversions:
       are architectural placeholders for future optimization.
 
   # Phase 2 conversions (Milestone 2.3) - WOFF
-  # NOTE: Temporarily disabled until WOFF writer bugs are fixed
-  # - from: ttf
-  #   to: woff
-  #   strategy: woff_writer
-  #   description: "Compress TrueType to WOFF format with zlib"
-  #   status: implemented
-  #   notes: >
-  #     WOFF 1.0 encoding with zlib compression. Supports optional metadata
-  #     and private data blocks. Individual table compression for optimal
-  #     file size reduction.
+  - from: ttf
+    to: woff
+    strategy: woff_writer
+    description: "Compress TrueType to WOFF format with zlib"
+    status: implemented
+    notes: >
+      WOFF 1.0 encoding with zlib compression. Supports optional metadata
+      and private data blocks. Individual table compression for optimal
+      file size reduction.
 
-  # - from: otf
-  #   to: woff
-  #   strategy: woff_writer
-  #   description: "Compress OpenType/CFF to WOFF format with zlib"
-  #   status: implemented
-  #   notes: >
-  #     WOFF 1.0 encoding with zlib compression. Supports optional metadata
-  #     and private data blocks. Individual table compression for optimal
-  #     file size reduction.
+  - from: otf
+    to: woff
+    strategy: woff_writer
+    description: "Compress OpenType/CFF to WOFF format with zlib"
+    status: implemented
+    notes: >
+      WOFF 1.0 encoding with zlib compression. Supports optional metadata
+      and private data blocks. Individual table compression for optimal
+      file size reduction.
+
+  - from: woff
+    to: woff
+    strategy: woff_recompress
+    description: "Copy WOFF font with re-compression"
+    status: implemented
+    notes: >
+      Same-format copy operation. Decompresses and re-compresses WOFF data,
+      useful for normalizing compression or updating metadata.
 
   # Reverse WOFF conversions (WOFF → TTF/OTF)
   - from: woff
@@ -138,6 +146,36 @@ conversions:
       SVG font generation with full glyph outline extraction and coordinate
       transformation. Note: SVG fonts are deprecated in favor of WOFF2, but
       useful for fallback, conversion, and inspection purposes.
+
+  # WOFF2 decompression (reverse conversions)
+  - from: woff2
+    to: ttf
+    strategy: woff2_decoder
+    description: "Decompress WOFF2 to TrueType format"
+    status: implemented
+    notes: >
+      WOFF2 decompression with Brotli. Reverses table transformations
+      (glyf/loca, hmtx) if present. Preserves all font data and metadata.
+      Automatically detects font flavor from WOFF2 header.
+
+  - from: woff2
+    to: otf
+    strategy: woff2_decoder
+    description: "Decompress WOFF2 to OpenType/CFF format"
+    status: implemented
+    notes: >
+      WOFF2 decompression with Brotli. Reverses table transformations
+      if present. Preserves all font data and metadata. Automatically
+      detects font flavor from WOFF2 header.
+
+  - from: woff2
+    to: woff2
+    strategy: woff2_recompress
+    description: "Copy WOFF2 font with re-compression"
+    status: implemented
+    notes: >
+      Same-format copy operation. Decompresses and re-compresses WOFF2 data
+      with Brotli, useful for normalizing compression or updating metadata.
 
 # Conversion compatibility matrix
 #

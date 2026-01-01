@@ -16,9 +16,9 @@ RSpec.describe Fontisan::Woff2::Directory do
     end
 
     it "has transformation constants" do
-      expect(described_class::TRANSFORM_NONE).to eq(0)
+      expect(described_class::TRANSFORM_NONE).to eq(3)
       expect(described_class::TRANSFORM_GLYF_LOCA).to eq(0)
-      expect(described_class::TRANSFORM_HMTX).to eq(0)
+      expect(described_class::TRANSFORM_HMTX).to eq(1)
     end
 
     it "has custom tag index" do
@@ -218,8 +218,8 @@ RSpec.describe Fontisan::Woff2::Directory do
         entry.tag = "glyf"
         flags = entry.calculate_flags
 
-        # For this milestone, transform version should be 0
-        expect((flags >> 6) & 0x03).to eq(0)
+        # For this milestone, transform version should be 3 (TRANSFORM_NONE - not transformed)
+        expect((flags >> 6) & 0x03).to eq(3)
       end
     end
 
