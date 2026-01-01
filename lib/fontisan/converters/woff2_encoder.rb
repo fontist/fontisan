@@ -6,7 +6,9 @@ require_relative "../woff2/directory"
 require_relative "../woff2/table_transformer"
 require_relative "../utilities/brotli_wrapper"
 require_relative "../utilities/checksum_calculator"
+require_relative "../validation/woff2_validator"
 require "yaml"
+require "stringio"
 
 module Fontisan
   module Converters
@@ -24,6 +26,7 @@ module Fontisan
     # 5. Compress all tables with single Brotli stream
     # 6. Build WOFF2 header and table directory
     # 7. Assemble complete WOFF2 binary
+    # 8. (Optional) Validate encoded WOFF2
     #
     # For Phase 2 Milestone 2.1:
     # - Basic WOFF2 structure generation
@@ -33,8 +36,13 @@ module Fontisan
     #
     # @example Convert TTF to WOFF2
     #   encoder = Woff2Encoder.new
-    #   woff2_binary = encoder.convert(font)
-    #   File.binwrite('font.woff2', woff2_binary)
+    #   result = encoder.convert(font)
+    #   File.binwrite('font.woff2', result[:woff2_binary])
+    #
+    # @example Convert with validation
+    #   encoder = Woff2Encoder.new
+    #   result = encoder.convert(font, validate: true)
+    #   puts result[:validation_report].text_summary if result[:validation_report]
     class Woff2Encoder
       include ConversionStrategy
 
@@ -57,7 +65,9 @@ module Fontisan
       # @param options [Hash] Conversion options
       # @option options [Integer] :quality Brotli quality (0-11)
       # @option options [Boolean] :transform_tables Apply table transformations
-      # @return [Hash] Hash with :woff2_binary key containing WOFF2 binary
+      # @option options [Boolean] :validate Run validation after encoding
+      # @option options [Symbol] :validation_level Validation level (:strict, :standard, :lenient)
+      # @return [Hash] Hash with :woff2_binary and optional :validation_report keys
       # @raise [Error] If encoding fails
       def convert(font, options = {})
         validate(font, :woff2)
@@ -97,8 +107,16 @@ module Fontisan
         # Assemble WOFF2 binary
         woff2_binary = assemble_woff2(header, entries, compressed_data)
 
-        # Return in special format for ConvertCommand to handle
-        { woff2_binary: woff2_binary }
+        # Prepare result
+        result = { woff2_binary: woff2_binary }
+
+        # Optional validation
+        if options[:validate]
+          validation_report = validate_encoding(woff2_binary, options)
+          result[:validation_report] = validation_report
+        end
+
+        result
       end
 
       # Get list of supported conversions
@@ -144,6 +162,67 @@ module Fontisan
 
       private
 
+      # Validate encoded WOFF2 binary
+      #
+      # @param woff2_binary [String] Encoded WOFF2 data
+      # @param options [Hash] Validation options
+      # @return [Models::ValidationReport] Validation report
+      def validate_encoding(woff2_binary, options)
+        # Load the encoded WOFF2 from memory
+        io = StringIO.new(woff2_binary)
+        woff2_font = Woff2Font.from_file_io(io, "encoded.woff2")
+
+        # Run validation
+        validation_level = options[:validation_level] || :standard
+        validator = Validation::Woff2Validator.new(level: validation_level)
+        validator.validate(woff2_font, "encoded.woff2")
+      rescue StandardError => e
+        # If validation fails, create a report with the error
+        report = Models::ValidationReport.new(
+          font_path: "encoded.woff2",
+          valid: false,
+        )
+        report.add_error("woff2_validation", "Validation failed: #{e.message}", nil)
+        report
+      end
+
+      # Helper method to load WOFF2 from StringIO
+      #
+      # This is added to Woff2Font to support in-memory validation
+      module Woff2FontMemoryLoader
+        def self.from_file_io(io, path_for_report)
+          io.rewind
+
+          woff2 = Woff2Font.new
+          woff2.io_source = Woff2Font::IOSource.new(path_for_report)
+
+          # Read header
+          woff2.header = Woff2::Woff2Header.read(io)
+
+          # Validate signature
+          unless woff2.header.signature == Woff2::Woff2Header::SIGNATURE
+            raise InvalidFontError,
+                  "Invalid WOFF2 signature: expected 0x#{Woff2::Woff2Header::SIGNATURE.to_s(16)}, " \
+                  "got 0x#{woff2.header.signature.to_i.to_s(16)}"
+          end
+
+          # Read table directory
+          woff2.table_entries = Woff2Font.read_table_directory_from_io(io, woff2.header)
+
+          # Decompress tables
+          woff2.decompressed_tables = Woff2Font.decompress_tables(io, woff2.header,
+                                                                   woff2.table_entries)
+
+          # Apply transformations
+          Woff2Font.apply_transformations!(woff2.table_entries, woff2.decompressed_tables)
+
+          woff2
+        end
+      end
+
+      # Extend Woff2Font with in-memory loading
+      Woff2Font.singleton_class.prepend(Woff2FontMemoryLoader)
+
       # Load configuration from YAML file
       #
       # @param path [String, nil] Path to config file
@@ -183,9 +262,9 @@ module Fontisan
             "mode" => "font",
           },
           "transformations" => {
-            "enabled" => false, # Disabled for Milestone 2.1
-            "glyf_loca" => false,
-            "hmtx" => false,
+            "enabled" => true, # Enable transformations for better compression
+            "glyf_loca" => true,
+            "hmtx" => true,
           },
           "metadata" => {
             "include" => false,
@@ -255,11 +334,17 @@ module Fontisan
       # @return [Array<Woff2::Directory::Entry>] Table entries
       def build_table_entries(table_data, transformer, transform_enabled)
         entries = []
+        transformed_data = {}
 
         # Sort tables by tag for consistent output
         sorted_tags = table_data.keys.sort
 
         sorted_tags.each do |tag|
+          # Skip loca if we're transforming glyf (loca is combined with glyf)
+          if tag == "loca" && transform_enabled && transformer.transformable?("glyf")
+            next
+          end
+
           entry = Woff2::Directory::Entry.new
           entry.tag = tag
 
@@ -270,8 +355,10 @@ module Fontisan
           # Apply transformation if enabled and supported
           if transform_enabled && transformer.transformable?(tag)
             transformed = transformer.transform_table(tag)
-            if transformed && transformed.bytesize < data.bytesize
+            if transformed&.bytesize&.positive? && transformed.bytesize < data.bytesize
+              # Transformation successful and reduces size
               entry.transform_length = transformed.bytesize
+              transformed_data[tag] = transformed
             end
           end
 
@@ -280,6 +367,9 @@ module Fontisan
 
           entries << entry
         end
+
+        # Store transformed data for compression
+        @transformed_data = transformed_data
 
         entries
       end
@@ -295,12 +385,15 @@ module Fontisan
         combined_data = String.new(encoding: Encoding::BINARY)
 
         entries.each do |entry|
-          # Get table data
-          data = table_data[entry.tag]
+          # Use transformed data if available, otherwise use original
+          data = if @transformed_data && @transformed_data[entry.tag]
+                   @transformed_data[entry.tag]
+                 else
+                   table_data[entry.tag]
+                 end
+
           next unless data
 
-          # For this milestone, we don't have transformed data yet
-          # Use original table data
           combined_data << data
         end
 

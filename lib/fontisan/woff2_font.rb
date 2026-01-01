@@ -410,15 +410,20 @@ module Fontisan
 
         # Determine if transformLength should be read
         # According to WOFF2 spec section 4.2:
-        # - glyf/loca with version 0: TRANSFORMED (transformLength present)
-        # - hmtx with non-zero version: TRANSFORMED (transformLength present)
-        # - all other tables: transformation version is 0 (no transformLength)
+        # - transformLength is ONLY present when table is actually transformed
+        # - For glyf/loca: transformation is indicated by transform_version = 0
+        # - For hmtx: transformation is indicated by transform_version = 1
+        # - For all other tables: no transformation, no transformLength
         transform_version = (flags >> 6) & 0x03
-        has_transform_length = if ["glyf",
-                                   "loca"].include?(entry.tag) && transform_version.zero?
-                                 true
-                               elsif entry.tag == "hmtx" && transform_version != 0
-                                 true
+
+        # transformLength is present when table is actually transformed
+        # glyf/loca use version 0 for transformation, hmtx uses version 1
+        has_transform_length = if ["glyf", "loca"].include?(entry.tag)
+                                 # For glyf/loca, version 0 means transformed
+                                 transform_version.zero?
+                               elsif entry.tag == "hmtx"
+                                 # For hmtx, version 1 means transformed
+                                 transform_version == 1
                                else
                                  false
                                end
