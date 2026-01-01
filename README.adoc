@@ -1599,6 +1599,31 @@ converter.supported_targets(:ttf)
 # => [:ttf, :otf, :woff2, :svg]
 ----
 
+=== Convert into WOFF2
+
+==== Validation
+
+WOFF2 encoding can be validated automatically to ensure spec compliance:
+
+.Validation example
+[example]
+====
+[source,ruby]
+----
+encoder = Fontisan::Converters::Woff2Encoder.new
+result = encoder.convert(font, {
+  transform_tables: true,
+  validate: true,
+  validation_level: :strict  # :strict, :standard, or :lenient
+})
+
+report = result[:validation_report]
+puts "Valid: #{report.valid}"
+puts "Compression: #{report.info_issues.first.message}"
+----
+====
+
+
 
 === Validation
 
