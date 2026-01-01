@@ -69,6 +69,12 @@ require_relative "fontisan/tables/cff"
 require_relative "fontisan/tables/layout_common"
 require_relative "fontisan/tables/gsub"
 require_relative "fontisan/tables/gpos"
+require_relative "fontisan/tables/colr"
+require_relative "fontisan/tables/cpal"
+require_relative "fontisan/tables/svg"
+require_relative "fontisan/tables/sbix"
+require_relative "fontisan/tables/cblc"
+require_relative "fontisan/tables/cbdt"
 
 # Domain objects (BinData::Record)
 require_relative "fontisan/true_type_font"
@@ -93,6 +99,8 @@ require_relative "fontisan/utilities/checksum_calculator"
 require_relative "fontisan/font_writer"
 
 # Information models (Lutaml::Model)
+require_relative "fontisan/models/bitmap_strike"
+require_relative "fontisan/models/bitmap_glyph"
 require_relative "fontisan/models/font_info"
 require_relative "fontisan/models/table_info"
 require_relative "fontisan/models/glyph_info"
@@ -111,6 +119,10 @@ require_relative "fontisan/models/collection_brief_info"
 require_relative "fontisan/models/collection_list_info"
 require_relative "fontisan/models/font_summary"
 require_relative "fontisan/models/table_sharing_info"
+require_relative "fontisan/models/color_glyph"
+require_relative "fontisan/models/color_layer"
+require_relative "fontisan/models/color_palette"
+require_relative "fontisan/models/svg_glyph"
 
 # Export infrastructure
 require_relative "fontisan/export/table_serializer"

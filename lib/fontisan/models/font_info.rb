@@ -38,6 +38,22 @@ module Fontisan
       attribute :units_per_em, :integer
       attribute :collection_offset, :integer
 
+      # Color font information (from COLR/CPAL tables)
+      attribute :is_color_font, Lutaml::Model::Type::Boolean
+      attribute :color_glyphs, :integer
+      attribute :color_palettes, :integer
+      attribute :colors_per_palette, :integer
+
+      # SVG table information
+      attribute :has_svg_table, Lutaml::Model::Type::Boolean
+      attribute :svg_glyph_count, :integer
+
+      # Bitmap table information (CBDT/CBLC, sbix)
+      attribute :has_bitmap_glyphs, Lutaml::Model::Type::Boolean
+      attribute :bitmap_strikes, Models::BitmapStrike, collection: true
+      attribute :bitmap_ppem_sizes, :integer, collection: true
+      attribute :bitmap_formats, :string, collection: true
+
       key_value do
         map "font_format", to: :font_format
         map "is_variable", to: :is_variable
@@ -66,6 +82,16 @@ module Fontisan
         map "permissions", to: :permissions
         map "units_per_em", to: :units_per_em
         map "collection_offset", to: :collection_offset
+        map "is_color_font", to: :is_color_font
+        map "color_glyphs", to: :color_glyphs
+        map "color_palettes", to: :color_palettes
+        map "colors_per_palette", to: :colors_per_palette
+        map "has_svg_table", to: :has_svg_table
+        map "svg_glyph_count", to: :svg_glyph_count
+        map "has_bitmap_glyphs", to: :has_bitmap_glyphs
+        map "bitmap_strikes", to: :bitmap_strikes
+        map "bitmap_ppem_sizes", to: :bitmap_ppem_sizes
+        map "bitmap_formats", to: :bitmap_formats
       end
     end
   end

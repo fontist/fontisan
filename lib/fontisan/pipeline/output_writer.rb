@@ -96,9 +96,9 @@ module Fontisan
 
         writer = Converters::WoffWriter.new
         font = build_font_from_tables(tables)
-        result = writer.convert(font, @options)
+        woff_data = writer.convert(font, @options)
 
-        File.binwrite(@output_path, result[:woff_data])
+        File.binwrite(@output_path, woff_data)
       end
 
       # Write WOFF2 format

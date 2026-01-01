@@ -202,6 +202,9 @@ module Fontisan
         populate_from_name_table(info) if font.has_table?(Constants::NAME_TAG)
         populate_from_os2_table(info) if font.has_table?(Constants::OS2_TAG)
         populate_from_head_table(info) if font.has_table?(Constants::HEAD_TAG)
+        populate_color_info(info) if font.has_table?("COLR") && font.has_table?("CPAL")
+        populate_svg_info(info) if font.has_table?("SVG ")
+        populate_bitmap_info(info) if font.has_table?("CBLC") || font.has_table?("sbix")
       end
 
       # Populate FontInfo from the name table.
@@ -253,6 +256,91 @@ module Fontisan
 
         info.font_revision = head_table.font_revision
         info.units_per_em = head_table.units_per_em
+      end
+
+      # Populate FontInfo with color font information from COLR/CPAL tables
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_color_info(info)
+        colr_table = font.table("COLR")
+        cpal_table = font.table("CPAL")
+
+        return unless colr_table && cpal_table
+
+        info.is_color_font = true
+        info.color_glyphs = colr_table.num_color_glyphs
+        info.color_palettes = cpal_table.num_palettes
+        info.colors_per_palette = cpal_table.num_palette_entries
+      rescue StandardError => e
+        warn "Failed to populate color font info: #{e.message}"
+        info.is_color_font = false
+      end
+
+      # Populate FontInfo with SVG table information
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_svg_info(info)
+        svg_table = font.table("SVG ")
+
+        return unless svg_table
+
+        info.has_svg_table = true
+        info.svg_glyph_count = svg_table.glyph_ids_with_svg.length
+      rescue StandardError => e
+        warn "Failed to populate SVG info: #{e.message}"
+        info.has_svg_table = false
+      end
+
+      # Populate FontInfo with bitmap table information (CBDT/CBLC, sbix)
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_bitmap_info(info)
+        bitmap_strikes = []
+        ppem_sizes = []
+        formats = []
+
+        # Check for CBDT/CBLC (Google format)
+        if font.has_table?("CBLC") && font.has_table?("CBDT")
+          cblc = font.table("CBLC")
+          info.has_bitmap_glyphs = true
+          ppem_sizes.concat(cblc.ppem_sizes)
+
+          cblc.strikes.each do |strike_rec|
+            bitmap_strikes << Models::BitmapStrike.new(
+              ppem: strike_rec.ppem,
+              start_glyph_id: strike_rec.start_glyph_index,
+              end_glyph_id: strike_rec.end_glyph_index,
+              bit_depth: strike_rec.bit_depth,
+              num_glyphs: strike_rec.glyph_range.size
+            )
+          end
+          formats << "PNG" # CBDT typically contains PNG data
+        end
+
+        # Check for sbix (Apple format)
+        if font.has_table?("sbix")
+          sbix = font.table("sbix")
+          info.has_bitmap_glyphs = true
+          ppem_sizes.concat(sbix.ppem_sizes)
+          formats.concat(sbix.supported_formats)
+
+          sbix.strikes.each do |strike|
+            bitmap_strikes << Models::BitmapStrike.new(
+              ppem: strike[:ppem],
+              start_glyph_id: 0,
+              end_glyph_id: strike[:num_glyphs] - 1,
+              bit_depth: 32,  # sbix is typically 32-bit
+              num_glyphs: strike[:num_glyphs]
+            )
+          end
+        end
+
+        info.bitmap_strikes = bitmap_strikes unless bitmap_strikes.empty?
+        info.bitmap_ppem_sizes = ppem_sizes.uniq.sort
+        info.bitmap_formats = formats.uniq
+      rescue StandardError => e
+        warn "Failed to populate bitmap info: #{e.message}"
+        info.has_bitmap_glyphs = false
       end
 
       # Format OS/2 embedding permission flags into a human-readable string.

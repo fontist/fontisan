@@ -62,6 +62,51 @@ module FixtureFonts
       single_file: true,
       markers: ["DinaRemasterII.ttc"],
     },
+    "EmojiOneColor" => {
+      url: "https://github.com/adobe-fonts/emojione-color/raw/master/EmojiOneColor.otf",
+      target_dir: "EmojiOneColor",
+      path_prefix: "", # Single file, no prefix
+      single_file: true,
+      markers: ["EmojiOneColor.otf"],
+    },
+    "TwitterColorEmoji" => {
+      url: "https://github.com/13rac1/twemoji-color-font/releases/download/v15.1.0/TwitterColorEmoji-SVGinOT-15.1.0.zip",
+      target_dir: "TwitterColorEmoji",
+      path_prefix: "TwitterColorEmoji-SVGinOT-15.1.0",
+      markers: ["TwitterColorEmoji-SVGinOT-15.1.0/TwitterColorEmoji-SVGinOT.ttf"],
+    },
+    "Gilbert" => {
+      url: "https://github.com/Fontself/TypeWithPride/releases/download/1.005/Gilbert_1.005_alpha.zip",
+      target_dir: "Gilbert",
+      path_prefix: "",
+      markers: ["Gilbert-Color Bold Preview5.otf"],
+    },
+    "TwemojiMozilla" => {
+      url: "https://github.com/mozilla/twemoji-colr/releases/download/v0.7.0/Twemoji.Mozilla.ttf",
+      target_dir: "TwemojiMozilla",
+      path_prefix: "",
+      single_file: true,
+      markers: ["Twemoji.Mozilla.ttf"],
+    },
+    # Broken fonts for validation testing
+    "RupaliBroken" => {
+      url: "https://github.com/fontist/fontisan/raw/main/spec/fixtures/fonts/Rupali_0.72.ttf",
+      target_dir: "broken",
+      path_prefix: "",
+      single_file: true,
+      markers: ["Rupali_0.72.ttf"],
+      broken: true,  # Mark as intentionally broken
+      issue: "name table structure broken",
+    },
+    "SiyamRupaliBroken" => {
+      url: "https://www.omicronlab.com/download/fonts/Siyam%20Rupali%20ANSI.ttf",
+      target_dir: "broken",
+      path_prefix: "",
+      single_file: true,
+      markers: ["Siyam Rupali ANSI.ttf"],
+      broken: true,  # Mark as intentionally broken
+      issue: "sbit embedded bitmap structure broken",
+    },
   }.freeze
 
   # Get absolute path to a font fixture file

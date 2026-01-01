@@ -512,6 +512,12 @@ module Fontisan
         Constants::GPOS_TAG => Tables::Gpos,
         Constants::GLYF_TAG => Tables::Glyf,
         Constants::LOCA_TAG => Tables::Loca,
+        "SVG " => Tables::Svg,
+        "COLR" => Tables::Colr,
+        "CPAL" => Tables::Cpal,
+        "CBDT" => Tables::Cbdt,
+        "CBLC" => Tables::Cblc,
+        "sbix" => Tables::Sbix,
       }[tag]
     end
 

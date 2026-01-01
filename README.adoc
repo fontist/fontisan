@@ -1300,6 +1300,173 @@ $ fontisan validate FONT.{ttc,otc}
 NOTE: In `extract_ttc`, this was done with `extract_ttc --validate FONT.ttc`.
 
 
+
+
+== Color font support
+
+=== General
+
+Fontisan provides comprehensive analysis of all color font formats defined in the OpenType specification.
+
+=== Supported color font formats
+
+Fontisan supports all four color font table formats:
+
+COLR/CPAL:: Layered color glyphs with custom color palettes (Microsoft/Google standard)
+
+SVG:: Embedded SVG graphics with gzip compression support (W3C standard)
+
+CBDT/CBLC:: Bitmap glyphs at multiple ppem sizes (Google format)
+
+sbix:: Bitmap graphics with PNG/JPEG/TIFF support (Apple format)
+
+=== Analyzing color fonts
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load and analyze a color font
+info = Fontisan.info('emoji-font.ttf')
+
+# Color glyph detection
+puts info.is_color_font       # true if COLR/CPAL present
+puts info.has_svg_table        # true if SVG table present
+puts info.has_bitmap_glyphs    # true if CBDT/CBLC or sbix present
+
+# Get color palette information (COLR/CPAL)
+if info.is_color_font
+  puts "Color glyphs: #{info.color_glyphs}"
+  puts "Color palettes: #{info.color_palettes}"
+  puts "Colors per palette: #{info.colors_per_palette}"
+end
+
+# Get SVG glyph information
+if info.has_svg_table
+  puts "SVG glyphs: #{info.svg_glyph_count}"
+end
+
+# Get bitmap information
+if info.has_bitmap_glyphs
+  puts "Bitmap formats: #{info.bitmap_formats.join(', ')}"
+  puts "Available sizes (ppem): #{info.bitmap_ppem_sizes.join(', ')}"
+
+  info.bitmap_strikes.each do |strike|
+    puts "Strike at #{strike.ppem}ppem:"
+    puts "  - Glyphs: #{strike.num_glyphs}"
+    puts "  - Color depth: #{strike.color_depth}"
+  end
+end
+----
+
+=== Color font table access
+
+Access color font tables directly:
+
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('emoji-font.ttf')
+
+# Access COLR table (layered color)
+if font.has_table?('COLR')
+  colr = font.table('COLR')
+  puts "Color glyphs: #{colr.num_color_glyphs}"
+
+  # Get color layers for a glyph
+  layers = colr.layers_for_glyph(42)
+  layers.each do |layer|
+    puts "Layer glyph: #{layer.glyph_id}, Palette index: #{layer.palette_index}"
+  end
+end
+
+# Access CPAL table (color palettes)
+if font.has_table?('CPAL')
+  cpal = font.table('CPAL')
+
+  # Get colors from first palette
+  palette = cpal.palette(0)
+  palette.each_with_index do |color, i|
+    puts "Color #{i}: R=#{color.red} G=#{color.green} B=#{color.blue} A=#{color.alpha}"
+  end
+end
+
+# Access SVG table
+if font.has_table?('SVG ')
+  svg = font.table('SVG ')
+
+  # Get SVG document for glyph 100
+  svg_doc = svg.svg_document_for_glyph(100)
+  puts "Compressed: #{svg_doc.compressed?}"
+  puts "SVG data: #{svg_doc.svg_data}"
+end
+
+# Access bitmap tables
+if font.has_table?('CBLC')
+  cblc = font.table('CBLC')
+  puts "Available ppem sizes: #{cblc.ppem_sizes.join(', ')}"
+
+  # Check if glyph 50 has bitmap at 64ppem
+  if cblc.has_bitmap_for_glyph?(50, 64)
+    puts "Glyph 50 has bitmap at 64ppem"
+  end
+end
+
+if font.has_table?('sbix')
+  sbix = font.table('sbix')
+
+  # Get bitmap data for glyph 42 at 128ppem
+  glyph_data = sbix.glyph_data(42, 128)
+  if glyph_data
+    puts "Format: #{glyph_data[:graphic_type_name]}"
+    puts "Origin: (#{glyph_data[:origin_x]}, #{glyph_data[:origin_y]})"
+    puts "Data size: #{glyph_data[:data].length} bytes"
+  end
+end
+----
+
+=== Output formats
+
+Color font information can be serialized to multiple formats:
+
+[source,ruby]
+----
+info = Fontisan.info('emoji-font.ttf')
+
+# YAML output
+puts info.to_yaml
+
+# JSON output
+puts info.to_json
+
+# XML output
+puts info.to_xml
+----
+
+Example YAML output:
+
+[source,yaml]
+----
+font_format: truetype
+family_name: "Emoji Font"
+is_color_font: true
+color_glyphs: 872
+color_palettes: 1
+colors_per_palette: 256
+has_svg_table: true
+svg_glyph_count: 872
+has_bitmap_glyphs: true
+bitmap_ppem_sizes: [16, 32, 64, 128, 256]
+bitmap_formats: ["PNG"]
+bitmap_strikes:
+  - ppem: 128
+    start_glyph_id: 1
+    end_glyph_id: 872
+    bit_depth: 32
+    num_glyphs: 872
+    color_depth: "32-bit (full color with alpha)"
+----
+
+
 == Advanced features
 
 Fontisan provides capabilities:
@@ -1389,6 +1556,9 @@ The loading mode can be queried at any time.
 
 [source,ruby]
 ----
+# Check laziness
+font.lazy?                  # => true
+
 # Mode stored as font property
 font.loading_mode  # => :metadata or :full
 
@@ -1397,6 +1567,12 @@ font.table_available?(tag)  # => boolean
 
 # Access restricted based on mode
 font.table(tag)  # => Returns table or raises error
+
+# Test lazy loading with an expensive operation
+glyphs = [] if font.subset_glyphs(lazy: true) { glyphs = font.subset_glyphs }
+glyphs.count                # => Tests whether glyphs were already loaded
+font.table_available?("head") # => true (lazy loading enabled)
+font.table_available?("GSUB") # => false (lazy loading enabled)
 ----
 
 
@@ -1430,7 +1606,7 @@ fields:
 `family_name`:: Font family name (nameID 1)
 `subfamily_name`:: Font subfamily/style name (nameID 2)
 `full_name`:: Full font name (nameID 4)
-`post_script_name`:: PostScript name (nameID 6)
+`postscript_name`:: PostScript name (nameID 6)
 `preferred_family_name`:: Preferred family name (nameID 16, may be nil)
 `preferred_subfamily_name`:: Preferred subfamily name (nameID 17, may be nil)
 `units_per_em`:: Units per em from head table
@@ -1484,6 +1660,64 @@ font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: false)
 ----
 
 
+=== Table preparedness
+
+Every table uses preparedness to avoid lazy initialization overhead. Function
+`table_available?` was added to check if table prepared for access.
+
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.ttf')
+
+# Check preparedness
+font.table_available?("head")     # => true
+font.table_available?("GSUB")     # => true
+font.table_available?("GPOS")     # => true
+
+# Force loading of a table
+head = font.table("head")
+puts head.metrics.units_per_em    # => Asks explicitly for metric value
+puts head.metrics.weight_class    # => Asks explicitly for metric value
+print head.ty                     # => Prints force loaded table
+
+# Check preparedness after loading
+font.table_available?("head")     # => true in cache
+font.table_available?("GSUB")     # => true in cache
+font.table_available?("GPOS")     # => true in cache
+----
+
+A table not present in a font file is loaded lazily and `table_available?`
+returns `false` after loading this table or after calling directly `table` for
+the given tag:
+
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.ttf')
+
+# Check preparedness
+font.standard_glyphs              # => instantly loading glyphs (CFF and GDEF)
+font.candlestick_and_widget_chart # => instantly loading glyphs (Colr)
+font.txt_encoder                  # => instantly loading glyphs (OutlinedFont)
+font.table_available?("post")     # => true (cached)
+
+font.table_available?("OS/2")     # => false (not loaded)
+font.table("OS/2")                # => instant loading tables (lazy loading)
+font.table_available?("OS/2")     # => true (cached)
+
+font.table_available?("VORG")     # => false (not loaded)
+font.table("VORG")                # => instant loading tables (lazy loading)
+# Raises Fontisan::Tables::VorgTableNotInFont: Not a valid sfnt font or sfnt table VORG not included in input font
+font.table_available?("VORG")     # => true (cached)
+
+font.table_available?("GLYC")     # => nil
+font.table("GLYC")                # => instant loading tables (lazy loading)
+# Raises Fontisan::TableNotFound: Table GLYC not found in font
+font.table_available?("GLYC")     # => nil (not cached)
+----
+
+NOTE: If you do not need to check whether the table is present before access
+it is faster to access directly `table` method and catch error with validation
+than first call table_available? for the table not present in the font file.
 
 
 == Outline format conversion
@@ -2142,7 +2376,7 @@ end
 ====
 
 
-== Round-Trip validation
+== Round-trip validation
 
 === General
 
@@ -2215,7 +2449,7 @@ Loron.
 
 Support for layered import CFF color glyphs rasterizing on demand, with
 composite font support, a multi-layer color font represented by many
-CFF fonts stacked on top of each other.	ColorGlyph support contains
+CFF fonts stacked on top of each other.  ColorGlyph support contains
 color glyphs, advanced color fonts glyphs and raster images (PNG or JPG)
 combined with TrueType outlines.
 

@@ -415,11 +415,14 @@ module Fontisan
           # If we have local subroutines, add Subrs offset
           # Subrs offset is relative to Private DICT start
           if local_subrs.any?
-            # Calculate size of Private DICT itself to know where Subrs starts
+            # Add a placeholder Subrs offset first to get accurate size
+            private_dict_hash[:subrs] = 0
+
+            # Calculate size of Private DICT with Subrs entry
             temp_private_dict_data = Tables::Cff::DictBuilder.build(private_dict_hash)
             subrs_offset = temp_private_dict_data.bytesize
 
-            # Add Subrs offset to DICT
+            # Update with actual Subrs offset
             private_dict_hash[:subrs] = subrs_offset
           end
 

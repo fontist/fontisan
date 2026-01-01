@@ -268,8 +268,7 @@ module Fontisan
 
         PrivateDict.new(private_data)
       rescue StandardError => e
-        warn "Failed to parse Private DICT: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to parse Private DICT: #{e.message}"
       end
 
       # Get the Local Subr INDEX for a specific font
@@ -300,8 +299,7 @@ module Fontisan
         io.seek(absolute_offset)
         Index.new(io, start_offset: absolute_offset)
       rescue StandardError => e
-        warn "Failed to parse Local Subr INDEX: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to parse Local Subr INDEX: #{e.message}"
       end
 
       # Get the CharStrings INDEX for a specific font
@@ -322,8 +320,7 @@ module Fontisan
         io.seek(charstrings_offset)
         CharstringsIndex.new(io, start_offset: charstrings_offset)
       rescue StandardError => e
-        warn "Failed to parse CharStrings INDEX: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to parse CharStrings INDEX: #{e.message}"
       end
 
       # Get a CharString for a specific glyph
@@ -358,8 +355,7 @@ module Fontisan
           local_subr_index,
         )
       rescue StandardError => e
-        warn "Failed to get CharString for glyph #{glyph_index}: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to get CharString for glyph #{glyph_index}: #{e.message}"
       end
 
       # Get the number of glyphs in a font
@@ -437,8 +433,7 @@ module Fontisan
         num_glyphs = glyph_count(index)
         Charset.new(charset_data, num_glyphs, self)
       rescue StandardError => e
-        warn "Failed to parse Charset: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to parse Charset: #{e.message}"
       end
 
       # Get the Encoding for a specific font
@@ -467,8 +462,7 @@ module Fontisan
         num_glyphs = glyph_count(index)
         Encoding.new(encoding_data, num_glyphs)
       rescue StandardError => e
-        warn "Failed to parse Encoding: #{e.message}"
-        nil
+        raise CorruptedTableError, "Failed to parse Encoding: #{e.message}"
       end
     end
 

@@ -55,16 +55,44 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
   describe "SourceSans3 font collection" do
     let(:base_path) { "spec/fixtures/fonts/SourceSans3" }
 
-    it "converts source fonts when available" do
-      skip "SourceSans3 directory not fully explored yet"
+    [
+      "OTF/SourceSans3-Bold.otf",
+      "OTF/SourceSans3-It.otf",
+      "OTF/SourceSans3-Black.otf",
+    ].each do |font_file|
+      it "successfully converts #{File.basename(font_file)} to WOFF2" do
+        font_path = File.join(base_path, font_file)
+        skip "Font not found: #{font_path}" unless File.exist?(font_path)
+
+        font = Fontisan::FontLoader.load(font_path)
+        result = encoder.convert(font, transform_tables: true)
+
+        expect(result[:woff2_binary]).to be_a(String)
+        expect(result[:woff2_binary].bytesize).to be > 0
+        expect(result[:woff2_binary][0, 4]).to eq("wOF2")
+      end
     end
   end
 
   describe "Libertinus font collection" do
-    let(:base_path) { "spec/fixtures/fonts/Libertinus" }
+    let(:base_path) { "spec/fixtures/fonts/Libertinus/Libertinus-7.051/static" }
 
-    it "converts Libertinus fonts when available" do
-      skip "Libertinus directory not fully explored yet"
+    [
+      "TTF/LibertinusSans-Bold.ttf",
+      "TTF/LibertinusSans-Regular.ttf",
+      "TTF/LibertinusSerif-BoldItalic.ttf",
+    ].each do |font_file|
+      it "successfully converts #{File.basename(font_file)} to WOFF2" do
+        font_path = File.join(base_path, font_file)
+        skip "Font not found: #{font_path}" unless File.exist?(font_path)
+
+        font = Fontisan::FontLoader.load(font_path)
+        result = encoder.convert(font, transform_tables: true)
+
+        expect(result[:woff2_binary]).to be_a(String)
+        expect(result[:woff2_binary].bytesize).to be > 0
+        expect(result[:woff2_binary][0, 4]).to eq("wOF2")
+      end
     end
   end
 
