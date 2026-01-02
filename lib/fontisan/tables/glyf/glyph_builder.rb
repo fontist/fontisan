@@ -76,9 +76,8 @@ module Fontisan
         contours = outline.to_truetype_contours
         raise ArgumentError, "no contours in outline" if contours.empty?
 
-        # Use the outline's existing bounding box instead of recalculating
-        # This preserves bbox accuracy during format conversions
-        bbox = outline.bbox
+        # Calculate bounding box from contours (on-curve points only)
+        bbox = calculate_bounding_box(contours)
 
         # Build binary data
         build_simple_glyph_data(contours, bbox, instructions)
@@ -390,6 +389,10 @@ axis)
 
         contours.each do |contour|
           contour.each do |point|
+            # Only consider on-curve points for bounding box
+            # Off-curve points are control points and may lie outside the actual outline
+            next unless point[:on_curve]
+
             x = point[:x]
             y = point[:y]
 
