@@ -424,6 +424,11 @@ tables:
   length: 17870
   offset: 542992
   checksum: 701383168
+- tag: OS/2
+  length: 96
+  offset: 392
+  checksum: 1193824355
+...
 ----
 ====
 
@@ -505,7 +510,7 @@ Syntax:
 $ fontisan unicode FONT_FILE [--format FORMAT]
 ----
 
-Where,
+Where:
 
 `FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
@@ -734,10 +739,8 @@ Dry-run mode: Preview of instance generation
 Coordinates:
   wght: 700.0
 
-Output would be written to: variable-instance.ttf
-Output
-
- format: same as input
+Output file: variable-instance.ttf
+Format: same as input
 
 Use without --dry-run to actually generate the instance.
 ----
@@ -1020,6 +1023,492 @@ Uses base64 encoding for binary data instead of hexadecimal, useful for
 JSON-based workflows.
 ====
 
+== Font validation
+
+=== General
+
+Fontisan provides validation functionality to ensure font quality, structural
+integrity, and compliance with various standards.
+
+The validation framework allows developers to create custom validators using a
+declarative DSL. Validators can perform checks on font tables, fields,
+structures, usability, instructions, and glyphs.
+
+=== Predefined profiles
+
+Fontisan includes several predefined validation profiles for common use cases:
+
+`indexability`:: Fast validation for font discovery and indexing (< 50ms). Uses
+BasicValidator with 8 essential checks. Loading mode: metadata.
+
+`usability`:: Basic usability for font installation. Uses FontBookValidator with
+26 checks including macOS Font Book compatibility. Loading mode: full.
+
+`production`:: Comprehensive quality checks for production fonts (default
+profile). Uses OpenTypeValidator with 36 checks for OpenType spec compliance.
+Loading mode: full.
+
+`web`:: Web font embedding and optimization validation. Uses WebFontValidator
+with 18 checks for web deployment. Loading mode: full.
+
+`spec_compliance`:: Full OpenType specification compliance with detailed checks.
+Uses OpenTypeValidator with info-level severity for comprehensive analysis.
+Loading mode: full.
+
+`default`:: Alias for the production profile.
+
+
+=== Command-line usage
+
+==== Validate a font file against a predefined profile
+
+.Validate with default profile
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf
+----
+====
+
+.Validate for web use
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -t web
+----
+====
+
+.List available profiles
+[example]
+====
+[source,shell]
+----
+$ fontisan validate --list
+Available validation profiles:
+  indexability         - Fast validation for font discovery and indexing
+  usability            - Basic usability for installation
+  production           - Comprehensive quality checks
+  web                  - Web embedding and optimization
+  spec_compliance      - Full OpenType spec compliance
+  default              - Default validation profile (alias for production)
+----
+====
+
+.Full report to file
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -t production -r -o report.txt
+----
+====
+
+.Summary with return value
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -S -R
+0 errors, 2 warnings, 0 info
+$ echo $?
+4  # Exit code 4 indicates warnings found
+----
+====
+
+.Table format output
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -T
+CHECK_ID | STATUS | SEVERITY | TABLE
+------------------------------------------------------------
+required_tables | PASS | error | N/A
+name_version | PASS | error | name
+family_name | PASS | error | name
+...
+----
+====
+
+==== CLI options
+
+-t, --test-list PROFILE:: Select validation profile (indexability, usability,
+production, web, spec_compliance, default)
+
+-l, --list:: List available validation profiles
+
+-o, --output FILE:: Write report to file instead of stdout
+
+-r, --full-report:: Generate full detailed report
+
+-R, --return-value-results:: Use return value to indicate results (0=none,
+1=error, 2=fatal, 3=major, 4=minor, 5=info)
+
+-S, --summary-report:: Generate brief summary report
+
+-T, --table-report:: Generate tabular format report
+
+-v, --verbose:: Enable verbose output
+
+-w, --suppress-warnings:: Suppress warning output
+
+-e, --exclude CHECKS:: Exclude specific checks (comma-separated list)
+
+
+=== Ruby API usage
+
+==== Architecture
+
+The validation framework in Ruby consists of:
+
+DSL base class:: `Fontisan::Validators::Validator` provides a declarative syntax
+for defining validation checks
+
+Table validation helpers::
+56 helper methods across 8 core OpenType tables (name, head, maxp, hhea, glyf,
+cmap, post, OS/2) that perform specific validation checks
+
+ValidationReport::
+Structured reports with individual check results, severity levels, and
+comprehensive issue tracking
+
+==== Using predefined profiles
+
+.Validate with Ruby API
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Validate with default profile (production)
+report = Fontisan.validate('font.ttf')
+puts report.valid?  # => true or false
+
+# Validate with specific profile
+report = Fontisan.validate('font.ttf', profile: :web)
+puts "Errors: #{report.summary.errors}"
+puts "Warnings: #{report.summary.warnings}"
+
+# Check validation status
+if report.valid?
+  puts "Font is valid for web use!"
+else
+  puts "Font has #{report.summary.errors} errors"
+end
+----
+====
+
+.Query validation results
+[example]
+====
+[source,ruby]
+----
+report = Fontisan.validate('font.ttf', profile: :production)
+
+# Get issues by severity
+fatal_issues = report.fatal_errors
+error_issues = report.errors_only
+warning_issues = report.warnings_only
+info_issues = report.info_only
+
+# Get issues by category
+table_issues = report.issues_by_category('table_validation')
+
+# Get check results
+failed_ids = report.failed_check_ids
+pass_rate = report.pass_rate
+
+# Export to different formats
+yaml_output = report.to_yaml
+json_output = report.to_json
+summary = report.to_summary  # "2 errors, 3 warnings, 0 info"
+----
+====
+
+.Use validators directly
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load font
+font = Fontisan::FontLoader.load('font.ttf')
+
+# Use specific validator
+validator = Fontisan::Validators::OpenTypeValidator.new
+report = validator.validate(font)
+
+# Check individual results
+name_check = report.result_of(:name_version)
+puts name_check.passed?
+puts name_check.severity
+----
+====
+
+==== Using custom validators
+
+===== General
+
+Custom validators inherit from `Fontisan::Validators::Validator` and define
+validation logic using the DSL.
+
+The DSL provides 6 check methods for different validation types:
+
+* `check_table` - Validate table-level properties
+* `check_field` - Validate specific field values
+* `check_structure` - Validate font structure and relationships
+* `check_usability` - Validate usability and best practices
+* `check_instructions` - Validate TrueType instructions/hinting
+* `check_glyphs` - Validate individual glyphs
+
+Each check receives a unique ID, severity level (:info, :warning, :error,
+:fatal), and a validation block.
+
+.Creating a custom validator
+[example]
+====
+[source,ruby]
+----
+require 'fontisan/validators/validator'
+
+# Define a custom validator
+class MyFontValidator < Fontisan::Validators::Validator
+  private
+
+  def define_checks
+    # Check name table
+    check_table :name_version, 'name', severity: :error do |table|
+      table.valid_version?
+    end
+
+    check_table :family_name, 'name', severity: :error do |table|
+      table.family_name_present?
+    end
+
+    # Check head table
+    check_table :head_magic, 'head', severity: :error do |table|
+      table.valid_magic?
+    end
+
+    check_table :units_per_em, 'head', severity: :error do |table|
+      table.valid_units_per_em?
+    end
+
+    # Check structure
+    check_structure :required_tables, severity: :error do |font|
+      %w[name head maxp hhea].all? { |tag| !font.table(tag).nil? }
+    end
+  end
+end
+
+# Use the validator
+font = Fontisan::FontLoader.load('font.ttf')
+validator = MyFontValidator.new
+report = validator.validate(font)
+
+# Check results
+puts report.valid?                           # => true/false
+puts report.status                           # => "valid", "valid_with_warnings", "invalid"
+puts report.summary.errors                   # => number of errors
+puts report.summary.warnings                 # => number of warnings
+
+# Query specific checks
+result = report.result_of(:name_version)
+puts result.passed?                          # => true/false
+puts result.severity                         # => "error"
+puts result.messages                         # => array of messages
+
+# Get all failed checks
+report.failed_checks.each do |check|
+  puts "#{check.check_id}: #{check.messages.join(', ')}"
+end
+
+# Serialize report
+puts report.to_yaml
+puts report.to_json
+----
+====
+
+
+.Using table validation helpers
+[example]
+====
+The validation framework integrates with 56 built-in validation helpers across
+core OpenType tables. These helpers perform specific validation checks and
+return boolean values.
+
+[source,ruby]
+----
+class ComprehensiveValidator < Fontisan::Validators::Validator
+  private
+
+  def define_checks
+    # Name table validation helpers
+    check_table :name_validation, 'name' do |table|
+      table.valid_version? &&
+        table.valid_encoding_heuristics? &&
+        table.family_name_present? &&
+        table.postscript_name_valid?
+    end
+
+    # Head table validation helpers
+    check_table :head_validation, 'head' do |table|
+      table.valid_magic? &&
+        table.valid_version? &&
+        table.valid_units_per_em? &&
+        table.valid_bounding_box? &&
+        table.valid_index_to_loc_format? &&
+        table.valid_glyph_data_format?
+    end
+
+    # Maxp table validation helpers
+    check_table :maxp_validation, 'maxp' do |table|
+      table.valid_version? &&
+        table.valid_num_glyphs? &&
+        table.valid_max_zones? &&
+        table.has_truetype_metrics? &&
+        table.reasonable_metrics?
+    end
+  end
+end
+----
+====
+
+.Handling validation results
+[example]
+====
+[source,ruby]
+----
+validator = MyFontValidator.new
+report = validator.validate(font)
+
+# Overall validation status
+if report.valid?
+  puts "Font is valid!"
+else
+  puts "Font has issues:"
+
+  # Show errors
+  report.errors.each do |error|
+    puts "  [ERROR] #{error.category}: #{error.message}"
+    puts "          Location: #{error.location}" if error.location
+  end
+
+  # Show warnings
+  report.warnings.each do |warning|
+    puts "  [WARN] #{warning.category}: #{warning.message}"
+  end
+end
+
+# Check specific validation results
+if report.result_of(:name_version)&.passed?
+  puts "Name table version is valid"
+else
+  puts "Name table version check failed"
+end
+
+# Get summary statistics
+puts "\nValidation Summary:"
+puts "  Total checks: #{report.check_results.count}"
+puts "  Passed: #{report.passed_checks.count}"
+puts "  Failed: #{report.failed_checks.count}"
+puts "  Errors: #{report.summary.errors}"
+puts "  Warnings: #{report.summary.warnings}"
+puts "  Info: #{report.summary.info}"
+----
+====
+
+==== Validation helpers
+
+===== General
+
+The validation framework provides 56 helper methods across 8 core OpenType
+tables. Each helper returns a boolean indicating whether the validation passed.
+
+Name table:
+
+* `valid_version?` - Check if version is 0 or 1
+* `valid_encoding_heuristics?` - Check platform/encoding combinations
+* `has_valid_platform_combos?` - Check for required platform combinations
+* `family_name_present?` - Check if family name exists and is non-empty
+* `postscript_name_present?` - Check if PostScript name exists and is non-empty
+* `postscript_name_valid?` - Check if PostScript name matches required pattern
+
+Head table:
+
+* `valid_magic?` - Check magic number (0x5F0F3CF5)
+* `valid_version?` - Check version is 1.0
+* `valid_units_per_em?` - Check units per em is valid (16-16384)
+* `valid_bounding_box?` - Check bounding box coordinates
+* `valid_index_to_loc_format?` - Check format is 0 or 1
+* `valid_glyph_data_format?` - Check format is 0
+
+Maxp Table:
+
+* `valid_version?` - Check version is 0.5 or 1.0
+* `valid_num_glyphs?` - Check num glyphs >= 1
+* `valid_max_zones?` - Check maxZones is 1 or 2
+* `has_truetype_metrics?` - Check TrueType metrics are present
+* `reasonable_metrics?` - Check metrics are within reasonable bounds
+
+Hhea Table:
+
+* `valid_version?` - Check version is 1.0
+* `valid_metric_data_format?` - Check format is 0
+* `valid_number_of_h_metrics?` - Check count >= 1
+* `valid_ascent_descent?` - Check signs are correct
+* `valid_line_gap?` - Check line gap >= 0
+* `valid_advance_width_max?` - Check max width > 0
+* `valid_caret_slope?` - Check caret slope values
+* `valid_x_max_extent?` - Check extent > 0
+
+Glyf Table:
+
+* `has_empty_glyphs?` - Check for empty glyphs
+* `has_clipped_glyphs?` - Check for clipped glyphs
+* `has_instructions?` - Check for TrueType instructions
+* `contours_valid?` - Check contour counts
+* `glyphs_accessible?` - Check glyph accessibility
+
+Cmap Table:
+
+* `valid_version?` - Check version is 0
+* `has_valid_subtables?` - Check subtable validity
+* `has_unicode_mapping?` - Check for Unicode support
+* `has_valid_bmp_coverage?` - Check BMP coverage
+* `has_valid_format4?` - Check format 4 subtable
+* `glyph_indices_valid?` - Check glyph index validity
+* `supports_platform?` - Check platform support
+
+Post Table:
+
+* `valid_version?` - Check version (1.0, 2.0, 2.5, 3.0, 4.0)
+* `valid_italic_angle?` - Check italic angle range
+* `valid_underline_position?` - Check underline metrics
+* `valid_underline_thickness?` - Check underline thickness
+* `valid_is_fixed_pitch?` - Check fixed pitch flag
+* `has_glyph_names?` - Check for glyph names
+
+OS/2 Table:
+
+* `valid_version?` - Check version (0-5)
+* `valid_weight_class?` - Check weight class (100-900)
+* `valid_width_class?` - Check width class (1-9)
+* `valid_vendor_id?` - Check vendor ID format
+* `valid_typo_metrics?` - Check typographic metrics
+* `valid_win_metrics?` - Check Windows metrics
+* `valid_unicode_ranges?` - Check Unicode range bits
+* `has_valid_panose?` - Check PANOSE classification
+* `valid_selection_flags?` - Check style selection flags
+* `valid_first_char_index?` - Check first character index
+* `valid_last_char_index?` - Check last character index
+* `valid_typo_ascender?` - Check typographic ascender
+* `valid_typo_descender?` - Check typographic descender
+
 
 == Version information
 
@@ -1300,173 +1789,6 @@ $ fontisan validate FONT.{ttc,otc}
 NOTE: In `extract_ttc`, this was done with `extract_ttc --validate FONT.ttc`.
 
 
-
-
-== Color font support
-
-=== General
-
-Fontisan provides comprehensive analysis of all color font formats defined in the OpenType specification.
-
-=== Supported color font formats
-
-Fontisan supports all four color font table formats:
-
-COLR/CPAL:: Layered color glyphs with custom color palettes (Microsoft/Google standard)
-
-SVG:: Embedded SVG graphics with gzip compression support (W3C standard)
-
-CBDT/CBLC:: Bitmap glyphs at multiple ppem sizes (Google format)
-
-sbix:: Bitmap graphics with PNG/JPEG/TIFF support (Apple format)
-
-=== Analyzing color fonts
-
-[source,ruby]
-----
-require 'fontisan'
-
-# Load and analyze a color font
-info = Fontisan.info('emoji-font.ttf')
-
-# Color glyph detection
-puts info.is_color_font       # true if COLR/CPAL present
-puts info.has_svg_table        # true if SVG table present
-puts info.has_bitmap_glyphs    # true if CBDT/CBLC or sbix present
-
-# Get color palette information (COLR/CPAL)
-if info.is_color_font
-  puts "Color glyphs: #{info.color_glyphs}"
-  puts "Color palettes: #{info.color_palettes}"
-  puts "Colors per palette: #{info.colors_per_palette}"
-end
-
-# Get SVG glyph information
-if info.has_svg_table
-  puts "SVG glyphs: #{info.svg_glyph_count}"
-end
-
-# Get bitmap information
-if info.has_bitmap_glyphs
-  puts "Bitmap formats: #{info.bitmap_formats.join(', ')}"
-  puts "Available sizes (ppem): #{info.bitmap_ppem_sizes.join(', ')}"
-
-  info.bitmap_strikes.each do |strike|
-    puts "Strike at #{strike.ppem}ppem:"
-    puts "  - Glyphs: #{strike.num_glyphs}"
-    puts "  - Color depth: #{strike.color_depth}"
-  end
-end
-----
-
-=== Color font table access
-
-Access color font tables directly:
-
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('emoji-font.ttf')
-
-# Access COLR table (layered color)
-if font.has_table?('COLR')
-  colr = font.table('COLR')
-  puts "Color glyphs: #{colr.num_color_glyphs}"
-
-  # Get color layers for a glyph
-  layers = colr.layers_for_glyph(42)
-  layers.each do |layer|
-    puts "Layer glyph: #{layer.glyph_id}, Palette index: #{layer.palette_index}"
-  end
-end
-
-# Access CPAL table (color palettes)
-if font.has_table?('CPAL')
-  cpal = font.table('CPAL')
-
-  # Get colors from first palette
-  palette = cpal.palette(0)
-  palette.each_with_index do |color, i|
-    puts "Color #{i}: R=#{color.red} G=#{color.green} B=#{color.blue} A=#{color.alpha}"
-  end
-end
-
-# Access SVG table
-if font.has_table?('SVG ')
-  svg = font.table('SVG ')
-
-  # Get SVG document for glyph 100
-  svg_doc = svg.svg_document_for_glyph(100)
-  puts "Compressed: #{svg_doc.compressed?}"
-  puts "SVG data: #{svg_doc.svg_data}"
-end
-
-# Access bitmap tables
-if font.has_table?('CBLC')
-  cblc = font.table('CBLC')
-  puts "Available ppem sizes: #{cblc.ppem_sizes.join(', ')}"
-
-  # Check if glyph 50 has bitmap at 64ppem
-  if cblc.has_bitmap_for_glyph?(50, 64)
-    puts "Glyph 50 has bitmap at 64ppem"
-  end
-end
-
-if font.has_table?('sbix')
-  sbix = font.table('sbix')
-
-  # Get bitmap data for glyph 42 at 128ppem
-  glyph_data = sbix.glyph_data(42, 128)
-  if glyph_data
-    puts "Format: #{glyph_data[:graphic_type_name]}"
-    puts "Origin: (#{glyph_data[:origin_x]}, #{glyph_data[:origin_y]})"
-    puts "Data size: #{glyph_data[:data].length} bytes"
-  end
-end
-----
-
-=== Output formats
-
-Color font information can be serialized to multiple formats:
-
-[source,ruby]
-----
-info = Fontisan.info('emoji-font.ttf')
-
-# YAML output
-puts info.to_yaml
-
-# JSON output
-puts info.to_json
-
-# XML output
-puts info.to_xml
-----
-
-Example YAML output:
-
-[source,yaml]
-----
-font_format: truetype
-family_name: "Emoji Font"
-is_color_font: true
-color_glyphs: 872
-color_palettes: 1
-colors_per_palette: 256
-has_svg_table: true
-svg_glyph_count: 872
-has_bitmap_glyphs: true
-bitmap_ppem_sizes: [16, 32, 64, 128, 256]
-bitmap_formats: ["PNG"]
-bitmap_strikes:
-  - ppem: 128
-    start_glyph_id: 1
-    end_glyph_id: 872
-    bit_depth: 32
-    num_glyphs: 872
-    color_depth: "32-bit (full color with alpha)"
-----
-
-
 == Advanced features
 
 Fontisan provides capabilities:
@@ -1556,9 +1878,6 @@ The loading mode can be queried at any time.
 
 [source,ruby]
 ----
-# Check laziness
-font.lazy?                  # => true
-
 # Mode stored as font property
 font.loading_mode  # => :metadata or :full
 
@@ -1567,12 +1886,6 @@ font.table_available?(tag)  # => boolean
 
 # Access restricted based on mode
 font.table(tag)  # => Returns table or raises error
-
-# Test lazy loading with an expensive operation
-glyphs = [] if font.subset_glyphs(lazy: true) { glyphs = font.subset_glyphs }
-glyphs.count                # => Tests whether glyphs were already loaded
-font.table_available?("head") # => true (lazy loading enabled)
-font.table_available?("GSUB") # => false (lazy loading enabled)
 ----
 
 
@@ -1606,7 +1919,7 @@ fields:
 `family_name`:: Font family name (nameID 1)
 `subfamily_name`:: Font subfamily/style name (nameID 2)
 `full_name`:: Full font name (nameID 4)
-`postscript_name`:: PostScript name (nameID 6)
+`post_script_name`:: PostScript name (nameID 6)
 `preferred_family_name`:: Preferred family name (nameID 16, may be nil)
 `preferred_subfamily_name`:: Preferred subfamily name (nameID 17, may be nil)
 `units_per_em`:: Units per em from head table
@@ -1660,64 +1973,6 @@ font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: false)
 ----
 
 
-=== Table preparedness
-
-Every table uses preparedness to avoid lazy initialization overhead. Function
-`table_available?` was added to check if table prepared for access.
-
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('font.ttf')
-
-# Check preparedness
-font.table_available?("head")     # => true
-font.table_available?("GSUB")     # => true
-font.table_available?("GPOS")     # => true
-
-# Force loading of a table
-head = font.table("head")
-puts head.metrics.units_per_em    # => Asks explicitly for metric value
-puts head.metrics.weight_class    # => Asks explicitly for metric value
-print head.ty                     # => Prints force loaded table
-
-# Check preparedness after loading
-font.table_available?("head")     # => true in cache
-font.table_available?("GSUB")     # => true in cache
-font.table_available?("GPOS")     # => true in cache
-----
-
-A table not present in a font file is loaded lazily and `table_available?`
-returns `false` after loading this table or after calling directly `table` for
-the given tag:
-
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('font.ttf')
-
-# Check preparedness
-font.standard_glyphs              # => instantly loading glyphs (CFF and GDEF)
-font.candlestick_and_widget_chart # => instantly loading glyphs (Colr)
-font.txt_encoder                  # => instantly loading glyphs (OutlinedFont)
-font.table_available?("post")     # => true (cached)
-
-font.table_available?("OS/2")     # => false (not loaded)
-font.table("OS/2")                # => instant loading tables (lazy loading)
-font.table_available?("OS/2")     # => true (cached)
-
-font.table_available?("VORG")     # => false (not loaded)
-font.table("VORG")                # => instant loading tables (lazy loading)
-# Raises Fontisan::Tables::VorgTableNotInFont: Not a valid sfnt font or sfnt table VORG not included in input font
-font.table_available?("VORG")     # => true (cached)
-
-font.table_available?("GLYC")     # => nil
-font.table("GLYC")                # => instant loading tables (lazy loading)
-# Raises Fontisan::TableNotFound: Table GLYC not found in font
-font.table_available?("GLYC")     # => nil (not cached)
-----
-
-NOTE: If you do not need to check whether the table is present before access
-it is faster to access directly `table` method and catch error with validation
-than first call table_available? for the table not present in the font file.
 
 
 == Outline format conversion
@@ -2376,7 +2631,7 @@ end
 ====
 
 
-== Round-trip validation
+== Round-Trip validation
 
 === General
 
@@ -2449,7 +2704,7 @@ Loron.
 
 Support for layered import CFF color glyphs rasterizing on demand, with
 composite font support, a multi-layer color font represented by many
-CFF fonts stacked on top of each other.  ColorGlyph support contains
+CFF fonts stacked on top of each other.	ColorGlyph support contains
 color glyphs, advanced color fonts glyphs and raster images (PNG or JPG)
 combined with TrueType outlines.
 

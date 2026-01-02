@@ -97,6 +97,80 @@ module Fontisan
         true
       end
 
+      # Validation helper: Check if version is valid
+      #
+      # OpenType spec requires version to be 1.0
+      #
+      # @return [Boolean] True if version is 1.0
+      def valid_version?
+        version_raw == 0x00010000
+      end
+
+      # Validation helper: Check if metric data format is valid
+      #
+      # Must be 0 for current format
+      #
+      # @return [Boolean] True if format is 0
+      def valid_metric_data_format?
+        metric_data_format == 0
+      end
+
+      # Validation helper: Check if number of h metrics is valid
+      #
+      # Must be at least 1
+      #
+      # @return [Boolean] True if number_of_h_metrics >= 1
+      def valid_number_of_h_metrics?
+        number_of_h_metrics && number_of_h_metrics >= 1
+      end
+
+      # Validation helper: Check if ascent/descent values are reasonable
+      #
+      # Ascent should be positive, descent should be negative
+      #
+      # @return [Boolean] True if ascent/descent have correct signs
+      def valid_ascent_descent?
+        ascent > 0 && descent < 0
+      end
+
+      # Validation helper: Check if line gap is non-negative
+      #
+      # Line gap should be >= 0
+      #
+      # @return [Boolean] True if line_gap >= 0
+      def valid_line_gap?
+        line_gap >= 0
+      end
+
+      # Validation helper: Check if advance width max is positive
+      #
+      # Maximum advance width should be > 0
+      #
+      # @return [Boolean] True if advance_width_max > 0
+      def valid_advance_width_max?
+        advance_width_max && advance_width_max > 0
+      end
+
+      # Validation helper: Check if caret slope is valid
+      #
+      # For vertical text: rise=1, run=0
+      # For horizontal italic: both should be non-zero
+      #
+      # @return [Boolean] True if caret slope values are sensible
+      def valid_caret_slope?
+        # At least one should be non-zero
+        caret_slope_rise != 0 || caret_slope_run != 0
+      end
+
+      # Validation helper: Check if extent is reasonable
+      #
+      # x_max_extent should be positive
+      #
+      # @return [Boolean] True if x_max_extent > 0
+      def valid_x_max_extent?
+        x_max_extent > 0
+      end
+
       # Validate the table and raise error if invalid
       #
       # @raise [Fontisan::CorruptedTableError] If table is invalid

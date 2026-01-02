@@ -263,16 +263,12 @@ module Fontisan
       def validate_output
         return unless File.exist?(@output_path)
 
-        require_relative "../validation/validator"
+        # Use new validation framework with production profile
+        report = Fontisan.validate(@output_path, profile: :production)
 
-        # Load font for validation
-        font = FontLoader.load(@output_path, mode: :full)
-        validator = Validation::Validator.new
-        result = validator.validate(font, @output_path)
+        return if report.valid?
 
-        return if result.valid
-
-        error_messages = result.errors.map(&:message).join(", ")
+        error_messages = report.errors.map(&:message).join(", ")
         raise Error, "Output validation failed: #{error_messages}"
       end
 

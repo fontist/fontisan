@@ -199,6 +199,82 @@ module Fontisan
         false
       end
 
+      # Validation helper: Check if version is valid (0 or 1)
+      #
+      # @return [Boolean] True if version is 0 or 1
+      def valid_version?
+        format == 0 || format == 1
+      end
+
+      # Validation helper: Check if encoding combinations are valid
+      #
+      # According to OpenType spec, certain platform/encoding combinations are valid:
+      # - Platform 0 (Unicode): encoding 0-6
+      # - Platform 1 (Mac): encoding 0-32
+      # - Platform 3 (Windows): encoding 0-10
+      #
+      # @return [Boolean] True if all encoding heuristics are valid
+      def valid_encoding_heuristics?
+        name_records.all? do |rec|
+          case rec.platform_id
+          when PLATFORM_UNICODE
+            rec.encoding_id.between?(0, 6)
+          when PLATFORM_MACINTOSH
+            rec.encoding_id.between?(0, 32)
+          when PLATFORM_WINDOWS
+            rec.encoding_id.between?(0, 10)
+          else
+            # Unknown platform - consider invalid
+            false
+          end
+        end
+      end
+
+      # Validation helper: Check if required platform combinations exist
+      #
+      # @param combos [Array<Array<Integer>>] Array of [platform_id, encoding_id, language_id] arrays
+      # @return [Boolean] True if all required combinations are present
+      #
+      # @example Check for Windows English name
+      #   name.has_valid_platform_combos?([3, 1, 0x0409])
+      def has_valid_platform_combos?(*combos)
+        combos.all? do |platform_id, encoding_id, language_id|
+          name_records.any? do |rec|
+            rec.platform_id == platform_id &&
+              rec.encoding_id == encoding_id &&
+              rec.language_id == language_id
+          end
+        end
+      end
+
+      # Validation helper: Check if family name is present and non-empty
+      #
+      # @return [Boolean] True if family name exists and is not empty
+      def family_name_present?
+        name = english_name(FAMILY)
+        !name.nil? && !name.empty?
+      end
+
+      # Validation helper: Check if PostScript name is present and non-empty
+      #
+      # @return [Boolean] True if PostScript name exists and is not empty
+      def postscript_name_present?
+        name = english_name(POSTSCRIPT_NAME)
+        !name.nil? && !name.empty?
+      end
+
+      # Validation helper: Check if PostScript name is valid
+      #
+      # PostScript names must contain only ASCII alphanumerics and hyphens
+      #
+      # @return [Boolean] True if PostScript name matches the required pattern
+      def postscript_name_valid?
+        name = english_name(POSTSCRIPT_NAME)
+        return false if name.nil? || name.empty?
+
+        name.match?(/^[A-Za-z0-9-]+$/)
+      end
+
       private
 
       # Find a name record matching the criteria

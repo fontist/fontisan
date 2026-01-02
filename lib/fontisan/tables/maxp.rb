@@ -157,6 +157,66 @@ module Fontisan
         true
       end
 
+      # Validation helper: Check if version is valid (0.5 or 1.0)
+      #
+      # @return [Boolean] True if version is 0.5 or 1.0
+      def valid_version?
+        version_0_5? || version_1_0?
+      end
+
+      # Validation helper: Check if number of glyphs is valid
+      #
+      # Must be at least 1 (.notdef glyph must exist)
+      #
+      # @return [Boolean] True if num_glyphs >= 1
+      def valid_num_glyphs?
+        num_glyphs && num_glyphs >= 1
+      end
+
+      # Validation helper: Check if maxZones is valid (version 1.0 only)
+      #
+      # For TrueType fonts, maxZones must be 1 or 2
+      #
+      # @return [Boolean] True if maxZones is valid or not applicable
+      def valid_max_zones?
+        return true if version_0_5?  # Not applicable for CFF
+
+        max_zones && max_zones.between?(1, 2)
+      end
+
+      # Validation helper: Check if all TrueType metrics are present
+      #
+      # For version 1.0, all max* fields should be present
+      #
+      # @return [Boolean] True if all required fields are present
+      def has_truetype_metrics?
+        version_1_0? &&
+          !max_points.nil? &&
+          !max_contours.nil? &&
+          !max_composite_points.nil? &&
+          !max_composite_contours.nil?
+      end
+
+      # Validation helper: Check if metrics are reasonable
+      #
+      # Checks that values don't exceed reasonable limits
+      #
+      # @return [Boolean] True if metrics are within reasonable bounds
+      def reasonable_metrics?
+        # num_glyphs should not exceed 65535
+        return false if num_glyphs > 65535
+
+        if version_1_0?
+          # Check reasonable limits for TrueType metrics
+          # These are generous limits to allow for complex fonts
+          return false if max_points && max_points > 50000
+          return false if max_contours && max_contours > 10000
+          return false if max_stack_elements && max_stack_elements > 1000
+        end
+
+        true
+      end
+
       # Validate the table and raise error if invalid
       #
       # @raise [Fontisan::CorruptedTableError] If table is invalid

@@ -82,6 +82,66 @@ module Fontisan
         magic_number == MAGIC_NUMBER
       end
 
+      # Validation helper: Check if magic number is valid
+      #
+      # @return [Boolean] True if magic number equals 0x5F0F3CF5
+      def valid_magic?
+        magic_number == MAGIC_NUMBER
+      end
+
+      # Validation helper: Check if version is valid
+      #
+      # OpenType spec requires version to be 1.0
+      #
+      # @return [Boolean] True if version is 1.0
+      def valid_version?
+        version_raw == 0x00010000  # Version 1.0
+      end
+
+      # Validation helper: Check if units per em is valid
+      #
+      # Units per em should be a power of 2 between 16 and 16384
+      #
+      # @return [Boolean] True if units_per_em is valid
+      def valid_units_per_em?
+        return false if units_per_em.nil? || units_per_em.zero?
+
+        # Must be between 16 and 16384
+        return false unless units_per_em.between?(16, 16384)
+
+        # Should be a power of 2 (recommended but not required)
+        # Common values: 1000, 1024, 2048
+        # We'll allow any value in range for flexibility
+        true
+      end
+
+      # Validation helper: Check if bounding box is valid
+      #
+      # The bounding box should have xMin < xMax and yMin < yMax
+      #
+      # @return [Boolean] True if bounding box coordinates are valid
+      def valid_bounding_box?
+        x_min < x_max && y_min < y_max
+      end
+
+      # Validation helper: Check if index_to_loc_format is valid
+      #
+      # Must be 0 (short) or 1 (long)
+      #
+      # @return [Boolean] True if format is 0 or 1
+      def valid_index_to_loc_format?
+        index_to_loc_format == 0 || index_to_loc_format == 1
+      end
+
+      # Validation helper: Check if glyph_data_format is valid
+      #
+      # Must be 0 for current format
+      #
+      # @return [Boolean] True if format is 0
+      def valid_glyph_data_format?
+        glyph_data_format == 0
+      end
+
       # Validate magic number and raise error if invalid
       #
       # @raise [Fontisan::CorruptedTableError] If magic number is invalid
