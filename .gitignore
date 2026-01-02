@@ -23,7 +23,6 @@ Gemfile.lock
 *.log
 
 # Downloaded test fixtures (use rake fixtures:download)
-/spec/fixtures/fonts/broken/
 /spec/fixtures/fonts/DinaRemasterII/
 /spec/fixtures/fonts/EmojiOneColor/
 /spec/fixtures/fonts/Gilbert/
