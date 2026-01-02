@@ -76,8 +76,9 @@ module Fontisan
         contours = outline.to_truetype_contours
         raise ArgumentError, "no contours in outline" if contours.empty?
 
-        # Calculate bounding box from contours
-        bbox = calculate_bounding_box(contours)
+        # Use the outline's existing bounding box instead of recalculating
+        # This preserves bbox accuracy during format conversions
+        bbox = outline.bbox
 
         # Build binary data
         build_simple_glyph_data(contours, bbox, instructions)
