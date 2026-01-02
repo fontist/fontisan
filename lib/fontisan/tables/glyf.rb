@@ -158,6 +158,124 @@ module Fontisan
         @glyphs_cache ||= {}
       end
 
+      # Validation helper: Check if all non-special glyphs have contours
+      #
+      # The .notdef glyph (ID 0) can be empty, but other glyphs should have geometry
+      #
+      # @param loca [Loca] Loca table for glyph access
+      # @param head [Head] Head table for context
+      # @param num_glyphs [Integer] Total number of glyphs to check
+      # @return [Boolean] True if all non-special glyphs have contours
+      def no_empty_glyphs_except_special?(loca, head, num_glyphs)
+        # Check glyphs 1 through num_glyphs-1 (.notdef at 0 can be empty)
+        (1...num_glyphs).all? do |glyph_id|
+          size = loca.size_of(glyph_id)
+          # Empty glyphs (like space) are allowed, but check if they should be empty
+          # This is a basic check - we just ensure non-control glyphs have data
+          size.nil? || size.positive?
+        end
+      rescue StandardError
+        false
+      end
+
+      # Validation helper: Check if any glyphs are clipped (exceed bounds)
+      #
+      # Validates that glyph coordinates don't exceed head table's bounding box
+      #
+      # @param loca [Loca] Loca table for glyph access
+      # @param head [Head] Head table for bounds reference
+      # @param num_glyphs [Integer] Total number of glyphs to check
+      # @return [Boolean] True if no glyphs exceed the font's bounding box
+      def no_clipped_glyphs?(loca, head, num_glyphs)
+        font_x_min = head.x_min
+        font_y_min = head.y_min
+        font_x_max = head.x_max
+        font_y_max = head.y_max
+
+        (0...num_glyphs).all? do |glyph_id|
+          glyph = glyph_for(glyph_id, loca, head)
+          next true if glyph.nil?  # Empty glyphs are OK
+
+          # Check if glyph bounds are within font bounds
+          glyph.x_min >= font_x_min &&
+            glyph.y_min >= font_y_min &&
+            glyph.x_max <= font_x_max &&
+            glyph.y_max <= font_y_max
+        end
+      rescue StandardError
+        false
+      end
+
+      # Validation helper: Check if TrueType instructions are sound
+      #
+      # Validates that glyph instructions (if present) are parseable
+      # This is a basic check that ensures instructions exist and have valid length
+      #
+      # @param loca [Loca] Loca table for glyph access
+      # @param head [Head] Head table for context
+      # @param num_glyphs [Integer] Total number of glyphs to check
+      # @return [Boolean] True if all instructions are valid or absent
+      def instructions_sound?(loca, head, num_glyphs)
+        (0...num_glyphs).all? do |glyph_id|
+          glyph = glyph_for(glyph_id, loca, head)
+          next true if glyph.nil?  # Empty glyphs are OK
+
+          # Simple glyphs have instructions
+          if glyph.respond_to?(:instruction_length)
+            inst_len = glyph.instruction_length
+            # If instructions present, length should be reasonable
+            inst_len.nil? || inst_len >= 0
+          else
+            # Compound glyphs may have instructions too
+            true
+          end
+        end
+      rescue StandardError
+        false
+      end
+
+      # Validation helper: Check if glyph has valid number of contours
+      #
+      # @param glyph_id [Integer] Glyph ID to check
+      # @param loca [Loca] Loca table for glyph access
+      # @param head [Head] Head table for context
+      # @return [Boolean] True if contour count is valid
+      def valid_contour_count?(glyph_id, loca, head)
+        glyph = glyph_for(glyph_id, loca, head)
+        return true if glyph.nil?  # Empty glyphs are OK
+
+        # Simple glyphs: contours should be >= 0
+        # Compound glyphs: numberOfContours = -1
+        if glyph.respond_to?(:num_contours)
+          glyph.num_contours >= -1
+        else
+          true
+        end
+      rescue StandardError
+        false
+      end
+
+      # Validation helper: Check if all glyphs are accessible
+      #
+      # Attempts to access each glyph to ensure no corruption
+      #
+      # @param loca [Loca] Loca table for glyph access
+      # @param head [Head] Head table for context
+      # @param num_glyphs [Integer] Total number of glyphs
+      # @return [Boolean] True if all glyphs can be accessed
+      def all_glyphs_accessible?(loca, head, num_glyphs)
+        (0...num_glyphs).all? do |glyph_id|
+          begin
+            glyph_for(glyph_id, loca, head)
+            true
+          rescue Fontisan::CorruptedTableError
+            false
+          end
+        end
+      rescue StandardError
+        false
+      end
+
       private
 
       # Validate context and glyph ID

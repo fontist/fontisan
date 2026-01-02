@@ -6,7 +6,8 @@ require_relative "../woff2/directory"
 require_relative "../woff2/table_transformer"
 require_relative "../utilities/brotli_wrapper"
 require_relative "../utilities/checksum_calculator"
-require_relative "../validation/woff2_validator"
+# Validation temporarily disabled - will be reimplemented with new DSL framework in Week 3+
+# require_relative "../validation/woff2_validator"
 require "yaml"
 require "stringio"
 
@@ -111,10 +112,11 @@ module Fontisan
         result = { woff2_binary: woff2_binary }
 
         # Optional validation
-        if options[:validate]
-          validation_report = validate_encoding(woff2_binary, options)
-          result[:validation_report] = validation_report
-        end
+        # Temporarily disabled - will be reimplemented with new DSL framework
+        # if options[:validate]
+        #   validation_report = validate_encoding(woff2_binary, options)
+        #   result[:validation_report] = validation_report
+        # end
 
         result
       end
@@ -161,30 +163,6 @@ module Fontisan
       end
 
       private
-
-      # Validate encoded WOFF2 binary
-      #
-      # @param woff2_binary [String] Encoded WOFF2 data
-      # @param options [Hash] Validation options
-      # @return [Models::ValidationReport] Validation report
-      def validate_encoding(woff2_binary, options)
-        # Load the encoded WOFF2 from memory
-        io = StringIO.new(woff2_binary)
-        woff2_font = Woff2Font.from_file_io(io, "encoded.woff2")
-
-        # Run validation
-        validation_level = options[:validation_level] || :standard
-        validator = Validation::Woff2Validator.new(level: validation_level)
-        validator.validate(woff2_font, "encoded.woff2")
-      rescue StandardError => e
-        # If validation fails, create a report with the error
-        report = Models::ValidationReport.new(
-          font_path: "encoded.woff2",
-          valid: false,
-        )
-        report.add_error("woff2_validation", "Validation failed: #{e.message}", nil)
-        report
-      end
 
       # Helper method to load WOFF2 from StringIO
       #

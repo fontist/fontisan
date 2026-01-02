@@ -46,6 +46,34 @@ module Fontisan
         end
       end
 
+      # Individual check result from DSL-based validation
+      class CheckResult < Lutaml::Model::Serializable
+        attribute :check_id, :string
+        attribute :passed, :boolean
+        attribute :severity, :string
+        attribute :messages, :string, collection: true, default: -> { [] }
+        attribute :table, :string
+        attribute :field, :string
+
+        yaml do
+          map "check_id", to: :check_id
+          map "passed", to: :passed
+          map "severity", to: :severity
+          map "messages", to: :messages
+          map "table", to: :table
+          map "field", to: :field
+        end
+
+        json do
+          map "check_id", to: :check_id
+          map "passed", to: :passed
+          map "severity", to: :severity
+          map "messages", to: :messages
+          map "table", to: :table
+          map "field", to: :field
+        end
+      end
+
       # Validation summary counts
       class Summary < Lutaml::Model::Serializable
         attribute :errors, :integer, default: -> { 0 }
@@ -69,12 +97,22 @@ module Fontisan
       attribute :valid, :boolean
       attribute :issues, Issue, collection: true, default: -> { [] }
       attribute :summary, Summary, default: -> { Summary.new }
+      attribute :profile, :string
+      attribute :status, :string
+      attribute :use_case, :string
+      attribute :checks_performed, :string, collection: true, default: -> { [] }
+      attribute :check_results, CheckResult, collection: true, default: -> { [] }
 
       yaml do
         map "font_path", to: :font_path
         map "valid", to: :valid
         map "summary", to: :summary
         map "issues", to: :issues
+        map "profile", to: :profile
+        map "status", to: :status
+        map "use_case", to: :use_case
+        map "checks_performed", to: :checks_performed
+        map "check_results", to: :check_results
       end
 
       json do
@@ -82,6 +120,11 @@ module Fontisan
         map "valid", to: :valid
         map "summary", to: :summary
         map "issues", to: :issues
+        map "profile", to: :profile
+        map "status", to: :status
+        map "use_case", to: :use_case
+        map "checks_performed", to: :checks_performed
+        map "check_results", to: :check_results
       end
 
       # Add an error to the report
@@ -196,6 +239,190 @@ module Fontisan
           end
         end
 
+        lines.join("\n")
+      end
+
+      # Check if font passed validation (alias for valid)
+      #
+      # @return [Boolean] true if font passed validation
+      def passed?
+        valid
+      end
+
+      # Check if font is valid (alias for valid attribute)
+      #
+      # @return [Boolean] true if font is valid
+      def valid?
+        valid
+      end
+
+      # Get result for a specific check by ID
+      #
+      # @param check_id [Symbol, String] The check identifier
+      # @return [CheckResult, nil] The check result or nil if not found
+      def result_of(check_id)
+        check_results.find { |cr| cr.check_id == check_id.to_s }
+      end
+
+      # Get all passed checks
+      #
+      # @return [Array<CheckResult>] Array of passed checks
+      def passed_checks
+        check_results.select(&:passed)
+      end
+
+      # Get all failed checks
+      #
+      # @return [Array<CheckResult>] Array of failed checks
+      def failed_checks
+        check_results.reject(&:passed)
+      end
+
+      # Severity filtering methods
+
+      # Get issues by severity level
+      #
+      # @param severity [Symbol, String] Severity level
+      # @return [Array<Issue>] Array of issues with the specified severity
+      def issues_by_severity(severity)
+        issues.select { |issue| issue.severity == severity.to_s }
+      end
+
+      # Get fatal error issues
+      #
+      # @return [Array<Issue>] Array of fatal error issues
+      def fatal_errors
+        issues_by_severity(:fatal)
+      end
+
+      # Get error issues only
+      #
+      # @return [Array<Issue>] Array of error issues
+      def errors_only
+        issues_by_severity(:error)
+      end
+
+      # Get warning issues only
+      #
+      # @return [Array<Issue>] Array of warning issues
+      def warnings_only
+        issues_by_severity(:warning)
+      end
+
+      # Get info issues only
+      #
+      # @return [Array<Issue>] Array of info issues
+      def info_only
+        issues_by_severity(:info)
+      end
+
+      # Category filtering methods
+
+      # Get issues by category
+      #
+      # @param category [String] Category name
+      # @return [Array<Issue>] Array of issues in the specified category
+      def issues_by_category(category)
+        issues.select { |issue| issue.category == category.to_s }
+      end
+
+      # Get check results for a specific table
+      #
+      # @param table_tag [String] Table tag (e.g., 'name', 'head')
+      # @return [Array<CheckResult>] Array of check results for the table
+      def table_issues(table_tag)
+        check_results.select { |cr| cr.table == table_tag.to_s }
+      end
+
+      # Get check results for a specific field in a table
+      #
+      # @param table_tag [String] Table tag
+      # @param field_name [String, Symbol] Field name
+      # @return [Array<CheckResult>] Array of check results for the field
+      def field_issues(table_tag, field_name)
+        check_results.select { |cr| cr.table == table_tag.to_s && cr.field == field_name.to_s }
+      end
+
+      # Check filtering methods
+
+      # Get checks by status
+      #
+      # @param passed [Boolean] true for passed checks, false for failed checks
+      # @return [Array<CheckResult>] Array of checks with the specified status
+      def checks_by_status(passed:)
+        check_results.select { |cr| cr.passed == passed }
+      end
+
+      # Get IDs of failed checks
+      #
+      # @return [Array<String>] Array of failed check IDs
+      def failed_check_ids
+        failed_checks.map(&:check_id)
+      end
+
+      # Get IDs of passed checks
+      #
+      # @return [Array<String>] Array of passed check IDs
+      def passed_check_ids
+        passed_checks.map(&:check_id)
+      end
+
+      # Statistics methods
+
+      # Calculate failure rate as percentage
+      #
+      # @return [Float] Failure rate (0.0 to 1.0)
+      def failure_rate
+        return 0.0 if check_results.empty?
+        failed_checks.length.to_f / check_results.length
+      end
+
+      # Calculate pass rate as percentage
+      #
+      # @return [Float] Pass rate (0.0 to 1.0)
+      def pass_rate
+        1.0 - failure_rate
+      end
+
+      # Get severity distribution
+      #
+      # @return [Hash] Hash with :errors, :warnings, :info counts
+      def severity_distribution
+        {
+          errors: summary.errors,
+          warnings: summary.warnings,
+          info: summary.info,
+        }
+      end
+
+      # Export format methods
+
+      # Generate full detailed text report
+      #
+      # @return [String] Detailed text report
+      def to_text_report
+        text_summary
+      end
+
+      # Generate brief summary
+      #
+      # @return [String] Brief summary string
+      def to_summary
+        "#{summary.errors} errors, #{summary.warnings} warnings, #{summary.info} info"
+      end
+
+      # Generate tabular format for CLI
+      #
+      # @return [String] Tabular format output
+      def to_table_format
+        lines = []
+        lines << "CHECK_ID | STATUS | SEVERITY | TABLE"
+        lines << "-" * 60
+        check_results.each do |cr|
+          status = cr.passed ? "PASS" : "FAIL"
+          table = cr.table || "N/A"
+          lines << "#{cr.check_id} | #{status} | #{cr.severity} | #{table}"
+        end
         lines.join("\n")
       end
     end

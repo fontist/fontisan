@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "base_command"
-require_relative "../validation/validator"
-require_relative "../validation/variable_font_validator"
+require_relative "../validators/profile_loader"
 require_relative "../font_loader"
 
 module Fontisan
@@ -11,195 +10,152 @@ module Fontisan
     #
     # This command validates fonts against quality checks, structural integrity,
     # and OpenType specification compliance. It supports different validation
-    # levels and output formats.
+    # profiles and output formats, with ftxvalidator-compatible options.
     #
-    # @example Validating a font
+    # @example Validating a font with default profile
+    #   command = ValidateCommand.new(input: "font.ttf")
+    #   exit_code = command.run
+    #
+    # @example Validating with specific profile
     #   command = ValidateCommand.new(
     #     input: "font.ttf",
-    #     level: :standard,
-    #     format: :text
+    #     profile: :web,
+    #     format: :json
     #   )
     #   exit_code = command.run
     class ValidateCommand < BaseCommand
       # Initialize validate command
       #
       # @param input [String] Path to font file
-      # @param level [Symbol] Validation level (:strict, :standard, :lenient)
+      # @param profile [Symbol, String, nil] Validation profile (default: :default)
+      # @param exclude [Array<String>] Tests to exclude
+      # @param output [String, nil] Output file path
       # @param format [Symbol] Output format (:text, :yaml, :json)
-      # @param verbose [Boolean] Show all issues (default: true)
-      # @param quiet [Boolean] Only return exit code, no output (default: false)
-      def initialize(input:, level: :standard, format: :text, verbose: true,
-quiet: false)
-        super()
+      # @param full_report [Boolean] Generate full detailed report
+      # @param summary_report [Boolean] Generate brief summary report
+      # @param table_report [Boolean] Generate tabular format report
+      # @param verbose [Boolean] Show verbose output
+      # @param suppress_warnings [Boolean] Suppress warning output
+      # @param return_value_results [Boolean] Use return values to indicate results
+      def initialize(
+        input:,
+        profile: nil,
+        exclude: [],
+        output: nil,
+        format: :text,
+        full_report: false,
+        summary_report: false,
+        table_report: false,
+        verbose: false,
+        suppress_warnings: false,
+        return_value_results: false
+      )
         @input = input
-        @level = level.to_sym
-        @format = format.to_sym
+        @profile = profile || :default
+        @exclude = exclude
+        @output = output
+        @format = format
+        @full_report = full_report
+        @summary_report = summary_report
+        @table_report = table_report
         @verbose = verbose
-        @quiet = quiet
+        @suppress_warnings = suppress_warnings
+        @return_value_results = return_value_results
       end
 
       # Run the validation command
       #
-      # @return [Integer] Exit code (0 = valid, 1 = errors, 2 = warnings only)
+      # @return [Integer] Exit code (0 = valid, 2 = fatal, 3 = errors, 4 = warnings, 5 = info)
       def run
-        validate_params!
+        # Load font with appropriate mode
+        profile_config = Validators::ProfileLoader.profile_info(@profile)
+        unless profile_config
+          puts "Error: Unknown profile '#{@profile}'" unless @suppress_warnings
+          return 1
+        end
 
-        # Load font
-        font = load_font
-        return 1 unless font
+        mode = profile_config[:loading_mode].to_sym
 
-        # Create validator
-        validator = Validation::Validator.new(level: @level)
+        font = FontLoader.load(@input, mode: mode)
+
+        # Select validator
+        validator = Validators::ProfileLoader.load(@profile)
 
         # Run validation
-        report = validator.validate(font, @input)
+        report = validator.validate(font)
 
-        # Add variable font validation if applicable
-        validate_variable_font(font, report) if font.has_table?("fvar")
+        # Filter excluded checks if specified
+        if @exclude.any?
+          report.check_results.reject! { |cr| @exclude.include?(cr.check_id) }
+        end
 
-        # Output results unless quiet mode
-        output_report(report) unless @quiet
+        # Generate output
+        output = generate_output(report)
 
-        # Return appropriate exit code
-        determine_exit_code(report)
-      rescue StandardError => e
-        puts "Error: #{e.message}" unless @quiet
-        puts e.backtrace.join("\n") if @verbose && !@quiet
+        # Write to file or stdout
+        if @output
+          File.write(@output, output)
+          puts "Validation report written to #{@output}" if @verbose && !@suppress_warnings
+        else
+          puts output unless @suppress_warnings
+        end
+
+        # Return exit code
+        exit_code(report)
+      rescue => e
+        puts "Error: #{e.message}" unless @suppress_warnings
+        puts e.backtrace.join("\n") if @verbose && !@suppress_warnings
         1
       end
 
       private
 
-      # Validate variable font structure
+      # Generate output based on requested format
       #
-      # @param font [TrueTypeFont, OpenTypeFont] The font to validate
-      # @param report [Models::ValidationReport] The validation report to update
-      # @return [void]
-      def validate_variable_font(font, report)
-        var_validator = Validation::VariableFontValidator.new(font)
-        errors = var_validator.validate
-
-        if errors.any?
-          puts "\nVariable font validation:" if @verbose && !@quiet
-          errors.each do |error|
-            puts "  ERROR: #{error}" if @verbose && !@quiet
-            # Add to report if report supports adding errors
-            if report.respond_to?(:errors)
-              report.errors << { message: error,
-                                 category: "variable_font" }
-            end
-          end
-        elsif @verbose && !@quiet
-          puts "\n✓ Variable font structure valid"
-        end
-      end
-
-      # Validate command parameters
-      #
-      # @raise [ArgumentError] if parameters are invalid
-      # @return [void]
-      def validate_params!
-        if @input.nil? || @input.empty?
-          raise ArgumentError,
-                "Input file is required"
-        end
-        unless File.exist?(@input)
-          raise ArgumentError,
-                "Input file does not exist: #{@input}"
-        end
-
-        valid_levels = %i[strict standard lenient]
-        unless valid_levels.include?(@level)
-          raise ArgumentError,
-                "Invalid level: #{@level}. Must be one of: #{valid_levels.join(', ')}"
-        end
-
-        valid_formats = %i[text yaml json]
-        unless valid_formats.include?(@format)
-          raise ArgumentError,
-                "Invalid format: #{@format}. Must be one of: #{valid_formats.join(', ')}"
-        end
-      end
-
-      # Load the font file
-      #
-      # @return [TrueTypeFont, OpenTypeFont, nil] The loaded font or nil on error
-      def load_font
-        FontLoader.load(@input)
-      rescue StandardError => e
-        puts "Error loading font: #{e.message}" unless @quiet
-        nil
-      end
-
-      # Output validation report in requested format
-      #
-      # @param report [Models::ValidationReport] The validation report
-      # @return [void]
-      def output_report(report)
-        case @format
-        when :text
-          output_text(report)
-        when :yaml
-          output_yaml(report)
-        when :json
-          output_json(report)
-        end
-      end
-
-      # Output report in text format
-      #
-      # @param report [Models::ValidationReport] The validation report
-      # @return [void]
-      def output_text(report)
-        if @verbose
-          puts report.text_summary
+      # @param report [ValidationReport] The validation report
+      # @return [String] Formatted output
+      def generate_output(report)
+        if @table_report
+          report.to_table_format
+        elsif @summary_report
+          report.to_summary
+        elsif @full_report
+          report.to_text_report
         else
-          # Compact output: just status and error/warning counts
-          status = report.valid ? "VALID" : "INVALID"
-          puts "#{status}: #{report.summary.errors} errors, #{report.summary.warnings} warnings"
-
-          # Show errors only in non-verbose mode
-          report.errors.each do |error|
-            puts "  [ERROR] #{error.message}"
+          # Default: format-specific output
+          case @format
+          when :yaml
+            require "yaml"
+            report.to_yaml
+          when :json
+            require "json"
+            report.to_json
+          else
+            report.text_summary
           end
         end
-      end
-
-      # Output report in YAML format
-      #
-      # @param report [Models::ValidationReport] The validation report
-      # @return [void]
-      def output_yaml(report)
-        require "yaml"
-        puts report.to_yaml
-      end
-
-      # Output report in JSON format
-      #
-      # @param report [Models::ValidationReport] The validation report
-      # @return [void]
-      def output_json(report)
-        require "json"
-        puts report.to_json
       end
 
       # Determine exit code based on validation results
       #
-      # Exit codes:
-      # - 0: Valid (no errors, or only warnings in lenient mode)
-      # - 1: Has errors
-      # - 2: Has warnings only (no errors)
+      # Exit codes (ftxvalidator compatible):
+      #   0 = No issues found
+      #   1 = Execution errors
+      #   2 = Fatal errors found
+      #   3 = Major errors found
+      #   4 = Minor errors (warnings) found
+      #   5 = Spec violations (info) found
       #
-      # @param report [Models::ValidationReport] The validation report
+      # @param report [ValidationReport] The validation report
       # @return [Integer] Exit code
-      def determine_exit_code(report)
-        if report.has_errors?
-          1
-        elsif report.has_warnings?
-          2
-        else
-          0
-        end
+      def exit_code(report)
+        return 0 unless @return_value_results
+
+        return 2 if report.fatal_errors.any?
+        return 3 if report.errors_only.any?
+        return 4 if report.warnings_only.any?
+        return 5 if report.info_only.any?
+        0
       end
     end
   end

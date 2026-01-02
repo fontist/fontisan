@@ -124,18 +124,30 @@ require_relative "fontisan/models/color_layer"
 require_relative "fontisan/models/color_palette"
 require_relative "fontisan/models/svg_glyph"
 
+# Validators infrastructure (NEW - DSL-based framework from Week 2+)
+require_relative "fontisan/validators/validator"
+require_relative "fontisan/validators/basic_validator"
+require_relative "fontisan/validators/font_book_validator"
+require_relative "fontisan/validators/opentype_validator"
+require_relative "fontisan/validators/web_font_validator"
+require_relative "fontisan/validators/profile_loader"
+
 # Export infrastructure
 require_relative "fontisan/export/table_serializer"
 require_relative "fontisan/export/ttx_generator"
 require_relative "fontisan/export/ttx_parser"
 require_relative "fontisan/export/exporter"
 
-# Validation infrastructure
-require_relative "fontisan/validation/table_validator"
-require_relative "fontisan/validation/structure_validator"
-require_relative "fontisan/validation/consistency_validator"
-require_relative "fontisan/validation/checksum_validator"
-require_relative "fontisan/validation/validator"
+# Validation infrastructure (OLD - commented out for new DSL framework)
+# Week 1 deleted these, Week 2-5 building new DSL-based framework
+# require_relative "fontisan/validation/checks/base_check"
+# require_relative "fontisan/validation/check_registry"
+# require_relative "fontisan/validation/profile"
+# require_relative "fontisan/validation/table_validator"
+# require_relative "fontisan/validation/structure_validator"
+# require_relative "fontisan/validation/consistency_validator"
+# require_relative "fontisan/validation/checksum_validator"
+# require_relative "fontisan/validation/validator"
 
 # Subsetting infrastructure
 require_relative "fontisan/subset/options"
@@ -260,5 +272,65 @@ module Fontisan
   #   puts info.to_json
   def self.info(path, brief: false, font_index: 0)
     Commands::InfoCommand.new(path, brief: brief, font_index: font_index).run
+  end
+
+  # Validate a font file using specified profile
+  #
+  # Validates fonts against quality checks, structural integrity, and OpenType
+  # specification compliance using the new DSL-based validation framework.
+  #
+  # @param path [String] Path to font file
+  # @param profile [Symbol, String] Validation profile (default: :default)
+  #   Available profiles:
+  #   - :indexability - Fast validation for font discovery
+  #   - :usability - Basic usability for installation
+  #   - :production - Comprehensive quality checks (default)
+  #   - :web - Web embedding and optimization
+  #   - :spec_compliance - Full OpenType spec compliance
+  #   - :default - Alias for production profile
+  # @param options [Hash] Additional validation options
+  # @return [Models::ValidationReport] Validation report with issues and status
+  #
+  # @example Validate with default profile
+  #   report = Fontisan.validate("font.ttf")
+  #   puts "Valid: #{report.valid?}"
+  #
+  # @example Validate for web use
+  #   report = Fontisan.validate("font.ttf", profile: :web)
+  #   puts "Errors: #{report.summary.errors}"
+  #
+  # @example Validate and get detailed report
+  #   report = Fontisan.validate("font.ttf", profile: :production)
+  #   puts report.to_yaml
+  def self.validate(path, profile: :default, options: {})
+    # Get profile configuration
+    profile_config = Validators::ProfileLoader.profile_info(profile)
+    raise ArgumentError, "Unknown profile: #{profile}" unless profile_config
+
+    # Load font with appropriate mode
+    mode = profile_config[:loading_mode].to_sym
+    font = FontLoader.load(path, mode: mode)
+
+    # Load validator for profile
+    validator = Validators::ProfileLoader.load(profile)
+
+    # Run validation
+    validator.validate(font)
+  end
+
+  class << self
+    private
+
+    # Get loading mode for validation profile
+    #
+    # Temporarily disabled - will be reimplemented with new DSL framework
+    #
+    # @param profile [Symbol] Validation profile
+    # @return [Symbol] Loading mode (:metadata or :full)
+    # def profile_loading_mode(profile)
+    #   Validation::Profile.load(profile).loading_mode.to_sym
+    # rescue
+    #   :full
+    # end
   end
 end

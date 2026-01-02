@@ -36,8 +36,6 @@ module Fontisan
         @unicode_mappings ||= parse_mappings
       end
 
-      private
-
       # Parse all encoding records and extract Unicode mappings
       def parse_mappings
         mappings = {}
@@ -278,6 +276,88 @@ module Fontisan
           glyph_index = start_glyph + (code - start_char)
           mappings[code] = glyph_index if glyph_index != 0
         end
+      end
+
+      public
+
+      # Validation helper: Check if version is valid
+      #
+      # cmap version should be 0
+      #
+      # @return [Boolean] True if version is 0
+      def valid_version?
+        version == 0
+      end
+
+      # Validation helper: Check if at least one subtable exists
+      #
+      # @return [Boolean] True if num_tables > 0
+      def has_subtables?
+        num_tables && num_tables > 0
+      end
+
+      # Validation helper: Check if Unicode mapping exists
+      #
+      # @return [Boolean] True if Unicode mappings are present
+      def has_unicode_mapping?
+        !unicode_mappings.nil? && !unicode_mappings.empty?
+      end
+
+      # Validation helper: Check if BMP coverage exists
+      #
+      # Checks if the Basic Multilingual Plane (U+0000-U+FFFF) has mappings
+      #
+      # @return [Boolean] True if BMP characters are mapped
+      def has_bmp_coverage?
+        mappings = unicode_mappings
+        return false if mappings.nil? || mappings.empty?
+
+        # Check if any BMP characters (0x0000-0xFFFF) are mapped
+        mappings.keys.any? { |code| code.between?(0x0000, 0xFFFF) }
+      end
+
+      # Validation helper: Check if required characters are mapped
+      #
+      # Checks for essential characters like space (U+0020)
+      #
+      # @param required_chars [Array<Integer>] Character codes that must be present
+      # @return [Boolean] True if all required characters are mapped
+      def has_required_characters?(*required_chars)
+        mappings = unicode_mappings
+        return false if mappings.nil?
+
+        required_chars.all? { |code| mappings.key?(code) }
+      end
+
+      # Validation helper: Check if format 4 subtable exists
+      #
+      # Format 4 is the minimum requirement for Unicode BMP support
+      #
+      # @return [Boolean] True if format 4 subtable is found
+      def has_format_4_subtable?
+        data = to_binary_s
+        records = read_encoding_records(data)
+
+        records.any? do |record|
+          subtable_data = extract_subtable_data(record, data)
+          next false unless subtable_data && subtable_data.length >= 2
+
+          format = subtable_data[0, 2].unpack1("n")
+          format == 4
+        end
+      rescue StandardError
+        false
+      end
+
+      # Validation helper: Check if glyph indices are within bounds
+      #
+      # @param max_glyph_id [Integer] Maximum valid glyph ID from maxp table
+      # @return [Boolean] True if all mapped glyph IDs are valid
+      def valid_glyph_indices?(max_glyph_id)
+        mappings = unicode_mappings
+        return true if mappings.nil? || mappings.empty?
+
+        mappings.values.all? { |glyph_id| glyph_id >= 0 && glyph_id < max_glyph_id }
       end
     end
   end

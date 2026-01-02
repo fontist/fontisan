@@ -350,13 +350,62 @@ module Fontisan
       handle_error(e)
     end
 
-    desc "validate FONT_FILE", "Validate font file structure and checksums"
-    option :verbose, type: :boolean, default: false,
-                     desc: "Show detailed validation information"
+    desc "validate FONT_FILE", "Validate font file"
+    long_desc <<-DESC
+      Validate font file against quality checks and standards.
+
+      Test lists (-t/--test-list):
+        indexability     - Fast indexing validation
+        usability        - Installation compatibility
+        production       - Comprehensive quality (default)
+        web              - Web font readiness
+        spec_compliance  - OpenType spec compliance
+        default          - Production profile (alias)
+
+      Return values (with -R/--return-value-results):
+        0  No results
+        1  Execution errors
+        2  Fatal errors found
+        3  Major errors found
+        4  Minor errors found
+        5  Spec violations found
+    DESC
+
+    option :exclude, aliases: "-e", type: :array, desc: "Tests to exclude"
+    option :list, aliases: "-l", type: :boolean, desc: "List available tests"
+    option :output, aliases: "-o", type: :string, desc: "Output file"
+    option :full_report, aliases: "-r", type: :boolean, desc: "Full report"
+    option :return_value_results, aliases: "-R", type: :boolean, desc: "Use return value for results"
+    option :summary_report, aliases: "-S", type: :boolean, desc: "Summary report"
+    option :test_list, aliases: "-t", type: :string, default: "default", desc: "Tests to execute"
+    option :table_report, aliases: "-T", type: :boolean, desc: "Tabular report"
+    option :verbose, aliases: "-v", type: :boolean, desc: "Verbose output"
+    option :suppress_warnings, aliases: "-W", type: :boolean, desc: "Suppress warnings"
+
     def validate(font_file)
-      command = Commands::ValidateCommand.new(font_file,
-                                              verbose: options[:verbose])
-      exit command.run
+      if options[:list]
+        list_available_tests
+        return
+      end
+
+      cmd = Commands::ValidateCommand.new(
+        input: font_file,
+        profile: options[:test_list],
+        exclude: options[:exclude] || [],
+        output: options[:output],
+        format: options[:format].to_sym,
+        full_report: options[:full_report],
+        summary_report: options[:summary_report],
+        table_report: options[:table_report],
+        verbose: options[:verbose],
+        suppress_warnings: options[:suppress_warnings],
+        return_value_results: options[:return_value_results]
+      )
+
+      exit cmd.run
+    rescue => e
+      error "Validation failed: #{e.message}"
+      exit 1
     end
 
     desc "export FONT_FILE", "Export font to TTX/YAML/JSON format"
@@ -554,6 +603,18 @@ module Fontisan
 
       warn message unless options[:quiet]
       exit 1
+    end
+
+    # List available validation tests/profiles
+    #
+    # @return [void]
+    def list_available_tests
+      require_relative "validators/profile_loader"
+      profiles = Validators::ProfileLoader.all_profiles
+      puts "Available validation profiles:"
+      profiles.each do |profile_name, config|
+        puts "  #{profile_name.to_s.ljust(20)} - #{config[:description]}"
+      end
     end
   end
 end

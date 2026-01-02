@@ -143,6 +143,63 @@ module Fontisan
         end
       end
       # rubocop:enable Metrics/PerceivedComplexity
+
+      public
+
+      # Validation helper: Check if version is valid
+      #
+      # Common versions: 1.0, 2.0, 2.5, 3.0, 4.0
+      #
+      # @return [Boolean] True if version is recognized
+      def valid_version?
+        [1.0, 2.0, 2.5, 3.0, 4.0].include?(version)
+      end
+
+      # Validation helper: Check if italic angle is reasonable
+      #
+      # Italic angle should be between -60 and 60 degrees
+      #
+      # @return [Boolean] True if italic angle is within reasonable bounds
+      def valid_italic_angle?
+        italic_angle.abs <= 60.0
+      end
+
+      # Validation helper: Check if underline values are present
+      #
+      # Both position and thickness should be non-zero for valid underline
+      #
+      # @return [Boolean] True if underline metrics exist
+      def has_underline_metrics?
+        underline_position != 0 && underline_thickness != 0
+      end
+
+      # Validation helper: Check if fixed pitch flag is consistent
+      #
+      # @return [Boolean] True if is_fixed_pitch is 0 or 1
+      def valid_fixed_pitch_flag?
+        is_fixed_pitch == 0 || is_fixed_pitch == 1
+      end
+
+      # Validation helper: Check if glyph names are available
+      #
+      # For versions 1.0 and 2.0, glyph names should be accessible
+      #
+      # @return [Boolean] True if glyph names can be retrieved
+      def has_glyph_names?
+        names = glyph_names
+        !names.nil? && !names.empty?
+      end
+
+      # Validation helper: Check if version 2.0 data is complete
+      #
+      # For version 2.0, we should have glyph count and name data
+      #
+      # @return [Boolean] True if version 2.0 data is present and complete
+      def complete_version_2_data?
+        return true unless version == 2.0
+
+        !num_glyphs_v2.nil? && num_glyphs_v2 > 0 && !remaining_data.empty?
+      end
     end
   end
 end
