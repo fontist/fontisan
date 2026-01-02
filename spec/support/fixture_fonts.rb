@@ -88,25 +88,6 @@ module FixtureFonts
       single_file: true,
       markers: ["Twemoji.Mozilla.ttf"],
     },
-    # Broken fonts for validation testing
-    "RupaliBroken" => {
-      url: "https://github.com/fontist/fontisan/raw/main/spec/fixtures/fonts/Rupali_0.72.ttf",
-      target_dir: "broken",
-      path_prefix: "",
-      single_file: true,
-      markers: ["Rupali_0.72.ttf"],
-      broken: true,  # Mark as intentionally broken
-      issue: "name table structure broken",
-    },
-    "SiyamRupaliBroken" => {
-      url: "https://www.omicronlab.com/download/fonts/Siyam%20Rupali%20ANSI.ttf",
-      target_dir: "broken",
-      path_prefix: "",
-      single_file: true,
-      markers: ["Siyam Rupali ANSI.ttf"],
-      broken: true,  # Mark as intentionally broken
-      issue: "sbit embedded bitmap structure broken",
-    },
   }.freeze
 
   # Get absolute path to a font fixture file
@@ -146,6 +127,7 @@ module FixtureFonts
         target_dir: base,
         marker: File.join(base, config[:markers].first), # Use first marker for Rake task
         single_file: config[:single_file] || false,
+        skip_download: config[:skip_download] || false,
       }
     end
   end
