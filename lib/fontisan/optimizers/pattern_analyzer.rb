@@ -160,7 +160,9 @@ module Fontisan
                         charstrings.length
                       end
 
-        sampled_glyphs = charstrings.keys.sample(sample_size)
+        # Use deterministic selection instead of random sampling
+        # Sort keys first to ensure consistent ordering across platforms
+        sampled_glyphs = charstrings.keys.sort.take(sample_size)
 
         # NEW: Pre-compute boundaries for sampled glyphs
         # Check if boundaries are useful (more than just start position)
