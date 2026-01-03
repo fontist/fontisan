@@ -95,22 +95,23 @@ module Fontisan
       # @return [String] encoded bytes
       def encode_integer(num)
         # Range 1: -107 to 107 (single byte)
+        # CFF spec: byte value = 139 + number
         if num >= -107 && num <= 107
-          return [32 + num].pack("c")
+          return [139 + num].pack("C")
         end
 
         # Range 2: 108 to 1131 (two bytes)
         if num >= 108 && num <= 1131
           b0 = 247 + ((num - 108) >> 8)
           b1 = (num - 108) & 0xff
-          return [b0, b1].pack("c*")
+          return [b0, b1].pack("C*")
         end
 
         # Range 3: -1131 to -108 (two bytes)
         if num >= -1131 && num <= -108
           b0 = 251 - ((num + 108) >> 8)
           b1 = -(num + 108) & 0xff
-          return [b0, b1].pack("c*")
+          return [b0, b1].pack("C*")
         end
 
         # Range 4: -32768 to 32767 (three bytes)
@@ -118,7 +119,7 @@ module Fontisan
           b0 = 29
           b1 = (num >> 8) & 0xff
           b2 = num & 0xff
-          return [b0, b1, b2].pack("c*")
+          return [b0, b1, b2].pack("C*")
         end
 
         # Range 5: Larger numbers (five bytes)
@@ -127,7 +128,7 @@ module Fontisan
         b2 = (num >> 16) & 0xff
         b3 = (num >> 8) & 0xff
         b4 = num & 0xff
-        [b0, b1, b2, b3, b4].pack("c*")
+        [b0, b1, b2, b3, b4].pack("C*")
       end
     end
   end

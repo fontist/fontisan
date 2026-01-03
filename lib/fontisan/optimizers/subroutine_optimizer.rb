@@ -30,7 +30,9 @@ module Fontisan
       # @return [Array<Pattern>] selected patterns
       def optimize_selection
         selected = []
-        remaining = @patterns.sort_by { |p| -p.savings }
+        # Sort by savings (descending), then by length (descending), then by min glyph ID,
+        # then by byte values for complete determinism across platforms
+        remaining = @patterns.sort_by { |p| [-p.savings, -p.length, p.glyphs.min, p.bytes.bytes] }
 
         remaining.each do |pattern|
           break if selected.length >= @max_subrs
@@ -50,7 +52,8 @@ module Fontisan
       # @return [Array<Pattern>] ordered subroutines
       def optimize_ordering(subroutines)
         # Higher frequency = lower ID (shorter encoding)
-        subroutines.sort_by { |subr| -subr.frequency }
+        # Use same comprehensive sort keys as optimize_selection for consistency
+        subroutines.sort_by { |subr| [-subr.frequency, -subr.length, subr.glyphs.min, subr.bytes.bytes] }
       end
 
       # Check if nesting would be beneficial

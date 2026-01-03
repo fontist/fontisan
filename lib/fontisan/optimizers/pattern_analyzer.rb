@@ -251,7 +251,7 @@ module Fontisan
           # Build positions hash
           positions = {}
           by_glyph.each do |glyph_id, glyph_occurrences|
-            positions[glyph_id] = glyph_occurrences.map(&:last)
+            positions[glyph_id] = glyph_occurrences.map(&:last).uniq
           end
 
           @patterns[bytes] = Pattern.new(
