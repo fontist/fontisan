@@ -150,24 +150,24 @@ RSpec.describe Fontisan::Optimizers::SubroutineBuilder do
     context "with bias 107 (default for < 1240 subroutines)" do
       it "creates callsubr for subroutine 0" do
         # bias=107, so biased_id = 0 - 107 = -107
-        # encode_integer(-107) = 32 + (-107) = -75 (as signed byte = 181)
+        # encode_integer(-107) = 139 + (-107) = 32
         # callsubr = "\x0a"
         call = builder.create_call(0)
-        expect(call.bytes).to eq([181, 10])
+        expect(call.bytes).to eq([32, 10])
       end
 
       it "creates callsubr for subroutine 1" do
         # biased_id = 1 - 107 = -106
-        # encode_integer(-106) = 32 + (-106) = -74 (as signed byte = 182)
+        # encode_integer(-106) = 139 + (-106) = 33
         call = builder.create_call(1)
-        expect(call.bytes).to eq([182, 10])
+        expect(call.bytes).to eq([33, 10])
       end
 
       it "creates callsubr for subroutine 107" do
         # biased_id = 107 - 107 = 0
-        # encode_integer(0) = 32 + 0 = 32 = "\x20"
+        # encode_integer(0) = 139 + 0 = 139
         call = builder.create_call(107)
-        expect(call.bytes).to eq([32, 10])
+        expect(call.bytes).to eq([139, 10])
       end
     end
 
@@ -187,9 +187,9 @@ RSpec.describe Fontisan::Optimizers::SubroutineBuilder do
 
       it "creates callsubr for subroutine 1200" do
         # biased_id = 1200 - 1131 = 69
-        # encode_integer(69) = 32 + 69 = 101 = "\x65"
+        # encode_integer(69) = 139 + 69 = 208
         call = @builder_with_bias.create_call(1200)
-        expect(call.bytes).to eq([101, 10])
+        expect(call.bytes).to eq([208, 10])
       end
     end
 
@@ -206,36 +206,36 @@ RSpec.describe Fontisan::Optimizers::SubroutineBuilder do
       it "encodes biased_id 0 (subroutine 107)" do
         call = builder.create_call(107)
         # bias=107, biased_id = 107 - 107 = 0
-        # encode_integer(0) = 32 + 0 = 32 = 0x20
-        expect(call.bytes[0]).to eq(32)
+        # encode_integer(0) = 139 + 0 = 139
+        expect(call.bytes[0]).to eq(139)
       end
 
       it "encodes biased_id 50 (subroutine 157)" do
         call = builder.create_call(157)
         # bias=107, biased_id = 157 - 107 = 50
-        # 32 + 50 = 82
-        expect(call.bytes[0]).to eq(82)
+        # 139 + 50 = 189
+        expect(call.bytes[0]).to eq(189)
       end
 
       it "encodes biased_id -50 (subroutine 57)" do
         call = builder.create_call(57)
         # bias=107, biased_id = 57 - 107 = -50
-        # 32 + (-50) = -18 (as signed byte = 238)
-        expect(call.bytes[0]).to eq(238)
+        # 139 + (-50) = 89
+        expect(call.bytes[0]).to eq(89)
       end
 
       it "encodes biased_id 107 (subroutine 214)" do
         call = builder.create_call(214)
         # bias=107, biased_id = 214 - 107 = 107
-        # 32 + 107 = 139
-        expect(call.bytes[0]).to eq(139)
+        # 139 + 107 = 246
+        expect(call.bytes[0]).to eq(246)
       end
 
       it "encodes biased_id -107 (subroutine 0)" do
         call = builder.create_call(0)
         # bias=107, biased_id = 0 - 107 = -107
-        # 32 + (-107) = -75 (as signed byte = 181)
-        expect(call.bytes[0]).to eq(181)
+        # 139 + (-107) = 32
+        expect(call.bytes[0]).to eq(32)
       end
     end
 

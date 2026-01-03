@@ -30,12 +30,13 @@ module Fontisan
       #
       # @param charstring [String] original CharString bytes
       # @param patterns [Array<Pattern>] patterns to replace in this CharString
+      # @param glyph_id [Integer, nil] glyph ID being rewritten (for position filtering)
       # @return [String] rewritten CharString with subroutine calls
-      def rewrite(charstring, patterns)
+      def rewrite(charstring, patterns, glyph_id = nil)
         return charstring if patterns.empty?
 
         # Build list of all replacements: [position, pattern]
-        replacements = build_replacement_list(charstring, patterns)
+        replacements = build_replacement_list(charstring, patterns, glyph_id)
 
         # Remove overlapping replacements
         replacements = remove_overlaps(replacements)
@@ -120,16 +121,26 @@ module Fontisan
       # Build list of all pattern replacements with their positions
       # @param charstring [String] CharString being rewritten
       # @param patterns [Array<Pattern>] patterns to find
+      # @param glyph_id [Integer, nil] glyph ID being rewritten (for position filtering)
       # @return [Array<Array>] array of [position, pattern] pairs
-      def build_replacement_list(charstring, patterns)
+      def build_replacement_list(charstring, patterns, glyph_id = nil)
         replacements = []
 
         patterns.each do |pattern|
-          # Find all positions where this pattern occurs
-          positions = find_pattern_positions(charstring, pattern)
+          if glyph_id && pattern.respond_to?(:positions) && pattern.positions.is_a?(Hash)
+            # Use exact positions from pattern analysis for this glyph
+            glyph_positions = pattern.positions[glyph_id] || []
 
-          positions.each do |position|
-            replacements << [position, pattern]
+            glyph_positions.each do |position|
+              replacements << [position, pattern]
+            end
+          else
+            # Fallback for backward compatibility (unit tests without glyph_id)
+            positions = find_pattern_positions(charstring, pattern)
+
+            positions.each do |position|
+              replacements << [position, pattern]
+            end
           end
         end
 
@@ -140,7 +151,7 @@ module Fontisan
       # @param charstring [String] CharString to search
       # @param pattern [Pattern] pattern to find
       # @return [Array<Integer>] array of start positions
-      def find_pattern_positions(charstring, pattern)
+      def find_pattern_positions(charstring, pattern, glyph_id = nil)
         positions = []
         offset = 0
 

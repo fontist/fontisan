@@ -732,7 +732,7 @@ module Fontisan
           if glyph_patterns.empty?
             charstring
           else
-            rewriter.rewrite(charstring, glyph_patterns)
+            rewriter.rewrite(charstring, glyph_patterns, glyph_id)
           end
         end
 
