@@ -57,8 +57,6 @@ RSpec.describe "WOFF2 Round-Trip Validation", :woff2 do
     let(:otf_path) { "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf" }
 
     it "successfully encodes CFF fonts to WOFF2" do
-      skip "OTF font not found" unless File.exist?(otf_path)
-
       original_font = Fontisan::FontLoader.load(otf_path)
       woff2_result = encoder.convert(original_font, transform_tables: true)
 
@@ -75,8 +73,6 @@ RSpec.describe "WOFF2 Round-Trip Validation", :woff2 do
     let(:vf_path) { "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/variable/MonaSansVF[wght,opsz].ttf" }
 
     it "successfully encodes variable fonts to WOFF2" do
-      skip "Variable font not found" unless File.exist?(vf_path)
-
       original_font = Fontisan::FontLoader.load(vf_path)
       woff2_result = encoder.convert(original_font, transform_tables: true)
 

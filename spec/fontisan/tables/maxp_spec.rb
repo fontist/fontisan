@@ -570,11 +570,11 @@ RSpec.describe Fontisan::Tables::Maxp do
 
     context "when reading from TrueType font" do
       it "successfully parses maxp table from Libertinus Serif TTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_ttf_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
         maxp = font.table("maxp")
-        skip "maxp table not found" if maxp.nil?
+
+        # maxp table is required and should exist
+        expect(maxp).not_to be_nil, "maxp table should exist in Libertinus font"
 
         # Verify this is version 1.0 (TrueType)
         expect(maxp).to be_truetype
@@ -610,11 +610,11 @@ RSpec.describe Fontisan::Tables::Maxp do
 
     context "when reading from OpenType/CFF font" do
       it "successfully parses maxp table from Libertinus Serif OTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_otf_path)
-
         font = Fontisan::OpenTypeFont.from_file(libertinus_serif_otf_path)
         maxp = font.table("maxp")
-        skip "maxp table not found" if maxp.nil?
+
+        # maxp table is required and should exist
+        expect(maxp).not_to be_nil, "maxp table should exist in Libertinus font"
 
         # Verify this is version 0.5 (CFF)
         expect(maxp).to be_cff
@@ -637,12 +637,13 @@ RSpec.describe Fontisan::Tables::Maxp do
 
     context "when used with hmtx table" do
       it "provides numGlyphs for hmtx parsing (TTF)" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_ttf_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
         maxp = font.table("maxp")
         hhea = font.table("hhea")
-        skip "Required tables not found" if maxp.nil? || hhea.nil?
+
+        # Required tables should exist
+        expect(maxp).not_to be_nil, "maxp table should exist"
+        expect(hhea).not_to be_nil, "hhea table should exist"
 
         # maxp provides numGlyphs needed for hmtx parsing
         expect(maxp.num_glyphs).to be >= 1
@@ -654,12 +655,13 @@ RSpec.describe Fontisan::Tables::Maxp do
       end
 
       it "provides numGlyphs for hmtx parsing (OTF)" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_otf_path)
-
         font = Fontisan::OpenTypeFont.from_file(libertinus_serif_otf_path)
         maxp = font.table("maxp")
         hhea = font.table("hhea")
-        skip "Required tables not found" if maxp.nil? || hhea.nil?
+
+        # Required tables should exist
+        expect(maxp).not_to be_nil, "maxp table should exist"
+        expect(hhea).not_to be_nil, "hhea table should exist"
 
         # CFF fonts also have maxp and hmtx tables
         expect(maxp.num_glyphs).to be >= 1

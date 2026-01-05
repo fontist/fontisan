@@ -59,8 +59,6 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       let(:ttc_file) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
 
       it "detects TTC files and uses default font_index" do
-        skip "TTC fixture not downloaded" unless File.exist?(ttc_file)
-
         command = described_class.new(ttc_file)
         font = command.send(:font)
 
@@ -70,8 +68,6 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       end
 
       it "uses custom font_index from options" do
-        skip "TTC fixture not downloaded" unless File.exist?(ttc_file)
-
         command = described_class.new(ttc_file, { font_index: 1 })
         font = command.send(:font)
 
@@ -88,8 +84,6 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       end
 
       it "detects OTC files and loads OpenType fonts" do
-        skip "OTC fixture not downloaded" unless File.exist?(otc_file)
-
         command = described_class.new(otc_file)
         font = command.send(:font)
 
@@ -98,8 +92,6 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       end
 
       it "uses custom font_index for OTC" do
-        skip "OTC fixture not downloaded" unless File.exist?(otc_file)
-
         command = described_class.new(otc_file, { font_index: 0 })
         font = command.send(:font)
 

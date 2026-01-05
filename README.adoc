@@ -184,7 +184,7 @@ Family:                   Noto Serif CJK JP ExtraLight
 ====
 [source,shell]
 ----
-$ fontisan info spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/googlefonts/variable/MonaSans[wdth,wght].ttf --brief
+$ fontisan info spec/fixtures/fonts/MonaSans/variable/MonaSans[wdth,wght].ttf --brief
 
 Font type:                TrueType (Variable)
 Family:                   Mona Sans ExtraLight
@@ -1241,7 +1241,7 @@ validator = Fontisan::Validators::OpenTypeValidator.new
 report = validator.validate(font)
 
 # Check individual results
-name_check = report.result_of(:name_version)
+name_check = report.result_of(:name_validation)
 puts name_check.passed?
 puts name_check.severity
 ----
@@ -1308,7 +1308,7 @@ font = Fontisan::FontLoader.load('font.ttf')
 validator = MyFontValidator.new
 report = validator.validate(font)
 
-# Check results
+# Check validation results
 puts report.valid?                           # => true/false
 puts report.status                           # => "valid", "valid_with_warnings", "invalid"
 puts report.summary.errors                   # => number of errors
@@ -1575,6 +1575,14 @@ glyph-count advantages as TTC but for CFF fonts. File extension: `.otc`
 dfont (Apple suitcase)::: Apple proprietary format storing complete Mac font
 suitcase resources in the data fork. Supports any SFNT fonts (TTF, OTF, or
 mixed). Mac OS X specific. File extension: `.dfont`
+
+Fontist returns the appropriate collection type based on the font data:
+
+* Examines font data within collection to determine type (TTC vs OTC)
+* TTC contains fonts with TrueType outlines (glyf table)
+* OTC contains fonts with CFF outlines (CFF table)
+* If ANY font in the collection has CFF outlines, use OpenTypeCollection
+* Only use TrueTypeCollection if ALL fonts have TrueType outlines
 
 
 === Collection compatibility
@@ -2074,6 +2082,41 @@ Fontisan can:
 * Managing Gray/Overprint/Color-Full image comps and layer conversion
 * Strategy management for smart vector combos from raster
 * Importing and generation PNG block ruler layers
+
+
+== Testing
+
+=== General
+
+Fontisan has a comprehensive test suite covering all font operations, formats,
+and features.
+
+=== Running tests
+
+[source,shell]
+----
+# Run full test suite
+bundle exec rspec
+
+# Run with documentation format
+bundle exec rspec --format documentation
+
+# Run specific file
+bundle exec rspec spec/fontisan/tables/maxp_spec.rb
+----
+
+=== Test fixtures
+
+All required font fixtures are automatically downloaded before tests run. The
+test suite uses a centralized fixture configuration system that ensures all
+necessary fonts are available.
+
+[source,shell]
+----
+# Manual fixture management (if needed)
+bundle exec rake fixtures:download  # Download all test fonts
+bundle exec rake fixtures:clean     # Remove downloaded fonts
+----
 
 
 == Copyright and license

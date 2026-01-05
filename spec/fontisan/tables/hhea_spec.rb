@@ -362,11 +362,11 @@ RSpec.describe Fontisan::Tables::Hhea do
 
     context "when reading from TrueType font" do
       it "successfully parses hhea table from Libertinus Serif" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
         hhea = font.table("hhea")
-        skip "hhea table not found" if hhea.nil?
+
+        # hhea table is required and should exist
+        expect(hhea).not_to be_nil, "hhea table should exist in Libertinus font"
 
         # Verify basic structure
         expect(hhea.version).to be_within(0.001).of(1.0)
@@ -389,11 +389,11 @@ RSpec.describe Fontisan::Tables::Hhea do
       end
 
       it "successfully parses hhea table from Libertinus Serif OTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_otf_path)
-
         font = Fontisan::OpenTypeFont.from_file(libertinus_serif_otf_path)
         hhea = font.table("hhea")
-        skip "hhea table not found" if hhea.nil?
+
+        # hhea table is required and should exist
+        expect(hhea).not_to be_nil, "hhea table should exist in Libertinus font"
 
         # CFF fonts also have hhea tables
         expect(hhea.version).to be_within(0.001).of(1.0)

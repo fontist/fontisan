@@ -675,23 +675,24 @@ y_coords:)
 
     context "when reading from TrueType font" do
       it "successfully parses glyf table from Libertinus Serif TTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_ttf_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
         head = font.table("head")
         maxp = font.table("maxp")
-        skip "Required tables not found" if head.nil? || maxp.nil?
+
+        # These tables are required and should exist
+        expect(head).not_to be_nil, "head table should exist"
+        expect(maxp).not_to be_nil, "maxp table should exist"
 
         # Parse loca table
         loca_data = font.table_data["loca"]
-        skip "loca table not found" if loca_data.nil?
+        expect(loca_data).not_to be_nil, "loca table should exist"
 
         loca = Fontisan::Tables::Loca.read(loca_data)
         loca.parse_with_context(head.index_to_loc_format, maxp.num_glyphs)
 
         # Parse glyf table
         glyf_data = font.table_data["glyf"]
-        skip "glyf table not found" if glyf_data.nil?
+        expect(glyf_data).not_to be_nil, "glyf table should exist"
 
         glyf = described_class.read(glyf_data)
 

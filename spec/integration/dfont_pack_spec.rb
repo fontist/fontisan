@@ -19,10 +19,6 @@ RSpec.describe "Dfont Pack Integration", :integration do
   end
 
   describe "DfontBuilder" do
-    before do
-      skip "Test fonts not available" unless File.exist?(ttf_path)
-    end
-
     it "creates dfont from single TTF font" do
       font = Fontisan::FontLoader.load(ttf_path)
 
@@ -36,8 +32,6 @@ RSpec.describe "Dfont Pack Integration", :integration do
     end
 
     it "creates dfont from multiple TTF fonts" do
-      skip "Test fonts not available" unless File.exist?(ttf_bold_path)
-
       font1 = Fontisan::FontLoader.load(ttf_path)
       font2 = Fontisan::FontLoader.load(ttf_bold_path)
 
@@ -102,10 +96,6 @@ RSpec.describe "Dfont Pack Integration", :integration do
   end
 
   describe "PackCommand with dfont format" do
-    before do
-      skip "Test fonts not available" unless File.exist?(ttf_path) && File.exist?(ttf_bold_path)
-    end
-
     it "packs fonts into dfont using PackCommand" do
       command = Fontisan::Commands::PackCommand.new(
         [ttf_path, ttf_bold_path],
@@ -142,10 +132,6 @@ RSpec.describe "Dfont Pack Integration", :integration do
   end
 
   describe "Round-trip: dfont pack and unpack" do
-    before do
-      skip "Test fonts not available" unless File.exist?(ttf_path) && File.exist?(ttf_bold_path)
-    end
-
     it "preserves font data through dfont pack/unpack cycle" do
       # Step 1: Pack into dfont
       font1 = Fontisan::FontLoader.load(ttf_path)
@@ -212,11 +198,6 @@ RSpec.describe "Dfont Pack Integration", :integration do
   describe "Mixed format support" do
     let(:otf_path) do
       font_fixture_path("MonaSans", "fonts/static/otf/MonaSans-Regular.otf")
-    end
-
-    before do
-      skip "OTF test font not available" unless File.exist?(otf_path)
-      skip "TTF test font not available" unless File.exist?(ttf_path)
     end
 
     it "creates dfont from mixed TTF and OTF fonts" do

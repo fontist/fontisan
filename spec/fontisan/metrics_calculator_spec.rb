@@ -541,8 +541,6 @@ RSpec.describe Fontisan::MetricsCalculator do
 
     context "when using TrueType font" do
       it "successfully calculates metrics from Libertinus Serif" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
         calculator = described_class.new(font)
 
@@ -575,8 +573,6 @@ RSpec.describe Fontisan::MetricsCalculator do
       end
 
       it "calculates string width for ASCII text" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
         calculator = described_class.new(font)
 
@@ -585,8 +581,6 @@ RSpec.describe Fontisan::MetricsCalculator do
       end
 
       it "handles repeated characters correctly" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
         calculator = described_class.new(font)
 
@@ -597,8 +591,6 @@ RSpec.describe Fontisan::MetricsCalculator do
       end
 
       it "returns 0 for empty string" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
         calculator = described_class.new(font)
 
@@ -613,8 +605,6 @@ RSpec.describe Fontisan::MetricsCalculator do
       end
 
       it "successfully calculates metrics from Libertinus Serif OTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_otf_path)
-
         font = Fontisan::OpenTypeFont.from_file(libertinus_serif_otf_path)
         calculator = described_class.new(font)
 

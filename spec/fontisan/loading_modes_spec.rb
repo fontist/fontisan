@@ -504,8 +504,6 @@ RSpec.describe "Loading Modes Integration" do
     let(:test_fonts) { Dir.glob(fixture_path("fonts/**/*.{ttf,otf}")).first(5) }
 
     it "metadata mode is faster than full mode", :slow do
-      skip "No test fonts available" if test_fonts.empty?
-
       # Run benchmark multiple times and average to reduce variance
       iterations = 100
       metadata_times = []
@@ -542,8 +540,6 @@ RSpec.describe "Loading Modes Integration" do
     end
 
     it "uses less memory in metadata mode" do
-      skip "No test fonts available" unless File.exist?(ttf_path)
-
       metadata_font = Fontisan::TrueTypeFont.from_file(ttf_path,
                                                        mode: :metadata, lazy: false)
       full_font = Fontisan::TrueTypeFont.from_file(ttf_path, mode: :full,
@@ -561,8 +557,6 @@ RSpec.describe "Loading Modes Integration" do
     end
 
     it "provides consistent data extraction across modes" do
-      skip "No test fonts available" if test_fonts.empty?
-
       test_fonts.each do |path|
         metadata_font = Fontisan::FontLoader.load(path, mode: :metadata)
         full_font = Fontisan::FontLoader.load(path, mode: :full)
@@ -576,8 +570,6 @@ RSpec.describe "Loading Modes Integration" do
 
   describe "use cases" do
     it "supports font indexing workflow" do
-      skip "No test fonts available" unless File.exist?(ttf_path)
-
       fonts_metadata = []
 
       time = Benchmark.realtime do
