@@ -69,12 +69,6 @@ module Fontisan
     # Whether lazy loading is enabled
     attr_accessor :lazy_load_enabled
 
-    # Page cache for lazy loading (maps page_start_offset => page_data)
-    attr_accessor :page_cache
-
-    # Page size for lazy loading alignment (typical filesystem page size)
-    PAGE_SIZE = 4096
-
     # Read TrueType Font from a file
     #
     # @param path [String] Path to the TTF file
@@ -101,8 +95,9 @@ module Fontisan
         font.lazy_load_enabled = lazy
 
         if lazy
-          # Keep file handle open for lazy loading
-          font.io_source = File.open(path, "rb")
+          # Reuse existing IO handle by duplicating it to prevent double file open
+          # The dup ensures the handle stays open after this block closes
+          font.io_source = io.dup
           font.setup_finalizer
         else
           # Read tables upfront
@@ -141,7 +136,6 @@ module Fontisan
       @loading_mode = LoadingModes::FULL
       @lazy_load_enabled = false
       @io_source = nil
-      @page_cache = {}
     end
 
     # Read table data for all tables
@@ -450,8 +444,8 @@ module Fontisan
 
     # Load a single table's data on demand
     #
-    # Uses page-aligned reads and caches pages to ensure lazy loading
-    # performance is not slower than eager loading.
+    # Uses direct seek-and-read for minimal overhead. This ensures lazy loading
+    # performance is comparable to eager loading when accessing all tables.
     #
     # @param tag [String] The table tag to load
     # @return [void]
@@ -461,42 +455,10 @@ module Fontisan
       entry = find_table_entry(tag)
       return nil unless entry
 
-      # Use page-aligned reading with caching
-      table_start = entry.offset
-      table_end = entry.offset + entry.table_length
-
-      # Calculate page boundaries
-      page_start = (table_start / PAGE_SIZE) * PAGE_SIZE
-      page_end = ((table_end + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE
-
-      # Read all required pages (or use cached pages)
-      table_data_parts = []
-      current_page = page_start
-
-      while current_page < page_end
-        page_data = @page_cache[current_page]
-
-        unless page_data
-          # Read page from disk and cache it
-          @io_source.seek(current_page)
-          page_data = @io_source.read(PAGE_SIZE) || ""
-          @page_cache[current_page] = page_data
-        end
-
-        # Calculate which part of this page we need
-        chunk_start = [table_start - current_page, 0].max
-        chunk_end = [table_end - current_page, PAGE_SIZE].min
-
-        if chunk_end > chunk_start
-          table_data_parts << page_data[chunk_start...chunk_end]
-        end
-
-        current_page += PAGE_SIZE
-      end
-
-      # Combine parts and store
+      # Direct seek and read - same as eager loading but on-demand
+      @io_source.seek(entry.offset)
       tag_key = tag.dup.force_encoding("UTF-8")
-      @table_data[tag_key] = table_data_parts.join
+      @table_data[tag_key] = @io_source.read(entry.table_length)
     end
 
     # Parse a table from raw data (Fontisan extension)
