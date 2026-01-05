@@ -25,6 +25,9 @@ module Fontisan
     # SFNT version for OpenType fonts with CFF outlines ('OTTO')
     SFNT_VERSION_OTTO = 0x4F54544F
 
+    # Apple 'true' TrueType signature (alternate to 0x00010000)
+    SFNT_VERSION_TRUE = 0x74727965  # 'true' in ASCII
+
     # Head table tag identifier.
     # The 'head' table contains global font header information including
     # the checksum adjustment field.

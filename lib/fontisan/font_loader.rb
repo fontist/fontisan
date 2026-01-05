@@ -63,7 +63,7 @@ module Fontisan
         when Constants::TTC_TAG
           load_from_collection(io, path, font_index, mode: resolved_mode,
                                                      lazy: resolved_lazy)
-        when pack_uint32(Constants::SFNT_VERSION_TRUETYPE)
+        when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
           TrueTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "OTTO"
           OpenTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
