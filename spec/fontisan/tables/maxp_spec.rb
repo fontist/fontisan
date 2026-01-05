@@ -569,29 +569,44 @@ RSpec.describe Fontisan::Tables::Maxp do
     end
 
     context "when reading from TrueType font" do
-      it "successfully parses maxp table from Libertinus Serif TTF" do
+      it "parses maxp table from Libertinus Serif TTF" do
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
         maxp = font.table("maxp")
 
-        # maxp table is required and should exist
         expect(maxp).not_to be_nil, "maxp table should exist in Libertinus font"
+      end
 
-        # Verify this is version 1.0 (TrueType)
+      it "identifies Libertinus Serif TTF maxp as TrueType version 1.0" do
+        font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
+        maxp = font.table("maxp")
+
         expect(maxp).to be_truetype
         expect(maxp).to be_version_1_0
         expect(maxp.version).to be_within(0.001).of(1.0)
+      end
 
-        # Verify table is valid
+      it "validates successfully for Libertinus Serif TTF maxp" do
+        font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
+        maxp = font.table("maxp")
+
         expect(maxp).to be_valid
         expect { maxp.validate! }.not_to raise_error
+      end
 
-        # Verify basic fields are reasonable
+      it "has reasonable field values in Libertinus Serif TTF maxp" do
+        font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
+        maxp = font.table("maxp")
+
         expect(maxp.num_glyphs).to be >= 1
         expect(maxp.max_points).to be >= 0
         expect(maxp.max_contours).to be >= 0
         expect(maxp.max_zones).to be_between(1, 2)
+      end
 
-        # Verify all version 1.0 fields are present
+      it "contains all version 1.0 fields in Libertinus Serif TTF maxp" do
+        font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
+        maxp = font.table("maxp")
+
         expect(maxp.max_points).not_to be_nil
         expect(maxp.max_contours).not_to be_nil
         expect(maxp.max_composite_points).not_to be_nil
