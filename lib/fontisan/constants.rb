@@ -26,7 +26,12 @@ module Fontisan
     SFNT_VERSION_OTTO = 0x4F54544F
 
     # Apple 'true' TrueType signature (alternate to 0x00010000)
-    SFNT_VERSION_TRUE = 0x74727965  # 'true' in ASCII
+    SFNT_VERSION_TRUE = 0x74727965 # 'true' in ASCII
+
+    # dfont resource fork signatures
+    DFONT_RESOURCE_HEADER = "\x00\x00\x01\x00"
+    SFNT_RESOURCE_TYPE = "sfnt"
+    FOND_RESOURCE_TYPE = "FOND"
 
     # Head table tag identifier.
     # The 'head' table contains global font header information including

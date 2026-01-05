@@ -34,3 +34,5 @@ Gemfile.lock
 /spec/fixtures/fonts/SourceSans3/
 /spec/fixtures/fonts/TwemojiMozilla/
 /spec/fixtures/fonts/TwitterColorEmoji/
+/spec/fixtures/fonts/tamsyn/
+/spec/fixtures/fonts/unifontex/

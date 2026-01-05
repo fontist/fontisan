@@ -220,6 +220,8 @@ module Fontisan
                          desc: "Skip output validation"
     option :preserve_hints, type: :boolean, default: false,
                             desc: "Preserve rendering hints during conversion (TTF→OTF preservations may be limited)"
+    option :target_format, type: :string, default: "preserve",
+                           desc: "Target outline format for collections: preserve (default), ttf, or otf"
     option :wght, type: :numeric,
                   desc: "Weight axis value (alternative to --coordinates)"
     option :wdth, type: :numeric,
@@ -236,6 +238,12 @@ module Fontisan
     # - TTF ↔ OTF: Outline format conversion
     # - WOFF/WOFF2: Web font packaging
     # - Variable fonts: Automatic variation preservation or instance generation
+    # - Collections (TTC/OTC/dfont): Preserve mixed TTF+OTF by default, or standardize with --target-format
+    #
+    # Collection Format Support:
+    # TTC, OTC, and dfont all support mixed TrueType and OpenType fonts. By default, original font formats
+    # are preserved during collection conversion (--target-format preserve). Use --target-format ttf to
+    # convert all fonts to TrueType, or --target-format otf to convert all to OpenType/CFF.
     #
     # Variable Font Operations:
     # The pipeline automatically detects whether variation data can be preserved based on
@@ -252,6 +260,15 @@ module Fontisan
     #
     # @example Convert TTF to OTF
     #   fontisan convert font.ttf --to otf --output font.otf
+    #
+    # @example Convert TTC to OTC (preserves mixed formats by default)
+    #   fontisan convert family.ttc --to otc --output family.otc
+    #
+    # @example Convert TTC to OTC with all fonts as TrueType
+    #   fontisan convert family.ttc --to otc --output family.otc --target-format ttf
+    #
+    # @example Convert TTC to OTC with all fonts as OpenType/CFF
+    #   fontisan convert family.ttc --to otc --output family.otc --target-format otf
     #
     # @example Generate bold instance at specific coordinates
     #   fontisan convert variable.ttf --to ttf --output bold.ttf --coordinates "wght=700,wdth=100"
@@ -493,7 +510,7 @@ module Fontisan
                     desc: "Output collection file path",
                     aliases: "-o"
     option :format, type: :string, default: "ttc",
-                    desc: "Collection format (ttc, otc)",
+                    desc: "Collection format (ttc, otc, dfont)",
                     aliases: "-f"
     option :optimize, type: :boolean, default: true,
                       desc: "Enable table sharing optimization",
@@ -501,10 +518,10 @@ module Fontisan
     option :analyze, type: :boolean, default: false,
                      desc: "Show analysis report before building",
                      aliases: "--analyze"
-    # Create a TTC (TrueType Collection) or OTC (OpenType Collection) from multiple font files.
+    # Create a TTC (TrueType Collection), OTC (OpenType Collection), or dfont (Apple Data Fork Font) from multiple font files.
     #
     # This command combines multiple fonts into a single collection file with
-    # shared table deduplication to save space. It supports both TTC and OTC formats.
+    # shared table deduplication to save space. It supports TTC, OTC, and dfont formats.
     #
     # @param font_files [Array<String>] Paths to input font files (minimum 2 required)
     #
@@ -514,6 +531,9 @@ module Fontisan
     # @example Pack into OTC with analysis
     #   fontisan pack Regular.otf Bold.otf Italic.otf --output family.otc --analyze
     #
+    # @example Pack into dfont (Apple suitcase)
+    #   fontisan pack font1.ttf font2.otf --output family.dfont --format dfont
+    #
     # @example Pack without optimization
     #   fontisan pack font1.ttf font2.ttf --output collection.ttc --no-optimize
     def pack(*font_files)
@@ -522,13 +542,13 @@ module Fontisan
 
       unless options[:quiet]
         puts "Collection created successfully:"
-        puts "  Output: #{result[:output]}"
+        puts "  Output: #{result[:output_path] || result[:output]}"
         puts "  Format: #{result[:format].upcase}"
         puts "  Fonts: #{result[:num_fonts]}"
-        puts "  Size: #{format_size(result[:output_size])}"
-        if result[:space_savings].positive?
+        puts "  Size: #{format_size(result[:output_size] || result[:total_size])}"
+        if result[:space_savings] && result[:space_savings].positive?
           puts "  Space saved: #{format_size(result[:space_savings])}"
-          puts "  Sharing: #{result[:sharing_percentage]}%"
+          puts "  Sharing: #{result[:statistics][:sharing_percentage]}%"
         end
       end
     rescue Errno::ENOENT, Error => e
