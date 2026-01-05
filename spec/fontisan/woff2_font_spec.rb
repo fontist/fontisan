@@ -523,10 +523,6 @@ RSpec.describe Fontisan::Woff2Font do
                           "fonts/webfonts/variable/MonaSansVF[wght,opsz].woff2")
       end
 
-      before do
-        skip "MonaSans WOFF2 fixture not available" unless File.exist?(woff2_path)
-      end
-
       it "successfully reconstructs glyf/loca tables" do
         font = Fontisan::FontLoader.load(woff2_path)
 

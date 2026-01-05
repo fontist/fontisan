@@ -237,8 +237,6 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
 
     context "with explicit coordinates" do
       it "uses instance strategy when coordinates provided" do
-        skip "Variable font fixture not available" unless File.exist?(variable_font)
-
         output = File.join(output_dir, "instance.ttf")
         pipeline = described_class.new(
           variable_font,
@@ -254,8 +252,6 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
 
     context "with explicit instance index" do
       it "uses named strategy when instance_index provided" do
-        skip "Variable font fixture not available" unless File.exist?(variable_font)
-
         output = File.join(output_dir, "named.ttf")
         pipeline = described_class.new(
           variable_font,
@@ -271,8 +267,6 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
 
     context "with preserve_variation option" do
       it "respects preserve_variation: false" do
-        skip "Variable font fixture not available" unless File.exist?(variable_font)
-
         output = File.join(output_dir, "no_variation.ttf")
         pipeline = described_class.new(
           variable_font,

@@ -20,10 +20,6 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "TTC creation with real fonts" do
-    before do
-      skip "Test fonts not available" unless File.exist?(font1_path) && File.exist?(font2_path)
-    end
-
     it "creates valid TTC from multiple fonts" do
       # Load fonts
       font1 = Fontisan::FontLoader.load(font1_path)
@@ -135,10 +131,6 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "table sharing optimization" do
-    before do
-      skip "Test fonts not available" unless File.exist?(font1_path) && File.exist?(font2_path)
-    end
-
     it "identifies shared tables correctly" do
       font1 = Fontisan::FontLoader.load(font1_path)
       font2 = Fontisan::FontLoader.load(font2_path)
@@ -176,8 +168,6 @@ RSpec.describe "Collection Management Integration", :integration do
     end
 
     it "validates font has required tables" do
-      skip "Test fonts not available" unless File.exist?(font1_path) && File.exist?(font2_path)
-
       font1 = Fontisan::FontLoader.load(font1_path)
       font2 = Fontisan::FontLoader.load(font2_path)
 
@@ -187,10 +177,6 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "format options" do
-    before do
-      skip "Test fonts not available" unless File.exist?(font1_path) && File.exist?(font2_path)
-    end
-
     it "creates TTC format" do
       font1 = Fontisan::FontLoader.load(font1_path)
       font2 = Fontisan::FontLoader.load(font2_path)
@@ -227,10 +213,6 @@ RSpec.describe "Collection Management Integration", :integration do
 
   describe "loading TTC collections with multiple fonts" do
     let(:dina_path) { font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc") }
-
-    before do
-      skip "DinaRemasterII.ttc not available" unless File.exist?(dina_path)
-    end
 
     it "loads DinaRemasterII.ttc collection successfully" do
       collection = Fontisan::FontLoader.load_collection(dina_path)
@@ -271,10 +253,6 @@ RSpec.describe "Collection Management Integration", :integration do
 
   describe "loading OpenType Collection with many fonts" do
     let(:noto_path) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
-
-    before do
-      skip "NotoSerifCJK.ttc not available" unless File.exist?(noto_path)
-    end
 
     it "loads NotoSerifCJK.ttc collection with proper type detection" do
       collection = Fontisan::FontLoader.load_collection(noto_path)

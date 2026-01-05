@@ -20,7 +20,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
       ].each do |font_file|
         it "successfully converts #{File.basename(font_file)} to WOFF2" do
           font_path = File.join(base_path, font_file)
-          skip "Font not found: #{font_path}" unless File.exist?(font_path)
 
           font = Fontisan::FontLoader.load(font_path)
           result = encoder.convert(font, transform_tables: true)
@@ -39,7 +38,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
       ].each do |font_file|
         it "successfully converts #{File.basename(font_file)} to WOFF2" do
           font_path = File.join(base_path, font_file)
-          skip "Font not found: #{font_path}" unless File.exist?(font_path)
 
           font = Fontisan::FontLoader.load(font_path)
           result = encoder.convert(font, transform_tables: true)
@@ -62,7 +60,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
     ].each do |font_file|
       it "successfully converts #{File.basename(font_file)} to WOFF2" do
         font_path = File.join(base_path, font_file)
-        skip "Font not found: #{font_path}" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)
         result = encoder.convert(font, transform_tables: true)
@@ -84,7 +81,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
     ].each do |font_file|
       it "successfully converts #{File.basename(font_file)} to WOFF2" do
         font_path = File.join(base_path, font_file)
-        skip "Font not found: #{font_path}" unless File.exist?(font_path)
 
         font = Fontisan::FontLoader.load(font_path)
         result = encoder.convert(font, transform_tables: true)
@@ -186,7 +182,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
     it "works with OTF/CFF fonts when available" do
       # Look for MonaSans OTF
       otf_path = "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf"
-      skip "OTF font not found" unless File.exist?(otf_path)
 
       font = Fontisan::FontLoader.load(otf_path)
       result = encoder.convert(font, transform_tables: true)

@@ -15,8 +15,8 @@ RSpec.describe Fontisan::Tables::Gsub do
       it "extracts script tags from GSUB table" do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
-        # Skip if font doesn't have GSUB table
-        skip "Font has no GSUB table" unless font.has_table?("GSUB")
+        # NotoSans should have GSUB table for OpenType features
+        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         scripts = gsub.scripts
@@ -32,16 +32,14 @@ RSpec.describe Fontisan::Tables::Gsub do
       it "extracts script tags from GSUB table" do
         font = Fontisan::OpenTypeFont.from_file(otf_font_path)
 
-        # Check if font has GSUB table
-        if font.has_table?("GSUB")
-          gsub = font.table("GSUB")
-          scripts = gsub.scripts
+        # Libertinus should have GSUB table
+        expect(font.has_table?("GSUB")).to be(true), "Libertinus should have GSUB table"
 
-          expect(scripts).to be_an(Array)
-          expect(scripts.length).to be > 0
-        else
-          skip "OpenType font has no GSUB table"
-        end
+        gsub = font.table("GSUB")
+        scripts = gsub.scripts
+
+        expect(scripts).to be_an(Array)
+        expect(scripts.length).to be > 0
       end
     end
 
@@ -61,8 +59,8 @@ RSpec.describe Fontisan::Tables::Gsub do
       it "extracts feature tags for Latin script" do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
-        # Skip if font doesn't have GSUB table
-        skip "Font has no GSUB table" unless font.has_table?("GSUB")
+        # NotoSans should have GSUB table
+        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         features = gsub.features(script_tag: "latn")
@@ -75,8 +73,8 @@ RSpec.describe Fontisan::Tables::Gsub do
       it "returns empty array for non-existent script" do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
-        # Skip if font doesn't have GSUB table
-        skip "Font has no GSUB table" unless font.has_table?("GSUB")
+        # NotoSans should have GSUB table
+        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         features = gsub.features(script_tag: "XXXX")
@@ -89,16 +87,14 @@ RSpec.describe Fontisan::Tables::Gsub do
       it "extracts feature tags for Latin script" do
         font = Fontisan::OpenTypeFont.from_file(otf_font_path)
 
-        # Check if font has GSUB table
-        if font.has_table?("GSUB")
-          gsub = font.table("GSUB")
-          features = gsub.features(script_tag: "latn")
+        # Libertinus should have GSUB table
+        expect(font.has_table?("GSUB")).to be(true), "Libertinus should have GSUB table"
 
-          expect(features).to be_an(Array)
-          expect(features.length).to be > 0
-        else
-          skip "OpenType font has no GSUB table"
-        end
+        gsub = font.table("GSUB")
+        features = gsub.features(script_tag: "latn")
+
+        expect(features).to be_an(Array)
+        expect(features.length).to be > 0
       end
     end
   end

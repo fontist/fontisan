@@ -595,16 +595,17 @@ RSpec.describe Fontisan::Tables::Loca do
 
     context "when reading from TrueType font" do
       it "successfully parses loca table from Libertinus Serif TTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_ttf_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_ttf_path)
         head = font.table("head")
         maxp = font.table("maxp")
-        skip "Required tables not found" if head.nil? || maxp.nil?
+
+        # These tables are required and should exist
+        expect(head).not_to be_nil, "head table should exist in Libertinus font"
+        expect(maxp).not_to be_nil, "maxp table should exist in Libertinus font"
 
         # Get loca table data
         loca_data = font.table_data["loca"]
-        skip "loca table not found" if loca_data.nil?
+        expect(loca_data).not_to be_nil, "loca table should exist in Libertinus font"
 
         loca = described_class.read(loca_data)
         loca.parse_with_context(head.index_to_loc_format, maxp.num_glyphs)

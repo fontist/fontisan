@@ -482,19 +482,17 @@ RSpec.describe Fontisan::Tables::Hmtx do
 
     context "when reading from TrueType font" do
       it "successfully parses hmtx table from Libertinus Serif" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_path)
-
         font = Fontisan::TrueTypeFont.from_file(libertinus_serif_path)
 
         # Get required tables for context
         hhea = font.table("hhea")
-        skip "hhea table not found" if hhea.nil?
+        expect(hhea).not_to be_nil, "hhea table should exist"
 
         maxp = font.table("maxp")
-        skip "maxp table not found" if maxp.nil?
+        expect(maxp).not_to be_nil, "maxp table should exist"
 
         hmtx_data = font.table_data["hmtx"]
-        skip "hmtx table not found" if hmtx_data.nil?
+        expect(hmtx_data).not_to be_nil, "hmtx table should exist"
 
         # Parse hmtx with context
         hmtx = described_class.read(hmtx_data)
@@ -520,18 +518,16 @@ RSpec.describe Fontisan::Tables::Hmtx do
       end
 
       it "successfully parses hmtx table from Libertinus Serif OTF" do
-        skip "Font file not available" unless File.exist?(libertinus_serif_otf_path)
-
         font = Fontisan::OpenTypeFont.from_file(libertinus_serif_otf_path)
 
         hhea = font.table("hhea")
-        skip "hhea table not found" if hhea.nil?
+        expect(hhea).not_to be_nil, "hhea table should exist"
 
         maxp = font.table("maxp")
-        skip "maxp table not found" if maxp.nil?
+        expect(maxp).not_to be_nil, "maxp table should exist"
 
         hmtx_data = font.table_data["hmtx"]
-        skip "hmtx table not found" if hmtx_data.nil?
+        expect(hmtx_data).not_to be_nil, "hmtx table should exist"
 
         hmtx = described_class.read(hmtx_data)
         hmtx.parse_with_context(hhea.number_of_h_metrics, maxp.num_glyphs)
