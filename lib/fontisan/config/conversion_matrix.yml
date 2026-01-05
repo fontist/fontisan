@@ -177,6 +177,91 @@ conversions:
       Same-format copy operation. Decompresses and re-compresses WOFF2 data
       with Brotli, useful for normalizing compression or updating metadata.
 
+  # Collection format conversions (TTC/OTC/dfont)
+  # Same-format collection operations
+  - from: ttc
+    to: ttc
+    strategy: collection_copier
+    description: "Copy TrueType Collection"
+    status: implemented
+    notes: >
+      Same-format copy operation for TTC files. Preserves all fonts and
+      table sharing structure.
+
+  - from: otc
+    to: otc
+    strategy: collection_copier
+    description: "Copy OpenType Collection"
+    status: implemented
+    notes: >
+      Same-format copy operation for OTC files. Preserves all fonts and
+      table sharing structure.
+
+  - from: dfont
+    to: dfont
+    strategy: collection_copier
+    description: "Copy Apple dfont suitcase"
+    status: implemented
+    notes: >
+      Same-format copy operation for dfont files. Preserves all fonts in
+      the suitcase.
+
+  # Cross-collection conversions
+  - from: ttc
+    to: otc
+    strategy: collection_converter
+    description: "Convert TrueType Collection to OpenType Collection"
+    status: implemented
+    notes: >
+      Unpacks TTC, converts all TrueType fonts to OpenType/CFF format,
+      then repacks as OTC with table sharing optimization.
+
+  - from: otc
+    to: ttc
+    strategy: collection_converter
+    description: "Convert OpenType Collection to TrueType Collection"
+    status: implemented
+    notes: >
+      Unpacks OTC, converts all OpenType/CFF fonts to TrueType format,
+      then repacks as TTC with table sharing optimization.
+
+  - from: ttc
+    to: dfont
+    strategy: collection_converter
+    description: "Convert TrueType Collection to dfont suitcase"
+    status: implemented
+    notes: >
+      Unpacks TTC and repacks as Apple dfont suitcase. No outline conversion
+      needed as dfont supports TrueType fonts.
+
+  - from: otc
+    to: dfont
+    strategy: collection_converter
+    description: "Convert OpenType Collection to dfont suitcase"
+    status: implemented
+    notes: >
+      Unpacks OTC and repacks as Apple dfont suitcase. No outline conversion
+      needed as dfont supports OpenType/CFF fonts.
+
+  - from: dfont
+    to: ttc
+    strategy: collection_converter
+    description: "Convert dfont suitcase to TrueType Collection"
+    status: implemented
+    notes: >
+      Unpacks dfont suitcase and repacks as TTC. If dfont contains OpenType
+      fonts, they are converted to TrueType format. Only valid if all fonts
+      can be converted to TrueType.
+
+  - from: dfont
+    to: otc
+    strategy: collection_converter
+    description: "Convert dfont suitcase to OpenType Collection"
+    status: implemented
+    notes: >
+      Unpacks dfont suitcase and repacks as OTC. If dfont contains TrueType
+      fonts, they are converted to OpenType/CFF format.
+
 # Conversion compatibility matrix
 #
 # This section documents which source features are preserved in conversions.
@@ -248,3 +333,92 @@ compatibility:
       - fallback: Emergency fallback for very old browsers
       - conversion: Intermediate format for font conversion workflows
       - inspection: Easy-to-read format for font inspection
+
+  collection_conversions:
+    ttc_to_otc:
+      preserves:
+        - all_fonts: All fonts in collection
+        - font_metrics: Font metrics for each font
+        - layout_features: Layout features for each font
+      limitations:
+        - outline_conversion_required: TrueType to CFF conversion applied
+        - hinting_loss: TrueType hinting not preserved in CFF
+      notes: >
+        Converts all TrueType fonts to OpenType/CFF format using the standard
+        TTF→OTF conversion pipeline, then repacks with table sharing.
+
+    otc_to_ttc:
+      preserves:
+        - all_fonts: All fonts in collection
+        - font_metrics: Font metrics for each font
+        - layout_features: Layout features for each font
+      limitations:
+        - outline_conversion_required: CFF to TrueType conversion applied
+        - hinting_loss: CFF hints not preserved in TrueType
+        - approximation: Cubic to quadratic curve approximation
+      notes: >
+        Converts all OpenType/CFF fonts to TrueType format using the standard
+        OTF→TTF conversion pipeline, then repacks with table sharing.
+
+    to_dfont:
+      preserves:
+        - all_fonts: All fonts in collection
+        - original_formats: Preserves original outline formats (TTF or OTF)
+        - font_metrics: All font metrics
+        - layout_features: All layout features
+      benefits:
+        - mixed_formats: dfont supports both TrueType and OpenType fonts
+        - mac_compatibility: Native Mac OS X suitcase format
+      limitations:
+        - platform_specific: Mac OS X only, not cross-platform
+        - no_table_sharing: dfont doesn't deduplicate tables like TTC/OTC
+      notes: >
+        Repackages fonts into Apple dfont suitcase format. No outline conversion
+        needed as dfont supports any SFNT font type (TTF, OTF, or mixed).
+
+    from_dfont:
+      preserves:
+        - all_fonts: All fonts in suitcase
+        - font_metrics: All font metrics
+        - layout_features: All layout features
+      limitations:
+        - conversion_may_be_required: Outline conversion if target requires specific format
+        - hinting_loss: If outline conversion occurs
+      benefits:
+        - cross_platform: TTC/OTC work on all platforms
+        - table_sharing: TTC/OTC optimize with table deduplication
+      notes: >
+        Extracts fonts from dfont suitcase and repacks into TTC or OTC.
+        Outline conversion may occur depending on target format requirements.
+
+# Collection format rules
+collection_rules:
+  ttc:
+    required_format: truetype
+    allows_mixed: false
+    spec_compliance: opentype_spec
+    description: >
+      TrueType Collection per OpenType specification. Contains only TrueType
+      fonts (glyf/loca tables). CFF fonts are not allowed.
+
+  otc:
+    required_format: cff_preferred
+    allows_mixed: true
+    spec_compliance: opentype_1.8
+    description: >
+      OpenType Collection per OpenType 1.8 specification. Requires at least
+      one CFF font. Fontisan extension allows mixed TTF+OTF for flexibility.
+
+  dfont:
+    required_format: any_sfnt
+    allows_mixed: true
+    spec_compliance: apple_proprietary
+    description: >
+      Apple dfont (Data Fork Font) suitcase. Contains Mac font suitcase
+      resources (FOND, NFNT, sfnt). Supports any SFNT fonts (TrueType,
+      OpenType/CFF, or mixed). Mac OS X specific, not cross-platform.
+
+  prohibited:
+    - web_fonts_in_collections: >
+        WOFF and WOFF2 fonts cannot be included in collections (TTC, OTC, or dfont).
+        Web fonts are designed for single-font web delivery only.

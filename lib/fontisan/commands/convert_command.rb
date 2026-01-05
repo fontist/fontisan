@@ -2,6 +2,8 @@
 
 require_relative "base_command"
 require_relative "../pipeline/transformation_pipeline"
+require_relative "../converters/collection_converter"
+require_relative "../font_loader"
 
 module Fontisan
   module Commands
@@ -47,6 +49,7 @@ module Fontisan
       # @option options [Integer] :instance_index Named instance index
       # @option options [Boolean] :preserve_variation Preserve variation data (default: auto)
       # @option options [Boolean] :preserve_hints Preserve rendering hints (default: false)
+      # @option options [String] :target_format Target outline format for collections: 'preserve' (default), 'ttf', or 'otf'
       # @option options [Boolean] :no_validate Skip output validation
       # @option options [Boolean] :verbose Verbose output
       def initialize(font_path, options = {})
@@ -70,6 +73,7 @@ module Fontisan
         @instance_index = opts[:instance_index]
         @preserve_variation = opts[:preserve_variation]
         @preserve_hints = opts.fetch(:preserve_hints, false)
+        @collection_target_format = opts.fetch(:target_format, 'preserve').to_s
         @validate = !opts[:no_validate]
       end
 
@@ -81,6 +85,35 @@ module Fontisan
       def run
         validate_options!
 
+        # Check if input is a collection
+        if collection_file?
+          convert_collection
+        else
+          convert_single_font
+        end
+      rescue ArgumentError
+        # Let ArgumentError propagate for validation errors
+        raise
+      rescue StandardError => e
+        raise Error, "Conversion failed: #{e.message}"
+      end
+
+      private
+
+      # Check if input file is a collection
+      #
+      # @return [Boolean] true if collection
+      def collection_file?
+        FontLoader.collection?(font_path)
+      rescue StandardError
+        # If detection fails, assume single font
+        false
+      end
+
+      # Convert a single font (original implementation)
+      #
+      # @return [Hash] Result information
+      def convert_single_font
         puts "Converting #{File.basename(font_path)} to #{@target_format}..." unless @options[:quiet]
 
         # Build pipeline options
@@ -137,14 +170,86 @@ module Fontisan
           output_size: File.size(@output_path),
           variation_strategy: result[:details][:variation_strategy],
         }
-      rescue ArgumentError
-        # Let ArgumentError propagate for validation errors
-        raise
-      rescue StandardError => e
-        raise Error, "Conversion failed: #{e.message}"
       end
 
-      private
+      # Convert a collection
+      #
+      # @return [Hash] Result information
+      def convert_collection
+        # Determine target collection type from target format
+        target_type = collection_type_from_format(@target_format)
+
+        unless target_type
+          raise ArgumentError,
+                "Target format #{@target_format} is not a collection format. " \
+                "Use ttc, otc, or dfont for collection conversion."
+        end
+
+        puts "Converting collection to #{target_type.to_s.upcase}..." unless @options[:quiet]
+
+        # Use CollectionConverter
+        converter = Converters::CollectionConverter.new
+        result = converter.convert(
+          font_path,
+          target_type: target_type,
+          options: {
+            output: @output_path,
+            target_format: @collection_target_format,
+            verbose: @options[:verbose],
+          }
+        )
+
+        # Display results
+        unless @options[:quiet]
+          output_size = File.size(@output_path)
+          input_size = File.size(font_path)
+
+          puts "Conversion complete!"
+          puts "  Input:  #{font_path} (#{format_size(input_size)})"
+          puts "  Output: #{@output_path} (#{format_size(output_size)})"
+          puts "  Format: #{result[:source_type].to_s.upcase} → #{result[:target_type].to_s.upcase}"
+          puts "  Fonts:  #{result[:num_fonts]}"
+        end
+
+        {
+          success: true,
+          input_path: font_path,
+          output_path: @output_path,
+          source_format: result[:source_type],
+          target_format: result[:target_type],
+          input_size: File.size(font_path),
+          output_size: File.size(@output_path),
+          num_fonts: result[:num_fonts],
+        }
+      end
+
+      # Determine collection type from format
+      #
+      # @param format [Symbol] Target format
+      # @return [Symbol, nil] Collection type (:ttc, :otc, :dfont) or nil
+      def collection_type_from_format(format)
+        case format
+        when :ttc
+          :ttc
+        when :otc
+          :otc
+        when :dfont
+          :dfont
+        else
+          # Check output extension
+          ext = File.extname(@output_path).downcase
+          case ext
+          when ".ttc"
+            :ttc
+          when ".otc"
+            :otc
+          when ".dfont"
+            :dfont
+          else
+            nil
+          end
+        end
+      end
 
       # Parse coordinates string to hash
       #
@@ -194,6 +299,12 @@ module Fontisan
           :ttf
         when "otf", "opentype", "cff"
           :otf
+        when "ttc"
+          :ttc
+        when "otc"
+          :otc
+        when "dfont"
+          :dfont
         when "svg"
           :svg
         when "woff"
@@ -203,7 +314,7 @@ module Fontisan
         else
           raise ArgumentError,
                 "Unknown target format: #{format}. " \
-                "Supported: ttf, otf, svg, woff, woff2"
+                "Supported: ttf, otf, ttc, otc, dfont, svg, woff, woff2"
         end
       end
 

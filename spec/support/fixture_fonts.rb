@@ -88,6 +88,19 @@ module FixtureFonts
       single_file: true,
       markers: ["Twemoji.Mozilla.ttf"],
     },
+    "Tamsyn" => {
+      url: "https://github.com/roman0x58/tamsyn-mac-version/archive/refs/tags/0.1.zip",
+      target_dir: "tamsyn",
+      path_prefix: "tamsyn-mac-version-0.1/tamsyn",
+      markers: ["tamsyn-mac-version-0.1/tamsyn/Tamsyn7x13.dfont"],
+    },
+    "UnifontEX" => {
+      url: "https://github.com/stgiga/UnifontEX/raw/refs/heads/main/UnifontExMono.dfont",
+      target_dir: "unifontex",
+      path_prefix: "",
+      single_file: true,
+      markers: ["UnifontExMono.dfont"],
+    },
   }.freeze
 
   # Get absolute path to a font fixture file

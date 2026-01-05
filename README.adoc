@@ -10,7 +10,7 @@ Fontisan is a Ruby gem providing font analysis tools and utilities.
 
 It is designed as a pure Ruby implementation with full object-oriented
 architecture, supporting extraction of information from OpenType and TrueType
-fonts (OTF, TTF, TTC).
+fonts (OTF, TTF, OTC, TTC, dfont).
 
 The gem provides both a Ruby library API and a command-line interface, with
 structured output formats (YAML, JSON, text) via lutaml-model.
@@ -71,6 +71,7 @@ gem install fontisan
 * Font validation with multiple severity levels
 * Collection management (pack/unpack TTC/OTC files with table deduplication)
 * Support for TTF, OTF, TTC, OTC font formats (production ready)
+* Apple legacy font support: 'true' signature TrueType fonts and dfont (Data Fork Font) format
 * WOFF format support (reading complete, writing functional, pending full integration)
 * WOFF2 format support (reading complete with table transformations, writing planned)
 * SVG font generation (complete)
@@ -100,12 +101,13 @@ and font metrics.
 
 [source,shell]
 ----
+
 $ fontisan info FONT_FILE [--format FORMAT] [--brief]
 ----
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTF)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 `--brief`:: Show only basic font information
 
@@ -366,7 +368,7 @@ $ fontisan tables FONT_FILE [--format FORMAT]
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 
 .List of OpenType tables in Libertinus Serif Regular
@@ -424,10 +426,6 @@ tables:
   length: 17870
   offset: 542992
   checksum: 701383168
-- tag: OS/2
-  length: 96
-  offset: 392
-  checksum: 1193824355
 ...
 ----
 ====
@@ -451,7 +449,7 @@ $ fontisan glyphs FONT_FILE [--format FORMAT]
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 
 
@@ -466,7 +464,7 @@ $ fontisan glyphs spec/fixtures/fonts/libertinus/ttf/LibertinusSerif-Regular.ttf
 [source,text]
 ----
 Glyph count: 2731
-Source: post_2.0
+Source: post-2.0
 
 Glyph names:
       0  .notdef
@@ -512,7 +510,7 @@ $ fontisan unicode FONT_FILE [--format FORMAT]
 
 Where:
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 
 
@@ -802,7 +800,7 @@ $ fontisan scripts FONT_FILE [--format FORMAT]
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 
 
@@ -845,7 +843,7 @@ $ fontisan features FONT_FILE [--script SCRIPT] [--format FORMAT]
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `SCRIPT`:: Optional 4-character script tag (e.g., `latn`, `cyrl`, `arab`). If not specified, shows features for all scripts
 `FORMAT`:: Output format: `text` (default), `json`, or `yaml`
 
@@ -942,7 +940,7 @@ $ fontisan dump-table FONT_FILE TABLE_TAG
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `TABLE_TAG`:: Four-character table tag (e.g., `name`, `head`, `GSUB`, `GPOS`)
 
 
@@ -980,7 +978,7 @@ $ fontisan export FONT_FILE [--output FILE] [--format FORMAT] [--tables TABLES] 
 
 Where,
 
-`FONT_FILE`:: Path to the font file (OTF, TTF, or TTC)
+`FONT_FILE`:: Path to the font file (OTF, TTF, TTC, OTC, dfont)
 `--output FILE`:: Output file path (default: stdout)
 `--format FORMAT`:: Export format: `yaml` (default), `json`, or `ttx`
 `--tables TABLES`:: Specific tables to export (space-separated list)
@@ -1281,21 +1279,21 @@ class MyFontValidator < Fontisan::Validators::Validator
 
   def define_checks
     # Check name table
-    check_table :name_version, 'name', severity: :error do |table|
-      table.valid_version?
-    end
-
-    check_table :family_name, 'name', severity: :error do |table|
-      table.family_name_present?
+    check_table :name_validation, 'name', severity: :error do |table|
+      table.valid_version? &&
+        table.valid_encoding_heuristics? &&
+        table.family_name_present? &&
+        table.postscript_name_valid?
     end
 
     # Check head table
-    check_table :head_magic, 'head', severity: :error do |table|
-      table.valid_magic?
-    end
-
-    check_table :units_per_em, 'head', severity: :error do |table|
-      table.valid_units_per_em?
+    check_table :head_validation, 'head', severity: :error do |table|
+      table.valid_magic? &&
+        table.valid_version? &&
+        table.valid_units_per_em? &&
+        table.valid_bounding_box? &&
+        table.valid_index_to_loc_format? &&
+        table.valid_glyph_data_format?
     end
 
     # Check structure
@@ -1317,7 +1315,7 @@ puts report.summary.errors                   # => number of errors
 puts report.summary.warnings                 # => number of warnings
 
 # Query specific checks
-result = report.result_of(:name_version)
+result = report.result_of(:name_validation)
 puts result.passed?                          # => true/false
 puts result.severity                         # => "error"
 puts result.messages                         # => array of messages
@@ -1337,10 +1335,6 @@ puts report.to_json
 .Using table validation helpers
 [example]
 ====
-The validation framework integrates with 56 built-in validation helpers across
-core OpenType tables. These helpers perform specific validation checks and
-return boolean values.
-
 [source,ruby]
 ----
 class ComprehensiveValidator < Fontisan::Validators::Validator
@@ -1348,7 +1342,7 @@ class ComprehensiveValidator < Fontisan::Validators::Validator
 
   def define_checks
     # Name table validation helpers
-    check_table :name_validation, 'name' do |table|
+    check_table :name_validation, 'name', severity: :error do |table|
       table.valid_version? &&
         table.valid_encoding_heuristics? &&
         table.family_name_present? &&
@@ -1356,7 +1350,7 @@ class ComprehensiveValidator < Fontisan::Validators::Validator
     end
 
     # Head table validation helpers
-    check_table :head_validation, 'head' do |table|
+    check_table :head_validation, 'head', severity: :error do |table|
       table.valid_magic? &&
         table.valid_version? &&
         table.valid_units_per_em? &&
@@ -1366,7 +1360,7 @@ class ComprehensiveValidator < Fontisan::Validators::Validator
     end
 
     # Maxp table validation helpers
-    check_table :maxp_validation, 'maxp' do |table|
+    check_table :maxp_validation, 'maxp', severity: :error do |table|
       table.valid_version? &&
         table.valid_num_glyphs? &&
         table.valid_max_zones? &&
@@ -1405,7 +1399,7 @@ else
 end
 
 # Check specific validation results
-if report.result_of(:name_version)&.passed?
+if report.result_of(:name_validation)&.passed?
   puts "Name table version is valid"
 else
   puts "Name table version check failed"
@@ -1524,16 +1518,51 @@ fontisan version
 ----
 
 
-== Font collections
+== Font containers and collections
 
 === General
 
-Fontisan provides comprehensive tools for managing TrueType Collections (TTC)
-and OpenType Collections (OTC). You can list fonts in a collection, extract
-individual fonts, unpack entire collections, and validate collection integrity.
+Fontisan provides comprehensive tools for managing font containers and
+collections. A font container is defined as a packaging format that can hold one
+or more font assets.
 
-Both TTC and OTC files use the same `ttcf` tag in their binary format, but
-differ in the type of font data they contain:
+In general, Fontisan supports the following levels of font packaging:
+
+Level 1:: Outline formats. This level defines the actual glyph outline data
+format for fonts.
+
+TrueType::: Quadratic Bézier curves (glyf/loca tables)
+CFF::: Cubic Bézier curves (CFF table, PostScript outlines)
+CFF2::: Variable CFF with cubic curves (CFF2 table)
+
+Level 2:: Curve and metadata container. This level defines the overall font
+file format that encapsulates outline data along with various metadata tables.
+
+SFNT::: "Spine/Scalable font" defines the overall structure and directory system
+for a font file, which houses different "tables" containing specific data like
+glyph outlines, character maps, and kerning information.
+
+TrueType (TTF)::: A specific implementation of the SFNT container that uses
+TrueType outlines.
+
+OpenType (OTF)::: A more versatile SFNT container that can house either TrueType
+or CFF outlines, along with additional typographic features.
+
+Web Open Font Format (WOFF and WOFF2)::: Compressed SFNT-based formats optimized
+for web delivery.
+
+Level 3:: Individual font file, representing a single font asset packaged in a
+specific container format.
+
+TTF `.ttf`::: A single font file in TrueType format
+OTF `.otf`::: A single font file in OpenType format
+WOFF `.woff`::: A single font file in Web Open Font Format 1.0 that is SFNT-based
+and uses zlib compression
+WOFF2 `.woff2`::: A single font file in Web Open Font Format 2.0 that is
+SFNT-based and uses Brotli compression
+
+Level 4:: Font collections, which are container formats that can hold multiple
+font assets within a single file.
 
 TTC (TrueType Collection):: Supported since OpenType 1.4. Contains fonts with
 TrueType outlines (glyf table). Multiple fonts can share identical tables for
@@ -1543,7 +1572,38 @@ OTC (OpenType Collection):: Supported since OpenType 1.8. Contains fonts with
 CFF-format outlines (CFF table). Provides the same storage benefits and
 glyph-count advantages as TTC but for CFF fonts. File extension: `.otc`
 
-The collection format allows:
+dfont (Apple suitcase)::: Apple proprietary format storing complete Mac font
+suitcase resources in the data fork. Supports any SFNT fonts (TTF, OTF, or
+mixed). Mac OS X specific. File extension: `.dfont`
+
+
+=== Collection compatibility
+
+.Compatibility matrix
+|===
+| Container | TrueType | CFF | Mixed | WOFF/WOFF2 | Platform
+
+| TTC       | ✅ ONLY  | ❌  | ❌    | ❌         | Cross-platform
+| OTC       | ✅       | ✅  | ✅    | ❌         | Cross-platform
+| dfont     | ✅       | ✅  | ✅    | ❌         | Apple only
+
+|===
+
+NOTE: WOFF/WOFF2 cannot be packaged into TTC, OTC or dfont collections. Web
+fonts are designed for single-font delivery only.
+
+
+=== Working with collections
+
+Fontist supports working with TrueType Collections (TTC), OpenType Collections
+(OTC) and the legacy Apple dfont format. You can list fonts in a collection,
+extract individual fonts, unpack entire collections, and validate collection
+integrity.
+
+NOTE: Both TTC and OTC files use the same `ttcf` tag in their binary format, but
+differ in the type of font data they contain.
+
+In particular, the TTC and OTC formats allows:
 
 Table sharing::
 Identical tables are stored once and referenced by multiple fonts
@@ -1568,8 +1628,7 @@ Fontist returns the appropriate collection type based on the font data:
 
 ==== General
 
-List all fonts in a TrueType Collection (TTC) or OpenType Collection (OTC), with
-their index, family name, and style.
+List all fonts in a font collection, with their index, family name, and style.
 
 ==== Command-line usage
 
@@ -1579,7 +1638,6 @@ $ fontisan ls FONT.{ttc,otc}
 ----
 
 NOTE: In `extract_ttc`, this was done with `extract_ttc --list FONT.ttc`.
-
 
 .List collection contents
 [example]
@@ -1608,6 +1666,27 @@ Font 3: Noto Serif CJK TC
   Family: Noto Serif CJK TC
   Subfamily: Regular
   PostScript: NotoSerifCJKTC-Regular
+----
+====
+
+.List fonts in dfont suitcase
+[example]
+====
+[source,shell]
+----
+$ fontisan ls family.dfont
+
+Font 0: Arial
+  Family: Arial
+  Subfamily: Regular
+
+Font 1: Arial
+  Family: Arial
+  Subfamily: Bold
+
+Font 2: Arial
+  Family: Arial
+  Subfamily: Italic
 ----
 ====
 
@@ -1771,863 +1850,111 @@ Collection created successfully:
 $ fontisan pack Regular.otf Bold.otf Italic.otf --output family.otc --format otc
 ----
 
-
-=== Validate collection
-
-==== General
-
-Validate the structure and checksums of a TrueType Collection (TTC) or OpenType
-Collection (OTC).
-
-==== Command-line usage
-
+.Pack into OTC
+[example]
+====
 [source,shell]
 ----
-$ fontisan validate FONT.{ttc,otc}
+$ fontisan pack Regular.otf Bold.otf Italic.otf --output family.otc --format otc
+
+Collection created successfully:
+  Output: family.otc
+  Format: OTC
+  Fonts: 3
 ----
 
-NOTE: In `extract_ttc`, this was done with `extract_ttc --validate FONT.ttc`.
-
-
-== Advanced features
-
-Fontisan provides capabilities:
-
-.Font analysis and inspection
-* Extract OpenType tables with checksums and offsets
-* Display Unicode mappings and glyph names
-* Analyze variable font axes and instances
-* Show supported scripts and OpenType features
-* Dump raw binary table data
-
-.Format conversion and subsetting
-* Convert between TTF, OTF, WOFF, and WOFF2 formats
-* Create font subsets with specific glyph ranges
-* Validate font structure and integrity
-* Generate SVG representations of glyphs
-
-.Collection creation
-* Build new TTC files from individual fonts
-* Optimize collection with table deduplication
-* Pack fonts with shared tables for smaller file sizes
-
-For complete migration guide, see link:docs/EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide].
-
-
-
-
-== Loading modes
-
-=== General
-
-Fontisan provides a flexible loading modes architecture that enables efficient
-font parsing for different use cases.
-
-The system supports two distinct modes:
-
-`:full` mode:: (default) Loads all tables in the font for complete analysis and
-manipulation
-
-`:metadata` mode:: Loads only metadata tables needed for font identification and
-metrics (similar to `otfinfo` functionality). This mode is around 5x faster
-than full parsing and uses significantly less memory.
-
-This architecture is particularly useful for software that only
-needs basic font information without full parsing overhead, such as
-font indexing systems or font discovery tools.
-
-This mode was developed to improve performance in font indexing in the
-https://github.com/fontist/fontist[Fontist] library, where system fonts
-need to be scanned quickly without loading unnecessary data.
-
-A font file opened in `:metadata` mode will only have a subset of tables
-loaded, and attempts to access non-loaded tables will return `nil`.
-
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('font.ttf', mode: :metadata)
-
-# Check table availability before accessing
-font.table_available?("name")  # => true
-font.table_available?("GSUB")  # => false
-
-# Access allowed tables
-font.table("name")  # => Works
-font.table("head")  # => Works
-
-# Restricted tables return nil
-font.table("GSUB")  # => nil (not loaded in metadata mode)
-----
-
-You can also set loading modes via the environment:
-
-[source,ruby]
-----
-# Set defaults via environment
-ENV['FONTISAN_MODE'] = 'metadata'
-ENV['FONTISAN_LAZY'] = 'false'
-
-# Uses environment settings
-font = Fontisan::FontLoader.load('font.ttf')
-
-# Explicit parameters override environment
-font = Fontisan::FontLoader.load('font.ttf', mode: :full)
-----
-
-The loading mode can be queried at any time.
-
-[source,ruby]
-----
-# Mode stored as font property
-font.loading_mode  # => :metadata or :full
-
-# Table availability checked before access
-font.table_available?(tag)  # => boolean
-
-# Access restricted based on mode
-font.table(tag)  # => Returns table or raises error
-----
-
-
-
-=== Metadata mode
-
-Loads only 6 tables (name, head, hhea, maxp, OS/2, post) instead of 15-20 tables.
-
-.Metadata mode: Fast loading for font identification
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('font.ttf', mode: :metadata)
-puts font.family_name          # => "Arial"
-puts font.subfamily_name       # => "Regular"
-puts font.post_script_name     # => "ArialMT"
-----
-
-Tables loaded:
-
-name:: Font names and metadata
-head:: Font header with global metrics
-hhea:: Horizontal header with line spacing
-maxp:: Maximum profile with glyph count
-OS/2:: OS/2 and Windows metrics
-post:: PostScript information
-
-
-In metadata mode, these convenience methods provide direct access to name table
-fields:
-
-`family_name`:: Font family name (nameID 1)
-`subfamily_name`:: Font subfamily/style name (nameID 2)
-`full_name`:: Full font name (nameID 4)
-`post_script_name`:: PostScript name (nameID 6)
-`preferred_family_name`:: Preferred family name (nameID 16, may be nil)
-`preferred_subfamily_name`:: Preferred subfamily name (nameID 17, may be nil)
-`units_per_em`:: Units per em from head table
-
-
-=== Full mode
-
-Loads all tables in the font for complete analysis and manipulation.
-
-.Full mode: Complete font analysis
-[source,ruby]
-----
-font = Fontisan::FontLoader.load('font.ttf', mode: :full)
-font.table("GSUB")  # => Available
-font.table("GPOS")  # => Available
-
-# Check which mode is active
-puts font.loading_mode  # => :metadata or :full
-----
-
-Tables loaded:
-
-* All tables in the font
-* Including GSUB, GPOS, cmap, glyf/CFF, etc.
-
-=== Lazy loading option
-
-Fontisan supports lazy loading of tables in both `:metadata` and `:full` modes.
-When lazy loading is enabled (optional), tables are only parsed when accessed.
-
-Options:
-
-`false`:: (default) Eager loading. All tables for the selected mode are parsed
-upfront.
-
-`true`:: Lazy loading enabled. Tables are parsed on-demand.
-
-[source,ruby]
-----
-# Metadata mode with lazy loading (default, fastest)
-font = Fontisan::FontLoader.load('font.ttf', mode: :metadata, lazy: true)
-
-# Metadata mode with eager loading (loads all metadata tables upfront)
-font = Fontisan::FontLoader.load('font.ttf', mode: :metadata, lazy: false)
-
-# Full mode with lazy loading (tables loaded on-demand)
-font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: true)
-
-# Full mode with eager loading (all tables loaded upfront)
-font = Fontisan::FontLoader.load('font.ttf', mode: :full, lazy: false)
-----
-
-
-
-
-== Outline format conversion
-
-=== General
-
-Fontisan supports bidirectional conversion between TrueType (TTF) and
-OpenType/CFF (OTF) outline formats through the Fontist universal outline model
-(UOM).
-
-The outline converter enables transformation between glyph outline formats:
-
-TrueType (TTF):: Uses quadratic Bézier curves stored in glyf/loca tables
-OpenType/CFF (OTF):: Uses cubic Bézier curves stored in CFF table
-
-Conversion uses a format-agnostic universal outline model as an intermediate
-representation, ensuring high-quality results while preserving glyph metrics and
-bounding boxes.
-
-
-=== Convert between TTF and OTF
-
-==== Command-line usage
-
-Syntax:
-
-[source,bash]
-----
-$ fontisan convert INPUT_FONT --to FORMAT --output OUTPUT_FONT
-----
-
-Where,
-
-`INPUT_FONT`:: Path to the input font file (TTF or OTF)
-`FORMAT`:: Target format:
-`ttf`, `truetype`::: TrueType format
-`otf`, `opentype`, `cff`::: OpenType/CFF format
-`OUTPUT_FONT`:: Path to the output font file
-
-
-[source,bash]
-----
-# Convert TrueType font to OpenType/CFF
-fontisan convert input.ttf --to otf --output output.otf
-
-# Convert OpenType/CFF font to TrueType
-fontisan convert input.otf --to ttf --output output.ttf
-----
-
-
-==== Ruby API usage
-
-Basic conversion with OutlineConverter:
-
-[source,ruby]
-----
-require 'fontisan'
-
-# Load a TrueType font
-font = Fontisan::FontLoader.load('input.ttf')
-
-# Convert to OpenType/CFF
-converter = Fontisan::Converters::OutlineConverter.new
-tables = converter.convert(font, target_format: :otf)
-
-# Write output
-Fontisan::FontWriter.write_to_file(
-  tables,
-  'output.otf',
-  sfnt_version: 0x4F54544F  # 'OTTO' for OpenType/CFF
-)
-----
-
-Using FormatConverter:
-
-[source,ruby]
-----
-require 'fontisan'
-
-# Load font
-font = Fontisan::FontLoader.load('input.ttf')
-
-# Convert using high-level API
-converter = Fontisan::Converters::FormatConverter.new
-if converter.supported?(:ttf, :otf)
-  tables = converter.convert(font, :otf)
-
-  # Write output
-  Fontisan::FontWriter.write_to_file(
-    tables,
-    'output.otf',
-    sfnt_version: 0x4F54544F
-  )
-end
-----
-
-To check supported conversions:
-
-[source,ruby]
-----
-converter = Fontisan::Converters::FormatConverter.new
-
-# Check if conversion is supported
-converter.supported?(:ttf, :otf)  # => true
-converter.supported?(:otf, :ttf)  # => true
-
-# Get all supported conversions
-converter.all_conversions
-# => [{from: :ttf, to: :otf}, {from: :otf, to: :ttf}, ...]
-
-# Get supported targets for a source format
-converter.supported_targets(:ttf)
-# => [:ttf, :otf, :woff2, :svg]
-----
-
-=== Convert into WOFF2
-
-==== Validation
-
-WOFF2 encoding can be validated automatically to ensure spec compliance:
-
-.Validation example
-[example]
-====
-[source,ruby]
-----
-encoder = Fontisan::Converters::Woff2Encoder.new
-result = encoder.convert(font, {
-  transform_tables: true,
-  validate: true,
-  validation_level: :strict  # :strict, :standard, or :lenient
-})
-
-report = result[:validation_report]
-puts "Valid: #{report.valid}"
-puts "Compression: #{report.info_issues.first.message}"
-----
+NOTE: dfont supports mixed TrueType and OpenType fonts in the same suitcase.
+dfont does not perform table deduplication like TTC/OTC.
 ====
 
 
-
-=== Validation
-
-Font integrity validation is enabled by default for all conversions.
-
-The validator ensures proper OpenType checksum calculation including correct
-handling of the head table's checksumAdjustment field per the OpenType
-specification.
-
-After conversion, validate the output font:
-
-[source,bash]
-----
-fontisan validate output.otf
-fontisan info output.otf
-fontisan tables output.otf
-----
-
-
-== Technical details of outline conversion
-
-=== General
-
-The converter uses a three-stage pipeline:
-
-[source]
-----
-Source Format         Universal Outline         Target Format
--------------         ------------------        -------------
-TrueType (glyf)  →→→  Command-based model  →→→  OpenType/CFF
-Quadratic curves      Path representation        Cubic curves
-On/off-curve pts      (format-agnostic)         CharStrings
-Delta encoding        Bounding boxes             Type 2 operators
-                      Metrics                    Compact encoding
-----
-
-=== Conversion steps
-
-TTF → OTF conversion:
-
-. Extract glyphs from glyf/loca tables
-. Convert quadratic Bézier curves to universal outline format
-. Build CFF table with CharStrings INDEX
-. Update maxp table to version 0.5 (CFF format)
-. Update head table (clear indexToLocFormat)
-. Remove glyf/loca tables
-. Preserve all other tables
-
-OTF → TTF conversion:
-
-. Extract CharStrings from CFF table
-. Convert cubic Bézier curves to universal outline format
-. Convert cubic curves to quadratic using adaptive subdivision
-. Build glyf and loca tables with optimal format selection
-. Update maxp table to version 1.0 (TrueType format)
-. Update head table (set indexToLocFormat)
-. Remove CFF table
-. Preserve all other tables
-
-=== Curve conversion
-
-**Quadratic to cubic** (lossless):
-
-[source]
-----
-Given quadratic curve with control point Q:
-  P0 (start), Q (control), P2 (end)
-
-Calculate cubic control points:
-  CP1 = P0 + (2/3) × (Q - P0)
-  CP2 = P2 + (2/3) × (Q - P2)
-
-Result: Exact mathematical equivalent
-----
-
-**Cubic to quadratic** (adaptive):
-
-[source]
-----
-Given cubic curve with control points:
-  P0 (start), CP1, CP2, P3 (end)
-
-Use adaptive subdivision algorithm:
-  1. Estimate error of quadratic approximation
-  2. If error > threshold (0.5 units):
-     - Subdivide cubic curve at midpoint
-     - Recursively convert each half
-  3. Otherwise: Output quadratic approximation
-
-Result: High-quality approximation with < 0.5 unit deviation
-----
-
-=== Compound glyph support
+=== Convert between font container formats
 
 ==== General
 
-Fontisan fully supports compound (composite) glyphs in both conversion directions:
+Fontisan supports converting font collections between TrueType Collection (TTC),
+OpenType Collection (OTC), and Apple dfont formats.
 
-* **TTF → OTF**: Compound glyphs are decomposed into simple outlines with transformations applied
-* **OTF → TTF**: CFF glyphs are converted to simple TrueType glyphs
+All collection formats (TTC, OTC, dfont) support mixed TrueType and OpenType fonts.
 
-==== Decomposition process
+By default, original font formats are preserved during conversion. Use the
+`--target-format` option to standardize all fonts to a specific outline format:
 
-When converting TTF to OTF, compound glyphs undergo the following process:
-
-. Detected from glyf table flags (numberOfContours = -1)
-. Components recursively resolved (handling nested compound glyphs)
-. Transformation matrices applied to each component (translation, scale, rotation)
-. All components merged into a single simple outline
-. Converted to CFF CharString format
-
-This ensures that all glyphs render identically while maintaining proper metrics
-and bounding boxes.
-
-==== Technical implementation
-
-Compound glyphs reference other glyphs by index and apply 2×3 affine
-transformation matrices:
-
-[source]
-----
-x' = a*x + c*y + e
-y' = b*x + d*y + f
-
-Where:
-- a, d: Scale factors for x and y axes
-- b, c: Rotation/skew components
-- e, f: Translation offsets (x, y position)
-----
-
-The resolver handles:
-
-* Simple glyphs referenced by compounds
-* Nested compound glyphs (compounds referencing other compounds)
-* Circular reference detection with maximum recursion depth (32 levels)
-* Complex transformation matrices (uniform scale, x/y scale, full 2×2 matrix)
-
-=== Subroutine optimization
-
-==== General
-
-When converting TrueType (TTF) to OpenType/CFF (OTF), Fontisan can automatically
-generate CFF subroutines to reduce file size.
-
-Subroutines extract repeated CharString patterns across glyphs and store them
-once, significantly reducing CFF table size while maintaining identical glyph
-rendering.
-
-Key features:
-
-* Pattern analysis: Analyzes byte sequences across all CharStrings to identify repeating patterns
-* Frequency-based selection: Prioritizes patterns that provide maximum space savings
-* Configurable thresholds: Customizable minimum pattern length and maximum subroutine count
-* Ordering optimization: Automatically orders subroutines by frequency for better compression
-
-Typical space savings: 30-50% reduction in CFF table size for fonts with similar
-glyph shapes.
-
-NOTE: Current implementation calculates accurate optimization metrics but does
-not modify the output CFF table. Full CFF serialization with subroutines will be
-available in the next development phase.
-
-==== Edge cases
-
-The optimizer correctly handles:
-
-* Multi-byte numbers: Number encodings from 1-5 bytes (CFF Type 2 format)
-* Two-byte operators: Operators with 0x0c prefix (e.g., `div` in `lib/fontisan/tables/cff/charstring.rb`, `flex` in `lib/fontisan/tables/cff/charstring.rb`)
-* Overlapping patterns: Multiple patterns at same byte positions
-* Stack-neutral validation: Patterns verified to maintain consistent stack state
-
-==== Technical details
-
-The subroutine optimizer uses a four-stage pipeline:
-
-[source]
-----
-CharStrings → Pattern Analysis → Selection → Ordering → Metadata
-  (Input)      (Find repeats)    (Optimize)  (Frequency)  (Output)
-----
-
-**Pattern analysis**:
-
-. Extracts byte sequences from all CharStrings
-. Identifies repeating patterns across glyphs
-. Filters by minimum pattern length (default: 10 bytes)
-. Builds pattern frequency map
-
-**Selection algorithm**:
-
-. Calculates savings for each pattern: `frequency × (length - overhead)`
-. Ranks patterns by total savings (descending)
-. Selects top patterns up to `max_subroutines` limit
-. Ensures selected patterns don't exceed CFF limits
-
-**Ordering optimization**:
-
-. Sorts subroutines by usage frequency (most used first)
-. Optimizes CFF bias calculation for better compression
-. Ensures subroutine indices fit within CFF constraints
-
-**CFF bias calculation**:
-
-[source]
-----
-Subroutine count    CFF Bias
------------------   ---------
-0-1239              107
-1240-33899          1131
-33900-65535         32768
-----
-
-The bias value determines how subroutine indices are encoded in CharStrings,
-affecting the final size.
+* `--target-format preserve` (default) - Keep original mixed TTF+OTF formats
+* `--target-format ttf` - Convert all fonts to TrueType outlines
+* `--target-format otf` - Convert all fonts to OpenType/CFF outlines
 
 
-==== Troubleshooting
+NOTE: dfont supports mixed TrueType and OpenType fonts in the same suitcase.
 
-If you encounter CharString parsing errors after optimization:
-
-. Verify bias calculation: Ensure bias matches CFF specification (107, 1131, or 32768)
-. Check operator boundaries: Patterns should only be extracted at valid boundaries
-. Ensure no overlaps: Multiple patterns should not occupy same byte positions
-. Enable verbose mode: Use `--verbose` flag for detailed diagnostics
-
-.Subroutine debugging workflow example
-====
-[source,bash]
-----
-# Convert with verbose output
-$ fontisan convert input.ttf --to otf --output output.otf --optimize --verbose
-
-# Validate the output
-$ fontisan validate output.otf
-
-# Check CharString structure
-$ fontisan info output.otf
-----
-
-If validation fails, try:
-
-[source,bash]
-----
-# Disable optimization
-$ fontisan convert input.ttf --to otf --output output.otf
-
-# Use stack-aware mode for safer optimization
-$ fontisan convert input.ttf --to otf --output output.otf --optimize --stack-aware
-----
-====
-
-.Optimization parameters
+.TTC to OTC conversion (preserves formats)
 [example]
 ====
-[source,bash]
+[source,shell]
 ----
-# Adjust pattern matching sensitivity
-$ fontisan convert input.ttf --to otf --output output.otf \
-  --optimize \
-  --min-pattern-length 15 \
-  --max-subroutines 10000 \
-  --verbose
-
-# Disable ordering optimization
-$ fontisan convert input.ttf --to otf --output output.otf \
-  --optimize \
-  --no-optimize-ordering
-----
-====
-
-Where,
-
-`--optimize`:: Enable subroutine optimization (default: false)
-`--min-pattern-length N`:: Minimum pattern length in bytes (default: 10)
-`--max-subroutines N`:: Maximum number of subroutines to generate (default: 65,535)
-`--optimize-ordering`:: Optimize subroutine ordering by frequency (default: true)
-`--verbose`:: Show detailed optimization statistics
-
-
-=== Stack-aware optimization
-
-==== General
-
-Stack-aware optimization is an advanced mode that ensures all extracted patterns
-are stack-neutral, guaranteeing 100% safety and reliability.
-
-Unlike normal byte-level pattern matching, stack-aware mode simulates CharString
-execution to track operand stack depth, only extracting patterns that maintain
-consistent stack state.
-
-Key benefits:
-
-* **100% Reliability**: All patterns are validated to be stack-neutral
-* **No Stack Errors**: Eliminates stack underflow/overflow issues
-* **Faster Processing**: 6-12x faster than normal optimization due to early filtering
-* **Smaller Pattern Set**: Significantly fewer candidates reduce memory usage
-
-Trade-offs:
-
-* **Lower Compression**: ~6% reduction vs ~11% with normal mode
-* **Fewer Patterns**: Filters out 90%+ of raw patterns for safety
-* **Stack Validation Overhead**: Adds stack tracking during analysis
-
-==== Command-line usage
-
-.Enable stack-aware optimization
-[example]
-====
-[source,bash]
-----
-# Convert with stack-aware optimization
-$ fontisan convert input.ttf --to otf --output output.otf \
-  --optimize \
-  --stack-aware \
-  --verbose
-
-Converting input.ttf to otf...
-
-Analyzing CharString patterns (4515 glyphs)...
-  Found 8566 potential patterns
-Selecting optimal patterns...
-  Selected 832 patterns for subroutinization
-Building subroutines...
-  Generated 832 subroutines
-Rewriting CharStrings with subroutine calls...
-  Rewrote 4515 CharStrings
-
-Subroutine Optimization Results:
-  Patterns found: 8566
-  Patterns selected: 832
-  Subroutines generated: 832
-  Estimated bytes saved: 46,280
-  CFF bias: 0
+$ fontisan convert family.ttc --to otc --output family.otc
 
 Conversion complete!
-  Input:  input.ttf (806.3 KB)
-  Output: output.otf (660.7 KB)
+  Input:  family.ttc (245.8 KB)
+  Output: family.otc (312.4 KB)
+  Format: TTC → OTC
+  Fonts:  3
 ----
+
+Original font formats are preserved (mixed TTF+OTF supported).
 ====
 
-.Stack-aware vs normal mode
+.TTC to OTC with forced conversion
 [example]
 ====
-[source,bash]
+[source,shell]
 ----
-# Use the comparison script
-$ ruby scripts/compare_stack_aware.rb input.ttf
+$ fontisan convert family.ttc --to otc --output family.otc --target-format otf
 
-File Size Reduction:
-  Normal: 81.49 KB (11.27%)
-  Stack-Aware: 43.17 KB (6.13%)
-
-Processing Times:
-  Normal: 18.38 s
-  Stack-Aware: 1.54 s (12x faster)
-
-Stack-Aware Efficiency: 52.97% of normal optimization
+Conversion complete!
+  Input:  family.ttc (245.8 KB)
+  Output: family.otc (312.4 KB)
+  Format: TTC → OTC
+  Fonts:  3
 ----
+
+All TrueType fonts are converted to OpenType/CFF format.
 ====
 
-Where,
-
-`--stack-aware`:: Enable stack-aware pattern detection (default: false)
-
-==== Using the Ruby API
-
-.Basic stack-aware optimization
+.dfont to OTC conversion (preserves formats)
 [example]
 ====
-[source,ruby]
+[source,shell]
 ----
-require 'fontisan'
+$ fontisan convert family.dfont --to otc --output family.otc
 
-# Load TrueType font
-font = Fontisan::FontLoader.load('input.ttf')
-
-# Convert with stack-aware optimization
-converter = Fontisan::Converters::OutlineConverter.new
-tables = converter.convert(font, {
-  target_format: :otf,
-  optimize_subroutines: true,
-  stack_aware: true  # Enable safe mode
-})
-
-# Access optimization results
-optimization = tables.instance_variable_get(:@subroutine_optimization)
-puts "Patterns found: #{optimization[:pattern_count]}"
-puts "Stack-neutral patterns: #{optimization[:selected_count]}"
-puts "Processing time: #{optimization[:processing_time]}s"
-
-# Write output
-Fontisan::FontWriter.write_to_file(
-  tables,
-  'output.otf',
-  sfnt_version: 0x4F54544F
-)
+Conversion complete!
+  Input:  family.dfont (387.6 KB)
+  Output: family.otc (312.4 KB)
+  Format: DFONT → OTC
+  Fonts:  3
 ----
+
+Fonts are extracted from dfont and repacked as OTC.
+Original font formats are preserved (mixed TTF+OTF supported).
 ====
 
-==== Technical details
-
-Stack-aware mode uses a three-stage validation process:
-
-[source]
-----
-CharString Bytes → Stack Tracking → Pattern Validation → Safe Patterns
-    (Input)         (Simulate)       (Filter)           (Output)
-----
-
-**Stack tracking**:
-
-. Simulates CharString execution without full interpretation
-. Records stack depth at each byte position
-. Handles 40+ Type 2 CharString operators with correct stack effects
-
-**Pattern validation**:
-
-. Checks if pattern start and end have same stack depth
-. Ensures no stack underflow during pattern execution
-. Verifies consistent results regardless of initial stack state
-
-**Stack-neutral pattern** criteria. Pattern is stack-neutral if:
-
-. depth_at(pattern_start) == depth_at(pattern_end)
-. No negative depth during pattern execution
-. Pattern produces same result for any valid initial stack
-+
-.Example Stack-Neutral Pattern
-[source]
-----
-10 20 rmoveto  # Pushes 2 operands, consumes 2 → neutral
-----
-+
-.Example Non-Neutral Pattern
-[source]
-----
-10 20 add  # Pushes 2, consumes 2, produces 1 → NOT neutral
-----
-
-==== When to use stack-aware mode
-
-**Recommended for**:
-
-* Production font conversion where reliability is critical
-* Fonts that will undergo further processing
-* Web fonts where correctness matters more than minimal size
-* Situations where testing/validation is limited
-
-**Normal mode acceptable for**:
-
-* Development/testing environments
-* When full validation will be performed post-conversion
-* Maximum compression is priority over guaranteed safety
-
-==== Using the Ruby API
-
-.Basic optimization
+.dfont to OTC with forced conversion
 [example]
 ====
-[source,ruby]
+[source,shell]
 ----
-require 'fontisan'
+$ fontisan convert family.dfont --to otc --output family.otc --target-format otf
 
-# Load TrueType font
-font = Fontisan::FontLoader.load('input.ttf')
-
-# Convert with optimization
-converter = Fontisan::Converters::OutlineConverter.new
-tables = converter.convert(font, {
-  target_format: :otf,
-  optimize_subroutines: true
-})
-
-# Access optimization results
-optimization = tables.instance_variable_get(:@subroutine_optimization)
-puts "Patterns found: #{optimization[:pattern_count]}"
-puts "Selected: #{optimization[:selected_count]}"
-puts "Savings: #{optimization[:savings]} bytes"
-
-# Write output
-Fontisan::FontWriter.write_to_file(
-  tables,
-  'output.otf',
-  sfnt_version: 0x4F54544F
-)
+Conversion complete!
+  Input:  family.dfont (387.6 KB)
+  Output: family.otc (312.4 KB)
+  Format: DFONT → OTC
+  Fonts:  3
 ----
-====
 
-.Custom optimization parameters
-[example]
-====
-[source,ruby]
-----
-require 'fontisan'
-
-font = Fontisan::FontLoader.load('input.ttf')
-converter = Fontisan::Converters::OutlineConverter.new
-
-# Fine-tune optimization
-tables = converter.convert(font, {
-  target_format: :otf,
-  optimize_subroutines: true,
-  min_pattern_length: 15,
-  max_subroutines: 5000,
-  optimize_ordering: true,
-  verbose: true
-})
-
-# Analyze results
-optimization = tables.instance_variable_get(:@subroutine_optimization)
-if optimization[:selected_count] > 0
-  efficiency = optimization[:savings].to_f / optimization[:selected_count]
-  puts "Average savings per subroutine: #{efficiency.round(2)} bytes"
-end
-----
+Fonts are extracted from dfont and repacked as OTC.
+All TrueType fonts are converted to OpenType/CFF format.
 ====
 
 
@@ -2736,7 +2063,7 @@ Fontisan can:
 
 === Universal color layers
 
-(Converted TTF, OTF files)
+(Fontisan, converted TTF, OTF files)
 
 Fontisan can:
 

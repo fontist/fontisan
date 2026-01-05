@@ -71,6 +71,8 @@ module Fontisan
           WoffFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when "wOF2"
           Woff2Font.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
+        when Constants::DFONT_RESOURCE_HEADER
+          extract_and_load_dfont(io, path, font_index, resolved_mode, resolved_lazy)
         else
           raise InvalidFontError,
                 "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, or WOFF2 file."
@@ -92,13 +94,25 @@ module Fontisan
 
       File.open(path, "rb") do |io|
         signature = io.read(4)
-        signature == Constants::TTC_TAG
+        io.rewind
+
+        # Check for TTC/OTC signature
+        return true if signature == Constants::TTC_TAG
+
+        # Check for multi-font dfont (suitcase) - only if it's actually a dfont
+        if signature == Constants::DFONT_RESOURCE_HEADER
+          require_relative "parsers/dfont_parser"
+          # Verify it's a valid dfont and has multiple fonts
+          return Parsers::DfontParser.dfont?(io) && Parsers::DfontParser.sfnt_count(io) > 1
+        end
+
+        false
       end
     end
 
     # Load a collection object without extracting fonts
     #
-    # Returns the collection object (TrueTypeCollection or OpenTypeCollection)
+    # Returns the collection object (TrueTypeCollection, OpenTypeCollection, or DfontCollection)
     # without extracting individual fonts. Useful for inspecting collection
     # metadata and structure.
     #
@@ -111,6 +125,10 @@ module Fontisan
     # - TTC typically contains TrueType fonts (glyf outlines)
     # - OTC typically contains OpenType fonts (CFF/CFF2 outlines)
     # - Mixed collections are possible (both TTF and OTF in same collection)
+    #
+    # dfont (Data Fork Font) is an Apple-specific format that contains Mac
+    # font suitcase resources. It can contain multiple SFNT fonts (TrueType
+    # or OpenType).
     #
     # Each collection can contain multiple SFNT-format font files, with table
     # deduplication to save space. Individual fonts within a collection are
@@ -128,13 +146,16 @@ module Fontisan
     # 4. If ANY font is OpenType (CFF), returns OpenTypeCollection
     # 5. Only returns TrueTypeCollection if ALL fonts are TrueType
     #
+    # For dfont files, returns DfontCollection.
+    #
     # This approach correctly handles:
     # - Homogeneous collections (all TTF or all OTF)
     # - Mixed collections (both TTF and OTF fonts) - uses OpenTypeCollection
     # - Large collections with many fonts (like NotoSerifCJK.ttc with 35 fonts)
+    # - dfont suitcases (Apple-specific)
     #
     # @param path [String] Path to the collection file
-    # @return [TrueTypeCollection, OpenTypeCollection] The collection object
+    # @return [TrueTypeCollection, OpenTypeCollection, DfontCollection] The collection object
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [InvalidFontError] if file is not a collection or type cannot be determined
     #
@@ -146,10 +167,18 @@ module Fontisan
 
       File.open(path, "rb") do |io|
         signature = io.read(4)
+        io.rewind
 
+        # Check for dfont
+        if signature == Constants::DFONT_RESOURCE_HEADER || dfont_signature?(io)
+          require_relative "dfont_collection"
+          return DfontCollection.from_file(path)
+        end
+
+        # Check for TTC/OTC
         unless signature == Constants::TTC_TAG
           raise InvalidFontError,
-                "File is not a collection (TTC/OTC). Use FontLoader.load instead."
+                "File is not a collection (TTC/OTC/dfont). Use FontLoader.load instead."
         end
 
         # Read version and num_fonts
@@ -291,6 +320,50 @@ mode: LoadingModes::FULL, lazy: true)
       end
     end
 
+    # Extract and load font from dfont resource fork
+    #
+    # @param io [IO] Open file handle
+    # @param path [String] Path to dfont file
+    # @param font_index [Integer] Font index in suitcase
+    # @param mode [Symbol] Loading mode
+    # @param lazy [Boolean] Lazy loading flag
+    # @return [TrueTypeFont, OpenTypeFont] Loaded font
+    # @api private
+    def self.extract_and_load_dfont(io, path, font_index, mode, lazy)
+      require_relative "parsers/dfont_parser"
+
+      # Extract SFNT data from resource fork
+      sfnt_data = Parsers::DfontParser.extract_sfnt(io, index: font_index)
+
+      # Create StringIO with SFNT data
+      sfnt_io = StringIO.new(sfnt_data)
+
+      # Detect SFNT signature
+      signature = sfnt_io.read(4)
+      sfnt_io.rewind
+
+      # Read and setup font based on signature
+      case signature
+      when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
+        font = TrueTypeFont.read(sfnt_io)
+        font.initialize_storage
+        font.loading_mode = mode
+        font.lazy_load_enabled = lazy
+        font.read_table_data(sfnt_io) unless lazy
+        font
+      when "OTTO"
+        font = OpenTypeFont.read(sfnt_io)
+        font.initialize_storage
+        font.loading_mode = mode
+        font.lazy_load_enabled = lazy
+        font.read_table_data(sfnt_io) unless lazy
+        font
+      else
+        raise InvalidFontError,
+              "Invalid SFNT data in dfont resource (signature: #{signature.inspect})"
+      end
+    end
+
     # Pack uint32 value to big-endian bytes
     #
     # @param value [Integer] The uint32 value
@@ -301,6 +374,18 @@ mode: LoadingModes::FULL, lazy: true)
     end
 
     private_class_method :load_from_collection, :pack_uint32, :env_mode,
-                         :env_lazy
+                         :env_lazy, :extract_and_load_dfont
+
+    # Check if file has dfont signature
+    #
+    # @param io [IO] Open file handle
+    # @return [Boolean] true if dfont
+    # @api private
+    def self.dfont_signature?(io)
+      require_relative "parsers/dfont_parser"
+      Parsers::DfontParser.dfont?(io)
+    end
+
+    private_class_method :dfont_signature?
   end
 end
