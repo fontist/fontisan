@@ -99,11 +99,10 @@ module Fontisan
         # Check for TTC/OTC signature
         return true if signature == Constants::TTC_TAG
 
-        # Check for multi-font dfont (suitcase) - only if it's actually a dfont
+        # Check for dfont - dfont is a collection format even if it contains only one font
         if signature == Constants::DFONT_RESOURCE_HEADER
           require_relative "parsers/dfont_parser"
-          # Verify it's a valid dfont and has multiple fonts
-          return Parsers::DfontParser.dfont?(io) && Parsers::DfontParser.sfnt_count(io) > 1
+          return Parsers::DfontParser.dfont?(io)
         end
 
         false

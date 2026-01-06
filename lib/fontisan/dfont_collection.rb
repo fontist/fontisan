@@ -2,6 +2,7 @@
 
 require_relative "parsers/dfont_parser"
 require_relative "error"
+require_relative "collection/shared_logic"
 
 module Fontisan
   # DfontCollection represents an Apple dfont suitcase containing multiple fonts
@@ -23,6 +24,8 @@ module Fontisan
   #     fonts.each { |font| puts font.class.name }
   #   end
   class DfontCollection
+    include Collection::SharedLogic
+
     # Path to dfont file
     # @return [String]
     attr_reader :path
@@ -31,6 +34,22 @@ module Fontisan
     # @return [Integer]
     attr_reader :num_fonts
     alias font_count num_fonts
+
+    # Get font offsets (indices for dfont)
+    #
+    # dfont doesn't use byte offsets like TTC/OTC, so we return indices
+    #
+    # @return [Array<Integer>] Array of font indices
+    def font_offsets
+      (0...@num_fonts).to_a
+    end
+
+    # Get the collection format identifier
+    #
+    # @return [String] "dfont" for dfont collection
+    def self.collection_format
+      "dfont"
+    end
 
     # Load dfont collection from file
     #
@@ -63,6 +82,15 @@ module Fontisan
     # @return [Boolean] true if valid
     def valid?
       File.exist?(@path) && @num_fonts.positive?
+    end
+
+    # Get the collection version as a string
+    #
+    # dfont files don't have version numbers like TTC/OTC
+    #
+    # @return [String] Version string (always "N/A" for dfont)
+    def version_string
+      "N/A"
     end
 
     # Extract all fonts from dfont
@@ -180,6 +208,62 @@ module Fontisan
       font.read_table_data(sfnt_io)
 
       font
+    end
+
+    # Get comprehensive collection metadata
+    #
+    # Returns a CollectionInfo model with header information and
+    # table sharing statistics for the dfont collection.
+    # This is the API method used by the `info` command for collections.
+    #
+    # @param io [IO] Open file handle to read fonts from
+    # @param path [String] Collection file path (for file size)
+    # @return [Models::CollectionInfo] Collection metadata
+    #
+    # @example Get collection info
+    #   File.open("family.dfont", "rb") do |io|
+    #     collection = DfontCollection.from_file("family.dfont")
+    #     info = collection.collection_info(io, "family.dfont")
+    #     puts "Format: #{info.collection_format}"
+    #   end
+    def collection_info(io, path)
+      require_relative "models/collection_info"
+      require_relative "models/table_sharing_info"
+
+      # Calculate table sharing statistics
+      table_sharing = calculate_table_sharing(io)
+
+      # Get file size
+      file_size = path ? File.size(path) : 0
+
+      Models::CollectionInfo.new(
+        collection_path: path,
+        collection_format: self.class.collection_format,
+        ttc_tag: "dfnt", # dfont doesn't use ttcf tag
+        major_version: 0, # dfont doesn't have version
+        minor_version: 0,
+        num_fonts: @num_fonts,
+        font_offsets: font_offsets,
+        file_size_bytes: file_size,
+        table_sharing: table_sharing,
+      )
+    end
+
+    private
+
+    # Calculate table sharing statistics
+    #
+    # Analyzes which tables are shared between fonts and calculates
+    # space savings from deduplication.
+    #
+    # @param io [IO] Open file handle
+    # @return [Models::TableSharingInfo] Sharing statistics
+    def calculate_table_sharing(io)
+      # Extract all fonts
+      fonts = extract_fonts(io)
+
+      # Use shared logic for calculation
+      calculate_table_sharing_for_fonts(fonts)
     end
   end
 end
