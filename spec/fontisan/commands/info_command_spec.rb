@@ -374,4 +374,75 @@ RSpec.describe Fontisan::Commands::InfoCommand do
       end
     end
   end
+
+  describe "dfont collection support" do
+    let(:dfont_path) { font_fixture_path("Tamsyn", "Tamsyn7x13.dfont") }
+    let(:dfont_command) { described_class.new(dfont_path) }
+
+    it "detects dfont as collection" do
+      expect(Fontisan::FontLoader.collection?(dfont_path)).to be true
+    end
+
+    it "returns CollectionInfo for dfont" do
+      info = dfont_command.run
+      expect(info).to be_a(Fontisan::Models::CollectionInfo)
+    end
+
+    it "extracts collection metadata for dfont" do
+      info = dfont_command.run
+      expect(info.collection_format).to eq("dfont")
+      expect(info.num_fonts).to eq(2)
+      expect(info.ttc_tag).to eq("dfnt")
+      expect(info.version_string).to eq("0.0")
+    end
+
+    it "extracts all fonts from dfont collection" do
+      info = dfont_command.run
+      expect(info.fonts).to be_an(Array)
+      expect(info.fonts.length).to eq(2)
+
+      # Check first font
+      expect(info.fonts[0]).to be_a(Fontisan::Models::FontInfo)
+      expect(info.fonts[0].family_name).to eq("Tamsyn7x13")
+      expect(info.fonts[0].subfamily_name).to eq("Regular")
+
+      # Check second font
+      expect(info.fonts[1]).to be_a(Fontisan::Models::FontInfo)
+      expect(info.fonts[1].family_name).to eq("Tamsyn7x13")
+      expect(info.fonts[1].subfamily_name).to eq("Bold")
+    end
+
+    it "calculates table sharing for dfont" do
+      info = dfont_command.run
+      expect(info.table_sharing).to be_a(Fontisan::Models::TableSharingInfo)
+      expect(info.table_sharing.unique_tables).to be > 0
+      expect(info.table_sharing.sharing_percentage).to be >= 0
+    end
+
+    it "provides font offsets as indices for dfont" do
+      info = dfont_command.run
+      expect(info.font_offsets).to eq([0, 1])
+    end
+
+    context "with single-font dfont" do
+      let(:single_dfont_path) { "spec/fixtures/fonttools/TestDFONT.dfont" }
+      let(:single_dfont_command) { described_class.new(single_dfont_path) }
+
+      it "still treats single-font dfont as collection" do
+        expect(Fontisan::FontLoader.collection?(single_dfont_path)).to be true
+      end
+
+      it "returns CollectionInfo for single-font dfont" do
+        info = single_dfont_command.run
+        expect(info).to be_a(Fontisan::Models::CollectionInfo)
+        expect(info.num_fonts).to eq(1)
+      end
+
+      it "extracts the single font correctly" do
+        info = single_dfont_command.run
+        expect(info.fonts.length).to eq(1)
+        expect(info.fonts[0]).to be_a(Fontisan::Models::FontInfo)
+      end
+    end
+  end
 end
