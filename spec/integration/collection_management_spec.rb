@@ -289,4 +289,106 @@ RSpec.describe "Collection Management Integration", :integration do
       end
     end
   end
+
+  describe "Windows tempfile GC regression test" do
+    let(:dina_path) { font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc") }
+
+    it "processes TTC collection fonts without EACCES errors on Windows" do
+      # This test reproduces the exact bug from fontisan 0.2.7:
+      # When extracting fonts from TTC, tempfiles could be GC'd prematurely,
+      # causing Errno::EACCES on Windows when the finalizer tried to delete them
+
+      File.open(dina_path, "rb") do |io|
+        collection = Fontisan::TrueTypeCollection.read(io)
+
+        # Extract all fonts and write them to disk
+        extracted_paths = []
+
+        begin
+          collection.num_fonts.times do |i|
+            output_path = File.join(temp_dir, "extracted_#{i}.ttf")
+            extracted_paths << output_path
+
+            # This workflow triggered the bug:
+            # 1. Get font from collection
+            font = collection.font(i, io)
+
+            # 2. Write to file (internally calls update_checksum_adjustment_in_file)
+            font.to_file(output_path)
+
+            # 3. Force GC (this would trigger EACCES in 0.2.7)
+            GC.start
+
+            # Verify file was created successfully
+            expect(File.exist?(output_path)).to be true
+            expect(File.size(output_path)).to be > 0
+          end
+
+          # All operations should complete without Errno::EACCES
+          expect(extracted_paths.size).to eq(collection.num_fonts)
+
+          # Verify extracted fonts are valid
+          extracted_paths.each do |path|
+            loaded_font = Fontisan::FontLoader.load(path)
+            expect(loaded_font.valid?).to be true
+          end
+        ensure
+          # Cleanup
+          extracted_paths.each do |path|
+            File.delete(path) if File.exist?(path)
+          end
+        end
+      end
+    end
+
+    it "handles concurrent TTC font extraction without file access conflicts" do
+      # Test that multiple concurrent font extractions don't interfere
+      File.open(dina_path, "rb") do |io|
+        collection = Fontisan::TrueTypeCollection.read(io)
+
+        threads = []
+        extracted_paths = []
+        mutex = Mutex.new
+
+        begin
+          collection.num_fonts.times do |i|
+            threads << Thread.new do
+              output_path = File.join(temp_dir, "concurrent_#{i}_#{Thread.current.object_id}.ttf")
+
+              # Each thread opens its own IO handle
+              File.open(dina_path, "rb") do |thread_io|
+                thread_collection = Fontisan::TrueTypeCollection.read(thread_io)
+                font = thread_collection.font(i, thread_io)
+                font.to_file(output_path)
+
+                # Force GC in each thread
+                GC.start
+
+                mutex.synchronize do
+                  extracted_paths << output_path
+                end
+              end
+            end
+          end
+
+          threads.each(&:join)
+
+          # All operations should complete successfully
+          expect(extracted_paths.size).to eq(collection.num_fonts)
+
+          # All files should exist and be valid
+          extracted_paths.each do |path|
+            expect(File.exist?(path)).to be true
+            loaded_font = Fontisan::FontLoader.load(path)
+            expect(loaded_font.valid?).to be true
+          end
+        ensure
+          # Cleanup
+          extracted_paths.each do |path|
+            File.delete(path) if File.exist?(path)
+          end
+        end
+      end
+    end
+  end
 end

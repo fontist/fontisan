@@ -162,6 +162,44 @@ RSpec.describe Fontisan::Utilities::ChecksumCalculator do
         checksums = results.map(&:first)
         expect(checksums.uniq.length).to eq(1)
       end
+
+      it "handles TTC collection font extraction workflow without EACCES errors" do
+        # Simulate the exact workflow from the bug report:
+        # TrueTypeCollection.font(index, io) -> TrueTypeFont.to_file(path) ->
+        # update_checksum_adjustment_in_file(path) -> calculate_checksum_from_io_with_tempfile(io)
+
+        # Create temp output files to simulate font extraction
+        output_files = []
+
+        begin
+          3.times do |i|
+            # Simulate creating output file from IO
+            output_file = Tempfile.new(["extracted_font_#{i}", ".ttf"])
+            output_files << output_file
+
+            # Write test data
+            output_file.write(test_data)
+            output_file.flush
+            output_file.close
+
+            # Simulate checksum calculation (as done in to_file)
+            File.open(output_file.path, "r+b") do |io|
+              checksum, _tmpfile = described_class.calculate_checksum_from_io_with_tempfile(io)
+              expect(checksum).to be_a(Integer)
+            end
+
+            # Force GC to trigger cleanup (this is where Windows would fail in 0.2.7)
+            GC.start
+          end
+
+          # All operations should complete without Errno::EACCES
+          expect(output_files.length).to eq(3)
+        ensure
+          output_files.each do |f|
+            f.unlink if f && File.exist?(f.path)
+          end
+        end
+      end
     end
   end
 
