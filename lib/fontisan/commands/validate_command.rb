@@ -167,7 +167,8 @@ module Fontisan
             font_path: @input,
             valid: false,
           )
-          error_report.add_error("font_loading", "Failed to load font #{index}: #{e.message}", nil)
+          error_report.add_error("font_loading",
+                                 "Failed to load font #{index}: #{e.message}", nil)
 
           collection_report.add_font_report(
             Models::FontReport.new(
@@ -223,11 +224,15 @@ module Fontisan
         return 0 unless @return_value_results
 
         # Check for fatal errors first
-        return 2 if report.font_reports.any? { |fr| fr.report.fatal_errors.any? }
+        return 2 if report.font_reports.any? do |fr|
+          fr.report.fatal_errors.any?
+        end
         # Then check for errors
         return 3 if report.font_reports.any? { |fr| fr.report.errors_only.any? }
         # Then check for warnings
-        return 4 if report.font_reports.any? { |fr| fr.report.warnings_only.any? }
+        return 4 if report.font_reports.any? do |fr|
+          fr.report.warnings_only.any?
+        end
         # Then check for info
         return 5 if report.font_reports.any? { |fr| fr.report.info_only.any? }
 

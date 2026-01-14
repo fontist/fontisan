@@ -11,3 +11,9 @@ plugins:
   - rubocop-performance
   - rubocop-rake
   - rubocop-rspec
+
+# Prevent combining loops in WOFF2 SFNT building - the two loops must remain separate
+# to maintain correct SFNT structure (all directory entries first, then all data)
+Style/CombinableLoops:
+  Exclude:
+    - 'lib/fontisan/woff2_font.rb'

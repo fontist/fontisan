@@ -125,15 +125,21 @@ RSpec.describe Fontisan::Models::CollectionValidationReport do
       report = described_class.new(
         collection_path: "/path/to/font.ttc",
         collection_type: "TrueType Collection",
-        num_fonts: 2
+        num_fonts: 2,
       )
 
-      valid_report = Fontisan::Models::ValidationReport.new(font_path: "f1.ttf", valid: true)
-      invalid_report = Fontisan::Models::ValidationReport.new(font_path: "f2.ttf", valid: false)
+      valid_report = Fontisan::Models::ValidationReport.new(
+        font_path: "f1.ttf", valid: true,
+      )
+      invalid_report = Fontisan::Models::ValidationReport.new(
+        font_path: "f2.ttf", valid: false,
+      )
       invalid_report.add_error("glyphs", "test error", nil)
 
-      report.font_reports << Fontisan::Models::FontReport.new(font_index: 0, font_name: "Font One", report: valid_report)
-      report.font_reports << Fontisan::Models::FontReport.new(font_index: 1, font_name: "Font Two", report: invalid_report)
+      report.font_reports << Fontisan::Models::FontReport.new(font_index: 0,
+                                                              font_name: "Font One", report: valid_report)
+      report.font_reports << Fontisan::Models::FontReport.new(font_index: 1,
+                                                              font_name: "Font Two", report: invalid_report)
 
       output = report.text_summary
 

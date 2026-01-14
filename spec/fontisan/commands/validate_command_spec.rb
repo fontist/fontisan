@@ -4,18 +4,25 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Commands::ValidateCommand do
   describe "#run with collection" do
-    let(:collection_path) { "/System/Library/Fonts/LucidaGrande.ttc" }
+    let(:collection_path) { "spec/fixtures/fonttools/TestTTC.ttc" }
 
     context "when collection has multiple fonts" do
-      it "validates all fonts in the collection", skip: "Requires system font, manual verification" do
+      it "validates all fonts in the collection" do
         command = described_class.new(input: collection_path)
 
-        # Capture output
-        output = capture_stdout { command.run }
+        # Capture stdout
+        output = StringIO.new
+        allow($stdout).to receive(:puts).and_wrap_original do |original, *args|
+          output.puts(*args) if args.first.is_a?(String)
+          original.call(*args)
+        end
 
-        expect(output).to include("Collection:")
-        expect(output).to include("=== Font 0:")
-        expect(output).to include("=== Font 1:")
+        command.run
+
+        result = output.string
+        expect(result).to include("Collection:")
+        expect(result).to include("=== Font 0:")
+        expect(result).to include("=== Font 1:")
       end
     end
   end

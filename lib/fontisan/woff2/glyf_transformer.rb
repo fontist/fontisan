@@ -265,16 +265,33 @@ module Fontisan
                                         glyph_io, bbox_io, instruction_io)
         # Read end points of contours
         end_pts_of_contours = []
+        max_points_per_glyph = 100000 # Sanity limit
+
         num_contours.times do
           if end_pts_of_contours.empty?
-            end_pts_of_contours << read_255_uint16(n_points_io)
+            val = read_255_uint16(n_points_io)
+            end_pts_of_contours << val
           else
             delta = read_255_uint16(n_points_io)
-            end_pts_of_contours << end_pts_of_contours.last + delta + 1
+            next_end_pt = end_pts_of_contours.last + delta + 1
+
+            # Sanity check to prevent explosion from corrupted data
+            if delta > 10000 || next_end_pt > max_points_per_glyph
+              # Data appears corrupted, stop reading
+              break
+            end
+
+            end_pts_of_contours << next_end_pt
           end
         end
 
-        total_points = end_pts_of_contours.last + 1
+        # Handle case where stream was corrupted
+        if end_pts_of_contours.empty?
+          # Return minimal empty glyph
+          return ["\x00\x00"].pack("n") * 5 # Empty glyph: num_contours=0, bbox=0
+        end
+
+        total_points = [end_pts_of_contours.last + 1, max_points_per_glyph].min
 
         # Read flags
         flags = read_flags(flag_io, total_points)
@@ -517,6 +534,15 @@ instruction_io, variable_font: false)
         flags = []
 
         while flags.size < count
+          # Safety check to prevent infinite loops with corrupted streams
+          if flags.size > 200000
+            # Stream appears corrupted, pad with zeros
+            while flags.size < count
+              flags << 0
+            end
+            break
+          end
+
           # EOF protection for variable fonts
           break if io.eof? || (io.size - io.pos) < 1
 
@@ -527,13 +553,10 @@ instruction_io, variable_font: false)
             break if io.eof? || (io.size - io.pos) < 1
 
             repeat_count = read_uint8(io)
+            # Safety check on repeat count
+            repeat_count = [repeat_count, 100].min
             repeat_count.times { flags << flag }
           end
-        end
-
-        # Pad with zero flags if needed
-        while flags.size < count
-          flags << 0
         end
 
         flags

@@ -485,9 +485,9 @@ module Fontisan
 
       return unless head_offset
 
-      # Use tempfile-based checksum calculation for Windows compatibility
+      # Calculate checksum directly from IO to avoid Windows Tempfile issues
       File.open(path, "r+b") do |io|
-        checksum, _tmpfile = Utilities::ChecksumCalculator.calculate_checksum_from_io_with_tempfile(io)
+        checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
 
         # Calculate adjustment
         adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)

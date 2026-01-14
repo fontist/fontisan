@@ -581,10 +581,9 @@ module Fontisan
     # @param path [String] Path to the OTF file
     # @return [void]
     def update_checksum_adjustment_in_file(path)
-      # Use tempfile-based checksum calculation for Windows compatibility
-      # This keeps the tempfile alive until we're done with the checksum
       File.open(path, "r+b") do |io|
-        checksum, _tmpfile = Utilities::ChecksumCalculator.calculate_checksum_from_io_with_tempfile(io)
+        # Calculate checksum directly from IO to avoid Windows Tempfile issues
+        checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
 
         # Calculate adjustment
         adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
