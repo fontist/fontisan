@@ -3,6 +3,7 @@
 require_relative "base_command"
 require_relative "../validators/profile_loader"
 require_relative "../font_loader"
+require_relative "../tables/name"
 
 module Fontisan
   module Commands
@@ -76,6 +77,25 @@ module Fontisan
 
         mode = profile_config[:loading_mode].to_sym
 
+        # Check if input is a collection
+        if FontLoader.collection?(@input)
+          validate_collection(mode)
+        else
+          validate_single_font(mode)
+        end
+      rescue StandardError => e
+        puts "Error: #{e.message}" unless @suppress_warnings
+        puts e.backtrace.join("\n") if @verbose && !@suppress_warnings
+        1
+      end
+
+      private
+
+      # Validate a single font file
+      #
+      # @param mode [Symbol] Loading mode
+      # @return [Integer] Exit code
+      def validate_single_font(mode)
         font = FontLoader.load(@input, mode: mode)
 
         # Select validator
@@ -102,13 +122,117 @@ module Fontisan
 
         # Return exit code
         exit_code(report)
-      rescue => e
-        puts "Error: #{e.message}" unless @suppress_warnings
-        puts e.backtrace.join("\n") if @verbose && !@suppress_warnings
-        1
       end
 
-      private
+      # Validate all fonts in a collection
+      #
+      # @param mode [Symbol] Loading mode
+      # @return [Integer] Exit code
+      def validate_collection(mode)
+        require_relative "../models/collection_validation_report"
+        require_relative "../models/font_report"
+
+        # Load collection metadata
+        collection = FontLoader.load_collection(@input)
+
+        # Create collection report
+        collection_report = Models::CollectionValidationReport.new(
+          collection_path: @input,
+          collection_type: collection.class.collection_format,
+          num_fonts: collection.num_fonts,
+        )
+
+        # Get validator
+        validator = Validators::ProfileLoader.load(@profile)
+
+        # Validate each font
+        collection.num_fonts.times do |index|
+          font = FontLoader.load(@input, font_index: index, mode: mode)
+          font_report = validator.validate(font)
+
+          # Extract font name
+          font_name = extract_font_name(font, index)
+
+          # Create and add font report
+          collection_report.add_font_report(
+            Models::FontReport.new(
+              font_index: index,
+              font_name: font_name,
+              report: font_report,
+            ),
+          )
+        rescue StandardError => e
+          # Create error report for failed font loading
+          error_report = Models::ValidationReport.new(
+            font_path: @input,
+            valid: false,
+          )
+          error_report.add_error("font_loading", "Failed to load font #{index}: #{e.message}", nil)
+
+          collection_report.add_font_report(
+            Models::FontReport.new(
+              font_index: index,
+              font_name: "Font #{index}",
+              report: error_report,
+            ),
+          )
+        end
+
+        # Generate output
+        output = collection_report.text_summary
+
+        # Write to file or stdout
+        if @output
+          File.write(@output, output)
+          puts "Validation report written to #{@output}" if @verbose && !@suppress_warnings
+        else
+          puts output unless @suppress_warnings
+        end
+
+        # Return exit code based on worst status
+        collection_exit_code(collection_report)
+      end
+
+      # Extract font name from font object
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Font object
+      # @param index [Integer] Font index (fallback)
+      # @return [String] Font name
+      def extract_font_name(font, index)
+        return "Font #{index}" unless font.respond_to?(:table)
+
+        name_table = font.table("name")
+        return "Font #{index}" unless name_table
+
+        full_name = name_table.english_name(Tables::Name::FULL_NAME)
+        return full_name if full_name && !full_name.empty?
+
+        postscript_name = name_table.english_name(Tables::Name::POSTSCRIPT_NAME)
+        return postscript_name if postscript_name && !postscript_name.empty?
+
+        "Font #{index}"
+      end
+
+      # Calculate exit code for collection validation
+      #
+      # Uses worst status across all fonts
+      #
+      # @param report [CollectionValidationReport] Collection report
+      # @return [Integer] Exit code
+      def collection_exit_code(report)
+        return 0 unless @return_value_results
+
+        # Check for fatal errors first
+        return 2 if report.font_reports.any? { |fr| fr.report.fatal_errors.any? }
+        # Then check for errors
+        return 3 if report.font_reports.any? { |fr| fr.report.errors_only.any? }
+        # Then check for warnings
+        return 4 if report.font_reports.any? { |fr| fr.report.warnings_only.any? }
+        # Then check for info
+        return 5 if report.font_reports.any? { |fr| fr.report.info_only.any? }
+
+        0
+      end
 
       # Generate output based on requested format
       #
@@ -155,6 +279,7 @@ module Fontisan
         return 3 if report.errors_only.any?
         return 4 if report.warnings_only.any?
         return 5 if report.info_only.any?
+
         0
       end
     end

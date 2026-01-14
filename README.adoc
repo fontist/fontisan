@@ -1154,6 +1154,53 @@ production, web, spec_compliance, default)
 
 -e, --exclude CHECKS:: Exclude specific checks (comma-separated list)
 
+=== Collection validation
+
+The `validate` command automatically detects and validates font collections (TTC, OTC, dfont).
+When validating a collection, fontisan validates all fonts in the collection and displays
+per-font results with an overall summary.
+
+.Validate a font collection
+[example]
+====
+[source,shell]
+----
+$ fontisan validate /path/to/font.ttc
+Collection: /path/to/font.ttc
+Type: TTC
+Fonts: 4
+
+Summary:
+  Total Errors: 14
+  Total Warnings: 8
+  Total Info: 0
+
+=== Font 0: Lucida Grande ===
+Font: unknown
+Status: INVALID
+...
+
+=== Font 1: Lucida Grande Bold ===
+Font: unknown
+Status: INVALID
+...
+----
+
+The collection validation output includes:
+
+* *Collection header* - Path, type, and number of fonts
+* *Summary* - Total errors, warnings, and info across all fonts
+* *Per-font sections* - Individual validation results for each font with:
+** Font index and name
+** Individual font status (VALID/INVALID/VALID_WITH_WARNINGS)
+** Font-specific errors and warnings
+** Exit codes* - For collections, uses the "worst" status across all fonts:
+** 0 = All fonts valid
+** 2 = Any font has fatal errors
+** 3 = Any font has errors (and no fatal)
+** 4 = Any font has warnings (and no errors)
+** 5 = Any font has info issues (and no errors or warnings)
+====
 
 === Ruby API usage
 

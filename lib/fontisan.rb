@@ -112,6 +112,8 @@ require_relative "fontisan/models/scripts_info"
 require_relative "fontisan/models/features_info"
 require_relative "fontisan/models/all_scripts_features_info"
 require_relative "fontisan/models/validation_report"
+require_relative "fontisan/models/font_report"
+require_relative "fontisan/models/collection_validation_report"
 require_relative "fontisan/models/font_export"
 require_relative "fontisan/models/collection_font_summary"
 require_relative "fontisan/models/collection_info"
@@ -319,8 +321,6 @@ module Fontisan
   end
 
   class << self
-    private
-
     # Get loading mode for validation profile
     #
     # Temporarily disabled - will be reimplemented with new DSL framework
