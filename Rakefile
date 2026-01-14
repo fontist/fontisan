@@ -8,6 +8,7 @@ require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
 
+# rubocop:disable Metrics/BlockLength
 namespace :fixtures do
   # Load centralized fixture configuration
   require_relative "spec/support/fixture_fonts"
@@ -99,10 +100,13 @@ namespace :fixtures do
     end
   end
 
-  desc "Download all test fixture fonts"
-  task download: fonts.values.reject do |config|
+  # Compute download task prerequisites (marker files for non-skipped fonts)
+  download_prerequisites = fonts.values.reject do |config|
     config[:skip_download]
   end.map { |config| config[:marker] }
+
+  desc "Download all test fixture fonts"
+  task download: download_prerequisites
 
   desc "Clean downloaded fixtures"
   task :clean do
@@ -123,6 +127,7 @@ namespace :fixtures do
     end
   end
 end
+# rubocop:enable Metrics/BlockLength
 
 # RSpec task depends on fixtures
 RSpec::Core::RakeTask.new(spec: "fixtures:download")

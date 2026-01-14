@@ -666,14 +666,17 @@ module Fontisan
         offset += padding
       end
 
-      # Write table directory
+      # Write table directory (all entries first)
+      # rubocop:disable Style/CombinableLoops - Must write directory entries first, then data
       table_records.each do |record|
         sfnt_data << record[:tag].ljust(4, "\x00")
         sfnt_data << [record[:checksum]].pack("N")
         sfnt_data << [record[:offset]].pack("N")
         sfnt_data << [record[:length]].pack("N")
+      end
 
-        # Write table data with padding
+      # Then write all table data with padding
+      table_records.each do |record|
         sfnt_data << record[:data]
 
         # Add padding
@@ -681,6 +684,7 @@ module Fontisan
           Constants::TABLE_ALIGNMENT
         sfnt_data << ("\x00" * padding) if padding.positive?
       end
+      # rubocop:enable Style/CombinableLoops
 
       # Update checksumAdjustment in head table
       update_checksum_in_memory(sfnt_data, table_records)
