@@ -166,7 +166,8 @@ module Fontisan
           # Sample first few glyphs to detect formats
           strike[:graphic_types]&.each do |type|
             format_name = GRAPHIC_TYPE_NAMES[type]
-            formats << format_name if format_name && !["dupe", "mask"].include?(format_name)
+            formats << format_name if format_name && !["dupe",
+                                                       "mask"].include?(format_name)
           end
         end
         formats.uniq.compact
@@ -312,12 +313,12 @@ module Fontisan
 
           # Check if offsets are valid
           next if glyph_offset >= strike_size || next_glyph_offset > strike_size
-          next if next_glyph_offset <= glyph_offset  # Empty glyph
+          next if next_glyph_offset <= glyph_offset # Empty glyph
 
           # Calculate absolute offset in table
           # glyph_offset is relative to strike start, so add strike_offset
           absolute_offset = strike_offset + glyph_offset
-          next if absolute_offset + 8 > raw_data.length  # Need at least header
+          next if absolute_offset + 8 > raw_data.length # Need at least header
 
           # Read graphic type (skip originOffsetX and originOffsetY = 4 bytes)
           io = StringIO.new(raw_data)
@@ -345,7 +346,7 @@ module Fontisan
         next_offset = strike[:glyph_offsets][glyph_id + 1]
 
         return nil unless offset && next_offset
-        return nil if next_offset <= offset  # Empty glyph
+        return nil if next_offset <= offset # Empty glyph
 
         # Calculate absolute position in table
         absolute_offset = strike[:base_offset] + offset

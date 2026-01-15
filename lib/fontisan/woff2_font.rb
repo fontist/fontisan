@@ -672,10 +672,8 @@ module Fontisan
         sfnt_data << [record[:checksum]].pack("N")
         sfnt_data << [record[:offset]].pack("N")
         sfnt_data << [record[:length]].pack("N")
-      end
 
-      # Write table data with padding
-      table_records.each do |record|
+        # Write table data with padding
         sfnt_data << record[:data]
 
         # Add padding

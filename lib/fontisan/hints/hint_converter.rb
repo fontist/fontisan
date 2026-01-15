@@ -244,7 +244,7 @@ module Fontisan
         # CVT values typically contain standard widths at the beginning
         if cvt && !cvt.empty?
           # First CVT value often represents standard horizontal stem
-          hints[:std_hw] = cvt[0].abs if cvt.length > 0
+          hints[:std_hw] = cvt[0].abs if cvt.length.positive?
           # Second CVT value often represents standard vertical stem
           hints[:std_vw] = cvt[1].abs if cvt.length > 1
         end

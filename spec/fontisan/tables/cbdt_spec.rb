@@ -9,7 +9,7 @@ RSpec.describe Fontisan::Tables::Cbdt do
       # Header: majorVersion(2) + minorVersion(2) + reserved(4) = 8 bytes
       # Bitmap data: variable length
 
-      bitmap_data = "\x89PNG\r\n\x1a\n" + "fake png data"
+      bitmap_data = "\x89PNG\r\n\u001A\nfake png data"
 
       header = [
         2, # majorVersion (uint16)
@@ -95,7 +95,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported CBDT major version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported CBDT major version/)
     end
 
     it "rejects unsupported major version 4" do
@@ -103,7 +104,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported CBDT major version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported CBDT major version/)
     end
   end
 
@@ -120,7 +122,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported CBDT minor version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported CBDT minor version/)
     end
   end
 
@@ -316,7 +319,7 @@ RSpec.describe Fontisan::Tables::Cbdt do
   describe "bitmap data extraction" do
     it "extracts PNG bitmap data" do
       # PNG magic bytes
-      png_data = "\x89PNG\r\n\x1a\n" + "\x00" * 100
+      png_data = "\x89PNG\r\n\u001A\n#{"\x00" * 100}"
 
       header = [2, 0, 0].pack("nnN")
       data = header + png_data
@@ -329,8 +332,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
     end
 
     it "extracts multiple bitmap entries" do
-      bitmap1 = "\x89PNG\r\n\x1a\n" + "bitmap1"
-      bitmap2 = "\x89PNG\r\n\x1a\n" + "bitmap2"
+      bitmap1 = "\x89PNG\r\n\u001A\nbitmap1"
+      bitmap2 = "\x89PNG\r\n\u001A\nbitmap2"
 
       header = [2, 0, 0].pack("nnN")
       data = header + bitmap1 + bitmap2
@@ -349,7 +352,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
     it "raises CorruptedTableError for invalid data" do
       expect do
         described_class.read("abc")
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse CBDT table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse CBDT table/)
     end
 
     it "raises CorruptedTableError for truncated header" do
@@ -357,7 +361,8 @@ RSpec.describe Fontisan::Tables::Cbdt do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse CBDT table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse CBDT table/)
     end
   end
 end

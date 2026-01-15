@@ -34,7 +34,7 @@ RSpec.describe Fontisan::Tables::Cpal do
         # Palette 1 colors (indices 3-5)
         128, 128, 128, 255,  # Gray → #808080FF
         255, 255, 255, 255,  # White → #FFFFFFFF
-        0, 0, 0, 255,        # Black → #000000FF
+        0, 0, 0, 255 # Black → #000000FF
       ].pack("C*")
 
       data = header + palette_indices + colors
@@ -104,7 +104,7 @@ RSpec.describe Fontisan::Tables::Cpal do
         0, 0, 255, 255,      # #FF0000FF (red)
         128, 128, 128, 255,  # #808080FF (gray)
         255, 255, 255, 255,  # #FFFFFFFF (white)
-        0, 0, 0, 255,        # #000000FF (black)
+        0, 0, 0, 255 # #000000FF (black)
       ].pack("C*")
       data = header + palette_indices + colors
       described_class.read(data)
@@ -164,7 +164,7 @@ RSpec.describe Fontisan::Tables::Cpal do
         255, 0, 0, 255,      # Palette 0
         0, 255, 0, 255,
         0, 0, 255, 255,      # Palette 1
-        128, 128, 128, 255,
+        128, 128, 128, 255
       ].pack("C*")
       data = header + palette_indices + colors
 
@@ -182,7 +182,7 @@ RSpec.describe Fontisan::Tables::Cpal do
       colors = [
         255, 0, 0, 255,
         0, 255, 0, 255,
-        0, 0, 255, 255,
+        0, 0, 255, 255
       ].pack("C*")
       data = header + palette_indices + colors
 
@@ -200,7 +200,7 @@ RSpec.describe Fontisan::Tables::Cpal do
         255, 0, 0, 255,      # Palette 0, entry 0
         0, 255, 0, 128,      # Palette 0, entry 1 (semi-transparent)
         0, 0, 255, 255,      # Palette 1, entry 0
-        128, 128, 128, 0,    # Palette 1, entry 1 (fully transparent)
+        128, 128, 128, 0 # Palette 1, entry 1 (fully transparent)
       ].pack("C*")
       data = header + palette_indices + colors
       described_class.read(data)
@@ -289,7 +289,7 @@ RSpec.describe Fontisan::Tables::Cpal do
         255, 0, 0, 255,       # Pure blue, opaque
         0, 255, 0, 128,       # Pure green, semi-transparent
         0, 0, 255, 64,        # Pure red, mostly transparent
-        128, 64, 192, 255,    # Mixed color: B=128, G=64, R=192, A=255
+        128, 64, 192, 255 # Mixed color: B=128, G=64, R=192, A=255
       ].pack("C*")
       data = header + palette_indices + colors
       described_class.read(data)
@@ -315,9 +315,10 @@ RSpec.describe Fontisan::Tables::Cpal do
 
   describe "error handling" do
     it "raises CorruptedTableError for invalid data" do
-      expect {
+      expect do
         described_class.read("abc")
-      }.to raise_error(Fontisan::CorruptedTableError, /Failed to parse CPAL table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse CPAL table/)
     end
 
     it "validates sufficient color records" do
@@ -327,9 +328,10 @@ RSpec.describe Fontisan::Tables::Cpal do
       colors = [255, 0, 0, 255] * 5
       data = header + palette_indices + colors.pack("C*")
 
-      expect {
+      expect do
         described_class.read(data)
-      }.to raise_error(Fontisan::CorruptedTableError, /Insufficient color records/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Insufficient color records/)
     end
   end
 end

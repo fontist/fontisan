@@ -72,7 +72,9 @@ RSpec.describe Fontisan::Validators::FontBookValidator do
       expect(error_checks.length).to be > 0
 
       # Warning-level checks
-      warning_checks = report.check_results.select { |cr| cr.severity == "warning" }
+      warning_checks = report.check_results.select do |cr|
+        cr.severity == "warning"
+      end
       expect(warning_checks.length).to be > 0
 
       # Info-level checks

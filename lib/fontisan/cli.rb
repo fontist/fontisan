@@ -392,12 +392,16 @@ module Fontisan
     option :list, aliases: "-l", type: :boolean, desc: "List available tests"
     option :output, aliases: "-o", type: :string, desc: "Output file"
     option :full_report, aliases: "-r", type: :boolean, desc: "Full report"
-    option :return_value_results, aliases: "-R", type: :boolean, desc: "Use return value for results"
-    option :summary_report, aliases: "-S", type: :boolean, desc: "Summary report"
-    option :test_list, aliases: "-t", type: :string, default: "default", desc: "Tests to execute"
+    option :return_value_results, aliases: "-R", type: :boolean,
+                                  desc: "Use return value for results"
+    option :summary_report, aliases: "-S", type: :boolean,
+                            desc: "Summary report"
+    option :test_list, aliases: "-t", type: :string, default: "default",
+                       desc: "Tests to execute"
     option :table_report, aliases: "-T", type: :boolean, desc: "Tabular report"
     option :verbose, aliases: "-v", type: :boolean, desc: "Verbose output"
-    option :suppress_warnings, aliases: "-W", type: :boolean, desc: "Suppress warnings"
+    option :suppress_warnings, aliases: "-W", type: :boolean,
+                               desc: "Suppress warnings"
 
     def validate(font_file)
       if options[:list]
@@ -416,11 +420,11 @@ module Fontisan
         table_report: options[:table_report],
         verbose: options[:verbose],
         suppress_warnings: options[:suppress_warnings],
-        return_value_results: options[:return_value_results]
+        return_value_results: options[:return_value_results],
       )
 
       exit cmd.run
-    rescue => e
+    rescue StandardError => e
       error "Validation failed: #{e.message}"
       exit 1
     end
@@ -546,7 +550,7 @@ module Fontisan
         puts "  Format: #{result[:format].upcase}"
         puts "  Fonts: #{result[:num_fonts]}"
         puts "  Size: #{format_size(result[:output_size] || result[:total_size])}"
-        if result[:space_savings] && result[:space_savings].positive?
+        if result[:space_savings]&.positive?
           puts "  Space saved: #{format_size(result[:space_savings])}"
           puts "  Sharing: #{result[:statistics][:sharing_percentage]}%"
         end

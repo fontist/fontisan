@@ -369,7 +369,7 @@ module Fontisan
         # Sort tables by tag for consistent output (same order as directory)
         sorted_tables = compressed_tables.sort_by { |tag, _| tag }
 
-        sorted_tables.each do |_tag, table_info|
+        sorted_tables.each_value do |table_info|
           io.write(table_info[:compressed_data])
         end
       end

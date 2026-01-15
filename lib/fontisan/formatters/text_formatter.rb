@@ -410,15 +410,16 @@ module Fontisan
 
           info.fonts.each_with_index do |font_info, index|
             # Show font index with offset
-            if font_info.collection_offset
-              lines << "Font #{index} (offset: #{font_info.collection_offset}):"
-            else
-              lines << "Font #{index}:"
-            end
+            lines << if font_info.collection_offset
+                       "Font #{index} (offset: #{font_info.collection_offset}):"
+                     else
+                       "Font #{index}:"
+                     end
             lines << ""
 
             # Format each font using same structure as brief mode
-            font_type_display = format_font_type_display(font_info.font_format, font_info.is_variable)
+            font_type_display = format_font_type_display(font_info.font_format,
+                                                         font_info.is_variable)
             add_line(lines, "Font type", font_type_display)
             add_line(lines, "Family", font_info.family_name)
             add_line(lines, "Subfamily", font_info.subfamily_name)
@@ -426,7 +427,8 @@ module Fontisan
             add_line(lines, "PostScript name", font_info.postscript_name)
             add_line(lines, "Version", font_info.version)
             add_line(lines, "Vendor ID", font_info.vendor_id)
-            add_line(lines, "Font revision", format_float(font_info.font_revision))
+            add_line(lines, "Font revision",
+                     format_float(font_info.font_revision))
             add_line(lines, "Units per em", font_info.units_per_em)
 
             # Blank line between fonts (except after last)
@@ -467,15 +469,16 @@ module Fontisan
         # Each font's brief info
         info.fonts.each_with_index do |font_info, index|
           # Show font index with offset
-          if font_info.collection_offset
-            lines << "Font #{index} (offset: #{font_info.collection_offset}):"
-          else
-            lines << "Font #{index}:"
-          end
+          lines << if font_info.collection_offset
+                     "Font #{index} (offset: #{font_info.collection_offset}):"
+                   else
+                     "Font #{index}:"
+                   end
           lines << ""
 
           # Format each font using same structure as individual fonts
-          font_type_display = format_font_type_display(font_info.font_format, font_info.is_variable)
+          font_type_display = format_font_type_display(font_info.font_format,
+                                                       font_info.is_variable)
           add_line(lines, "Font type", font_type_display)
           add_line(lines, "Family", font_info.family_name)
           add_line(lines, "Subfamily", font_info.subfamily_name)
@@ -483,7 +486,8 @@ module Fontisan
           add_line(lines, "PostScript name", font_info.postscript_name)
           add_line(lines, "Version", font_info.version)
           add_line(lines, "Vendor ID", font_info.vendor_id)
-          add_line(lines, "Font revision", format_float(font_info.font_revision))
+          add_line(lines, "Font revision",
+                   format_float(font_info.font_revision))
           add_line(lines, "Units per em", font_info.units_per_em)
 
           # Blank line between fonts (except after last)

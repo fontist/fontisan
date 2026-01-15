@@ -57,7 +57,7 @@ RSpec.describe "Dfont Pack Integration", :integration do
         data_length = io.read(4).unpack1("N")
         map_length = io.read(4).unpack1("N")
 
-        expect(data_offset).to eq(256)  # Standard dfont offset
+        expect(data_offset).to eq(256) # Standard dfont offset
         expect(map_offset).to be > data_offset
         expect(data_length).to be > 0
         expect(map_length).to be > 0
@@ -100,7 +100,7 @@ RSpec.describe "Dfont Pack Integration", :integration do
       command = Fontisan::Commands::PackCommand.new(
         [ttf_path, ttf_bold_path],
         output: dfont_path,
-        format: :dfont
+        format: :dfont,
       )
       result = command.run
 
@@ -113,7 +113,7 @@ RSpec.describe "Dfont Pack Integration", :integration do
     it "auto-detects dfont format from .dfont extension" do
       command = Fontisan::Commands::PackCommand.new(
         [ttf_path, ttf_bold_path],
-        output: dfont_path
+        output: dfont_path,
       )
       result = command.run
 
@@ -125,7 +125,7 @@ RSpec.describe "Dfont Pack Integration", :integration do
         Fontisan::Commands::PackCommand.new(
           [],
           output: dfont_path,
-          format: :dfont
+          format: :dfont,
         )
       end.to raise_error(ArgumentError, /Must specify at least 2 font files/)
     end

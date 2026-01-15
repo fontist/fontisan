@@ -149,7 +149,9 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
   end
 
   describe "TwemojiMozilla.ttf (TTF with COLR/CPAL)" do
-    let(:font_path) { font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf") }
+    let(:font_path) do
+      font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf")
+    end
 
     it "loads successfully" do
       font = Fontisan::FontLoader.load(font_path, mode: :full)
@@ -210,7 +212,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
       # Check color structure - colors are hex strings
       color = palette.first
       expect(color).to be_a(String)
-      expect(color).to match(/^#[0-9A-F]{8}$/)  # Hex format: #RRGGBBAA
+      expect(color).to match(/^#[0-9A-F]{8}$/) # Hex format: #RRGGBBAA
     end
 
     it "validates COLR structure" do
@@ -250,7 +252,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
   describe "FontInfo integration with COLR/CPAL" do
     it "detects COLR/CPAL in TwemojiMozilla" do
       info = Fontisan.info(
-        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf")
+        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf"),
       )
 
       expect(info.is_color_font).to be true
@@ -261,7 +263,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
 
     it "serializes COLR/CPAL info to YAML" do
       info = Fontisan.info(
-        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf")
+        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf"),
       )
 
       yaml = info.to_yaml
@@ -272,7 +274,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
 
     it "serializes COLR/CPAL info to JSON" do
       info = Fontisan.info(
-        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf")
+        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf"),
       )
 
       json = info.to_json
@@ -284,7 +286,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
   describe "FontInfo integration with SVG" do
     it "detects SVG in EmojiOneColor" do
       info = Fontisan.info(
-        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf")
+        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf"),
       )
 
       expect(info.has_svg_table).to be true
@@ -293,7 +295,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
 
     it "serializes SVG info to YAML" do
       info = Fontisan.info(
-        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf")
+        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf"),
       )
 
       yaml = info.to_yaml
@@ -303,7 +305,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
 
     it "serializes SVG info to JSON" do
       info = Fontisan.info(
-        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf")
+        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf"),
       )
 
       json = info.to_json
@@ -316,7 +318,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
     it "distinguishes SVG vs COLR/CPAL fonts" do
       # SVG font
       svg_info = Fontisan.info(
-        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf")
+        font_fixture_path("EmojiOneColor", "EmojiOneColor.otf"),
       )
       expect(svg_info.has_svg_table).to be true
       # is_color_font is nil for SVG-only fonts (it specifically refers to COLR/CPAL)
@@ -324,7 +326,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
 
       # COLR/CPAL font
       colr_info = Fontisan.info(
-        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf")
+        font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf"),
       )
       expect(colr_info.is_color_font).to be true
       # has_svg_table can be falsy (nil or false) for fonts without SVG
@@ -334,13 +336,13 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
     it "detects different SVG fonts correctly" do
       # Twitter emoji (TTF with SVG)
       twitter_info = Fontisan.info(
-        font_fixture_path("TwitterColorEmoji", "TwitterColorEmoji-SVGinOT.ttf")
+        font_fixture_path("TwitterColorEmoji", "TwitterColorEmoji-SVGinOT.ttf"),
       )
       expect(twitter_info.has_svg_table).to be true
 
       # Gilbert (CFF with SVG)
       gilbert_info = Fontisan.info(
-        font_fixture_path("Gilbert", "Gilbert-Color Bold Preview5.otf")
+        font_fixture_path("Gilbert", "Gilbert-Color Bold Preview5.otf"),
       )
       expect(gilbert_info.has_svg_table).to be true
     end
@@ -350,7 +352,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
     it "handles missing SVG documents gracefully" do
       font = Fontisan::FontLoader.load(
         font_fixture_path("EmojiOneColor", "EmojiOneColor.otf"),
-        mode: :full
+        mode: :full,
       )
       svg = font.table("SVG ")
 
@@ -362,7 +364,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
     it "handles invalid palette index gracefully" do
       font = Fontisan::FontLoader.load(
         font_fixture_path("TwemojiMozilla", "Twemoji.Mozilla.ttf"),
-        mode: :full
+        mode: :full,
       )
       cpal = font.table("CPAL")
 

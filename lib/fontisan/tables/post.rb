@@ -177,7 +177,7 @@ module Fontisan
       #
       # @return [Boolean] True if is_fixed_pitch is 0 or 1
       def valid_fixed_pitch_flag?
-        is_fixed_pitch == 0 || is_fixed_pitch == 1
+        [0, 1].include?(is_fixed_pitch)
       end
 
       # Validation helper: Check if glyph names are available
@@ -198,7 +198,7 @@ module Fontisan
       def complete_version_2_data?
         return true unless version == 2.0
 
-        !num_glyphs_v2.nil? && num_glyphs_v2 > 0 && !remaining_data.empty?
+        !num_glyphs_v2.nil? && num_glyphs_v2.positive? && !remaining_data.empty?
       end
     end
   end

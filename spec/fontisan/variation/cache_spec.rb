@@ -30,7 +30,7 @@ RSpec.describe Fontisan::Variation::Cache do
 
   describe "#fetch" do
     it "computes value on cache miss" do
-      value = cache.fetch("key1") { "computed_value" }
+      value = cache.fetch("key1", "computed_value")
 
       expect(value).to eq("computed_value")
       expect(cache.stats[:misses]).to eq(1)
@@ -38,8 +38,8 @@ RSpec.describe Fontisan::Variation::Cache do
     end
 
     it "returns cached value on cache hit" do
-      cache.fetch("key1") { "computed_value" }
-      value = cache.fetch("key1") { "should_not_compute" }
+      cache.fetch("key1", "computed_value")
+      value = cache.fetch("key1", "should_not_compute")
 
       expect(value).to eq("computed_value")
       expect(cache.stats[:misses]).to eq(1)
@@ -167,7 +167,7 @@ RSpec.describe Fontisan::Variation::Cache do
       cache.store("key1", "value1")
 
       expect(cache.size).to eq(1)
-      expect(cache.fetch("key1") { "fallback" }).to eq("value1")
+      expect(cache.fetch("key1", "fallback")).to eq("value1")
     end
 
     it "updates existing key" do
@@ -175,7 +175,7 @@ RSpec.describe Fontisan::Variation::Cache do
       cache.store("key1", "value2")
 
       expect(cache.size).to eq(1)
-      expect(cache.fetch("key1") { "fallback" }).to eq("value2")
+      expect(cache.fetch("key1", "fallback")).to eq("value2")
     end
   end
 
@@ -186,7 +186,7 @@ RSpec.describe Fontisan::Variation::Cache do
       cache.store("key3", "value3")
 
       # Access key1 to make it recently used
-      cache.fetch("key1") { "fallback" }
+      cache.fetch("key1", "fallback")
 
       # Store key4, should evict key2 (least recently used)
       cache.store("key4", "value4")
@@ -258,9 +258,9 @@ RSpec.describe Fontisan::Variation::Cache do
 
   describe "#statistics" do
     it "returns comprehensive statistics" do
-      cache.fetch("key1") { "value1" }
-      cache.fetch("key1") { "value1" }
-      cache.fetch("key2") { "value2" }
+      cache.fetch("key1", "value1")
+      cache.fetch("key1", "value1")
+      cache.fetch("key2", "value2")
 
       stats = cache.statistics
 
@@ -375,7 +375,7 @@ RSpec.describe Fontisan::Variation::ThreadSafeCache do
       threads = Array.new(5) do
         Thread.new do
           50.times do |i|
-            cache.fetch("key#{i % 10}") { "value" }
+            cache.fetch("key#{i % 10}", "value")
           end
         end
       end

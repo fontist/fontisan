@@ -177,7 +177,7 @@ module Fontisan
       #
       # @return [Boolean] True if version is 0-5
       def valid_version?
-        version && version.between?(0, 5)
+        version&.between?(0, 5)
       end
 
       # Validation helper: Check if weight class is valid
@@ -186,7 +186,7 @@ module Fontisan
       #
       # @return [Boolean] True if weight class is valid
       def valid_weight_class?
-        us_weight_class && us_weight_class.between?(1, 1000)
+        us_weight_class&.between?(1, 1000)
       end
 
       # Validation helper: Check if width class is valid
@@ -195,7 +195,7 @@ module Fontisan
       #
       # @return [Boolean] True if width class is 1-9
       def valid_width_class?
-        us_width_class && us_width_class.between?(1, 9)
+        us_width_class&.between?(1, 9)
       end
 
       # Validation helper: Check if vendor ID is present
@@ -213,7 +213,7 @@ module Fontisan
       #
       # @return [Boolean] True if typo metrics have correct signs
       def valid_typo_metrics?
-        s_typo_ascender > 0 && s_typo_descender < 0 && s_typo_line_gap >= 0
+        s_typo_ascender.positive? && s_typo_descender.negative? && s_typo_line_gap >= 0
       end
 
       # Validation helper: Check if Win metrics are valid
@@ -222,7 +222,7 @@ module Fontisan
       #
       # @return [Boolean] True if Win ascent and descent are positive
       def valid_win_metrics?
-        us_win_ascent > 0 && us_win_descent > 0
+        us_win_ascent.positive? && us_win_descent.positive?
       end
 
       # Validation helper: Check if Unicode ranges are set
@@ -240,7 +240,7 @@ module Fontisan
       #
       # @return [Boolean] True if PANOSE seems to be set
       def has_panose?
-        panose && panose.any? { |val| val != 0 }
+        panose&.any? { |val| val != 0 }
       end
 
       # Validation helper: Check if embedding permissions are set
@@ -270,9 +270,9 @@ module Fontisan
       #
       # @return [Boolean] True if metrics are present (or not required)
       def has_x_height_cap_height?
-        return true if version < 2  # Not required for v0-1
+        return true if version < 2 # Not required for v0-1
 
-        !sx_height.nil? && !s_cap_height.nil? && sx_height > 0 && s_cap_height > 0
+        !sx_height.nil? && !s_cap_height.nil? && sx_height.positive? && s_cap_height.positive?
       end
 
       # Validation helper: Check if first/last char indices are reasonable

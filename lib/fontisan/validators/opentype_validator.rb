@@ -33,45 +33,44 @@ module Fontisan
         super
 
         # Check 27: Maxp TrueType metrics (only for version 1.0)
-        check_table :maxp_truetype_metrics, 'maxp', severity: :warning do |table|
+        check_table :maxp_truetype_metrics, "maxp",
+                    severity: :warning do |table|
           !table.version_1_0? || table.has_truetype_metrics?
         end
 
         # Check 28: Maxp max zones must be valid
-        check_table :maxp_zones, 'maxp', severity: :error do |table|
-          table.valid_max_zones?
-        end
+        check_table :maxp_zones, "maxp", severity: :error, &:valid_max_zones?
 
         # Check 29: Glyf glyphs must be accessible (TrueType fonts only)
         check_glyphs :glyf_accessible, severity: :error do |font|
-          glyf = font.table('glyf')
+          glyf = font.table("glyf")
           next true unless glyf # Skip if CFF font
 
-          loca = font.table('loca')
-          head = font.table('head')
-          maxp = font.table('maxp')
+          loca = font.table("loca")
+          head = font.table("head")
+          maxp = font.table("maxp")
           glyf.all_glyphs_accessible?(loca, head, maxp.num_glyphs)
         end
 
         # Check 30: Glyf glyphs should not be clipped
         check_glyphs :glyf_no_clipping, severity: :warning do |font|
-          glyf = font.table('glyf')
+          glyf = font.table("glyf")
           next true unless glyf
 
-          loca = font.table('loca')
-          head = font.table('head')
-          maxp = font.table('maxp')
+          loca = font.table("loca")
+          head = font.table("head")
+          maxp = font.table("maxp")
           glyf.no_clipped_glyphs?(loca, head, maxp.num_glyphs)
         end
 
         # Check 31: Glyf contour counts must be valid
         check_glyphs :glyf_valid_contours, severity: :error do |font|
-          glyf = font.table('glyf')
+          glyf = font.table("glyf")
           next true unless glyf
 
-          loca = font.table('loca')
-          head = font.table('head')
-          maxp = font.table('maxp')
+          loca = font.table("loca")
+          head = font.table("head")
+          maxp = font.table("maxp")
 
           (0...maxp.num_glyphs).all? do |glyph_id|
             glyf.valid_contour_count?(glyph_id, loca, head)
@@ -79,29 +78,26 @@ module Fontisan
         end
 
         # Check 32: Cmap must have Unicode mapping
-        check_table :cmap_unicode_mapping, 'cmap', severity: :error do |table|
-          table.has_unicode_mapping?
-        end
+        check_table :cmap_unicode_mapping, "cmap", severity: :error,
+                    &:has_unicode_mapping?
 
         # Check 33: Cmap should have BMP coverage
-        check_table :cmap_bmp_coverage, 'cmap', severity: :warning do |table|
-          table.has_bmp_coverage?
-        end
+        check_table :cmap_bmp_coverage, "cmap", severity: :warning,
+                    &:has_bmp_coverage?
 
         # Check 34: Cmap must have format 4 subtable
-        check_table :cmap_format4, 'cmap', severity: :error do |table|
-          table.has_format_4_subtable?
-        end
+        check_table :cmap_format4, "cmap", severity: :error,
+                    &:has_format_4_subtable?
 
         # Check 35: Cmap glyph indices must be valid
         check_structure :cmap_glyph_indices, severity: :error do |font|
-          cmap = font.table('cmap')
-          maxp = font.table('maxp')
+          cmap = font.table("cmap")
+          maxp = font.table("maxp")
           cmap.valid_glyph_indices?(maxp.num_glyphs)
         end
 
         # Check 36: Table checksums (info level - many fonts have mismatches)
-        check_structure :checksum_valid, severity: :info do |font|
+        check_structure :checksum_valid, severity: :info do |_font|
           # Table checksum validation (info level - for reference)
           # Most fonts have checksum mismatches, so we make it info not error
           true # Placeholder - actual checksum validation if desired

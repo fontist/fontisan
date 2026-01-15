@@ -28,7 +28,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "stores table check definition" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :test_check, "name" do |table|
+            check_table :test_check, "name" do |_table|
               true
             end
           end
@@ -45,7 +45,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "allows custom severity" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :test_check, "name", severity: :warning do |table|
+            check_table :test_check, "name", severity: :warning do |_table|
               true
             end
           end
@@ -61,18 +61,19 @@ RSpec.describe Fontisan::Validators::Validator do
         expect do
           Class.new(described_class) do
             def define_checks
-              check_field :test_field, :family_name do |table, value|
+              check_field :test_field, :family_name do |_table, _value|
                 true
               end
             end
           end.new
-        end.to raise_error(ArgumentError, /must be called within check_table block/)
+        end.to raise_error(ArgumentError,
+                           /must be called within check_table block/)
       end
 
       it "stores field check definition within table context" do
-        validator = Class.new(described_class) do
+        Class.new(described_class) do
           def define_checks
-            check_table :table_check, "name" do |table|
+            check_table :table_check, "name" do |_table|
               # This sets context but doesn't actually execute check_field here
               true
             end
@@ -89,7 +90,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "stores structure check definition" do
         validator = Class.new(described_class) do
           def define_checks
-            check_structure :test_structure do |font|
+            check_structure :test_structure do |_font|
               true
             end
           end
@@ -105,7 +106,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "stores usability check definition with warning severity by default" do
         validator = Class.new(described_class) do
           def define_checks
-            check_usability :test_usability do |font|
+            check_usability :test_usability do |_font|
               true
             end
           end
@@ -121,7 +122,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "stores instruction check definition" do
         validator = Class.new(described_class) do
           def define_checks
-            check_instructions :test_instructions do |font|
+            check_instructions :test_instructions do |_font|
               true
             end
           end
@@ -136,7 +137,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "stores glyph check definition" do
         validator = Class.new(described_class) do
           def define_checks
-            check_glyphs :test_glyphs do |font|
+            check_glyphs :test_glyphs do |_font|
               true
             end
           end
@@ -153,9 +154,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "returns valid ValidationReport" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :name_table, "name" do |table|
-              table.valid?
-            end
+            check_table :name_table, "name", &:valid?
           end
         end.new
 
@@ -173,7 +172,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "returns invalid ValidationReport with errors" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :invalid_check, "name" do |table|
+            check_table :invalid_check, "name" do |_table|
               false
             end
           end
@@ -192,7 +191,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "reports table not found" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :missing_table, "ZZZZ" do |table|
+            check_table :missing_table, "ZZZZ" do |_table|
               true
             end
           end
@@ -212,13 +211,9 @@ RSpec.describe Fontisan::Validators::Validator do
       it "executes all checks and aggregates results" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :name_check, "name" do |table|
-              table.valid?
-            end
+            check_table :name_check, "name", &:valid?
 
-            check_table :head_check, "head" do |table|
-              table.valid?
-            end
+            check_table :head_check, "head", &:valid?
 
             check_structure :has_glyphs do |font|
               font.table("maxp").num_glyphs > 0
@@ -230,7 +225,8 @@ RSpec.describe Fontisan::Validators::Validator do
 
         expect(report.check_results.size).to eq(3)
         expect(report.checks_performed.size).to eq(3)
-        expect(report.checks_performed).to include("name_check", "head_check", "has_glyphs")
+        expect(report.checks_performed).to include("name_check", "head_check",
+                                                   "has_glyphs")
       end
     end
 
@@ -238,7 +234,7 @@ RSpec.describe Fontisan::Validators::Validator do
       it "handles exception gracefully" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :error_check, "name" do |table|
+            check_table :error_check, "name" do |_table|
               raise StandardError, "Test error"
             end
           end
@@ -259,7 +255,7 @@ RSpec.describe Fontisan::Validators::Validator do
     it "builds CheckResult objects correctly" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :test_check, "name", severity: :warning do |table|
+          check_table :test_check, "name", severity: :warning do |_table|
             false
           end
         end
@@ -278,11 +274,11 @@ RSpec.describe Fontisan::Validators::Validator do
     it "uses result_of to query specific check" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :check_one, "name" do |table|
+          check_table :check_one, "name" do |_table|
             true
           end
 
-          check_table :check_two, "head" do |table|
+          check_table :check_two, "head" do |_table|
             false
           end
         end
@@ -298,11 +294,11 @@ RSpec.describe Fontisan::Validators::Validator do
     it "tracks passed and failed checks" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :pass_check, "name" do |table|
+          check_table :pass_check, "name" do |_table|
             true
           end
 
-          check_table :fail_check, "head" do |table|
+          check_table :fail_check, "head" do |_table|
             false
           end
         end
@@ -322,17 +318,11 @@ RSpec.describe Fontisan::Validators::Validator do
       it "validates name table successfully" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :name_version, "name" do |table|
-              table.valid_version?
-            end
+            check_table :name_version, "name", &:valid_version?
 
-            check_table :name_family, "name" do |table|
-              table.family_name_present?
-            end
+            check_table :name_family, "name", &:family_name_present?
 
-            check_table :postscript_name, "name" do |table|
-              table.postscript_name_valid?
-            end
+            check_table :postscript_name, "name", &:postscript_name_valid?
           end
         end.new
 
@@ -345,17 +335,11 @@ RSpec.describe Fontisan::Validators::Validator do
       it "validates head table successfully" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :head_magic, "head" do |table|
-              table.valid_magic?
-            end
+            check_table :head_magic, "head", &:valid_magic?
 
-            check_table :head_version, "head" do |table|
-              table.valid_version?
-            end
+            check_table :head_version, "head", &:valid_version?
 
-            check_table :head_units_per_em, "head" do |table|
-              table.valid_units_per_em?
-            end
+            check_table :head_units_per_em, "head", &:valid_units_per_em?
           end
         end.new
 
@@ -368,17 +352,11 @@ RSpec.describe Fontisan::Validators::Validator do
       it "validates maxp table successfully" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :maxp_version, "maxp" do |table|
-              table.valid_version?
-            end
+            check_table :maxp_version, "maxp", &:valid_version?
 
-            check_table :maxp_num_glyphs, "maxp" do |table|
-              table.valid_num_glyphs?
-            end
+            check_table :maxp_num_glyphs, "maxp", &:valid_num_glyphs?
 
-            check_table :maxp_metrics, "maxp" do |table|
-              table.reasonable_metrics?
-            end
+            check_table :maxp_metrics, "maxp", &:reasonable_metrics?
           end
         end.new
 
@@ -391,17 +369,11 @@ RSpec.describe Fontisan::Validators::Validator do
       it "validates hhea table successfully" do
         validator = Class.new(described_class) do
           def define_checks
-            check_table :hhea_version, "hhea" do |table|
-              table.valid_version?
-            end
+            check_table :hhea_version, "hhea", &:valid_version?
 
-            check_table :hhea_metrics, "hhea" do |table|
-              table.valid_number_of_h_metrics?
-            end
+            check_table :hhea_metrics, "hhea", &:valid_number_of_h_metrics?
 
-            check_table :hhea_ascent_descent, "hhea" do |table|
-              table.valid_ascent_descent?
-            end
+            check_table :hhea_ascent_descent, "hhea", &:valid_ascent_descent?
           end
         end.new
 
@@ -467,17 +439,11 @@ RSpec.describe Fontisan::Validators::Validator do
     it "completes validation in under 200ms for typical font" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :name_check, "name" do |table|
-            table.valid?
-          end
+          check_table :name_check, "name", &:valid?
 
-          check_table :head_check, "head" do |table|
-            table.valid?
-          end
+          check_table :head_check, "head", &:valid?
 
-          check_table :maxp_check, "maxp" do |table|
-            table.valid?
-          end
+          check_table :maxp_check, "maxp", &:valid?
 
           check_structure :has_glyphs do |font|
             font.table("maxp").num_glyphs > 0
@@ -498,7 +464,7 @@ RSpec.describe Fontisan::Validators::Validator do
     it "produces reports that serialize to YAML" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :test_check, "name" do |table|
+          check_table :test_check, "name" do |_table|
             true
           end
         end
@@ -517,7 +483,7 @@ RSpec.describe Fontisan::Validators::Validator do
     it "produces reports that serialize to JSON" do
       validator = Class.new(described_class) do
         def define_checks
-          check_table :test_check, "name" do |table|
+          check_table :test_check, "name" do |_table|
             true
           end
         end

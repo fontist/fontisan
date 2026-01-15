@@ -32,7 +32,9 @@ module Fontisan
         selected = []
         # Sort by savings (descending), then by length (descending), then by min glyph ID,
         # then by byte values for complete determinism across platforms
-        remaining = @patterns.sort_by { |p| [-p.savings, -p.length, p.glyphs.min, p.bytes.bytes] }
+        remaining = @patterns.sort_by do |p|
+          [-p.savings, -p.length, p.glyphs.min, p.bytes.bytes]
+        end
 
         remaining.each do |pattern|
           break if selected.length >= @max_subrs
@@ -53,7 +55,9 @@ module Fontisan
       def optimize_ordering(subroutines)
         # Higher frequency = lower ID (shorter encoding)
         # Use same comprehensive sort keys as optimize_selection for consistency
-        subroutines.sort_by { |subr| [-subr.frequency, -subr.length, subr.glyphs.min, subr.bytes.bytes] }
+        subroutines.sort_by do |subr|
+          [-subr.frequency, -subr.length, subr.glyphs.min, subr.bytes.bytes]
+        end
       end
 
       # Check if nesting would be beneficial

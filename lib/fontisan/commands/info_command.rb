@@ -311,7 +311,7 @@ module Fontisan
               start_glyph_id: strike_rec.start_glyph_index,
               end_glyph_id: strike_rec.end_glyph_index,
               bit_depth: strike_rec.bit_depth,
-              num_glyphs: strike_rec.glyph_range.size
+              num_glyphs: strike_rec.glyph_range.size,
             )
           end
           formats << "PNG" # CBDT typically contains PNG data
@@ -329,8 +329,8 @@ module Fontisan
               ppem: strike[:ppem],
               start_glyph_id: 0,
               end_glyph_id: strike[:num_glyphs] - 1,
-              bit_depth: 32,  # sbix is typically 32-bit
-              num_glyphs: strike[:num_glyphs]
+              bit_depth: 32, # sbix is typically 32-bit
+              num_glyphs: strike[:num_glyphs],
             )
           end
         end

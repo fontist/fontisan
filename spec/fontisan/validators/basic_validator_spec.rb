@@ -14,7 +14,9 @@ RSpec.describe Fontisan::Validators::BasicValidator do
   let(:rupali_font) { Fontisan::FontLoader.load(rupali_font_path) }
 
   # Siyam Rupali has sbit issues (known from ftxvalidator)
-  let(:siyam_font_path) { fixture_path("fonts/SiyamRupaliANSI/Siyam Rupali ANSI.ttf") }
+  let(:siyam_font_path) do
+    fixture_path("fonts/SiyamRupaliANSI/Siyam Rupali ANSI.ttf")
+  end
   let(:siyam_font) { Fontisan::FontLoader.load(siyam_font_path) }
 
   describe "#validate" do
@@ -39,7 +41,7 @@ RSpec.describe Fontisan::Validators::BasicValidator do
           "head_magic",
           "units_per_em",
           "num_glyphs",
-          "reasonable_metrics"
+          "reasonable_metrics",
         )
       end
 
@@ -59,7 +61,7 @@ RSpec.describe Fontisan::Validators::BasicValidator do
         validator.validate(valid_font)
         elapsed = Time.now - start_time
 
-        expect(elapsed).to be < 0.05  # 50ms
+        expect(elapsed).to be < 0.05 # 50ms
       end
     end
 
@@ -287,7 +289,7 @@ RSpec.describe Fontisan::Validators::BasicValidator do
         elapsed = Time.now - start_time
 
         expect(reports.all?(&:valid?)).to be true
-        expect(elapsed).to be < 0.1  # < 100ms for 2 fonts
+        expect(elapsed).to be < 0.1 # < 100ms for 2 fonts
       end
     end
   end

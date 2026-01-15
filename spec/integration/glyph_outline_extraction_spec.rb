@@ -265,7 +265,8 @@ RSpec.describe "Glyph Outline Extraction Integration" do
       end
 
       # Libertinus fonts should have compound glyphs (accented characters)
-      expect(compound_found).to be(true), "Expected to find compound glyphs in Libertinus font"
+      expect(compound_found).to be(true),
+                                "Expected to find compound glyphs in Libertinus font"
     end
   end
 

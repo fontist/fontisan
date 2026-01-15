@@ -17,13 +17,13 @@ RSpec.describe Fontisan::Tables::Cblc do
       # BitmapSize record 1 (48 bytes)
       size1 = create_bitmap_size(
         offset: 1000, size: 500, num_subtables: 3,
-        start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8
       )
 
       # BitmapSize record 2 (48 bytes)
       size2 = create_bitmap_size(
         offset: 2000, size: 600, num_subtables: 5,
-        start_glyph: 30, end_glyph: 40, ppem: 32, bit_depth: 32,
+        start_glyph: 30, end_glyph: 40, ppem: 32, bit_depth: 32
       )
 
       data = header + size1 + size2
@@ -59,7 +59,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00030000, 1].pack("NN")
       size = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 0, end_glyph: 10, ppem: 12, bit_depth: 1,
+        start_glyph: 0, end_glyph: 10, ppem: 12, bit_depth: 1
       )
       data = header + size
 
@@ -83,7 +83,8 @@ RSpec.describe Fontisan::Tables::Cblc do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported CBLC version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported CBLC version/)
     end
 
     it "rejects unsupported version 4.0" do
@@ -91,7 +92,8 @@ RSpec.describe Fontisan::Tables::Cblc do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported CBLC version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported CBLC version/)
     end
   end
 
@@ -100,11 +102,11 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 2].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       data = header + size1 + size2
       described_class.read(data)
@@ -131,15 +133,15 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 3].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       size3 = create_bitmap_size(
         offset: 300, size: 70, num_subtables: 1,
-        start_glyph: 30, end_glyph: 35, ppem: 16, bit_depth: 8,
+        start_glyph: 30, end_glyph: 35, ppem: 16, bit_depth: 8
       )
       data = header + size1 + size2 + size3
       described_class.read(data)
@@ -172,11 +174,11 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 2].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       data = header + size1 + size2
       described_class.read(data)
@@ -207,19 +209,19 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 4].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       size3 = create_bitmap_size(
         offset: 300, size: 70, num_subtables: 1,
-        start_glyph: 30, end_glyph: 35, ppem: 16, bit_depth: 8,
+        start_glyph: 30, end_glyph: 35, ppem: 16, bit_depth: 8
       )
       size4 = create_bitmap_size(
         offset: 400, size: 80, num_subtables: 1,
-        start_glyph: 40, end_glyph: 45, ppem: 64, bit_depth: 8,
+        start_glyph: 40, end_glyph: 45, ppem: 64, bit_depth: 8
       )
       data = header + size1 + size2 + size3 + size4
 
@@ -242,11 +244,11 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 2].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 12, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 12, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 21, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 21, ppem: 32, bit_depth: 32
       )
       data = header + size1 + size2
 
@@ -260,11 +262,11 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 2].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 12, end_glyph: 18, ppem: 32, bit_depth: 32,
+        start_glyph: 12, end_glyph: 18, ppem: 32, bit_depth: 32
       )
       data = header + size1 + size2
 
@@ -287,15 +289,15 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 3].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 15, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 15, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       size3 = create_bitmap_size(
         offset: 300, size: 70, num_subtables: 1,
-        start_glyph: 30, end_glyph: 40, ppem: 64, bit_depth: 8,
+        start_glyph: 30, end_glyph: 40, ppem: 64, bit_depth: 8
       )
       data = header + size1 + size2 + size3
       described_class.read(data)
@@ -328,15 +330,15 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 3].pack("NN")
       size1 = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       size2 = create_bitmap_size(
         offset: 200, size: 60, num_subtables: 2,
-        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32,
+        start_glyph: 20, end_glyph: 25, ppem: 32, bit_depth: 32
       )
       size3 = create_bitmap_size(
         offset: 300, size: 70, num_subtables: 1,
-        start_glyph: 30, end_glyph: 35, ppem: 64, bit_depth: 8,
+        start_glyph: 30, end_glyph: 35, ppem: 64, bit_depth: 8
       )
       data = header + size1 + size2 + size3
 
@@ -358,7 +360,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00020000, 1].pack("NN")
       size = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       data = header + size
 
@@ -371,7 +373,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       header = [0x00030000, 1].pack("NN")
       size = create_bitmap_size(
         offset: 100, size: 50, num_subtables: 1,
-        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+        start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
       )
       data = header + size
 
@@ -418,7 +420,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       it "returns ppem_x value" do
         size_data = create_bitmap_size(
           offset: 100, size: 50, num_subtables: 1,
-          start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8,
+          start_glyph: 10, end_glyph: 15, ppem: 16, bit_depth: 8
         )
         size = described_class::BitmapSize.read(size_data)
 
@@ -430,7 +432,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       it "returns range of glyph IDs" do
         size_data = create_bitmap_size(
           offset: 100, size: 50, num_subtables: 1,
-          start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8,
+          start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8
         )
         size = described_class::BitmapSize.read(size_data)
 
@@ -442,7 +444,7 @@ RSpec.describe Fontisan::Tables::Cblc do
       let(:size) do
         size_data = create_bitmap_size(
           offset: 100, size: 50, num_subtables: 1,
-          start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8,
+          start_glyph: 10, end_glyph: 20, ppem: 16, bit_depth: 8
         )
         described_class::BitmapSize.read(size_data)
       end
@@ -465,7 +467,8 @@ RSpec.describe Fontisan::Tables::Cblc do
     it "raises CorruptedTableError for invalid data" do
       expect do
         described_class.read("abc")
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse CBLC table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse CBLC table/)
     end
 
     it "raises CorruptedTableError for truncated data" do
@@ -474,12 +477,14 @@ RSpec.describe Fontisan::Tables::Cblc do
 
       expect do
         described_class.read(header + size_partial)
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse CBLC table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse CBLC table/)
     end
   end
 
   # Helper method to create BitmapSize record (48 bytes)
-  def create_bitmap_size(offset:, size:, num_subtables:, start_glyph:, end_glyph:, ppem:, bit_depth:)
+  def create_bitmap_size(offset:, size:, num_subtables:, start_glyph:,
+end_glyph:, ppem:, bit_depth:)
     [
       offset,         # indexSubTableArrayOffset (uint32)
       size,           # indexTablesSize (uint32)

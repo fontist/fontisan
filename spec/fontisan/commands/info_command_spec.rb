@@ -287,7 +287,9 @@ RSpec.describe Fontisan::Commands::InfoCommand do
   end
 
   describe "brief mode" do
-    let(:brief_command) { described_class.new(temp_font_file.path, brief: true) }
+    let(:brief_command) do
+      described_class.new(temp_font_file.path, brief: true)
+    end
 
     it "returns FontInfo model" do
       result = brief_command.run

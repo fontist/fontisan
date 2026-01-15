@@ -95,7 +95,7 @@ module Fontisan
       #
       # @return [Boolean] True if version is 1.0
       def valid_version?
-        version_raw == 0x00010000  # Version 1.0
+        version_raw == 0x00010000 # Version 1.0
       end
 
       # Validation helper: Check if units per em is valid
@@ -130,7 +130,7 @@ module Fontisan
       #
       # @return [Boolean] True if format is 0 or 1
       def valid_index_to_loc_format?
-        index_to_loc_format == 0 || index_to_loc_format == 1
+        [0, 1].include?(index_to_loc_format)
       end
 
       # Validation helper: Check if glyph_data_format is valid
@@ -139,7 +139,7 @@ module Fontisan
       #
       # @return [Boolean] True if format is 0
       def valid_glyph_data_format?
-        glyph_data_format == 0
+        glyph_data_format.zero?
       end
 
       # Validate magic number and raise error if invalid

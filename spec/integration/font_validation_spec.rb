@@ -164,9 +164,9 @@ RSpec.describe "Font Validation Integration" do
 
     it "catches validation errors" do
       # Should not raise, should capture errors in report
-      expect {
+      expect do
         Fontisan.validate(valid_font_path, profile: :production)
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 

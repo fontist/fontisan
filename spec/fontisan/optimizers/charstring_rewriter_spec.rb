@@ -11,7 +11,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
       3,
       18,
       { 0 => [0], 1 => [5], 2 => [10] },
-      false # stack_neutral
+      false, # stack_neutral
     )
   end
 
@@ -23,7 +23,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
       2,
       0,
       { 0 => [10], 1 => [8] },
-      false # stack_neutral
+      false, # stack_neutral
     )
   end
 
@@ -205,7 +205,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           1,
           0,
           { 0 => [0] },
-          false # stack_neutral
+          false, # stack_neutral
         )
 
         charstring = "UNKNOWN"
@@ -223,7 +223,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           1,
           0,
           { 0 => [0] },
-          false # stack_neutral
+          false, # stack_neutral
         )
 
         map = { "\x00\x01\x02" => 0 }
@@ -376,7 +376,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           1,
           0,
           { 0 => [0] },
-          false # stack_neutral
+          false, # stack_neutral
         )
 
         map = { "\x15\x16\x15" => 0 }

@@ -59,11 +59,12 @@ module Fontisan
 
         verbose = options.fetch(:verbose, false)
         output_path = options[:output]
-        target_format = options.fetch(:target_format, 'preserve').to_s
+        target_format = options.fetch(:target_format, "preserve").to_s
 
         # Validate target_format
         unless %w[preserve ttf otf].include?(target_format)
-          raise ArgumentError, "Invalid target_format: #{target_format}. Must be 'preserve', 'ttf', or 'otf'"
+          raise ArgumentError,
+                "Invalid target_format: #{target_format}. Must be 'preserve', 'ttf', or 'otf'"
         end
 
         puts "Converting collection to #{target_type.to_s.upcase}..." if verbose
@@ -76,19 +77,22 @@ module Fontisan
         if source_type == target_type
           puts "  Source and target formats are the same, copying collection..." if verbose
           FileUtils.cp(collection_path, output_path)
-          return build_result(collection_path, output_path, source_type, target_type, fonts.size, [])
+          return build_result(collection_path, output_path, source_type,
+                              target_type, fonts.size, [])
         end
 
         # Step 2: Convert - transform fonts if requested
         puts "  Converting #{fonts.size} font(s)..." if verbose
-        converted_fonts, conversions = convert_fonts(fonts, source_type, target_type, options.merge(target_format: target_format))
+        converted_fonts, conversions = convert_fonts(fonts, source_type,
+                                                     target_type, options.merge(target_format: target_format))
 
         # Step 3: Repack - build target collection
         puts "  Repacking into #{target_type.to_s.upcase} format..." if verbose
         repack_fonts(converted_fonts, target_type, output_path, options)
 
         # Build result
-        result = build_result(collection_path, output_path, source_type, target_type, fonts.size, conversions)
+        result = build_result(collection_path, output_path, source_type,
+                              target_type, fonts.size, conversions)
 
         if verbose
           display_result(result)
@@ -111,7 +115,8 @@ module Fontisan
         end
 
         unless %i[ttc otc dfont].include?(target_type)
-          raise ArgumentError, "Invalid target type: #{target_type}. Must be :ttc, :otc, or :dfont"
+          raise ArgumentError,
+                "Invalid target type: #{target_type}. Must be :ttc, :otc, or :dfont"
         end
 
         unless options[:output]
@@ -202,20 +207,21 @@ module Fontisan
       # @param target_type [Symbol] Target collection type
       # @param options [Hash] Conversion options
       # @return [Array<(Array<Font>, Array<Hash>)>] [converted_fonts, conversions]
-      def convert_fonts(fonts, source_type, target_type, options)
+      def convert_fonts(fonts, _source_type, target_type, options)
         converted_fonts = []
         conversions = []
 
         # Determine if outline conversion is needed
-        target_format = options.fetch(:target_format, 'preserve').to_s
+        target_format = options.fetch(:target_format, "preserve").to_s
 
         fonts.each_with_index do |font, index|
           source_format = detect_font_format(font)
-          needs_conversion = outline_conversion_needed?(source_format, target_format)
+          needs_conversion = outline_conversion_needed?(source_format,
+                                                        target_format)
 
           if needs_conversion
             # Convert outline format
-            desired_format = target_format == 'preserve' ? source_format : target_format.to_sym
+            desired_format = target_format == "preserve" ? source_format : target_format.to_sym
             converter = FormatConverter.new
 
             begin
@@ -266,7 +272,7 @@ module Fontisan
       # @return [Boolean] true if conversion needed
       def outline_conversion_needed?(source_format, target_format)
         # 'preserve' means keep original format
-        return false if target_format == 'preserve'
+        return false if target_format == "preserve"
 
         # Convert if target format differs from source
         target_format.to_sym != source_format
@@ -401,7 +407,8 @@ module Fontisan
       # @param num_fonts [Integer] Number of fonts
       # @param conversions [Array<Hash>] Conversion details
       # @return [Hash] Result
-      def build_result(input, output, source_type, target_type, num_fonts, conversions)
+      def build_result(input, output, source_type, target_type, num_fonts,
+conversions)
         {
           input: input,
           output: output,
@@ -425,7 +432,9 @@ module Fontisan
         puts "Fonts: #{result[:num_fonts]}"
 
         if result[:conversions].any?
-          converted_count = result[:conversions].count { |c| c[:status] == :converted }
+          converted_count = result[:conversions].count do |c|
+            c[:status] == :converted
+          end
           if converted_count.positive?
             puts "Outline conversions: #{converted_count}"
           end

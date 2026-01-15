@@ -138,7 +138,8 @@ module Fontisan
         num_glyphs = maxp_table.num_glyphs
 
         # Parse hmtx table
-        advance_widths, lsbs = parse_hmtx_table(hmtx_data, num_h_metrics, num_glyphs)
+        advance_widths, lsbs = parse_hmtx_table(hmtx_data, num_h_metrics,
+                                                num_glyphs)
 
         # Build transformed hmtx table
         build_transformed_hmtx(advance_widths, lsbs, num_h_metrics, num_glyphs)
@@ -388,7 +389,8 @@ module Fontisan
       # @param num_h_metrics [Integer] Number of hMetric entries
       # @param num_glyphs [Integer] Total number of glyphs
       # @return [String] Transformed hmtx data
-      def build_transformed_hmtx(advance_widths, lsbs, num_h_metrics, num_glyphs)
+      def build_transformed_hmtx(advance_widths, lsbs, num_h_metrics,
+num_glyphs)
         data = String.new(encoding: Encoding::BINARY)
 
         # Flags: Use proportional encoding (not explicit) and explicit LSBs

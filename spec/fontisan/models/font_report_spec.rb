@@ -6,7 +6,7 @@ RSpec.describe Fontisan::Models::FontReport do
   let(:validation_report) do
     Fontisan::Models::ValidationReport.new(
       font_path: "test.ttf",
-      valid: true
+      valid: true,
     )
   end
 
@@ -15,7 +15,7 @@ RSpec.describe Fontisan::Models::FontReport do
       report = described_class.new(
         font_index: 0,
         font_name: "Test Font",
-        report: validation_report
+        report: validation_report,
       )
 
       expect(report.font_index).to eq(0)

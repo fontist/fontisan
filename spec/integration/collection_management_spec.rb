@@ -212,7 +212,9 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "loading TTC collections with multiple fonts" do
-    let(:dina_path) { font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc") }
+    let(:dina_path) do
+      font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc")
+    end
 
     it "loads DinaRemasterII.ttc collection successfully" do
       collection = Fontisan::FontLoader.load_collection(dina_path)
@@ -291,7 +293,9 @@ RSpec.describe "Collection Management Integration", :integration do
   end
 
   describe "Windows tempfile GC regression test" do
-    let(:dina_path) { font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc") }
+    let(:dina_path) do
+      font_fixture_path("DinaRemasterII", "DinaRemasterII.ttc")
+    end
 
     it "processes TTC collection fonts without EACCES errors on Windows" do
       # This test reproduces the exact bug from fontisan 0.2.7:
@@ -353,7 +357,8 @@ RSpec.describe "Collection Management Integration", :integration do
         begin
           collection.num_fonts.times do |i|
             threads << Thread.new do
-              output_path = File.join(temp_dir, "concurrent_#{i}_#{Thread.current.object_id}.ttf")
+              output_path = File.join(temp_dir,
+                                      "concurrent_#{i}_#{Thread.current.object_id}.ttf")
 
               # Each thread opens its own IO handle
               File.open(dina_path, "rb") do |thread_io|

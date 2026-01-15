@@ -108,7 +108,8 @@ RSpec.describe "Hint Round-Trip Conversion" do
       original_cvt = [80, 90, 100]
 
       # TT → PS conversion (use full converter)
-      ps_params = converter.send(:convert_tt_programs_to_ps_dict, "", original_prep, original_cvt)
+      ps_params = converter.send(:convert_tt_programs_to_ps_dict, "",
+                                 original_prep, original_cvt)
 
       # PS → TT conversion
       tt_programs = generator.generate(ps_params)
@@ -195,7 +196,8 @@ RSpec.describe "Hint Round-Trip Conversion" do
       }
 
       tt_programs = generator.generate(original_ps)
-      recovered_ps = analyzer.analyze_prep(tt_programs[:prep], tt_programs[:cvt])
+      analyzer.analyze_prep(tt_programs[:prep],
+                            tt_programs[:cvt])
 
       # Calculate loss
       original_values = [80, 90, 75, 80, 85].sort.uniq

@@ -166,7 +166,7 @@ module Fontisan
       # @param head [Head] Head table for context
       # @param num_glyphs [Integer] Total number of glyphs to check
       # @return [Boolean] True if all non-special glyphs have contours
-      def no_empty_glyphs_except_special?(loca, head, num_glyphs)
+      def no_empty_glyphs_except_special?(loca, _head, num_glyphs)
         # Check glyphs 1 through num_glyphs-1 (.notdef at 0 can be empty)
         (1...num_glyphs).all? do |glyph_id|
           size = loca.size_of(glyph_id)
@@ -194,7 +194,7 @@ module Fontisan
 
         (0...num_glyphs).all? do |glyph_id|
           glyph = glyph_for(glyph_id, loca, head)
-          next true if glyph.nil?  # Empty glyphs are OK
+          next true if glyph.nil? # Empty glyphs are OK
 
           # Check if glyph bounds are within font bounds
           glyph.x_min >= font_x_min &&
@@ -218,7 +218,7 @@ module Fontisan
       def instructions_sound?(loca, head, num_glyphs)
         (0...num_glyphs).all? do |glyph_id|
           glyph = glyph_for(glyph_id, loca, head)
-          next true if glyph.nil?  # Empty glyphs are OK
+          next true if glyph.nil? # Empty glyphs are OK
 
           # Simple glyphs have instructions
           if glyph.respond_to?(:instruction_length)
@@ -242,7 +242,7 @@ module Fontisan
       # @return [Boolean] True if contour count is valid
       def valid_contour_count?(glyph_id, loca, head)
         glyph = glyph_for(glyph_id, loca, head)
-        return true if glyph.nil?  # Empty glyphs are OK
+        return true if glyph.nil? # Empty glyphs are OK
 
         # Simple glyphs: contours should be >= 0
         # Compound glyphs: numberOfContours = -1
@@ -265,12 +265,10 @@ module Fontisan
       # @return [Boolean] True if all glyphs can be accessed
       def all_glyphs_accessible?(loca, head, num_glyphs)
         (0...num_glyphs).all? do |glyph_id|
-          begin
-            glyph_for(glyph_id, loca, head)
-            true
-          rescue Fontisan::CorruptedTableError
-            false
-          end
+          glyph_for(glyph_id, loca, head)
+          true
+        rescue Fontisan::CorruptedTableError
+          false
         end
       rescue StandardError
         false

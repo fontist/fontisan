@@ -8,7 +8,7 @@ RSpec.describe Fontisan::Models::ValidationReport do
       font_path: "test.ttf",
       valid: true,
       profile: "production",
-      status: "valid"
+      status: "valid",
     )
   end
 
@@ -117,7 +117,7 @@ RSpec.describe Fontisan::Models::ValidationReport do
         report.issues << described_class::Issue.new(
           severity: "fatal",
           category: "critical",
-          message: "Fatal error"
+          message: "Fatal error",
         )
         expect(report.fatal_errors.length).to eq(1)
       end
@@ -173,13 +173,13 @@ RSpec.describe Fontisan::Models::ValidationReport do
           check_id: "name_version",
           passed: true,
           severity: "error",
-          table: "name"
+          table: "name",
         )
         report.check_results << described_class::CheckResult.new(
           check_id: "head_magic",
           passed: false,
           severity: "error",
-          table: "head"
+          table: "head",
         )
       end
 
@@ -197,7 +197,7 @@ RSpec.describe Fontisan::Models::ValidationReport do
           passed: false,
           severity: "error",
           table: "name",
-          field: "family_name"
+          field: "family_name",
         )
       end
 
@@ -214,17 +214,17 @@ RSpec.describe Fontisan::Models::ValidationReport do
       report.check_results << described_class::CheckResult.new(
         check_id: "check1",
         passed: true,
-        severity: "error"
+        severity: "error",
       )
       report.check_results << described_class::CheckResult.new(
         check_id: "check2",
         passed: false,
-        severity: "error"
+        severity: "error",
       )
       report.check_results << described_class::CheckResult.new(
         check_id: "check3",
         passed: false,
-        severity: "warning"
+        severity: "warning",
       )
     end
 
@@ -262,7 +262,7 @@ RSpec.describe Fontisan::Models::ValidationReport do
         report.check_results << described_class::CheckResult.new(
           check_id: "check_#{i}",
           passed: i < 3, # 3 passed, 2 failed
-          severity: "error"
+          severity: "error",
         )
       end
     end
@@ -308,7 +308,7 @@ RSpec.describe Fontisan::Models::ValidationReport do
         check_id: "test_check",
         passed: false,
         severity: "error",
-        table: "name"
+        table: "name",
       )
     end
 
