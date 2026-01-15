@@ -203,7 +203,7 @@ module Fontisan
       #
       # @return [Boolean] True if version is 0 or 1
       def valid_version?
-        format == 0 || format == 1
+        [0, 1].include?(format)
       end
 
       # Validation helper: Check if encoding combinations are valid

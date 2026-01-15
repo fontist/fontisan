@@ -19,7 +19,7 @@ RSpec.describe Fontisan::Tables::Sbix do
       strike1_data = create_strike(ppem: 16, ppi: 72, num_glyphs: 3)
       strike2_data = create_strike(ppem: 32, ppi: 72, num_glyphs: 2)
 
-      strike_offset_1 = 16  # After header (8) + offsets (8)
+      strike_offset_1 = 16 # After header (8) + offsets (8)
       strike_offset_2 = 16 + strike1_data.bytesize
 
       offsets = [strike_offset_1, strike_offset_2].pack("NN")
@@ -66,7 +66,8 @@ RSpec.describe Fontisan::Tables::Sbix do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported sbix version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported sbix version/)
     end
 
     it "rejects unsupported version 2" do
@@ -74,7 +75,8 @@ RSpec.describe Fontisan::Tables::Sbix do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported sbix version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported sbix version/)
     end
   end
 
@@ -123,9 +125,9 @@ RSpec.describe Fontisan::Tables::Sbix do
       header = [1, 0, 3].pack("nnN")
       strike1_data = create_strike(ppem: 16, ppi: 72, num_glyphs: 2)
       strike2_data = create_strike(ppem: 32, ppi: 72, num_glyphs: 2)
-      strike3_data = create_strike(ppem: 16, ppi: 144, num_glyphs: 2)  # retina
+      strike3_data = create_strike(ppem: 16, ppi: 144, num_glyphs: 2) # retina
 
-      strike_offset_1 = 20  # After header (8) + offsets (3*4=12)
+      strike_offset_1 = 20 # After header (8) + offsets (3*4=12)
       strike_offset_2 = strike_offset_1 + strike1_data.bytesize
       strike_offset_3 = strike_offset_2 + strike2_data.bytesize
       offsets = [strike_offset_1, strike_offset_2, strike_offset_3].pack("NNN")
@@ -145,7 +147,7 @@ RSpec.describe Fontisan::Tables::Sbix do
       strike = sbix.strike_for_ppem(16)
 
       expect(strike[:ppem]).to eq(16)
-      expect(strike[:ppi]).to eq(72)  # First one, not retina
+      expect(strike[:ppi]).to eq(72) # First one, not retina
     end
 
     it "returns nil when no strikes match" do
@@ -163,11 +165,12 @@ RSpec.describe Fontisan::Tables::Sbix do
       strike3_data = create_strike(ppem: 16, ppi: 144, num_glyphs: 2)
       strike4_data = create_strike(ppem: 64, ppi: 72, num_glyphs: 2)
 
-      strike_offset_1 = 24  # After header (8) + offsets (4*4=16)
+      strike_offset_1 = 24 # After header (8) + offsets (4*4=16)
       strike_offset_2 = strike_offset_1 + strike1_data.bytesize
       strike_offset_3 = strike_offset_2 + strike2_data.bytesize
       strike_offset_4 = strike_offset_3 + strike3_data.bytesize
-      offsets = [strike_offset_1, strike_offset_2, strike_offset_3, strike_offset_4].pack("NNNN")
+      offsets = [strike_offset_1, strike_offset_2, strike_offset_3,
+                 strike_offset_4].pack("NNNN")
 
       data = header + offsets + strike1_data + strike2_data + strike3_data + strike4_data
 
@@ -195,7 +198,7 @@ RSpec.describe Fontisan::Tables::Sbix do
         origin_x: 5,
         origin_y: 10,
         type: described_class::GRAPHIC_TYPE_PNG,
-        data: png_data
+        data: png_data,
       )
 
       jpeg_data = "\xff\xd8\xff\xe0".b + "jpeg".b
@@ -203,29 +206,29 @@ RSpec.describe Fontisan::Tables::Sbix do
         origin_x: -2,
         origin_y: 8,
         type: described_class::GRAPHIC_TYPE_JPG,
-        data: jpeg_data
+        data: jpeg_data,
       )
 
       glyph2 = create_glyph_data(
         origin_x: 0,
         origin_y: 0,
         type: described_class::GRAPHIC_TYPE_DUPE,
-        data: "".b
+        data: "".b,
       )
 
       # Now calculate offsets based on actual sizes
-      strike_header = [16, 72].pack("nn")  # ppem, ppi (4 bytes)
-      offset_base = 4 + (4 * 4)  # strike header (4) + 4 offsets (16) = 20
+      strike_header = [16, 72].pack("nn") # ppem, ppi (4 bytes)
+      offset_base = 4 + (4 * 4) # strike header (4) + 4 offsets (16) = 20
 
       glyph_offsets = [
         offset_base,                                    # glyph 0 at 20
         offset_base + glyph0.bytesize,                  # glyph 1 at 20 + glyph0_size
         offset_base + glyph0.bytesize + glyph1.bytesize, # glyph 2 at 20 + glyph0 + glyph1
-        offset_base + glyph0.bytesize + glyph1.bytesize + glyph2.bytesize,  # end
+        offset_base + glyph0.bytesize + glyph1.bytesize + glyph2.bytesize, # end
       ].pack("NNNN")
 
       strike_data = strike_header + glyph_offsets + glyph0 + glyph1 + glyph2
-      strike_offset = 12  # After header (8) + offset (4)
+      strike_offset = 12 # After header (8) + offset (4)
       offsets = [strike_offset].pack("N")
 
       data = header + offsets + strike_data
@@ -287,11 +290,11 @@ RSpec.describe Fontisan::Tables::Sbix do
       )
 
       strike_header = [16, 72].pack("nn")
-      offset_base = 4 + (3 * 4)  # 3 offsets for 2 glyphs (including end marker)
+      offset_base = 4 + (3 * 4) # 3 offsets for 2 glyphs (including end marker)
       glyph_offsets = [
         offset_base,
         offset_base + glyph0.bytesize,
-        offset_base + glyph0.bytesize,  # Glyph 1 is empty (both offsets same)
+        offset_base + glyph0.bytesize, # Glyph 1 is empty (both offsets same)
       ].pack("NNN")
 
       strike_data = strike_header + glyph_offsets + glyph0
@@ -500,16 +503,18 @@ RSpec.describe Fontisan::Tables::Sbix do
     it "raises CorruptedTableError for invalid data" do
       expect do
         described_class.read("abc")
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse sbix table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse sbix table/)
     end
 
     it "raises CorruptedTableError for truncated data" do
       header = [1, 0, 1].pack("nnN")
-      offsets = "ab"  # Not 4 bytes
+      offsets = "ab" # Not 4 bytes
 
       expect do
         described_class.read(header + offsets)
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse sbix table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse sbix table/)
     end
   end
 
@@ -518,24 +523,24 @@ RSpec.describe Fontisan::Tables::Sbix do
     strike_header = [ppem, ppi].pack("nn")
 
     # Create glyph data offsets (num_glyphs + 1)
-    offset = 4 + ((num_glyphs + 1) * 4)  # After header and offsets
+    offset = 4 + ((num_glyphs + 1) * 4) # After header and offsets
     glyph_offsets = []
 
-    (num_glyphs + 1).times do |i|
+    (num_glyphs + 1).times do |_i|
       glyph_offsets << offset
-      offset += 20  # Each glyph is ~20 bytes
+      offset += 20 # Each glyph is ~20 bytes
     end
 
     offsets_data = glyph_offsets.pack("N*")
 
     # Create dummy glyph data
-    glyphs_data = "".b  # Force binary encoding
+    glyphs_data = "".b # Force binary encoding
     num_glyphs.times do
       glyphs_data += create_glyph_data(
         origin_x: 0,
         origin_y: 0,
         type: described_class::GRAPHIC_TYPE_PNG,
-        data: "\x89PNG".b
+        data: "\x89PNG".b,
       )
     end
 
@@ -550,6 +555,6 @@ RSpec.describe Fontisan::Tables::Sbix do
       type,      # graphicType (uint32)
     ].pack("s>s>N")
 
-    (header + data.b).b  # Force binary encoding
+    (header + data.b).b # Force binary encoding
   end
 end

@@ -112,7 +112,7 @@ module Fontisan
       #
       # @return [Boolean] True if format is 0
       def valid_metric_data_format?
-        metric_data_format == 0
+        metric_data_format.zero?
       end
 
       # Validation helper: Check if number of h metrics is valid
@@ -130,7 +130,7 @@ module Fontisan
       #
       # @return [Boolean] True if ascent/descent have correct signs
       def valid_ascent_descent?
-        ascent > 0 && descent < 0
+        ascent.positive? && descent.negative?
       end
 
       # Validation helper: Check if line gap is non-negative
@@ -148,7 +148,7 @@ module Fontisan
       #
       # @return [Boolean] True if advance_width_max > 0
       def valid_advance_width_max?
-        advance_width_max && advance_width_max > 0
+        advance_width_max&.positive?
       end
 
       # Validation helper: Check if caret slope is valid
@@ -168,7 +168,7 @@ module Fontisan
       #
       # @return [Boolean] True if x_max_extent > 0
       def valid_x_max_extent?
-        x_max_extent > 0
+        x_max_extent.positive?
       end
 
       # Validate the table and raise error if invalid

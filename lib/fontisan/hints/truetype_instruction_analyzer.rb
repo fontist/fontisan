@@ -29,7 +29,7 @@ module Fontisan
       RCVT = 0x45     # Read CVT
       WCVTP = 0x44    # Write CVT (in Pixels)
       WCVTF = 0x70    # Write CVT (in FUnits)
-      MDAP = [0x2E, 0x2F].freeze  # Move Direct Absolute Point
+      MDAP = [0x2E, 0x2F].freeze # Move Direct Absolute Point
       SCVTCI = 0x1D   # Set Control Value Table Cut In
       SSWCI = 0x1E    # Set Single Width Cut In
       SSW = 0x1F      # Set Single Width
@@ -106,7 +106,7 @@ module Fontisan
               # Pattern: value cvt_index WCVTP (stack top to bottom)
               if stack.length >= 2
                 value = stack.pop
-                cvt_index = stack.pop
+                stack.pop
                 # Track CVT modifications (useful for understanding setup)
               end
 
@@ -168,7 +168,7 @@ module Fontisan
 
         {
           fpgm_size: size,
-          has_functions: size > 0,
+          has_functions: size.positive?,
           complexity: complexity,
         }
       rescue StandardError
@@ -208,13 +208,19 @@ module Fontisan
         xheight_min = (450 * scale_factor).to_i
         xheight_max = (600 * scale_factor).to_i
         capheight_min = (650 * scale_factor).to_i
-        capheight_max = (1500 * scale_factor).to_i  # Wider range for large UPM
+        capheight_max = (1500 * scale_factor).to_i # Wider range for large UPM
 
         # Group CVT values by typical alignment zones
-        descender_values = cvt.select { |v| v < descender_max && v > descender_min }
-        baseline_values = cvt.select { |v| v >= -baseline_range && v <= baseline_range }
-        xheight_values = cvt.select { |v| v >= xheight_min && v <= xheight_max }
-        capheight_values = cvt.select { |v| v >= capheight_min && v <= capheight_max }
+        descender_values = cvt.select do |v|
+          v < descender_max && v > descender_min
+        end
+        baseline_values = cvt.select do |v|
+          v >= -baseline_range && v <= baseline_range
+        end
+        cvt.select { |v| v >= xheight_min && v <= xheight_max }
+        capheight_values = cvt.select do |v|
+          v >= capheight_min && v <= capheight_max
+        end
 
         # Build blue_values (baseline and top zones)
         blue_values = []
@@ -254,6 +260,7 @@ module Fontisan
       def estimate_complexity(bytes)
         return :simple if bytes.length < 50
         return :moderate if bytes.length < 200
+
         :complex
       end
     end

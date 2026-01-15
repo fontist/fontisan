@@ -65,7 +65,7 @@ module Fontisan
         {
           fpgm: generate_fpgm(ps_params),
           prep: generate_prep(ps_params),
-          cvt: generate_cvt(ps_params)
+          cvt: generate_cvt(ps_params),
         }
       end
 

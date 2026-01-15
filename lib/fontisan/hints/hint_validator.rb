@@ -40,7 +40,10 @@ module Fontisan
       # @param instructions [String] Binary instruction bytes
       # @return [Hash] Validation result with :valid, :errors, :warnings keys
       def validate_truetype_instructions(instructions)
-        return { valid: true, errors: [], warnings: [] } if instructions.nil? || instructions.empty?
+        if instructions.nil? || instructions.empty?
+          return { valid: true, errors: [],
+                   warnings: [] }
+        end
 
         errors = []
         warnings = []
@@ -114,7 +117,6 @@ module Fontisan
           if stack_depth != 0
             warnings << "Stack not neutral: #{stack_depth} value(s) remaining"
           end
-
         rescue StandardError => e
           errors << "Exception during validation: #{e.message}"
         end
@@ -162,14 +164,14 @@ module Fontisan
         end
 
         # Validate stem widths
-        [:std_hw, :std_vw].each do |key|
+        %i[std_hw std_vw].each do |key|
           if hints[key] && hints[key] <= 0
             errors << "#{key} must be positive: #{hints[key]}"
           end
         end
 
         # Validate stem snaps
-        [:stem_snap_h, :stem_snap_v].each do |key|
+        %i[stem_snap_h stem_snap_v].each do |key|
           if hints[key]
             if hints[key].length > MAX_STEM_SNAP
               errors << "#{key} exceeds maximum (#{MAX_STEM_SNAP}): #{hints[key].length}"
@@ -191,10 +193,8 @@ module Fontisan
         end
 
         # Validate language_group
-        if hints[:language_group]
-          unless [0, 1].include?(hints[:language_group])
-            errors << "language_group must be 0 (Latin) or 1 (CJK): #{hints[:language_group]}"
-          end
+        if hints[:language_group] && ![0, 1].include?(hints[:language_group])
+          errors << "language_group must be 0 (Latin) or 1 (CJK): #{hints[:language_group]}"
         end
 
         {
@@ -212,7 +212,10 @@ module Fontisan
       # @param instructions [String] Binary instruction bytes
       # @return [Hash] Result with :neutral, :stack_depth, :errors keys
       def validate_stack_neutrality(instructions)
-        return { neutral: true, stack_depth: 0, errors: [] } if instructions.nil? || instructions.empty?
+        if instructions.nil? || instructions.empty?
+          return { neutral: true, stack_depth: 0,
+                   errors: [] }
+        end
 
         errors = []
         stack_depth = 0
@@ -257,7 +260,7 @@ module Fontisan
         end
 
         {
-          neutral: stack_depth == 0,
+          neutral: stack_depth.zero?,
           stack_depth: stack_depth,
           errors: errors,
         }

@@ -128,7 +128,8 @@ RSpec.describe Fontisan::Parsers::DfontParser do
         resources = described_class.send(:find_sfnt_resources, io, header)
 
         resource_info = resources.first
-        data = described_class.send(:extract_resource_data, io, header, resource_info)
+        data = described_class.send(:extract_resource_data, io, header,
+                                    resource_info)
 
         expect(data).to be_a(String)
         expect(data.length).to be > 0

@@ -40,15 +40,15 @@ RSpec.describe Fontisan::Validators::ProfileLoader do
     end
 
     it "raises ArgumentError for unknown profile" do
-      expect {
+      expect do
         described_class.load(:unknown_profile)
-      }.to raise_error(ArgumentError, /Unknown profile: unknown_profile/)
+      end.to raise_error(ArgumentError, /Unknown profile: unknown_profile/)
     end
 
     it "includes available profiles in error message" do
-      expect {
+      expect do
         described_class.load(:invalid)
-      }.to raise_error(ArgumentError, /Available profiles:/)
+      end.to raise_error(ArgumentError, /Available profiles:/)
     end
   end
 
@@ -115,7 +115,7 @@ RSpec.describe Fontisan::Validators::ProfileLoader do
     it "includes configuration for each profile" do
       profiles = described_class.all_profiles
 
-      profiles.each do |name, config|
+      profiles.each_value do |config|
         expect(config).to have_key(:name)
         expect(config).to have_key(:description)
         expect(config).to have_key(:validator)

@@ -109,7 +109,7 @@ module Fontisan
         woff2_binary = assemble_woff2(header, entries, compressed_data)
 
         # Prepare result
-        result = { woff2_binary: woff2_binary }
+        { woff2_binary: woff2_binary }
 
         # Optional validation
         # Temporarily disabled - will be reimplemented with new DSL framework
@@ -117,8 +117,6 @@ module Fontisan
         #   validation_report = validate_encoding(woff2_binary, options)
         #   result[:validation_report] = validation_report
         # end
-
-        result
       end
 
       # Get list of supported conversions
@@ -185,14 +183,16 @@ module Fontisan
           end
 
           # Read table directory
-          woff2.table_entries = Woff2Font.read_table_directory_from_io(io, woff2.header)
+          woff2.table_entries = Woff2Font.read_table_directory_from_io(io,
+                                                                       woff2.header)
 
           # Decompress tables
           woff2.decompressed_tables = Woff2Font.decompress_tables(io, woff2.header,
-                                                                   woff2.table_entries)
+                                                                  woff2.table_entries)
 
           # Apply transformations
-          Woff2Font.apply_transformations!(woff2.table_entries, woff2.decompressed_tables)
+          Woff2Font.apply_transformations!(woff2.table_entries,
+                                           woff2.decompressed_tables)
 
           woff2
         end

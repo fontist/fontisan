@@ -51,7 +51,7 @@ module Fontisan
           # Check if this is blend data
           # Format: base1 delta1_1 ... delta1_N base2 delta2_1 ... delta2_N ...
           # The array must be divisible by (num_axes + 1)
-          return nil unless value.size % (num_axes + 1) == 0
+          return nil unless (value.size % (num_axes + 1)).zero?
 
           num_values = value.size / (num_axes + 1)
           blends = []

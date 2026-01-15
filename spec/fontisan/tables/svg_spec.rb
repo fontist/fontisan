@@ -73,7 +73,8 @@ RSpec.describe Fontisan::Tables::Svg do
 
       expect do
         described_class.read(data)
-      end.to raise_error(Fontisan::CorruptedTableError, /Unsupported SVG version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported SVG version/)
     end
   end
 
@@ -273,7 +274,8 @@ RSpec.describe Fontisan::Tables::Svg do
 
       expect do
         svg.svg_for_glyph(10)
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to decompress SVG data/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to decompress SVG data/)
     end
   end
 
@@ -394,7 +396,8 @@ RSpec.describe Fontisan::Tables::Svg do
       # Too short data
       expect do
         described_class.read("abc")
-      end.to raise_error(Fontisan::CorruptedTableError, /Failed to parse SVG table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse SVG table/)
     end
 
     it "raises CorruptedTableError for invalid offset" do
@@ -403,7 +406,8 @@ RSpec.describe Fontisan::Tables::Svg do
 
       expect do
         described_class.read(header)
-      end.to raise_error(Fontisan::CorruptedTableError, /Invalid svgDocumentListOffset/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Invalid svgDocumentListOffset/)
     end
   end
 end

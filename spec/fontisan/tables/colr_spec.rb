@@ -21,8 +21,8 @@ RSpec.describe Fontisan::Tables::Colr do
 
       # Base glyph records (6 bytes each): glyphID(2) + firstLayerIndex(2) + numLayers(2)
       base_glyphs = [
-        10, 0, 2,  # glyph 10: layers 0-1 (2 layers)
-        20, 2, 2,  # glyph 20: layers 2-3 (2 layers)
+        10, 0, 2, # glyph 10: layers 0-1 (2 layers)
+        20, 2, 2 # glyph 20: layers 2-3 (2 layers)
       ].pack("n*")
 
       # Layer records (4 bytes each): glyphID(2) + paletteIndex(2)
@@ -30,7 +30,7 @@ RSpec.describe Fontisan::Tables::Colr do
         100, 0,  # layer 0: glyph 100, palette 0
         101, 1,  # layer 1: glyph 101, palette 1
         200, 0,  # layer 2: glyph 200, palette 0
-        201, 2,  # layer 3: glyph 201, palette 2
+        201, 2 # layer 3: glyph 201, palette 2
       ].pack("n*")
 
       data = header + base_glyphs + layers
@@ -72,9 +72,10 @@ RSpec.describe Fontisan::Tables::Colr do
     it "rejects unsupported version 1" do
       data = [1, 0, 14, 14, 0].pack("nnNNn")
 
-      expect {
+      expect do
         described_class.read(data)
-      }.to raise_error(Fontisan::CorruptedTableError, /Unsupported COLR version/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Unsupported COLR version/)
     end
   end
 
@@ -231,7 +232,7 @@ RSpec.describe Fontisan::Tables::Colr do
         20, 1, 1,  # glyph 20: 1 layer at index 1
         30, 2, 1,  # glyph 30: 1 layer at index 2
         40, 3, 1,  # glyph 40: 1 layer at index 3
-        50, 4, 1,  # glyph 50: 1 layer at index 4
+        50, 4, 1 # glyph 50: 1 layer at index 4
       ].pack("n*")
       # Add 5 layer records (even though we don't use them in this test)
       layers = [100, 0, 101, 0, 102, 0, 103, 0, 104, 0].pack("n*")
@@ -260,9 +261,10 @@ RSpec.describe Fontisan::Tables::Colr do
   describe "error handling" do
     it "raises CorruptedTableError for invalid data" do
       # Too short data
-      expect {
+      expect do
         described_class.read("abc")
-      }.to raise_error(Fontisan::CorruptedTableError, /Failed to parse COLR table/)
+      end.to raise_error(Fontisan::CorruptedTableError,
+                         /Failed to parse COLR table/)
     end
   end
 end

@@ -278,22 +278,20 @@ module Fontisan
         end
       end
 
-      public
-
       # Validation helper: Check if version is valid
       #
       # cmap version should be 0
       #
       # @return [Boolean] True if version is 0
       def valid_version?
-        version == 0
+        version.zero?
       end
 
       # Validation helper: Check if at least one subtable exists
       #
       # @return [Boolean] True if num_tables > 0
       def has_subtables?
-        num_tables && num_tables > 0
+        num_tables&.positive?
       end
 
       # Validation helper: Check if Unicode mapping exists
@@ -357,7 +355,9 @@ module Fontisan
         mappings = unicode_mappings
         return true if mappings.nil? || mappings.empty?
 
-        mappings.values.all? { |glyph_id| glyph_id >= 0 && glyph_id < max_glyph_id }
+        mappings.values.all? do |glyph_id|
+          glyph_id >= 0 && glyph_id < max_glyph_id
+        end
       end
     end
   end

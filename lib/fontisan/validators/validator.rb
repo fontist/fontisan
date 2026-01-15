@@ -80,7 +80,8 @@ module Fontisan
       # @param block [Proc] Check logic that receives (table, value) as parameters
       def check_field(check_id, field_key, severity: :error, &block)
         unless @current_table_context
-          raise ArgumentError, "check_field must be called within check_table block"
+          raise ArgumentError,
+                "check_field must be called within check_table block"
         end
 
         @checks << {
@@ -194,7 +195,7 @@ module Fontisan
             issues: [],
           }
         end
-      rescue => e
+      rescue StandardError => e
         {
           check_id: check_def[:id],
           passed: false,
@@ -239,7 +240,7 @@ module Fontisan
 
         begin
           result = check_def[:block].call(table)
-          passed = result != false && result != nil
+          passed = result != false && !result.nil?
 
           {
             check_id: check_def[:id],
@@ -247,12 +248,16 @@ module Fontisan
             severity: check_def[:severity].to_s,
             messages: passed ? [] : ["Table '#{table_tag}' validation failed"],
             table: table_tag,
-            issues: passed ? [] : [{
-              severity: check_def[:severity].to_s,
-              category: "table_validation",
-              table: table_tag,
-              message: "Table '#{table_tag}' failed validation",
-            }],
+            issues: if passed
+                      []
+                    else
+                      [{
+                        severity: check_def[:severity].to_s,
+                        category: "table_validation",
+                        table: table_tag,
+                        message: "Table '#{table_tag}' failed validation",
+                      }]
+                    end,
           }
         ensure
           @current_table_context = old_context
@@ -290,12 +295,10 @@ module Fontisan
         # Get field value
         value = if table.respond_to?(field_key)
                   table.public_send(field_key)
-                else
-                  nil
                 end
 
         result = check_def[:block].call(table, value)
-        passed = result != false && result != nil
+        passed = result != false && !result.nil?
 
         {
           check_id: check_def[:id],
@@ -304,13 +307,17 @@ module Fontisan
           messages: passed ? [] : ["Field '#{field_key}' validation failed"],
           table: table_tag,
           field: field_key.to_s,
-          issues: passed ? [] : [{
-            severity: check_def[:severity].to_s,
-            category: "field_validation",
-            table: table_tag,
-            field: field_key.to_s,
-            message: "Field '#{field_key}' in table '#{table_tag}' failed validation",
-          }],
+          issues: if passed
+                    []
+                  else
+                    [{
+                      severity: check_def[:severity].to_s,
+                      category: "field_validation",
+                      table: table_tag,
+                      field: field_key.to_s,
+                      message: "Field '#{field_key}' in table '#{table_tag}' failed validation",
+                    }]
+                  end,
         }
       end
 
@@ -321,18 +328,22 @@ module Fontisan
       # @return [Hash] Check result
       def execute_structure_check(font, check_def)
         result = check_def[:block].call(font)
-        passed = result != false && result != nil
+        passed = result != false && !result.nil?
 
         {
           check_id: check_def[:id],
           passed: passed,
           severity: check_def[:severity].to_s,
           messages: passed ? [] : ["Structure validation failed"],
-          issues: passed ? [] : [{
-            severity: check_def[:severity].to_s,
-            category: "structure",
-            message: "Font structure validation failed for check '#{check_def[:id]}'",
-          }],
+          issues: if passed
+                    []
+                  else
+                    [{
+                      severity: check_def[:severity].to_s,
+                      category: "structure",
+                      message: "Font structure validation failed for check '#{check_def[:id]}'",
+                    }]
+                  end,
         }
       end
 
@@ -343,18 +354,22 @@ module Fontisan
       # @return [Hash] Check result
       def execute_usability_check(font, check_def)
         result = check_def[:block].call(font)
-        passed = result != false && result != nil
+        passed = result != false && !result.nil?
 
         {
           check_id: check_def[:id],
           passed: passed,
           severity: check_def[:severity].to_s,
           messages: passed ? [] : ["Usability check failed"],
-          issues: passed ? [] : [{
-            severity: check_def[:severity].to_s,
-            category: "usability",
-            message: "Font usability check failed for '#{check_def[:id]}'",
-          }],
+          issues: if passed
+                    []
+                  else
+                    [{
+                      severity: check_def[:severity].to_s,
+                      category: "usability",
+                      message: "Font usability check failed for '#{check_def[:id]}'",
+                    }]
+                  end,
         }
       end
 
@@ -365,18 +380,22 @@ module Fontisan
       # @return [Hash] Check result
       def execute_instruction_check(font, check_def)
         result = check_def[:block].call(font)
-        passed = result != false && result != nil
+        passed = result != false && !result.nil?
 
         {
           check_id: check_def[:id],
           passed: passed,
           severity: check_def[:severity].to_s,
           messages: passed ? [] : ["Instruction validation failed"],
-          issues: passed ? [] : [{
-            severity: check_def[:severity].to_s,
-            category: "instructions",
-            message: "TrueType instruction check failed for '#{check_def[:id]}'",
-          }],
+          issues: if passed
+                    []
+                  else
+                    [{
+                      severity: check_def[:severity].to_s,
+                      category: "instructions",
+                      message: "TrueType instruction check failed for '#{check_def[:id]}'",
+                    }]
+                  end,
         }
       end
 
@@ -387,18 +406,22 @@ module Fontisan
       # @return [Hash] Check result
       def execute_glyph_check(font, check_def)
         result = check_def[:block].call(font)
-        passed = result != false && result != nil
+        passed = result != false && !result.nil?
 
         {
           check_id: check_def[:id],
           passed: passed,
           severity: check_def[:severity].to_s,
           messages: passed ? [] : ["Glyph validation failed"],
-          issues: passed ? [] : [{
-            severity: check_def[:severity].to_s,
-            category: "glyphs",
-            message: "Glyph validation failed for check '#{check_def[:id]}'",
-          }],
+          issues: if passed
+                    []
+                  else
+                    [{
+                      severity: check_def[:severity].to_s,
+                      category: "glyphs",
+                      message: "Glyph validation failed for check '#{check_def[:id]}'",
+                    }]
+                  end,
         }
       end
 
@@ -408,7 +431,7 @@ module Fontisan
       # @param all_results [Array<Hash>] All check results
       # @param elapsed [Float] Elapsed time in seconds
       # @return [ValidationReport] Complete report
-      def build_report(font, all_results, elapsed)
+      def build_report(font, all_results, _elapsed)
         # Extract font path from font object
         font_path = if font.respond_to?(:path)
                       font.path
@@ -438,28 +461,26 @@ module Fontisan
           report.check_results << check_result
 
           # Add issues to main report
-          if result[:issues]
-            result[:issues].each do |issue_data|
-              case issue_data[:severity]
-              when "error", "fatal"
-                report.add_error(
-                  issue_data[:category] || "validation",
-                  issue_data[:message],
-                  issue_data[:table] || issue_data[:field],
-                )
-              when "warning"
-                report.add_warning(
-                  issue_data[:category] || "validation",
-                  issue_data[:message],
-                  issue_data[:table] || issue_data[:field],
-                )
-              when "info"
-                report.add_info(
-                  issue_data[:category] || "validation",
-                  issue_data[:message],
-                  issue_data[:table] || issue_data[:field],
-                )
-              end
+          result[:issues]&.each do |issue_data|
+            case issue_data[:severity]
+            when "error", "fatal"
+              report.add_error(
+                issue_data[:category] || "validation",
+                issue_data[:message],
+                issue_data[:table] || issue_data[:field],
+              )
+            when "warning"
+              report.add_warning(
+                issue_data[:category] || "validation",
+                issue_data[:message],
+                issue_data[:table] || issue_data[:field],
+              )
+            when "info"
+              report.add_info(
+                issue_data[:category] || "validation",
+                issue_data[:message],
+                issue_data[:table] || issue_data[:field],
+              )
             end
           end
         end

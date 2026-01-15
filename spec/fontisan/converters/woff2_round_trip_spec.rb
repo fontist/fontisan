@@ -54,7 +54,9 @@ RSpec.describe "WOFF2 Round-Trip Validation", :woff2 do
   end
 
   describe "OTF → WOFF2 encoding" do
-    let(:otf_path) { "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf" }
+    let(:otf_path) do
+      "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf"
+    end
 
     it "successfully encodes CFF fonts to WOFF2" do
       original_font = Fontisan::FontLoader.load(otf_path)
@@ -70,7 +72,9 @@ RSpec.describe "WOFF2 Round-Trip Validation", :woff2 do
   end
 
   describe "variable font encoding" do
-    let(:vf_path) { "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/variable/MonaSansVF[wght,opsz].ttf" }
+    let(:vf_path) do
+      "spec/fixtures/fonts/MonaSans/mona-sans-2.0.8/fonts/variable/MonaSansVF[wght,opsz].ttf"
+    end
 
     it "successfully encodes variable fonts to WOFF2" do
       original_font = Fontisan::FontLoader.load(vf_path)

@@ -142,7 +142,7 @@ RSpec.describe Fontisan::Hints::TrueTypeInstructionAnalyzer do
           0x40, 0x03, 0x44, 0x10, 0x08, # NPUSHB: push 68, 16, 8 (reverse order)
           0x1D,                          # SCVTCI (pops 8)
           0x1E,                          # SSWCI (pops 16)
-          0x1F,                          # SSW (pops 68)
+          0x1F # SSW (pops 68)
         ].pack("C*")
 
         result = analyzer.analyze_prep(prep, [])
@@ -195,10 +195,10 @@ RSpec.describe Fontisan::Hints::TrueTypeInstructionAnalyzer do
         # Truncated NPUSHB (missing bytes)
         prep = [0x40, 0x10].pack("C*") # Says 16 bytes but none provided
 
-        expect {
+        expect do
           result = analyzer.analyze_prep(prep, [])
           expect(result).to be_a(Hash)
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it "returns empty hash on exception" do
@@ -274,7 +274,7 @@ RSpec.describe Fontisan::Hints::TrueTypeInstructionAnalyzer do
           0x40, 0x05, 0x08, 0x10, 0x44, 0x00, 0x01, # NPUSHB: 5 bytes
           0x1D,                                      # SCVTCI
           0x1E,                                      # SSWCI
-          0x1F,                                      # SSW
+          0x1F # SSW
         ].pack("C*")
 
         cvt = [0, 68, 88, 100, 450, 700]

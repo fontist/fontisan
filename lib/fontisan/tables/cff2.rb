@@ -121,7 +121,7 @@ module Fontisan
       def charstrings
         return [] unless @charstrings_index
 
-        @charstrings_index.count.times.map do |glyph_id|
+        Array.new(@charstrings_index.count) do |glyph_id|
           charstring_for_glyph(glyph_id)
         end.compact
       end

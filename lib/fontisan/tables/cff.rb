@@ -299,7 +299,8 @@ module Fontisan
         io.seek(absolute_offset)
         Index.new(io, start_offset: absolute_offset)
       rescue StandardError => e
-        raise CorruptedTableError, "Failed to parse Local Subr INDEX: #{e.message}"
+        raise CorruptedTableError,
+              "Failed to parse Local Subr INDEX: #{e.message}"
       end
 
       # Get the CharStrings INDEX for a specific font
@@ -320,7 +321,8 @@ module Fontisan
         io.seek(charstrings_offset)
         CharstringsIndex.new(io, start_offset: charstrings_offset)
       rescue StandardError => e
-        raise CorruptedTableError, "Failed to parse CharStrings INDEX: #{e.message}"
+        raise CorruptedTableError,
+              "Failed to parse CharStrings INDEX: #{e.message}"
       end
 
       # Get a CharString for a specific glyph
@@ -355,7 +357,8 @@ module Fontisan
           local_subr_index,
         )
       rescue StandardError => e
-        raise CorruptedTableError, "Failed to get CharString for glyph #{glyph_index}: #{e.message}"
+        raise CorruptedTableError,
+              "Failed to get CharString for glyph #{glyph_index}: #{e.message}"
       end
 
       # Get the number of glyphs in a font

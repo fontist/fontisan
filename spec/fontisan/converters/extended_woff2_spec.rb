@@ -196,10 +196,10 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
     it "raises error for invalid target format" do
       font = Fontisan::FontLoader.load(fixture_path("fonttools/TestTTF.ttf"))
 
-      expect {
+      expect do
         encoder.convert(font, {})
         encoder.validate(font, :ttf)
-      }.to raise_error(Fontisan::Error, /only supports conversion to woff2/)
+      end.to raise_error(Fontisan::Error, /only supports conversion to woff2/)
     end
 
     it "validates required tables presence" do
@@ -210,9 +210,9 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
       allow(incomplete_font).to receive(:table).with("maxp").and_return(double)
       allow(incomplete_font).to receive(:has_table?).and_return(true)
 
-      expect {
+      expect do
         encoder.validate(incomplete_font, :woff2)
-      }.to raise_error(Fontisan::Error, /missing required table/)
+      end.to raise_error(Fontisan::Error, /missing required table/)
     end
   end
 end

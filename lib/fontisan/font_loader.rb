@@ -72,7 +72,8 @@ module Fontisan
         when "wOF2"
           Woff2Font.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
         when Constants::DFONT_RESOURCE_HEADER
-          extract_and_load_dfont(io, path, font_index, resolved_mode, resolved_lazy)
+          extract_and_load_dfont(io, path, font_index, resolved_mode,
+                                 resolved_lazy)
         else
           raise InvalidFontError,
                 "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, or WOFF2 file."
@@ -185,7 +186,7 @@ module Fontisan
         num_fonts = io.read(4).unpack1("N")
 
         # Read all font offsets
-        font_offsets = num_fonts.times.map { io.read(4).unpack1("N") }
+        font_offsets = Array.new(num_fonts) { io.read(4).unpack1("N") }
 
         # Scan all fonts to determine collection type (not just first)
         truetype_count = 0
@@ -212,7 +213,7 @@ module Fontisan
         # Determine collection type based on what fonts are inside
         # If ANY font is OpenType, use OpenTypeCollection (more general format)
         # Only use TrueTypeCollection if ALL fonts are TrueType
-        if opentype_count > 0
+        if opentype_count.positive?
           OpenTypeCollection.from_file(path)
         else
           # All fonts are TrueType
@@ -282,7 +283,7 @@ mode: LoadingModes::FULL, lazy: true)
       end
 
       # Read all font offsets
-      font_offsets = num_fonts.times.map { io.read(4).unpack1("N") }
+      font_offsets = Array.new(num_fonts) { io.read(4).unpack1("N") }
 
       # Scan all fonts to determine collection type (not just first)
       truetype_count = 0
@@ -308,7 +309,7 @@ mode: LoadingModes::FULL, lazy: true)
 
       # If ANY font is OpenType, use OpenTypeCollection (more general format)
       # Only use TrueTypeCollection if ALL fonts are TrueType
-      if opentype_count > 0
+      if opentype_count.positive?
         # OpenType Collection
         otc = OpenTypeCollection.from_file(path)
         File.open(path, "rb") { |f| otc.font(font_index, f, mode: mode) }
@@ -328,7 +329,7 @@ mode: LoadingModes::FULL, lazy: true)
     # @param lazy [Boolean] Lazy loading flag
     # @return [TrueTypeFont, OpenTypeFont] Loaded font
     # @api private
-    def self.extract_and_load_dfont(io, path, font_index, mode, lazy)
+    def self.extract_and_load_dfont(io, _path, font_index, mode, lazy)
       require_relative "parsers/dfont_parser"
 
       # Extract SFNT data from resource fork

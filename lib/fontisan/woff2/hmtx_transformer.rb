@@ -33,7 +33,8 @@ module Fontisan
       # @param glyf_lsbs [Array<Integer>, nil] LSB values from glyf bboxes (optional)
       # @return [String] Standard hmtx table data
       # @raise [InvalidFontError] If data is corrupted or invalid
-      def self.reconstruct(transformed_data, num_glyphs, num_h_metrics, glyf_lsbs = nil)
+      def self.reconstruct(transformed_data, num_glyphs, num_h_metrics,
+glyf_lsbs = nil)
         io = StringIO.new(transformed_data)
 
         # Read transformation flags

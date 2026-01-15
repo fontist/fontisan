@@ -152,7 +152,7 @@ module Fontisan
         # Build new hmtx data
         data = String.new(encoding: Encoding::BINARY)
 
-        mapping.each do |old_id, _new_id|
+        mapping.each_key do |old_id|
           metric = table.metric_for(old_id)
           next unless metric
 
@@ -319,7 +319,7 @@ module Fontisan
         current_offset = 0
 
         # Process glyphs in mapping order
-        mapping.each do |old_id, _new_id|
+        mapping.each_key do |old_id|
           @loca_offsets << current_offset
 
           # Get offset and size from original loca

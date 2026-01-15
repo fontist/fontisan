@@ -33,18 +33,16 @@ module Fontisan
         super
 
         # Check 9: OS/2 embedding permissions must allow web use
-        check_table :embedding_permissions, 'OS/2', severity: :error do |table|
-          table.has_embedding_permissions?
-        end
+        check_table :embedding_permissions, "OS/2", severity: :error,
+                    &:has_embedding_permissions?
 
         # Check 10: OS/2 version should be present
-        check_table :os2_version_web, 'OS/2', severity: :warning do |table|
-          table.valid_version?
-        end
+        check_table :os2_version_web, "OS/2", severity: :warning,
+                    &:valid_version?
 
         # Check 11: Glyph complexity should be reasonable for web
         check_glyphs :no_complex_glyphs, severity: :warning do |font|
-          maxp = font.table('maxp')
+          maxp = font.table("maxp")
           next true unless maxp.version_1_0?
 
           # Check max points and contours are reasonable for web rendering
@@ -53,33 +51,30 @@ module Fontisan
         end
 
         # Check 12: Cmap must have Unicode mapping for web
-        check_table :character_coverage, 'cmap', severity: :error do |table|
-          table.has_unicode_mapping?
-        end
+        check_table :character_coverage, "cmap", severity: :error,
+                    &:has_unicode_mapping?
 
         # Check 13: Cmap should have BMP coverage
-        check_table :cmap_bmp_web, 'cmap', severity: :warning do |table|
-          table.has_bmp_coverage?
-        end
+        check_table :cmap_bmp_web, "cmap", severity: :warning,
+                    &:has_bmp_coverage?
 
         # Check 14: Glyf glyphs must be accessible (web browsers need this)
         check_glyphs :glyph_accessible_web, severity: :error do |font|
-          glyf = font.table('glyf')
+          glyf = font.table("glyf")
           next true unless glyf
 
-          loca = font.table('loca')
-          head = font.table('head')
-          maxp = font.table('maxp')
+          loca = font.table("loca")
+          head = font.table("head")
+          maxp = font.table("maxp")
           glyf.all_glyphs_accessible?(loca, head, maxp.num_glyphs)
         end
 
         # Check 15: Head table must have valid bounding box
-        check_table :head_bbox_web, 'head', severity: :error do |table|
-          table.valid_bounding_box?
-        end
+        check_table :head_bbox_web, "head", severity: :error,
+                    &:valid_bounding_box?
 
         # Check 16: Hhea metrics must be valid for web rendering
-        check_table :hhea_metrics_web, 'hhea', severity: :error do |table|
+        check_table :hhea_metrics_web, "hhea", severity: :error do |table|
           table.valid_ascent_descent? && table.valid_number_of_h_metrics?
         end
 

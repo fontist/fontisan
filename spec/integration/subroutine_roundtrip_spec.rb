@@ -15,7 +15,9 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
   end
 
   describe "TTF → OTF with optimization → TTF round-trip" do
-    let(:ttf_font_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
+    let(:ttf_font_path) do
+      font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
+    end
 
     it "preserves glyph geometry through round-trip with optimization" do
       # Load original TTF font
@@ -199,7 +201,8 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
     it "uses correct bias for small subroutine counts" do
       # This is tested through the SubroutineBuilder unit tests
       # but we verify it works in practice here
-      font = Fontisan::FontLoader.load(font_fixture_path("NotoSans", "NotoSans-Regular.ttf"))
+      font = Fontisan::FontLoader.load(font_fixture_path("NotoSans",
+                                                         "NotoSans-Regular.ttf"))
 
       tables = converter.convert(font,
                                  target_format: :otf,
@@ -227,7 +230,8 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
 
   describe "Stack-aware optimization" do
     it "produces stack-neutral subroutines" do
-      font = Fontisan::FontLoader.load(font_fixture_path("NotoSans", "NotoSans-Regular.ttf"))
+      font = Fontisan::FontLoader.load(font_fixture_path("NotoSans",
+                                                         "NotoSans-Regular.ttf"))
 
       tables = converter.convert(font,
                                  target_format: :otf,

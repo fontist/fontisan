@@ -4,7 +4,9 @@ require "spec_helper"
 
 RSpec.describe Fontisan do
   describe ".info with brief mode" do
-    let(:ttf_path) { fixture_path("fonts/MonaSans/mona-sans-2.0.8/googlefonts/variable/MonaSans[wdth,wght].ttf") }
+    let(:ttf_path) do
+      fixture_path("fonts/MonaSans/mona-sans-2.0.8/googlefonts/variable/MonaSans[wdth,wght].ttf")
+    end
 
     it "returns FontInfo model" do
       info = described_class.info(ttf_path, brief: true)

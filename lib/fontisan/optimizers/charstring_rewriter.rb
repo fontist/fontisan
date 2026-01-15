@@ -151,7 +151,7 @@ module Fontisan
       # @param charstring [String] CharString to search
       # @param pattern [Pattern] pattern to find
       # @return [Array<Integer>] array of start positions
-      def find_pattern_positions(charstring, pattern, glyph_id = nil)
+      def find_pattern_positions(charstring, pattern, _glyph_id = nil)
         positions = []
         offset = 0
 

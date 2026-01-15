@@ -152,9 +152,9 @@ RSpec.describe Fontisan::Hints::HintValidator do
     context "error handling" do
       it "catches exceptions during validation" do
         # This should not raise an exception
-        expect {
+        expect do
           validator.validate_truetype_instructions("invalid\x00binary\xFF")
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
   end
@@ -409,9 +409,9 @@ RSpec.describe Fontisan::Hints::HintValidator do
 
     it "handles errors gracefully" do
       # Malformed instructions
-      expect {
+      expect do
         validator.validate_stack_neutrality("invalid\xFF")
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 end

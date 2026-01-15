@@ -73,7 +73,7 @@ module Fontisan
         @instance_index = opts[:instance_index]
         @preserve_variation = opts[:preserve_variation]
         @preserve_hints = opts.fetch(:preserve_hints, false)
-        @collection_target_format = opts.fetch(:target_format, 'preserve').to_s
+        @collection_target_format = opts.fetch(:target_format, "preserve").to_s
         @validate = !opts[:no_validate]
       end
 
@@ -196,7 +196,7 @@ module Fontisan
             output: @output_path,
             target_format: @collection_target_format,
             verbose: @options[:verbose],
-          }
+          },
         )
 
         # Display results
@@ -245,8 +245,6 @@ module Fontisan
             :otc
           when ".dfont"
             :dfont
-          else
-            nil
           end
         end
       end

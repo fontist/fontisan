@@ -46,39 +46,29 @@ module Fontisan
         end
 
         # Check 2: Name table version must be valid (0 or 1)
-        check_table :name_version, "name", severity: :error do |table|
-          table.valid_version?
-        end
+        check_table :name_version, "name", severity: :error, &:valid_version?
 
         # Check 3: Family name must be present and non-empty
-        check_table :family_name, "name", severity: :error do |table|
-          table.family_name_present?
-        end
+        check_table :family_name, "name", severity: :error,
+                    &:family_name_present?
 
         # Check 4: PostScript name must be valid (alphanumeric + hyphens)
-        check_table :postscript_name, "name", severity: :error do |table|
-          table.postscript_name_valid?
-        end
+        check_table :postscript_name, "name", severity: :error,
+                    &:postscript_name_valid?
 
         # Check 5: Head table magic number must be correct
-        check_table :head_magic, "head", severity: :error do |table|
-          table.valid_magic?
-        end
+        check_table :head_magic, "head", severity: :error, &:valid_magic?
 
         # Check 6: Units per em must be valid (16-16384)
-        check_table :units_per_em, "head", severity: :error do |table|
-          table.valid_units_per_em?
-        end
+        check_table :units_per_em, "head", severity: :error,
+                    &:valid_units_per_em?
 
         # Check 7: Number of glyphs must be at least 1 (.notdef)
-        check_table :num_glyphs, "maxp", severity: :error do |table|
-          table.valid_num_glyphs?
-        end
+        check_table :num_glyphs, "maxp", severity: :error, &:valid_num_glyphs?
 
         # Check 8: Maxp metrics should be reasonable (not absurd values)
-        check_table :reasonable_metrics, "maxp", severity: :warning do |table|
-          table.reasonable_metrics?
-        end
+        check_table :reasonable_metrics, "maxp", severity: :warning,
+                    &:reasonable_metrics?
       end
     end
   end

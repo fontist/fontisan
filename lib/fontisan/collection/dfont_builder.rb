@@ -86,7 +86,8 @@ module Fontisan
         map_size = 28 + 2 + 8 + (sfnt_binaries.size * 12)
 
         # Step 4: Build resource map
-        resource_map = build_resource_map(sfnt_binaries, resource_data.bytesize, map_size)
+        resource_map = build_resource_map(sfnt_binaries,
+                                          resource_data.bytesize, map_size)
 
         # Step 5: Build header
         header = build_header(resource_data.bytesize, resource_map.bytesize)

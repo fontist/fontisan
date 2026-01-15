@@ -68,7 +68,8 @@ module Fontisan
         issues = []
 
         return ["Font array cannot be empty"] if fonts.nil? || fonts.empty?
-        return ["Invalid format: #{format}"] unless %i[ttc otc dfont].include?(format)
+        return ["Invalid format: #{format}"] unless %i[ttc otc
+                                                       dfont].include?(format)
 
         case format
         when :ttc
@@ -100,7 +101,8 @@ module Fontisan
       # @raise [ArgumentError] if invalid
       def validate_format!(format)
         unless %i[ttc otc dfont].include?(format)
-          raise ArgumentError, "Invalid format: #{format}. Must be :ttc, :otc, or :dfont"
+          raise ArgumentError,
+                "Invalid format: #{format}. Must be :ttc, :otc, or :dfont"
         end
       end
 

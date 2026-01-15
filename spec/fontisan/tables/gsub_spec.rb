@@ -16,7 +16,8 @@ RSpec.describe Fontisan::Tables::Gsub do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
         # NotoSans should have GSUB table for OpenType features
-        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
+        expect(font.has_table?("GSUB")).to be(true),
+                                           "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         scripts = gsub.scripts
@@ -33,7 +34,8 @@ RSpec.describe Fontisan::Tables::Gsub do
         font = Fontisan::OpenTypeFont.from_file(otf_font_path)
 
         # Libertinus should have GSUB table
-        expect(font.has_table?("GSUB")).to be(true), "Libertinus should have GSUB table"
+        expect(font.has_table?("GSUB")).to be(true),
+                                           "Libertinus should have GSUB table"
 
         gsub = font.table("GSUB")
         scripts = gsub.scripts
@@ -60,7 +62,8 @@ RSpec.describe Fontisan::Tables::Gsub do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
         # NotoSans should have GSUB table
-        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
+        expect(font.has_table?("GSUB")).to be(true),
+                                           "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         features = gsub.features(script_tag: "latn")
@@ -74,7 +77,8 @@ RSpec.describe Fontisan::Tables::Gsub do
         font = Fontisan::TrueTypeFont.from_file(ttf_font_path)
 
         # NotoSans should have GSUB table
-        expect(font.has_table?("GSUB")).to be(true), "NotoSans should have GSUB table"
+        expect(font.has_table?("GSUB")).to be(true),
+                                           "NotoSans should have GSUB table"
 
         gsub = font.table("GSUB")
         features = gsub.features(script_tag: "XXXX")
@@ -88,7 +92,8 @@ RSpec.describe Fontisan::Tables::Gsub do
         font = Fontisan::OpenTypeFont.from_file(otf_font_path)
 
         # Libertinus should have GSUB table
-        expect(font.has_table?("GSUB")).to be(true), "Libertinus should have GSUB table"
+        expect(font.has_table?("GSUB")).to be(true),
+                                           "Libertinus should have GSUB table"
 
         gsub = font.table("GSUB")
         features = gsub.features(script_tag: "latn")

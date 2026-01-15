@@ -107,7 +107,8 @@ module Fontisan
       # @param extractor [OutlineExtractor] Outline extractor for layer glyphs
       # @param palette_index [Integer] Palette index to use (default: 0)
       # @return [String, nil] SVG path data with color layers, or nil if not color glyph
-      def generate_color_glyph(glyph_id, colr_table, cpal_table, extractor, palette_index: 0)
+      def generate_color_glyph(glyph_id, colr_table, cpal_table, extractor,
+palette_index: 0)
         # Get layers for this glyph
         layers = colr_table.layers_for_glyph(glyph_id)
         return nil if layers.empty?

@@ -179,9 +179,9 @@ module Fontisan
       #
       # @return [Boolean] True if maxZones is valid or not applicable
       def valid_max_zones?
-        return true if version_0_5?  # Not applicable for CFF
+        return true if version_0_5? # Not applicable for CFF
 
-        max_zones && max_zones.between?(1, 2)
+        max_zones&.between?(1, 2)
       end
 
       # Validation helper: Check if all TrueType metrics are present

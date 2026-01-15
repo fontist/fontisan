@@ -101,7 +101,9 @@ module Fontisan
       attribute :status, :string
       attribute :use_case, :string
       attribute :checks_performed, :string, collection: true, default: -> { [] }
-      attribute :check_results, CheckResult, collection: true, default: -> { [] }
+      attribute :check_results, CheckResult, collection: true, default: -> {
+        []
+      }
 
       yaml do
         map "font_path", to: :font_path
@@ -340,7 +342,9 @@ module Fontisan
       # @param field_name [String, Symbol] Field name
       # @return [Array<CheckResult>] Array of check results for the field
       def field_issues(table_tag, field_name)
-        check_results.select { |cr| cr.table == table_tag.to_s && cr.field == field_name.to_s }
+        check_results.select do |cr|
+          cr.table == table_tag.to_s && cr.field == field_name.to_s
+        end
       end
 
       # Check filtering methods
@@ -374,6 +378,7 @@ module Fontisan
       # @return [Float] Failure rate (0.0 to 1.0)
       def failure_rate
         return 0.0 if check_results.empty?
+
         failed_checks.length.to_f / check_results.length
       end
 

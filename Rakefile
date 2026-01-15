@@ -100,7 +100,9 @@ namespace :fixtures do
   end
 
   desc "Download all test fixture fonts"
-  task download: fonts.values.reject { |config| config[:skip_download] }.map { |config| config[:marker] }
+  task download: fonts.values.reject do |config|
+    config[:skip_download]
+  end.map { |config| config[:marker] }
 
   desc "Clean downloaded fixtures"
   task :clean do
@@ -112,13 +114,11 @@ namespace :fixtures do
           FileUtils.rm_f(config[:marker])
           puts "[fixtures:clean] Removed #{config[:marker]}"
         end
-      else
+      elsif File.exist?(config[:target_dir])
         # For archives, delete the entire target directory
-        if File.exist?(config[:target_dir])
-          puts "[fixtures:clean] Removing #{config[:target_dir]}..."
-          FileUtils.rm_rf(config[:target_dir])
-          puts "[fixtures:clean] Removed #{config[:target_dir]}"
-        end
+        puts "[fixtures:clean] Removing #{config[:target_dir]}..."
+        FileUtils.rm_rf(config[:target_dir])
+        puts "[fixtures:clean] Removed #{config[:target_dir]}"
       end
     end
   end

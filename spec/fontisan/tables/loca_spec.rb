@@ -605,7 +605,8 @@ RSpec.describe Fontisan::Tables::Loca do
 
         # Get loca table data
         loca_data = font.table_data["loca"]
-        expect(loca_data).not_to be_nil, "loca table should exist in Libertinus font"
+        expect(loca_data).not_to be_nil,
+                                 "loca table should exist in Libertinus font"
 
         loca = described_class.read(loca_data)
         loca.parse_with_context(head.index_to_loc_format, maxp.num_glyphs)

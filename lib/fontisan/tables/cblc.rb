@@ -86,9 +86,12 @@ module Fontisan
           size = new
 
           io = StringIO.new(data)
-          size.instance_variable_set(:@index_subtable_array_offset, io.read(4).unpack1("N"))
-          size.instance_variable_set(:@index_tables_size, io.read(4).unpack1("N"))
-          size.instance_variable_set(:@number_of_index_subtables, io.read(4).unpack1("N"))
+          size.instance_variable_set(:@index_subtable_array_offset,
+                                     io.read(4).unpack1("N"))
+          size.instance_variable_set(:@index_tables_size,
+                                     io.read(4).unpack1("N"))
+          size.instance_variable_set(:@number_of_index_subtables,
+                                     io.read(4).unpack1("N"))
           size.instance_variable_set(:@color_ref, io.read(4).unpack1("N"))
 
           # Parse hori and vert metrics (12 bytes each)
@@ -98,7 +101,8 @@ module Fontisan
           size.instance_variable_set(:@vert, SbitLineMetrics.read(vert_data))
 
           # Parse remaining fields
-          size.instance_variable_set(:@start_glyph_index, io.read(2).unpack1("n"))
+          size.instance_variable_set(:@start_glyph_index,
+                                     io.read(2).unpack1("n"))
           size.instance_variable_set(:@end_glyph_index, io.read(2).unpack1("n"))
           size.instance_variable_set(:@ppem_x, io.read(1).unpack1("C"))
           size.instance_variable_set(:@ppem_y, io.read(1).unpack1("C"))

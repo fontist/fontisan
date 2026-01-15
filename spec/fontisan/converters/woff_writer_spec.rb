@@ -47,7 +47,8 @@ RSpec.describe Fontisan::Converters::WoffWriter do
 
     context "with OpenType/CFF font" do
       it "converts OTF to WOFF successfully" do
-        otf_path = File.join(fixture_path, "MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf")
+        otf_path = File.join(fixture_path,
+                             "MonaSans/mona-sans-2.0.8/fonts/static/otf/MonaSans-Regular.otf")
 
         font = Fontisan::FontLoader.load(otf_path)
         result = writer.convert(font)

@@ -260,7 +260,8 @@ RSpec.describe "Hint Application Integration" do
         hint_set = extractor.extract_from_font(font)
 
         # NotoSans TrueType font should have hints
-        expect(hint_set.empty?).to be(false), "NotoSans TrueType font should contain hints"
+        expect(hint_set.empty?).to be(false),
+                                   "NotoSans TrueType font should contain hints"
 
         # Apply hints to new tables
         applier = Fontisan::Hints::TrueTypeHintApplier.new

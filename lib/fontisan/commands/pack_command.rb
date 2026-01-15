@@ -260,7 +260,8 @@ module Fontisan
       # @return [Symbol] Parsed format (:ttc, :otc, or :dfont)
       # @raise [ArgumentError] if format is invalid
       def parse_format(format)
-        return format if format.is_a?(Symbol) && %i[ttc otc dfont].include?(format)
+        return format if format.is_a?(Symbol) && %i[ttc otc
+                                                    dfont].include?(format)
 
         case format.to_s.downcase
         when "ttc"
