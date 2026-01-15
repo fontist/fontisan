@@ -367,17 +367,26 @@ module Fontisan
       handle_error(e)
     end
 
-    desc "validate FONT_FILE", "Validate font file"
+    desc "validate [FONT_FILE]", "Validate font file"
     long_desc <<-DESC
       Validate font file against quality checks and standards.
 
-      Test lists (-t/--test-list):
-        indexability     - Fast indexing validation
+      Supports individual fonts (TTF/OTF) and font collections (TTC/OTC/dfont).
+      For collections, validates each font and provides a summary report.
+
+      Profiles (-p/--profile):
+        indexability     - Fast indexing validation (metadata only, 8 checks)
         usability        - Installation compatibility
         production       - Comprehensive quality (default)
         web              - Web font readiness
         spec_compliance  - OpenType spec compliance
         default          - Production profile (alias)
+
+      Collection validation with profiles:
+        When validating TTC/OTC/dfont collections, the selected profile
+        determines which tables are loaded and which checks are performed
+        for each font in the collection. Use 'indexability' for quick
+        validation or 'production' for comprehensive quality checks.
 
       Return values (with -R/--return-value-results):
         0  No results
@@ -389,29 +398,41 @@ module Fontisan
     DESC
 
     option :exclude, aliases: "-e", type: :array, desc: "Tests to exclude"
-    option :list, aliases: "-l", type: :boolean, desc: "List available tests"
+    option :list, aliases: "-l", type: :boolean, desc: "List available profiles"
     option :output, aliases: "-o", type: :string, desc: "Output file"
     option :full_report, aliases: "-r", type: :boolean, desc: "Full report"
     option :return_value_results, aliases: "-R", type: :boolean,
                                   desc: "Use return value for results"
     option :summary_report, aliases: "-S", type: :boolean,
                             desc: "Summary report"
-    option :test_list, aliases: "-t", type: :string, default: "default",
-                       desc: "Tests to execute"
+    option :profile, aliases: "-p", type: :string, default: "default",
+                       desc: "Validation profile"
     option :table_report, aliases: "-T", type: :boolean, desc: "Tabular report"
     option :verbose, aliases: "-v", type: :boolean, desc: "Verbose output"
     option :suppress_warnings, aliases: "-W", type: :boolean,
                                desc: "Suppress warnings"
 
-    def validate(font_file)
+    def validate(*font_files)
       if options[:list]
         list_available_tests
         return
       end
 
+      # Validate argument count
+      if font_files.empty?
+        raise(Thor::Error, "FONT_FILE is required unless using --list")
+      elsif font_files.size > 1
+        raise(Thor::Error,
+              "Too many arguments. validate accepts only one font file.\n" \
+              "To validate multiple files, run validate separately for each.\n" \
+              "To validate all fonts in a collection, use: fontisan validate collection.ttc")
+      end
+
+      font_file = font_files.first
+
       cmd = Commands::ValidateCommand.new(
         input: font_file,
-        profile: options[:test_list],
+        profile: options[:profile],
         exclude: options[:exclude] || [],
         output: options[:output],
         format: options[:format].to_sym,
@@ -424,6 +445,13 @@ module Fontisan
       )
 
       exit cmd.run
+    rescue Thor::Error => e
+      unless options[:quiet]
+        warn "ERROR: #{e.message}"
+        warn
+        help("validate")
+      end
+      exit 1
     rescue StandardError => e
       error "Validation failed: #{e.message}"
       exit 1

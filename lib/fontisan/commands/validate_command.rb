@@ -71,7 +71,16 @@ module Fontisan
         # Load font with appropriate mode
         profile_config = Validators::ProfileLoader.profile_info(@profile)
         unless profile_config
-          puts "Error: Unknown profile '#{@profile}'" unless @suppress_warnings
+          unless @suppress_warnings
+            puts "Error: Unknown profile '#{@profile}'"
+            puts ""
+            puts "Available profiles:"
+            Validators::ProfileLoader.all_profiles.each do |name, config|
+              puts "  #{name.to_s.ljust(20)} - #{config[:description]}"
+            end
+            puts ""
+            puts "Use --list to see all available profiles"
+          end
           return 1
         end
 
@@ -150,6 +159,10 @@ module Fontisan
           font = FontLoader.load(@input, font_index: index, mode: mode)
           font_report = validator.validate(font)
 
+          # Set font_path to indicate collection file with index
+          # Fonts in collections don't have individual file paths
+          font_report.font_path = "#{@input}:#{index}"
+
           # Extract font name
           font_name = extract_font_name(font, index)
 
@@ -163,8 +176,9 @@ module Fontisan
           )
         rescue StandardError => e
           # Create error report for failed font loading
+          # Use collection file path with index for fonts in collections
           error_report = Models::ValidationReport.new(
-            font_path: @input,
+            font_path: "#{@input}:#{index}",
             valid: false,
           )
           error_report.add_error("font_loading",
@@ -179,8 +193,15 @@ module Fontisan
           )
         end
 
-        # Generate output
-        output = collection_report.text_summary
+        # Generate output based on format
+        output = case @format
+                 when :yaml
+                   collection_report.to_yaml
+                 when :json
+                   collection_report.to_json
+                 else
+                   collection_report.text_summary
+                 end
 
         # Write to file or stdout
         if @output
