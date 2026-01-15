@@ -30,6 +30,8 @@ module Fontisan
     #   mapping = Fontisan::Subset::GlyphMapping.new([0, 5, 10])
     #   mapping.old_id(1) # => 5
     class GlyphMapping
+      include Enumerable
+
       # @return [Hash<Integer, Integer>] mapping from old GIDs to new GIDs
       attr_reader :old_to_new
 

@@ -225,13 +225,13 @@ RSpec.describe Fontisan::Subset::TableSubsetter do
     describe "#compound_glyph?" do
       it "identifies compound glyphs" do
         # Create mock compound glyph data (numberOfContours = -1)
-        compound_data = [0xFFFF].pack("n") + "x" * 10
+        compound_data = [0xFFFF].pack("n") + ("x" * 10)
         expect(subsetter.send(:compound_glyph?, compound_data)).to be true
       end
 
       it "identifies simple glyphs" do
         # Create mock simple glyph data (numberOfContours = 2)
-        simple_data = [2].pack("n") + "x" * 10
+        simple_data = [2].pack("n") + ("x" * 10)
         expect(subsetter.send(:compound_glyph?, simple_data)).to be false
       end
 
@@ -249,7 +249,7 @@ RSpec.describe Fontisan::Subset::TableSubsetter do
       partial_subsetter = described_class.new(font, partial_mapping, options)
 
       # Try to remap a compound glyph that references missing components
-      compound_data = [0xFFFF].pack("n") + "x" * 8
+      compound_data = [0xFFFF].pack("n") + ("x" * 8)
       compound_data << [0x0020].pack("n") # flags (MORE_COMPONENTS not set)
       compound_data << [100].pack("n")     # glyph_index not in mapping
       compound_data << [0, 0].pack("n2")   # args

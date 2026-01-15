@@ -31,8 +31,8 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       let(:charstrings) do
         {
           0 => "A" * 20, # 20 A's
-          1 => "B" * 5 + "A" * 20 + "C" * 5, # Pattern in middle
-          2 => "A" * 20 + "D" * 5, # Pattern at start
+          1 => ("B" * 5) + ("A" * 20) + ("C" * 5), # Pattern in middle
+          2 => ("A" * 20) + ("D" * 5), # Pattern at start
         }
       end
 

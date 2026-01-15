@@ -88,11 +88,11 @@ y_coords:)
       delta = coord - prev
       flag = flags[i]
 
-      if (flag & short_flag) != 0
+      if flag.anybits?(short_flag)
         # Short coordinate (1 byte)
         value = delta.abs
         data << [value].pack("C")
-      elsif (flag & same_or_positive_flag) != 0
+      elsif flag.anybits?(same_or_positive_flag)
         # Same as previous (delta = 0), no data
       else
         # Long coordinate (2 bytes, signed)
@@ -126,7 +126,7 @@ y_coords:)
       data << [comp[:glyph_index]].pack("n")
 
       # Arguments
-      data << if (flags & 0x0001) == 0
+      data << if flags.nobits?(0x0001)
                 # 8-bit args
                 [comp[:arg1], comp[:arg2]].pack("C2")
               else
@@ -135,16 +135,16 @@ y_coords:)
               end
 
       # Transformation
-      if (flags & 0x0080) != 0
+      if flags.anybits?(0x0080)
         # 2x2 matrix
         scale_values = [comp[:scale_x], comp[:scale_01], comp[:scale_10],
                         comp[:scale_y]]
         scale_values.each { |v| data << [(v * 16384).to_i].pack("n") }
-      elsif (flags & 0x0040) != 0
+      elsif flags.anybits?(0x0040)
         # X and Y scale
         data << [(comp[:scale_x] * 16384).to_i].pack("n")
         data << [(comp[:scale_y] * 16384).to_i].pack("n")
-      elsif (flags & 0x0008) != 0
+      elsif flags.anybits?(0x0008)
         # Uniform scale
         data << [(comp[:scale_x] * 16384).to_i].pack("n")
       end
@@ -401,7 +401,7 @@ y_coords:)
       it "parses flags" do
         expect(glyph.flags.length).to eq(8)
         # Flags might have REPEAT_FLAG bit set during encoding, so check base flag
-        expect(glyph.flags.all? { |f| (f & 0x01) == 0x01 }).to be true
+        expect(glyph.flags.all? { |f| f.allbits?(0x01) }).to be true
       end
 
       it "parses coordinates" do

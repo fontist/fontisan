@@ -42,7 +42,7 @@ RSpec.describe Fontisan::Export::TtxGenerator do
   describe "with TestTTF font" do
     let(:font_path) { "spec/fixtures/fonttools/TestTTF.ttf" }
 
-    include_examples "generates valid TTX"
+    it_behaves_like "generates valid TTX"
 
     it "generates head table" do
       ttx_xml = generator.generate(tables: ["head"])
@@ -89,7 +89,7 @@ RSpec.describe Fontisan::Export::TtxGenerator do
   describe "with TestOTF font" do
     let(:font_path) { "spec/fixtures/fonttools/TestOTF.otf" }
 
-    include_examples "generates valid TTX"
+    it_behaves_like "generates valid TTX"
 
     it "generates CFF table as binary" do
       ttx_xml = generator.generate(tables: ["CFF"])

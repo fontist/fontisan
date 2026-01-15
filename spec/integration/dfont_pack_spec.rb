@@ -15,7 +15,7 @@ RSpec.describe "Dfont Pack Integration", :integration do
   let(:dfont_path) { File.join(temp_dir, "test.dfont") }
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    FileUtils.rm_rf(temp_dir)
   end
 
   describe "DfontBuilder" do

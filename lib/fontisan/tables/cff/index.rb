@@ -35,6 +35,8 @@ module Fontisan
       #   puts index[0]  # => first item data
       #   index.each { |item| puts item }
       class Index
+        include Enumerable
+
         # @return [Integer] Number of items in the INDEX
         attr_reader :count
 

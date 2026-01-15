@@ -53,7 +53,7 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
       # Verify local subroutines were created if optimization worked
       local_subrs = cff.local_subrs(0)
       if local_subrs && local_subrs.count > 0
-        puts "✓ CFF optimization created #{local_subrs.count} local subroutines"
+
       end
 
       # Extract outlines from optimized OTF
@@ -152,7 +152,6 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
 
       # If subroutines were created
       if local_subrs && local_subrs.count > 0
-        puts "✓ Testing #{local_subrs.count} subroutines"
 
         # Verify each CharString can be parsed
         num_glyphs = cff.glyph_count
@@ -163,8 +162,6 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
           charstring = cff.charstring_for_glyph(glyph_id)
           expect(charstring).not_to be_nil
         end
-      else
-        puts "⚠ No subroutines created (font may have insufficient repeated patterns)"
       end
     end
 
@@ -189,10 +186,8 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
 
       if optimized_size < unoptimized_size
         reduction = ((unoptimized_size - optimized_size).to_f / unoptimized_size * 100).round(2)
-        puts "✓ CFF size reduction: #{reduction}% (#{unoptimized_size} → #{optimized_size} bytes)"
+
         expect(reduction).to be >= 0
-      else
-        puts "⚠ No size reduction (font may have insufficient repeated patterns)"
       end
     end
   end
@@ -217,8 +212,7 @@ RSpec.describe "CFF Subroutine Optimization Round-Trip Validation" do
       local_subrs = cff.local_subrs(0)
 
       if local_subrs && local_subrs.count > 0
-        subr_count = local_subrs.count
-        puts "✓ Subroutine count: #{subr_count}"
+        local_subrs.count
 
         # Verify CharStrings can be decoded (proves bias is correct)
         expect do

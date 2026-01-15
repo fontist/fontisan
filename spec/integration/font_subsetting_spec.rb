@@ -8,7 +8,7 @@ RSpec.describe "Font Subsetting Integration" do
   let(:output_dir) { Dir.mktmpdir("fontisan_subset_test") }
 
   after do
-    FileUtils.rm_rf(output_dir) if Dir.exist?(output_dir)
+    FileUtils.rm_rf(output_dir)
   end
 
   describe "Basic subsetting workflow" do

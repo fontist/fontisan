@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# rubocop:disable Lint/UselessAssignment
+# Benchmarks calculate values for timing without using them to prevent JIT compiler optimization
+
 require "spec_helper"
 require "benchmark"
 
@@ -22,64 +25,38 @@ RSpec.describe "Subroutine Optimization Performance" do
 
   describe "Conversion Performance" do
     it "benchmarks conversion without optimization" do
-      puts "\n#{'=' * 60}"
-      puts "Benchmarking TTF→OTF Conversion (No Optimization)"
-      puts "=" * 60
-
       times = []
-      5.times do |i|
+      5.times do |_i|
         time = Benchmark.realtime do
           converter.convert(font, target_format: :otf,
                                   optimize_subroutines: false)
         end
         times << time
-        puts "Run #{i + 1}: #{(time * 1000).round(2)}ms"
       end
 
       avg = times.sum / times.length
-      min = times.min
-      max = times.max
-      stddev = Math.sqrt(times.sum { |t| (t - avg)**2 } / times.length)
-
-      puts "\nStatistics:"
-      puts "  Average: #{(avg * 1000).round(2)}ms"
-      puts "  Min: #{(min * 1000).round(2)}ms"
-      puts "  Max: #{(max * 1000).round(2)}ms"
-      puts "  Std Dev: #{(stddev * 1000).round(2)}ms"
+      times.min
+      times.max
+      Math.sqrt(times.sum { |t| (t - avg)**2 } / times.length)
     end
 
     it "benchmarks conversion with optimization" do
-      puts "\n#{'=' * 60}"
-      puts "Benchmarking TTF→OTF Conversion (With Optimization)"
-      puts "=" * 60
-
       times = []
-      5.times do |i|
+      5.times do |_i|
         time = Benchmark.realtime do
           converter.convert(font, target_format: :otf,
                                   optimize_subroutines: true)
         end
         times << time
-        puts "Run #{i + 1}: #{(time * 1000).round(2)}ms"
       end
 
       avg = times.sum / times.length
-      min = times.min
-      max = times.max
-      stddev = Math.sqrt(times.sum { |t| (t - avg)**2 } / times.length)
-
-      puts "\nStatistics:"
-      puts "  Average: #{(avg * 1000).round(2)}ms"
-      puts "  Min: #{(min * 1000).round(2)}ms"
-      puts "  Max: #{(max * 1000).round(2)}ms"
-      puts "  Std Dev: #{(stddev * 1000).round(2)}ms"
+      times.min
+      times.max
+      Math.sqrt(times.sum { |t| (t - avg)**2 } / times.length)
     end
 
     it "compares overhead of optimization" do
-      puts "\n#{'=' * 60}"
-      puts "Optimization Overhead Comparison"
-      puts "=" * 60
-
       # Baseline: without optimization
       baseline_times = []
       3.times do
@@ -103,55 +80,35 @@ RSpec.describe "Subroutine Optimization Performance" do
       optimized_avg = optimized_times.sum / optimized_times.length
 
       overhead = optimized_avg - baseline_avg
-      overhead_pct = (overhead / baseline_avg * 100)
-
-      puts "Baseline (no optimization): #{(baseline_avg * 1000).round(2)}ms"
-      puts "With optimization: #{(optimized_avg * 1000).round(2)}ms"
-      puts "Overhead: #{(overhead * 1000).round(2)}ms (#{overhead_pct.round(1)}%)"
+      (overhead / baseline_avg * 100)
     end
   end
 
   describe "Parameter Impact" do
     it "benchmarks different min_pattern_length values" do
-      puts "\n#{'=' * 60}"
-      puts "Impact of min_pattern_length Parameter"
-      puts "=" * 60
-
       [5, 10, 15, 20].each do |min_length|
-        time = Benchmark.realtime do
+        Benchmark.realtime do
           result = converter.convert(font, {
                                        target_format: :otf,
                                        optimize_subroutines: true,
                                        min_pattern_length: min_length,
                                      })
 
-          optimization = result.instance_variable_get(:@subroutine_optimization)
-          puts "\nmin_pattern_length = #{min_length}:"
-          puts "  Time: #{(time * 1000).round(2)}ms"
-          puts "  Patterns found: #{optimization[:pattern_count]}"
-          puts "  Patterns selected: #{optimization[:selected_count]}"
+          result.instance_variable_get(:@subroutine_optimization)
         end
       end
     end
 
     it "benchmarks different max_subroutines values" do
-      puts "\n#{'=' * 60}"
-      puts "Impact of max_subroutines Parameter"
-      puts "=" * 60
-
       [100, 1000, 10_000, 65_535].each do |max_subrs|
-        time = Benchmark.realtime do
+        Benchmark.realtime do
           result = converter.convert(font, {
                                        target_format: :otf,
                                        optimize_subroutines: true,
                                        max_subroutines: max_subrs,
                                      })
 
-          optimization = result.instance_variable_get(:@subroutine_optimization)
-          puts "\nmax_subroutines = #{max_subrs}:"
-          puts "  Time: #{(time * 1000).round(2)}ms"
-          puts "  Patterns selected: #{optimization[:selected_count]}"
-          puts "  Limited by max: #{optimization[:selected_count] >= max_subrs}"
+          result.instance_variable_get(:@subroutine_optimization)
         end
       end
     end
@@ -159,10 +116,6 @@ RSpec.describe "Subroutine Optimization Performance" do
 
   describe "Memory Usage" do
     it "estimates memory overhead" do
-      puts "\n#{'=' * 60}"
-      puts "Memory Usage Estimation"
-      puts "=" * 60
-
       # Baseline conversion
       GC.start
       before_memory = GC.stat(:heap_allocated_pages)
@@ -170,7 +123,7 @@ RSpec.describe "Subroutine Optimization Performance" do
       converter.convert(font, target_format: :otf, optimize_subroutines: false)
 
       after_baseline = GC.stat(:heap_allocated_pages)
-      baseline_pages = after_baseline - before_memory
+      after_baseline - before_memory
 
       # With optimization
       GC.start
@@ -180,28 +133,14 @@ RSpec.describe "Subroutine Optimization Performance" do
                                        optimize_subroutines: true)
 
       after_optimized = GC.stat(:heap_allocated_pages)
-      optimized_pages = after_optimized - before_memory
+      after_optimized - before_memory
 
-      optimization = result.instance_variable_get(:@subroutine_optimization)
-
-      puts "Baseline memory (pages): #{baseline_pages}"
-      puts "Optimized memory (pages): #{optimized_pages}"
-      puts "Additional pages: #{optimized_pages - baseline_pages}"
-      puts "\nOptimization results:"
-      puts "  Patterns: #{optimization[:pattern_count]}"
-      puts "  Selected: #{optimization[:selected_count]}"
-      puts "  Subroutines: #{optimization[:local_subrs].length}"
+      result.instance_variable_get(:@subroutine_optimization)
     end
   end
 
   describe "Scalability" do
     it "shows performance characteristics summary" do
-      puts "\n#{'=' * 60}"
-      puts "Performance Characteristics Summary"
-      puts "=" * 60
-      puts "\nFont: #{File.basename(ttf_font_path)}"
-      puts "Size: #{(File.size(ttf_font_path) / 1024.0).round(2)} KB"
-
       # Single run with detailed timing
       start_time = Time.now
 
@@ -212,24 +151,13 @@ RSpec.describe "Subroutine Optimization Performance" do
                                    max_subroutines: 65_535,
                                  })
 
-      total_time = Time.now - start_time
+      Time.now - start_time
       optimization = result.instance_variable_get(:@subroutine_optimization)
 
-      puts "\nConversion Results:"
-      puts "  Total time: #{(total_time * 1000).round(2)}ms"
-      puts "  Optimization time: #{(optimization[:processing_time] * 1000).round(2)}ms"
-      puts "  Optimization %: #{((optimization[:processing_time] / total_time) * 100).round(1)}%"
-
-      puts "\nOptimization Metrics:"
-      puts "  Patterns analyzed: #{optimization[:pattern_count]}"
-      puts "  Subroutines created: #{optimization[:selected_count]}"
-      puts "  Estimated savings: #{optimization[:savings]} bytes"
-      puts "  CFF bias: #{optimization[:bias]}"
-
       if optimization[:selected_count] > 0
-        puts "\nEfficiency:"
-        bytes_per_subr = optimization[:savings].to_f / optimization[:selected_count]
-        puts "  Bytes saved per subroutine: #{bytes_per_subr.round(2)}"
+
+        optimization[:savings].to_f / optimization[:selected_count]
+
       end
     end
   end
@@ -243,3 +171,5 @@ if __FILE__ == $PROGRAM_NAME
 
   RSpec::Core::Runner.run([$__FILE__])
 end
+
+# rubocop:enable Lint/UselessAssignment

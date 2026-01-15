@@ -291,8 +291,8 @@ RSpec.describe Fontisan::Models::GlyphOutline do
       svg_path = outline.to_svg_path
 
       # Should have two separate paths, both starting with M and ending with Z
-      expect(svg_path.scan(/M/).length).to eq(2)
-      expect(svg_path.scan(/Z/).length).to eq(2)
+      expect(svg_path.scan("M").length).to eq(2)
+      expect(svg_path.scan("Z").length).to eq(2)
     end
   end
 

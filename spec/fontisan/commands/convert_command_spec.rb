@@ -12,7 +12,7 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
   let(:output_dir) { Dir.mktmpdir }
 
   after do
-    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
+    FileUtils.rm_rf(output_dir)
   end
 
   describe "#initialize" do

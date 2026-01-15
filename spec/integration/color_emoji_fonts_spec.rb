@@ -6,7 +6,7 @@ RSpec.describe "Color Emoji Fonts Integration", :integration do
   let(:output_dir) { Dir.mktmpdir }
 
   after do
-    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
+    FileUtils.rm_rf(output_dir)
   end
 
   describe "EmojiOneColor.otf (CFF with SVG)" do

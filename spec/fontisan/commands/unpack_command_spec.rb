@@ -94,7 +94,7 @@ RSpec.describe Fontisan::Commands::UnpackCommand do
     end
 
     after do
-      FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+      FileUtils.rm_rf(temp_dir)
     end
 
     it "returns result hash" do

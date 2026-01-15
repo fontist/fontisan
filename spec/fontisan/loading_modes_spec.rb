@@ -250,8 +250,8 @@ RSpec.describe "Loading Modes Integration" do
 
     context "with environment variables" do
       around do |example|
-        old_mode = ENV["FONTISAN_MODE"]
-        old_lazy = ENV["FONTISAN_LAZY"]
+        old_mode = ENV.fetch("FONTISAN_MODE", nil)
+        old_lazy = ENV.fetch("FONTISAN_LAZY", nil)
         example.run
         ENV["FONTISAN_MODE"] = old_mode
         ENV["FONTISAN_LAZY"] = old_lazy
@@ -523,14 +523,14 @@ RSpec.describe "Loading Modes Integration" do
       metadata_time = metadata_times.sum / iterations
       full_time = full_times.sum / iterations
 
-      puts "\nPerformance (#{test_fonts.size} fonts, #{iterations} iterations):"
-      puts "  Metadata: #{(metadata_time * 1000).round(2)}ms (avg)"
-      puts "  Full:     #{(full_time * 1000).round(2)}ms (avg)"
+      
+      
+      
 
       if metadata_time < full_time
-        puts "  Speedup:  #{(full_time / metadata_time).round(1)}x"
+        
       else
-        puts "  WARNING: Metadata mode was not faster (timing can vary)"
+        
       end
 
       # Informational test - timing can vary significantly based on system load
@@ -548,10 +548,10 @@ RSpec.describe "Loading Modes Integration" do
       metadata_size = metadata_font.table_data.values.sum(&:bytesize)
       full_size = full_font.table_data.values.sum(&:bytesize)
 
-      puts "\nMemory usage:"
-      puts "  Metadata: #{metadata_size} bytes (#{metadata_font.table_data.keys.size} tables)"
-      puts "  Full:     #{full_size} bytes (#{full_font.table_data.keys.size} tables)"
-      puts "  Saved:    #{((1 - metadata_size.to_f / full_size) * 100).round(1)}%"
+      
+      
+      
+      
 
       expect(metadata_size).to be < (full_size * 0.5)
     end
@@ -592,7 +592,7 @@ RSpec.describe "Loading Modes Integration" do
         expect(metadata[:postscript_name]).to be_a(String)
       end
 
-      puts "\nIndexed #{fonts_metadata.size} fonts in #{(time * 1000).round(1)}ms"
+      
     end
   end
 

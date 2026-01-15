@@ -15,7 +15,7 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
 
   after do
     # Clean up output files
-    FileUtils.rm_rf(output_dir) if File.exist?(output_dir)
+    FileUtils.rm_rf(output_dir)
   end
 
   describe "#initialize" do

@@ -145,7 +145,7 @@ RSpec.describe "Glyph Outline Extraction Integration" do
       svg_path = outline.to_svg_path
 
       # Count path closures (Z commands)
-      close_count = svg_path.scan(/Z/).length
+      close_count = svg_path.scan("Z").length
 
       expect(close_count).to be >= 1
       expect(close_count).to eq(outline.contour_count)

@@ -93,7 +93,7 @@ RSpec.describe Fontisan::Converters::SvgGenerator do
       svg = result[:svg_xml]
 
       # Should have limited number of glyphs
-      glyph_count = svg.scan(/<glyph/).length
+      glyph_count = svg.scan("<glyph").length
       expect(glyph_count).to be <= 5
     end
 

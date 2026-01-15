@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "canon", "~> 0.1.3"
-gem "openssl"
+gem "openssl", "~> 3.0"
 gem "rake"
 gem "rspec"
 gem "rubocop"
