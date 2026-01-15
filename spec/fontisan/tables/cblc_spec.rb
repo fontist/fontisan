@@ -491,8 +491,8 @@ end_glyph:, ppem:, bit_depth:)
       num_subtables,  # numberOfIndexSubTables (uint32)
       0,              # colorRef (uint32)
     ].pack("NNNN") +
-      "\x00" * 12 +   # hori SbitLineMetrics (12 bytes)
-      "\x00" * 12 +   # vert SbitLineMetrics (12 bytes)
+      ("\x00" * 12) +   # hori SbitLineMetrics (12 bytes)
+      ("\x00" * 12) +   # vert SbitLineMetrics (12 bytes)
       [
         start_glyph,  # startGlyphIndex (uint16)
         end_glyph,    # endGlyphIndex (uint16)

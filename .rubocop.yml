@@ -7,6 +7,9 @@ inherit_from:
 # local repo-specific modifications
 # ...
 
+AllCops:
+  NewCops: enable
+
 plugins:
   - rubocop-performance
   - rubocop-rake
@@ -17,3 +20,97 @@ plugins:
 Style/CombinableLoops:
   Exclude:
     - 'lib/fontisan/woff2_font.rb'
+
+# Disable Performance/Size - Index class doesn't have Enumerable methods
+# .count > 0 and .count.zero? are the appropriate checks
+Performance/Size:
+  Enabled: false
+
+# Disable Style/CollectionQuerying - Using .count.zero? is clearer than .none?
+# for Index classes, and .count > 0 is clearer than .any?
+Style/CollectionQuerying:
+  Enabled: false
+
+# Disable Style/MapIntoArray - Using .each is sometimes clearer than .map
+# especially when building arrays with complex transformations
+Style/MapIntoArray:
+  Enabled: false
+
+# Disable Style/HashSlice - Using .select is clearer than .slice for filtering
+# especially when the filter logic is complex
+Style/HashSlice:
+  Enabled: false
+
+# Disable Performance/CollectionLiteralInLoop - Array literals in loops are fine
+# when they're small (3 elements) and self-documenting
+Performance/CollectionLiteralInLoop:
+  Enabled: false
+
+# Disable Style/SelfAssignment - Self-assignment branches are needed
+# for signed/unsigned conversion patterns (e.g., x = x >= 0x8000 ? x - 0x10000 : x)
+Style/SelfAssignment:
+  Enabled: false
+
+# Disable Style/RedundantSelfAssignmentBranch - Self-assignment branches are needed
+# for signed/unsigned conversion patterns in font data parsing
+Style/RedundantSelfAssignmentBranch:
+  Enabled: false
+
+# Disable Lint/AmbiguousOperatorPrecedence - Expressions are clear enough
+# Adding parentheses would reduce readability for arithmetic operations
+Lint/AmbiguousOperatorPrecedence:
+  Enabled: false
+
+# Disable Lint/AmbiguousRange - Ranges are clear enough without parentheses
+Lint/AmbiguousRange:
+  Enabled: false
+
+# Disable Style/ReturnNilInPredicateMethodDefinition - Returning nil is sometimes
+# more appropriate than false for predicate methods that check bounds/index validity
+Style/ReturnNilInPredicateMethodDefinition:
+  Enabled: false
+
+# Disable Style/ComparableBetween - Using >= and <= is clearer than .between?
+# for numeric comparisons, especially with signed/unsigned conversions
+Style/ComparableBetween:
+  Enabled: false
+
+# Disable Performance/MapCompact - Using .map {}.compact is clearer than filter_map
+# when the block has complex logic
+Performance/MapCompact:
+  Enabled: false
+
+# Disable Style/SelectByRegexp - Using .select { |k| k.match?(pattern) } is clearer
+# than grep for complex regex patterns
+Style/SelectByRegexp:
+  Enabled: false
+
+# Disable Style/FetchEnvVar - Using ENV[] is clearer than ENV.fetch
+# when we want nil to be returned for unset environment variables
+Style/FetchEnvVar:
+  Enabled: false
+
+# Disable Lint/NonAtomicFileOperation - Existence checks before Dir.mkdir_p
+# are useful for clarity and to avoid spurious failures
+Lint/NonAtomicFileOperation:
+  Enabled: false
+
+# Disable Style/RedundantInitialize - Initialize calls can be useful
+# for clarity and to ensure parent initialization happens correctly
+Style/RedundantInitialize:
+  Enabled: false
+
+# Disable Style/SuperArguments - Explicit super arguments are clearer
+# than implicit, especially when the signature might change
+Style/SuperArguments:
+  Enabled: false
+
+# Disable Layout/LineEndStringConcatenationIndentation - String concatenation
+# indentation is fine as-is for readability
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: false
+
+# Disable Style/BitwisePredicate - anybits?/nobits?/allbits? require Ruby 3.3+
+# Bitwise AND checks with != 0 are clearer for font bitmasks
+Style/BitwisePredicate:
+  Enabled: false

@@ -735,7 +735,7 @@ RSpec.describe Fontisan::GlyphAccessor do
       # Simulate subsetting scenario: keep only 'A', 'B', 'C'
       cmap = font.table("cmap")
       chars = [0x0041, 0x0042, 0x0043] # A, B, C
-      glyph_ids = chars.map { |char| cmap.unicode_mappings[char] }.compact
+      glyph_ids = chars.filter_map { |char| cmap.unicode_mappings[char] }
 
       # Calculate closure (includes composite dependencies)
       closure = accessor.closure_for(glyph_ids)

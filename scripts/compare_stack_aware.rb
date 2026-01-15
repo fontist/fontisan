@@ -153,7 +153,7 @@ def main
     puts "\nStack-Aware Efficiency: #{efficiency_ratio}% of normal optimization"
   end
 
-  time_overhead = ((stack_aware[:time] / unoptimized[:time] - 1) * 100).round(2)
+  time_overhead = (((stack_aware[:time] / unoptimized[:time]) - 1) * 100).round(2)
   puts "\nProcessing Time Overhead:"
   puts "  Stack-Aware vs Unoptimized: +#{time_overhead}%"
 

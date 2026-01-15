@@ -342,8 +342,7 @@ RSpec.describe Fontisan::Tables::Cff::IndexBuilder do
       expect(index.to_a).to eq(items)
 
       # Verify iteration
-      collected = []
-      index.each { |item| collected << item }
+      collected = index.map { |item| item }
       expect(collected).to eq(items)
     end
 

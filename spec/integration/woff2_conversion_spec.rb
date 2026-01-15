@@ -22,7 +22,7 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
   after do
     # Clean up output files created during tests
     Dir.glob(File.join(output_dir, "*.woff2")).each do |file|
-      File.delete(file) if File.exist?(file)
+      FileUtils.rm_f(file)
     end
   end
 
@@ -64,7 +64,6 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
 
       # Calculate compression ratio
       ratio = woff2_size.to_f / ttf_size
-      puts "  Compression ratio: #{(ratio * 100).round(1)}%"
 
       # Typically WOFF2 achieves 30-50% compression
       expect(ratio).to be < 0.8 # At least 20% compression
@@ -232,11 +231,7 @@ RSpec.describe "WOFF2 Conversion Integration", type: :integration do
 
       original_size = File.size(test_font_path)
       compressed_size = File.size(output_path)
-      savings = ((1 - compressed_size.to_f / original_size) * 100).round(1)
-
-      puts "  Original: #{original_size} bytes"
-      puts "  WOFF2: #{compressed_size} bytes"
-      puts "  Savings: #{savings}%"
+      ((1 - (compressed_size.to_f / original_size)) * 100).round(1)
 
       expect(compressed_size).to be < original_size
     end

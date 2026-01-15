@@ -225,10 +225,8 @@ RSpec.describe Fontisan::Subset::GlyphMapping do
   describe "#each" do
     it "iterates over all mappings" do
       mapping = described_class.new([0, 5, 10])
-      results = []
-
-      mapping.each do |old_id, new_id|
-        results << [old_id, new_id]
+      results = mapping.map do |old_id, new_id|
+        [old_id, new_id]
       end
 
       expect(results).to eq([[0, 0], [5, 1], [10, 2]])
@@ -249,10 +247,8 @@ RSpec.describe Fontisan::Subset::GlyphMapping do
 
     it "iterates in order of old IDs" do
       mapping = described_class.new([0, 5, 10])
-      old_ids = []
-
       # Use old_ids.each to iterate over old glyph IDs
-      mapping.old_ids.each { |old_id| old_ids << old_id }
+      old_ids = mapping.old_ids.map { |old_id| old_id }
 
       expect(old_ids).to eq([0, 5, 10])
     end

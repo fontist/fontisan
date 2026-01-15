@@ -6,13 +6,13 @@ require "fontisan/optimizers/stack_tracker"
 RSpec.describe Fontisan::Optimizers::StackTracker do
   # Helper to encode CFF integer
   def encode_cff_int(value)
-    if value >= -107 && value <= 107
+    if value.between?(-107, 107)
       [139 + value].pack("C")
-    elsif value >= 108 && value <= 1131
+    elsif value.between?(108, 1131)
       b0 = 247 + ((value - 108) >> 8)
       b1 = (value - 108) & 0xff
       [b0, b1].pack("C*")
-    elsif value >= -1131 && value <= -108
+    elsif value.between?(-1131, -108)
       b0 = 251 - ((value + 108) >> 8)
       b1 = -(value + 108) & 0xff
       [b0, b1].pack("C*")

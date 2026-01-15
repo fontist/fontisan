@@ -94,7 +94,7 @@ RSpec.describe Fontisan::Commands::ScriptsCommand do
           expect(result.script_count).to eq(0)
           expect(result.scripts).to eq([])
         ensure
-          File.delete(temp_font_path) if File.exist?(temp_font_path)
+          FileUtils.rm_f(temp_font_path)
         end
       end
     end

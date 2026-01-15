@@ -28,11 +28,11 @@ RSpec.describe Fontisan::Variable::TableUpdater do
 
       advance0 = io.read(2).unpack1("n")
       lsb0 = io.read(2).unpack1("n")
-      lsb0 = lsb0 >= 0x8000 ? lsb0 - 0x10000 : lsb0
+      lsb0 = lsb0 - 0x10000 if lsb0 >= 0x8000
 
       advance1 = io.read(2).unpack1("n")
       lsb1 = io.read(2).unpack1("n")
-      lsb1 = lsb1 >= 0x8000 ? lsb1 - 0x10000 : lsb1
+      lsb1 = lsb1 - 0x10000 if lsb1 >= 0x8000
 
       expect(advance0).to eq(550)
       expect(lsb0).to eq(55)
@@ -56,7 +56,7 @@ RSpec.describe Fontisan::Variable::TableUpdater do
       io.set_encoding(Encoding::BINARY)
       io.read(2) # skip advance
       lsb = io.read(2).unpack1("n")
-      lsb = lsb >= 0x8000 ? lsb - 0x10000 : lsb
+      lsb = lsb - 0x10000 if lsb >= 0x8000
 
       expect(lsb).to eq(-100)
     end
@@ -92,7 +92,7 @@ RSpec.describe Fontisan::Variable::TableUpdater do
       original_hhea << [2048].pack("n")        # ascent (signed as unsigned)
       original_hhea << [0xFE00].pack("n")      # descent (-512 as unsigned)
       original_hhea << [0].pack("n")           # line_gap
-      original_hhea << "\x00" * 26             # rest of table
+      original_hhea << ("\x00" * 26) # rest of table
 
       varied_metrics = {
         ascent: 2100,
@@ -107,10 +107,10 @@ RSpec.describe Fontisan::Variable::TableUpdater do
       io.read(4) # skip version
 
       ascent = io.read(2).unpack1("n")
-      ascent = ascent >= 0x8000 ? ascent - 0x10000 : ascent
+      ascent = ascent - 0x10000 if ascent >= 0x8000
 
       descent = io.read(2).unpack1("n")
-      descent = descent >= 0x8000 ? descent - 0x10000 : descent
+      descent = descent - 0x10000 if descent >= 0x8000
 
       line_gap = io.read(2).unpack1("n")
 
@@ -142,9 +142,9 @@ RSpec.describe Fontisan::Variable::TableUpdater do
     it "updates head table modified timestamp" do
       # Build minimal head table (54 bytes)
       original_head = String.new(encoding: Encoding::BINARY)
-      original_head << "\x00" * 28 # up to created timestamp
+      original_head << ("\x00" * 28) # up to created timestamp
       original_head << [0].pack("q>") # old modified (8 bytes)
-      original_head << "\x00" * 18 # rest of table
+      original_head << ("\x00" * 18) # rest of table
 
       timestamp = Time.new(2024, 1, 1, 0, 0, 0, "+00:00")
       result = updater.update_head_modified(original_head, timestamp)

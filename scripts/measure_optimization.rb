@@ -96,8 +96,7 @@ def print_summary(results)
   puts "\n\n#{'=' * 80}"
   puts "SUMMARY TABLE"
   puts "=" * 80
-  puts format("%-30s %8s %12s %12s %10s %8s",
-              "Font", "Glyphs", "Before", "After", "Saved", "Reduction")
+  puts "Font                             Glyphs       Before        After      Saved Reduction"
   puts "-" * 80
 
   results.each do |r|

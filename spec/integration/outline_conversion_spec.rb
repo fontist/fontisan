@@ -428,7 +428,7 @@ RSpec.describe "Outline Conversion Integration" do
       # the reduction may be less than 20%, so we just verify it's smaller or equal
       if optimized_size < unoptimized_size
         reduction_percent = ((unoptimized_size - optimized_size).to_f / unoptimized_size * 100).round
-        puts "CFF size reduction: #{reduction_percent}% (#{unoptimized_size} -> #{optimized_size} bytes)"
+
         expect(reduction_percent).to be >= 0
       end
     end

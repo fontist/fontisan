@@ -81,8 +81,7 @@ RSpec.describe Fontisan::Tables::Cff::Index do
     end
 
     it "iterates correctly" do
-      items = []
-      index.each { |item| items << item }
+      items = index.map { |item| item }
       expect(items).to eq(["Hello"])
     end
 
@@ -129,8 +128,7 @@ RSpec.describe Fontisan::Tables::Cff::Index do
     end
 
     it "iterates correctly" do
-      items = []
-      index.each { |item| items << item }
+      items = index.map { |item| item }
       expect(items).to eq(["Foo", "Bar", "Baz!!"])
     end
 

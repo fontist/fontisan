@@ -16,7 +16,7 @@ RSpec.describe "Collection Management Integration", :integration do
   let(:extract_dir) { File.join(temp_dir, "extracted") }
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    FileUtils.rm_rf(temp_dir)
   end
 
   describe "TTC creation with real fonts" do
@@ -339,7 +339,7 @@ RSpec.describe "Collection Management Integration", :integration do
         ensure
           # Cleanup
           extracted_paths.each do |path|
-            File.delete(path) if File.exist?(path)
+            FileUtils.rm_f(path)
           end
         end
       end
@@ -390,7 +390,7 @@ RSpec.describe "Collection Management Integration", :integration do
         ensure
           # Cleanup
           extracted_paths.each do |path|
-            File.delete(path) if File.exist?(path)
+            FileUtils.rm_f(path)
           end
         end
       end

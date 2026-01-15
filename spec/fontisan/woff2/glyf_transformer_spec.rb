@@ -327,7 +327,7 @@ RSpec.describe Fontisan::Woff2::GlyfTransformer do
         data << [-99].pack("n") # Invalid nContours (not 0, >0, or -1)
 
         # Empty other streams
-        data << [0].pack("N") * 6
+        data << ([0].pack("N") * 6)
 
         expect do
           described_class.reconstruct(data, 1)

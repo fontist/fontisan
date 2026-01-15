@@ -156,9 +156,9 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
           advance = io.read(2).unpack1("n")
           lsb = io.read(2).unpack1("n")
 
-          expect(advance).to eq(100 + i * 10)
+          expect(advance).to eq(100 + (i * 10))
           lsb_signed = lsb > 0x7FFF ? lsb - 0x10000 : lsb
-          expect(lsb_signed).to eq(10 + i * 10)
+          expect(lsb_signed).to eq(10 + (i * 10))
         end
       end
     end
@@ -314,7 +314,7 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
 
         result = described_class.reconstruct(data, 100, 50, nil)
 
-        expect(result.bytesize).to eq(100 * 2 + 50 * 2) # 50 full metrics + 50 LSBs
+        expect(result.bytesize).to eq((100 * 2) + (50 * 2)) # 50 full metrics + 50 LSBs
       end
 
       it "handles proportional font with variable widths" do
@@ -358,7 +358,7 @@ RSpec.describe Fontisan::Woff2::HmtxTransformer do
         data << [120].pack("C")
 
         # LSBs for 10 glyphs
-        10.times { |i| data << [10 + i * 5].pack("n") }
+        10.times { |i| data << [10 + (i * 5)].pack("n") }
 
         result = described_class.reconstruct(data, 10, 1, nil)
 

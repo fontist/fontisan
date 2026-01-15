@@ -7,7 +7,7 @@ RSpec.describe Fontisan::Commands::SubsetCommand do
   let(:output_path) { File.join(Dir.tmpdir, "subset_test.ttf") }
 
   after do
-    File.delete(output_path) if File.exist?(output_path)
+    FileUtils.rm_f(output_path)
   end
 
   describe "#initialize" do

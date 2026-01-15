@@ -406,7 +406,7 @@ module Fontisan
     option :summary_report, aliases: "-S", type: :boolean,
                             desc: "Summary report"
     option :profile, aliases: "-p", type: :string, default: "default",
-                       desc: "Validation profile"
+                     desc: "Validation profile"
     option :table_report, aliases: "-T", type: :boolean, desc: "Tabular report"
     option :verbose, aliases: "-v", type: :boolean, desc: "Verbose output"
     option :suppress_warnings, aliases: "-W", type: :boolean,

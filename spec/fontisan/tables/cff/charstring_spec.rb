@@ -30,7 +30,7 @@ RSpec.describe Fontisan::Tables::Cff::CharString do
     # Calculate offsets
     offsets = [1]
     subrs.each do |subr|
-      offsets << offsets.last + subr.bytesize
+      offsets << (offsets.last + subr.bytesize)
     end
     parts << offsets.pack("C#{offsets.size}") # offsets
 

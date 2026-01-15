@@ -18,7 +18,7 @@ puts "Font: #{FONT_PATH}"
 puts
 
 # Test coordinates
-coords = Array.new(4) { |i| { "wght" => 300 + i * 200 } }
+coords = Array.new(4) { |i| { "wght" => 300 + (i * 200) } }
 puts "Generating #{coords.size} instances"
 puts
 
