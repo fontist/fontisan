@@ -1034,26 +1034,19 @@ structures, usability, instructions, and glyphs.
 
 === Predefined profiles
 
-Fontisan includes several predefined validation profiles for common use cases:
+Fontisan includes validation profiles for different use cases:
 
-`indexability`:: Fast validation for font discovery and indexing (< 50ms). Uses
-BasicValidator with 8 essential checks. Loading mode: metadata.
+`indexability`:: Fast font discovery and indexing (~5x faster, 8 checks, metadata-only)
 
-`usability`:: Basic usability for font installation. Uses FontBookValidator with
-26 checks including macOS Font Book compatibility. Loading mode: full.
+`usability`:: Font installation compatibility (26 checks, macOS Font Book focused)
 
-`production`:: Comprehensive quality checks for production fonts (default
-profile). Uses OpenTypeValidator with 36 checks for OpenType spec compliance.
-Loading mode: full.
+`production`:: Comprehensive production quality (36 checks, OpenType spec compliance - default)
 
-`web`:: Web font embedding and optimization validation. Uses WebFontValidator
-with 18 checks for web deployment. Loading mode: full.
+`web`:: Web font embedding readiness (18 checks for web deployment)
 
-`spec_compliance`:: Full OpenType specification compliance with detailed checks.
-Uses OpenTypeValidator with info-level severity for comprehensive analysis.
-Loading mode: full.
+`spec_compliance`:: Full OpenType specification compliance (detailed analysis mode)
 
-`default`:: Alias for the production profile.
+`default`:: Alias for the production profile
 
 
 === Command-line usage
@@ -1160,6 +1153,48 @@ The `validate` command automatically detects and validates font collections (TTC
 When validating a collection, fontisan validates all fonts in the collection and displays
 per-font results with an overall summary.
 
+.Validation profiles with collections
+[example]
+====
+All validation profiles work with font collections. The selected profile determines:
+
+* **Which tables are loaded** - metadata vs full mode
+* **Which checks are performed** - number and type of validations
+* **Performance characteristics** - indexability is ~5x faster than production
+
+For large collections (CJK fonts with 30+ fonts), use the `indexability` profile for fast
+validation when scanning for font discovery, or `production` for comprehensive quality
+checks.
+
+[source,shell]
+----
+# Quick validation for indexing (metadata mode, 8 checks, ~5x faster)
+$ fontisan validate /path/to/font.ttc -t indexability
+
+# Comprehensive validation (full mode, 37 checks)
+$ fontisan validate /path/to/font.ttc -t production
+
+# Web font readiness validation
+$ fontisan validate /path/to/font.ttc -t web
+----
+
+The collection validation output includes:
+
+* *Collection header* - Path, type, and number of fonts
+* *Summary* - Total errors, warnings, and info across all fonts
+* *Per-font sections* - Individual validation results for each font with:
+** Font index and name
+** Font path in `collection.ttc:index` format
+** Individual font status (VALID/INVALID/VALID_WITH_WARNINGS)
+** Font-specific errors and warnings
+** Exit codes* - For collections, uses the "worst" status across all fonts:
+** 0 = All fonts valid
+** 2 = Any font has fatal errors
+** 3 = Any font has errors (and no fatal)
+** 4 = Any font has warnings (and no errors)
+** 5 = Any font has info issues (and no errors or warnings)
+====
+
 .Validate a font collection
 [example]
 ====
@@ -1176,30 +1211,15 @@ Summary:
   Total Info: 0
 
 === Font 0: Lucida Grande ===
-Font: unknown
+Font: /path/to/font.ttc:0
 Status: INVALID
 ...
 
 === Font 1: Lucida Grande Bold ===
-Font: unknown
+Font: /path/to/font.ttc:1
 Status: INVALID
 ...
 ----
-
-The collection validation output includes:
-
-* *Collection header* - Path, type, and number of fonts
-* *Summary* - Total errors, warnings, and info across all fonts
-* *Per-font sections* - Individual validation results for each font with:
-** Font index and name
-** Individual font status (VALID/INVALID/VALID_WITH_WARNINGS)
-** Font-specific errors and warnings
-** Exit codes* - For collections, uses the "worst" status across all fonts:
-** 0 = All fonts valid
-** 2 = Any font has fatal errors
-** 3 = Any font has errors (and no fatal)
-** 4 = Any font has warnings (and no errors)
-** 5 = Any font has info issues (and no errors or warnings)
 ====
 
 === Ruby API usage

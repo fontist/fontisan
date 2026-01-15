@@ -15,7 +15,8 @@ module Fontisan
       attribute :collection_path, :string
       attribute :collection_type, :string
       attribute :num_fonts, :integer
-      attribute :font_reports, FontReport, collection: true, default: -> { [] }
+      attribute :font_reports, FontReport, collection: true,
+                                           initialize_empty: true
       attribute :valid, :boolean, default: -> { true }
 
       key_value do
@@ -32,6 +33,8 @@ module Fontisan
       # @return [void]
       def add_font_report(font_report)
         font_reports << font_report
+        # Mark that we're no longer using the default value
+        value_set_for(:font_reports)
         # Update overall validity
         self.valid = valid && font_report.report.valid?
       end

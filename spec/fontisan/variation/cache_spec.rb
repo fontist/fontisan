@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-# rubocop:disable Style/FetchMethodArgument - Cache#fetch requires block, not default value argument
 require "spec_helper"
 require "fontisan/variation/cache"
+
+# rubocop:disable Style/RedundantFetchBlock - Cache#fetch requires block for lazy evaluation
 
 RSpec.describe Fontisan::Variation::Cache do
   let(:cache) { described_class.new(max_size: 3) }
@@ -391,3 +392,4 @@ RSpec.describe Fontisan::Variation::ThreadSafeCache do
     end
   end
 end
+# rubocop:enable Style/RedundantFetchBlock

@@ -369,9 +369,11 @@ module Fontisan
         # Sort tables by tag for consistent output (same order as directory)
         sorted_tables = compressed_tables.sort_by { |tag, _| tag }
 
+        # rubocop:disable Style/HashEachMethods - sorted_tables is an Array, not a Hash
         sorted_tables.each do |_, table_info|
           io.write(table_info[:compressed_data])
         end
+        # rubocop:enable Style/HashEachMethods
       end
 
       # Write metadata to output
