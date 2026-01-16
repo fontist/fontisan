@@ -4,6 +4,7 @@ require "bindata"
 require_relative "constants"
 require_relative "loading_modes"
 require_relative "utilities/checksum_calculator"
+require_relative "checksum_update"
 
 module Fontisan
   # OpenType Font domain object using BinData
@@ -25,6 +26,8 @@ module Fontisan
   # @example Writing a font
   #   otf.to_file("output.otf")
   class OpenTypeFont < BinData::Record
+    include ChecksumUpdate
+
     endian :big
 
     offset_table :header
@@ -238,7 +241,8 @@ module Fontisan
 
         # Update checksum adjustment in head table BEFORE closing file
         # This avoids Windows file locking issues when Tempfiles are used
-        update_checksum_adjustment_in_io(io) if head_table
+        head = head_table
+        update_checksum_adjustment_in_io(io, head.offset) if head
 
         io.pos
       end
@@ -574,39 +578,6 @@ module Fontisan
         io.seek(directory_offset_position)
         io.write([current_position].pack("N"))
         io.seek(current_pos)
-      end
-    end
-
-    # Update checksumAdjustment field in head table using an open IO object
-    #
-    # @param io [IO] Open IO object positioned at start of file
-    # @return [void]
-    def update_checksum_adjustment_in_io(io)
-      # Rewind to calculate checksum from the beginning
-      io.rewind
-
-      # Calculate checksum directly from IO to avoid Windows Tempfile issues
-      checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
-
-      # Calculate adjustment
-      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
-      # Find head table position
-      head_entry = head_table
-      return unless head_entry
-
-      # Write adjustment to head table (offset 8 within head table)
-      io.seek(head_entry.offset + 8)
-      io.write([adjustment].pack("N"))
-    end
-
-    # Update checksumAdjustment field in head table
-    #
-    # @param path [String] Path to the OTF file
-    # @return [void]
-    def update_checksum_adjustment_in_file(path)
-      File.open(path, "r+b") do |io|
-        update_checksum_adjustment_in_io(io)
       end
     end
   end
