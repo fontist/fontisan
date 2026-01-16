@@ -125,12 +125,6 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
 
       compression_ratio = ((original_size - woff2_size).to_f / original_size * 100).round(2)
 
-      
-      
-      
-      
-      
-
       expect(compression_ratio).to be > 20.0 # At least 20% compression
     end
   end

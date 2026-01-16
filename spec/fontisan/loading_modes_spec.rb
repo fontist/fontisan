@@ -523,14 +523,8 @@ RSpec.describe "Loading Modes Integration" do
       metadata_time = metadata_times.sum / iterations
       full_time = full_times.sum / iterations
 
-      
-      
-      
-
       if metadata_time < full_time
-        
-      else
-        
+
       end
 
       # Informational test - timing can vary significantly based on system load
@@ -547,11 +541,6 @@ RSpec.describe "Loading Modes Integration" do
 
       metadata_size = metadata_font.table_data.values.sum(&:bytesize)
       full_size = full_font.table_data.values.sum(&:bytesize)
-
-      
-      
-      
-      
 
       expect(metadata_size).to be < (full_size * 0.5)
     end
@@ -572,7 +561,7 @@ RSpec.describe "Loading Modes Integration" do
     it "supports font indexing workflow" do
       fonts_metadata = []
 
-      time = Benchmark.realtime do
+      Benchmark.realtime do
         Dir.glob(fixture_path("fonts/**/*.{ttf,otf}")).first(10).each do |path|
           font = Fontisan::FontLoader.load(path, mode: :metadata)
 
@@ -591,8 +580,6 @@ RSpec.describe "Loading Modes Integration" do
         expect(metadata[:subfamily]).to be_a(String)
         expect(metadata[:postscript_name]).to be_a(String)
       end
-
-      
     end
   end
 
