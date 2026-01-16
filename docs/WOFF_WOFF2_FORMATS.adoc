@@ -1,0 +1,94 @@
+= WOFF and WOFF2 Font Format Support
+
+== General
+
+Fontisan provides comprehensive support for Web Open Font Format (WOFF) and WOFF2,
+including reading, writing, and conversion between these and other font formats.
+
+WOFF is a wrapper around SFNT fonts (TTF/OTF) using zlib compression, while WOFF2
+uses Brotli compression for better compression ratios and table transformations.
+
+=== Display WOFF/WOFF2 font information
+
+Show metadata specific to WOFF/WOFF2 fonts including version, compression details,
+and original font flavor.
+
+[source,shell]
+----
+$ fontisan info FONT.woff [--format FORMAT]
+----
+
+Where,
+
+`FONT.woff`:: Path to the WOFF or WOFF2 file
+`FORMAT`:: Output format: `text` (default), `json`, or `yaml`
+
+.Major version from WOFF/WOFF2 header
+[example]
+====
+[source,shell]
+----
+$ fontisan info /path/to/your/font.woff
+
+Font type:                WOFF (TrueType)
+Family:                   Example Font
+WOFF Major Version:       1
+WOFF Minor Version:       0
+WOFF Metadata:            0 entries
+WOFF Private Data:        0 bytes
+Original Font Flavor:     TrueType
+----
+====
+
+=== WOFF2 validation
+
+Fontisan validates WOFF2 fonts according to the specification, checking:
+
+* Required table presence and order
+* Table transformation flags (glyf, loca transformations)
+* Checksum validation for transformed tables
+* Compression format validation
+
+.Validation example
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.woff2 -t web
+
+CHECK_ID                     | STATUS | SEVERITY
+--------------------------------------------------------------
+woff2_required_tables        | PASS   | error
+woff2_table_transformations  | PASS   | error
+woff2_checksum_validation    | PASS   | error
+----
+====
+
+=== Convert fonts to WOFF/WOFF2
+
+Convert TTF/OTF fonts to web-optimized formats.
+
+[source,shell]
+----
+$ fontisan convert INPUT.ttf --to woff --output output.woff
+$ fontisan convert INPUT.ttf --to woff2 --output output.woff2
+----
+
+.Conversion with optimization
+[example]
+====
+[source,shell]
+----
+$ fontisan convert font.ttf --to woff2 --output font.woff2
+
+Converting font.ttf to WOFF2...
+  Input:  245.8 KB (TTF)
+  Output: 89.2 KB (WOFF2)
+  Ratio:  63.7% reduction
+
+Compression details:
+  Tables: 12
+  Brotli compression: Applied
+  Transformed tables: glyf, loca
+----
+====

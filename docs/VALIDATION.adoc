@@ -1,0 +1,254 @@
+= Font Validation Framework
+
+== General
+
+Fontisan provides a comprehensive validation framework for ensuring font quality,
+structural integrity, and compliance with OpenType specifications.
+
+The framework uses a declarative DSL for defining validation checks and supports
+multiple validation profiles for different use cases.
+
+== Validation profiles
+
+Fontisan includes predefined validation profiles:
+
+`indexability`:: Fast font discovery and indexing (8 checks, metadata-only, ~5x faster)
+
+`usability`:: Font installation compatibility (26 checks, macOS Font Book focused)
+
+`production`:: Comprehensive production quality (37 checks, OpenType spec compliance - default)
+
+`web`:: Web font embedding readiness (18 checks for web deployment)
+
+`spec_compliance`:: Full OpenType specification compliance (detailed analysis mode)
+
+[source,shell]
+----
+$ fontisan validate --list
+Available validation profiles:
+  indexability         - Fast validation for font discovery and indexing
+  usability            - Basic usability for installation
+  production           - Comprehensive quality checks
+  web                  - Web embedding and optimization
+  spec_compliance      - Full OpenType spec compliance
+  default              - Default validation profile (alias for production)
+----
+
+== Command-line validation
+
+.Validate with default profile
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf
+
+Font: font.ttf
+Status: VALID
+
+Summary:
+  Checks performed: 37
+  Passed: 37
+  Failed: 0
+
+Errors: 0
+Warnings: 0
+Info: 0
+----
+====
+
+.Validate for web use with summary
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -t web -S
+
+Font: font.ttf
+Status: VALID
+
+Summary:
+  Checks performed: 18
+  Passed: 17
+  Failed: 1
+
+Errors: 1
+Warnings: 0
+
+Failed checks:
+  web_font_tables      - Missing required GSUB table
+----
+====
+
+.Validation with table format output
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttf -T
+
+CHECK_ID                    | STATUS | SEVERITY | TABLE
+------------------------------------------------------------
+required_tables             | PASS   | error    | N/A
+name_version                | PASS   | error    | name
+family_name                 | PASS   | error    | name
+----
+====
+====
+
+== Ruby API usage
+
+=== Using predefined profiles
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Validate with default profile (production)
+report = Fontisan.validate('font.ttf')
+puts report.valid?  # => true or false
+
+# Validate with specific profile
+report = Fontisan.validate('font.ttf', profile: :web)
+puts "Errors: #{report.summary.errors}"
+puts "Warnings: #{report.summary.warnings}"
+
+# Check validation status
+if report.valid?
+  puts "Font is valid for web use!"
+else
+  puts "Font has #{report.summary.errors} errors"
+end
+----
+
+=== Query validation results
+
+[source,ruby]
+----
+report = Fontisan.validate('font.ttf', profile: :production)
+
+# Get issues by severity
+fatal_issues = report.fatal_errors
+error_issues = report.errors_only
+warning_issues = report.warnings_only
+info_issues = report.info_only
+
+# Get issues by category
+table_issues = report.issues_by_category('table_validation')
+
+# Get check results
+failed_ids = report.failed_check_ids
+pass_rate = report.pass_rate
+
+# Export to different formats
+yaml_output = report.to_yaml
+json_output = report.to_json
+summary = report.to_summary  # "2 errors, 3 warnings, 0 info"
+----
+
+== Creating custom validators
+
+=== General
+
+Custom validators inherit from `Fontisan::Validators::Validator` and define
+validation logic using the DSL.
+
+The DSL provides 6 check methods:
+
+* `check_table` - Validate table-level properties
+* `check_field` - Validate specific field values
+* `check_structure` - Validate font structure and relationships
+* `check_usability` - Validate usability and best practices
+* `check_instructions` - Validate TrueType instructions/hinting
+* `check_glyphs` - Validate individual glyphs
+
+.Creating a custom validator
+[example]
+====
+[source,ruby]
+----
+require 'fontisan/validators/validator'
+
+class MyFontValidator < Fontisan::Validators::Validator
+  private
+
+  def define_checks
+    # Check name table
+    check_table :name_validation, 'name', severity: :error do |table|
+      table.valid_version? &&
+        table.valid_encoding_heuristics? &&
+        table.family_name_present? &&
+        table.postscript_name_valid?
+    end
+
+    # Check head table
+    check_table :head_validation, 'head', severity: :error do |table|
+      table.valid_magic? &&
+        table.valid_version? &&
+        table.valid_units_per_em?
+    end
+
+    # Check structure
+    check_structure :required_tables, severity: :error do |font|
+      %w[name head maxp hhea].all? { |tag| !font.table(tag).nil? }
+    end
+  end
+end
+
+# Use the validator
+font = Fontisan::FontLoader.load('font.ttf')
+validator = MyFontValidator.new
+report = validator.validate(font)
+
+puts report.valid?                           # => true/false
+puts report.summary.errors                   # => number of errors
+puts report.summary.warnings                 # => number of warnings
+----
+====
+
+== Validation helpers
+
+The validation framework provides 56 helper methods across 8 core OpenType
+tables. Each helper returns a boolean indicating whether the validation passed.
+
+.Name table helpers:
+[example]
+====
+[source,ruby]
+----
+class MyValidator < Fontisan::Validators::Validator
+  private
+
+  def define_checks
+    check_table :name_validation, 'name', severity: :error do |table|
+      table.valid_version? &&
+        table.valid_encoding_heuristics? &&
+        table.family_name_present? &&
+        table.postscript_name_valid?
+    end
+  end
+end
+----
+====
+
+.Head table helpers:
+[example]
+====
+[source,ruby]
+----
+class MyValidator < Fontisan::Validators::Validator
+  private
+
+  def define_checks
+    check_table :head_validation, 'head', severity: :error do |table|
+      table.valid_magic? &&
+        table.valid_version? &&
+        table.valid_units_per_em? &&
+        table.valid_bounding_box? &&
+        table.valid_index_to_loc_format? &&
+        table.valid_glyph_data_format?
+    end
+  end
+end
+----
+====

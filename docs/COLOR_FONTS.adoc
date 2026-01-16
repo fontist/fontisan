@@ -1,0 +1,127 @@
+= Color Font Support
+
+== General
+
+Fontisan provides support for color fonts through multiple formats:
+
+* **COLR/CPAL** - OpenType color layered glyphs (SVG-like layering in font)
+* **sbix** - Apple color bitmap glyphs (embedded raster images)
+* **SVG** - OpenType SVG color glyphs (embedded SVG vector graphics)
+
+Color fonts enable rich typography with gradients, images, and artistic effects
+beyond standard outline fonts.
+
+=== COLR/CPAL color layered glyphs
+
+The COLR table defines color layers using base glyphs and paint layers,
+with the CPAL table defining color palettes.
+
+[source,shell]
+----
+$ fontisan tables FONT.ttf --format yaml | grep -A 50 "tag: COLR"
+----
+
+.COLR table structure
+[example]
+====
+[source,yaml]
+----
+---
+tag: COLR
+version: 0
+num_base_glyphs: 15
+num_layers: 47
+num_palettes: 1
+color_records: 8
+
+Base glyphs:
+  - base_glyph: emoji_smile
+    layers:
+      - glyph: emoji_smile_layer0
+        palette_index: 1
+        color_index: 0
+      - glyph: emoji_smile_layer1
+        palette_index: 1
+        color_index: 1
+----
+====
+
+=== sbix color bitmap glyphs
+
+Apple's sbix table embeds raster images (PNG, JPG) for color glyphs.
+Each glyph can have multiple bitmap strikes at different sizes.
+
+[source,shell]
+----
+$ fontisan tables FONT.ttf | grep -A 20 "tag: sbix"
+----
+
+.sbix structure
+[example]
+====
+[source,text]
+----
+  sbix        245892 bytes  (offset: 542992, checksum: 0x12345678)
+
+Strikes:
+  Strike 0: 72 PPI
+    Bitmaps: 150 glyphs
+    Format: PNG
+    Glyph 1 (emoji_smile): 128x128 pixels, 8.2 KB
+    Glyph 2 (emoji_heart): 128x128 pixels, 7.8 KB
+----
+====
+
+=== SVG table color glyphs
+
+The SVG table contains inline SVG graphics for color glyphs, supporting
+gradients, transparency, and complex vector artwork.
+
+[source,shell]
+----
+$ fontisan dump-table FONT.ttf SVG > svg_content.svg
+----
+
+.SVG table structure
+[example]
+====
+[source,text]
+----
+  svg         45678 bytes  (offset: 788760, checksum: 0xABCDEF01)
+
+SVG Documents: 12
+  Glyph 1 (emoji_flag_us): 1.2 KB
+  Glyph 2 (emoji_heart): 0.8 KB
+  Glyph 3 (gradient_icon): 2.1 KB
+----
+====
+
+=== Ruby API for color fonts
+
+Access color font data through the Ruby API.
+
+[source,ruby]
+----
+require 'fontisan'
+
+font = Fontisan::FontLoader.load('color_font.ttf')
+
+# Access COLR/CPAL data
+colr = font.table('COLR')
+cpal = font.table('CPAL')
+
+puts "Base glyphs: #{colr.num_base_glyph_records}"
+puts "Palettes: #{cpal.num_palettes}"
+
+# Access sbix strikes
+sbix = font.table('sbix')
+sbix.strikes.each do |strike|
+  puts "Strike: #{strike[:ppi]} PPI, #{strike[:num_glyphs]} glyphs"
+end
+
+# Access SVG data
+svg = font.table('SVG')
+svg.document_records.each do |record|
+  puts "Glyphs #{record.start_glyph_id}-#{record.end_glyph_id}: #{record.svg_doc_length} bytes"
+end
+----

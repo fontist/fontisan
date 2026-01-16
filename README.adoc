@@ -56,39 +56,51 @@ gem install fontisan
 
 == Features
 
+Color fonts and collections::
+* Color font support: COLR/CPAL layered glyphs, sbix bitmap glyphs, and SVG table (see link:docs/COLOR_FONTS.adoc[Color Fonts Guide])
+* Font collection validation with per-font reporting (see link:docs/COLLECTION_VALIDATION.adoc[Collection Validation Guide])
+
+Font analysis and information::
 * Bidirectional font hint conversion (see link:docs/FONT_HINTING.adoc[Font Hinting Guide])
 * Extract comprehensive font metadata (name, version, designer, license, etc.)
+* Brief mode for fast font indexing (5x faster, metadata-only loading)
 * List OpenType tables with checksums and offsets
 * Extract glyph names from post table
 * Display Unicode codepoint to glyph index mappings
 * Analyze variable font axes and named instances
-* Generate static font instances from variable fonts
 * Display optical size information
 * List supported scripts from GSUB/GPOS tables
 * List OpenType features (ligatures, kerning, etc.) by script
 * Dump raw binary table data for analysis
+
+Font operations::
+* Generate static font instances from variable fonts
 * Font subsetting with multiple profiles (PDF, web, minimal)
-* Font validation with multiple severity levels
-* Collection management (pack/unpack TTC/OTC files with table deduplication)
-* Support for TTF, OTF, TTC, OTC font formats (production ready)
-* Apple legacy font support: 'true' signature TrueType fonts and dfont (Data Fork Font) format
-* WOFF format support (reading complete, writing functional, pending full integration)
-* WOFF2 format support (reading complete with table transformations, writing planned)
+* Font validation framework with multiple profiles (indexability, usability, production, web, spec_compliance) (see link:docs/VALIDATION.adoc[Validation Guide])
+* Collection management (pack/unpack TTC/OTC/dfont files with table deduplication)
+
+Font format support::
+* TTF, OTF, TTC, OTC font formats (production ready)
+* WOFF/WOFF2 format support with reading, writing, and conversion (see link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Guide])
+* Apple legacy font support: 'true' signature TrueType fonts and dfont format (see link:docs/APPLE_LEGACY_FONTS.adoc[Apple Legacy Fonts Guide])
 * SVG font generation (complete)
-* TTX/YAML/JSON export (complete)
-* Command-line interface with 18 commands
-* Ruby library API for programmatic access
-* Structured output in YAML, JSON, and text formats
-* Universal outline model for format-agnostic glyph representation (complete)
+
+Font engineering::
+* Universal outline model for format-agnostic glyph representation
 * CFF CharString encoding/decoding (complete)
 * CFF INDEX structure building (complete)
 * CFF DICT structure building (complete)
 * TrueType curve converter for bi-directional quadratic/cubic conversion (complete)
 * Compound glyph decomposition with transformation support (complete)
 * CFF subroutine optimization for space-efficient OTF generation (preview mode)
-* Various loading modes for high-performance font indexing (5x faster)
 * Bidirectional hint conversion (TrueType ↔ PostScript) with validation (complete)
 * CFF2 variable font support for PostScript hint conversion (complete)
+
+Export and interfaces::
+* TTX/YAML/JSON export (complete)
+* Command-line interface with 18 commands
+* Ruby library API for programmatic access
+* Structured output in YAML, JSON, and text formats
 
 
 == Font information
