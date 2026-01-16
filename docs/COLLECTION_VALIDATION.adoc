@@ -1,0 +1,143 @@
+= Font Collection Validation
+
+== General
+
+Fontisan provides validation support for font collections (TTC, OTC, dfont),
+enabling quality assurance across multiple fonts in a single file.
+
+Collection validation ensures all fonts in a collection meet quality standards
+while providing per-font and aggregate reporting.
+
+== Collection validation output
+
+When validating a collection, Fontisan displays:
+
+* *Collection header* - Path, type, and number of fonts
+* *Summary* - Total errors, warnings, and info across all fonts
+* *Per-font sections* - Individual validation results for each font with:
+  ** Font index and name
+  ** Font path in `collection.ttc:index` format
+  ** Individual font status (VALID/INVALID/VALID_WITH_WARNINGS)
+  ** Font-specific errors and warnings
+
+.Using the CLI to validate a font collection
+[example]
+====
+[source,shell]
+----
+$ fontisan validate /path/to/font.ttc
+
+Collection: /path/to/font.ttc
+Type: TTC
+Fonts: 4
+
+Summary:
+  Total Errors: 14
+  Total Warnings: 8
+  Total Info: 0
+
+=== Font 0: Lucida Grande ===
+Font: /path/to/font.ttc:0
+Status: INVALID
+
+Errors:
+  name_table.family_name_present - Family name is empty
+  head_table.valid_magic - Invalid magic number
+
+Warnings:
+  os2_table.valid_version - Version 5 requires Windows 10+
+
+=== Font 1: Lucida Grande Bold ===
+Font: /path/to/font.ttc:1
+Status: VALID
+...
+----
+====
+
+== Validation profiles with collections
+
+All validation profiles work with font collections. The selected profile determines:
+
+* **Which tables are loaded** - metadata vs full mode
+* **Which checks are performed** - number and type of validations
+* **Performance characteristics** - indexability is ~5x faster than production
+
+.Using validation profiles with collections
+[example]
+====
+[source,shell]
+----
+# Quick validation for indexing (metadata mode, 8 checks, ~5x faster)
+$ fontisan validate /path/to/font.ttc -t indexability
+
+# Comprehensive validation (full mode, 37 checks)
+$ fontisan validate /path/to/font.ttc -t production
+
+# Web font readiness validation
+$ fontisan validate /path/to/font.ttc -t web
+----
+====
+
+== Collection validation exit codes
+
+For collections, the validation command uses the "worst" status across all fonts:
+
+* **0** = All fonts valid
+* **2** = Any font has fatal errors
+* **3** = Any font has errors (and no fatal)
+* **4** = Any font has warnings (and no errors)
+* **5** = Any font has info issues (and no errors or warnings)
+
+.Checking collection validation exit codes
+[example]
+====
+[source,shell]
+----
+$ fontisan validate font.ttc -S -R
+
+Collection: font.ttc
+Type: TTC
+Fonts: 3
+
+Summary:
+  Total Errors: 2
+  Total Warnings: 5
+
+$ echo $?
+3  # Exit code 3 indicates errors found
+----
+====
+
+== Ruby API for collection validation
+
+.Using the Ruby API for collection validation
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Validate collection
+report = Fontisan.validate('font.ttc', profile: :production)
+
+# Check overall status
+puts report.overall_status  # "valid", "valid_with_warnings", "invalid"
+
+# Access per-font reports
+report.font_reports.each_with_index do |font_report, i|
+  puts "Font #{i}: #{font_report.font_name}"
+  puts "  Status: #{font_report.report.status}"
+  puts "  Errors: #{font_report.report.summary.errors}"
+  puts "  Warnings: #{font_report.report.summary.warnings}"
+end
+
+# Get aggregate statistics
+puts "Total fonts: #{report.num_fonts}"
+
+# Count valid/invalid fonts (requires iteration)
+valid_count = report.font_reports.count { |fr| fr.report.valid? }
+invalid_count = report.font_reports.count { |fr| !fr.report.valid? }
+puts "Valid fonts: #{valid_count}"
+puts "Invalid fonts: #{invalid_count}"
+----
+====

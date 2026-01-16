@@ -1,0 +1,173 @@
+= Apple Legacy Font Format Support
+
+== General
+
+Fontisan provides support for Apple's legacy font formats that predate modern
+OpenType standards:
+
+* **'true' signature TrueType fonts** - Older Mac fonts with 'true' sfnt version
+* **dfont (Data Fork Font)** - Mac suitcase format with fonts in data fork
+
+These formats require special handling due to their unique structures and
+historical platform-specific conventions.
+
+=== 'true' signature TrueType fonts
+
+Traditional TrueType fonts use 'true' (0x74727565) as the SFNT version instead
+of the modern 0x00010000. These were common on classic Mac OS.
+
+[source,shell]
+----
+$ fontisan info legacy_font.ttf
+
+Font type:                TrueType (Not Variable)
+SFNT Version:             'true' (legacy)
+Family:                   Legacy Font
+...
+
+Detection:
+  Fontisan automatically detects 'true' signature fonts
+  Treats them as standard TrueType for all operations
+  Preserves signature format when writing
+----
+
+=== dfont (Data Fork Font) format
+
+The dfont format stores complete Mac font suitcases in the data fork, supporting
+multiple fonts in a single file with resource-fork style structure.
+
+[source,shell]
+----
+$ fontisan ls family.dfont
+
+Font 0: Arial
+  Family: Arial
+  Subfamily: Regular
+
+Font 1: Arial
+  Family: Arial
+  Subfamily: Bold
+
+Font 2: Arial
+  Family: Arial
+  Subfamily: Italic
+----
+
+.dfont structure
+[example]
+====
+[source,text]
+----
+dfont format structure:
+
+Data Fork Map:
+  Resource data: Contains all font resources
+  Resource map: Index of resources by type and ID
+  Postscript names: Font name mapping
+
+Supported fonts in dfont:
+  - TrueType fonts ('true' signature)
+  - OpenType fonts (CFF or TrueType outlines)
+  - Mixed formats in single dfont
+
+Features:
+  - Automatic resource fork extraction
+  - Font list with metadata
+  - Extract individual fonts by index
+  - Unpack all fonts to directory
+  - Validate fonts within dfont
+====
+----
+
+=== Working with dfont files
+
+==== List fonts in dfont
+
+[source,shell]
+----
+$ fontisan ls family.dfont
+
+Font 0: Arial Regular
+  Family: Arial
+  Subfamily: Regular
+  PostScript: Arial
+
+Font 1: Arial Bold
+  Family: Arial
+  Subfamily: Bold
+  PostScript: Arial-Bold
+----
+
+==== Show dfont info
+
+[source,shell]
+----
+$ fontisan info family.dfont
+
+Collection: family.dfont
+Type: dfont
+Fonts: 3
+
+Font 0 (offset: 256):
+  Font type:                TrueType (Not Variable)
+  Family:                   Arial
+  Subfamily:                Regular
+  ...
+----
+
+==== Extract fonts from dfont
+
+[source,shell]
+----
+# Extract all fonts
+$ fontisan unpack family.dfont extracted_fonts/
+
+# Extract specific font
+$ fontisan unpack family.dfont --font-index 0 Arial.ttf
+----
+
+==== Validate dfont
+
+[source,shell]
+----
+$ fontisan validate family.dfont -t indexability
+
+Collection: family.dfont
+Type: dfont
+Fonts: 3
+
+Summary:
+  Total Errors: 0
+  Total Warnings: 2
+
+=== Font 0: Arial Regular ===
+Font: family.dfont:0
+Status: VALID_WITH_WARNINGS
+...
+----
+
+=== Ruby API for dfont
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load dfont collection
+dfont = Fontisan::FontLoader.load('family.dfont')
+
+# Access as collection
+puts "Font count: #{dfont.font_count}"
+File.open('family.dfont', 'rb') do |io|
+  fonts = dfont.extract_fonts(io)
+  fonts.each_with_index do |font, i|
+    puts "Font #{i}: #{font.family_name}"
+  end
+end
+
+# Extract specific font
+font = Fontisan::FontLoader.load('family.dfont', font_index: 0)
+
+# Validate dfont
+report = Fontisan.validate('family.dfont')
+puts report.valid?  # => true/false
+----
