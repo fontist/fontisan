@@ -541,9 +541,12 @@ The hint system has comprehensive test coverage:
 * **Total Tests**: 306 (100% passing)
 * **Generator Tests**: 45
 * **Validator Tests**: 48
+* **Applier Tests**: 87 (PostScript: 63, TrueType: 24)
+* **Extractor Tests**: 23 (PostScript: 11, TrueType: 12)
+* **Converter Tests**: 29
 * **Round-Trip Tests**: 16
+* **Integration Tests**: 28 (Conversion: 11, Application: 17)
 * **Analyzer Tests**: 30
-* **Integration Tests**: 167
 
 Test files:
 
@@ -552,7 +555,12 @@ Test files:
 * link:../spec/fontisan/hints/hint_validator_spec.rb[hint_validator_spec.rb]
 * link:../spec/fontisan/hints/hint_round_trip_spec.rb[hint_round_trip_spec.rb]
 * link:../spec/fontisan/hints/hint_converter_spec.rb[hint_converter_spec.rb]
+* link:../spec/fontisan/hints/postscript_hint_applier_spec.rb[postscript_hint_applier_spec.rb]
+* link:../spec/fontisan/hints/postscript_hint_extractor_spec.rb[postscript_hint_extractor_spec.rb]
+* link:../spec/fontisan/hints/truetype_hint_applier_spec.rb[truetype_hint_applier_spec.rb]
+* link:../spec/fontisan/hints/truetype_hint_extractor_spec.rb[truetype_hint_extractor_spec.rb]
 * link:../spec/fontisan/hints/hint_conversion_integration_spec.rb[hint_conversion_integration_spec.rb]
+* link:../spec/fontisan/hints/hint_application_integration_spec.rb[hint_application_integration_spec.rb]
 
 == References
 
