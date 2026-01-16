@@ -438,11 +438,12 @@ module Fontisan
           io.write("\x00" * padding) if padding.positive?
         end
 
+        # Update checksum adjustment in head table BEFORE closing file
+        # This avoids Windows file locking issues when Tempfiles are used
+        update_checksum_adjustment_in_io(io)
+
         io.pos
       end
-
-      # Update checksum adjustment in head table
-      update_checksum_adjustment_in_file(output_path)
 
       File.size(output_path)
     end
@@ -458,43 +459,58 @@ module Fontisan
       [search_range, entry_selector, range_shift]
     end
 
-    # Update checksumAdjustment field in head table
+    # Update checksumAdjustment field in head table using an open IO object
     #
-    # @param path [String] Path to the font file
+    # @param io [IO] Open IO object positioned at start of file
     # @return [void]
-    def update_checksum_adjustment_in_file(path)
-      # Find head table position in output file
+    def update_checksum_adjustment_in_io(io)
+      # Save current position
+      current_pos = io.pos
+
+      # Find head table position in the file
       head_offset = nil
-      File.open(path, "rb") do |io|
-        io.seek(4) # Skip sfnt_version
-        num_tables = io.read(2).unpack1("n")
-        io.seek(12) # Start of table directory
+      io.seek(4) # Skip sfnt_version
+      num_tables = io.read(2).unpack1("n")
+      io.seek(12) # Start of table directory
 
-        num_tables.times do
-          tag = io.read(4)
-          io.read(4) # checksum
-          offset = io.read(4).unpack1("N")
-          io.read(4) # length
+      num_tables.times do
+        tag = io.read(4)
+        io.read(4) # checksum
+        offset = io.read(4).unpack1("N")
+        io.read(4) # length
 
-          if tag == Constants::HEAD_TAG
-            head_offset = offset
-            break
-          end
+        if tag == Constants::HEAD_TAG
+          head_offset = offset
+          break
         end
       end
 
       return unless head_offset
 
+      # Rewind to calculate checksum from the beginning
+      io.rewind
+
       # Calculate checksum directly from IO to avoid Windows Tempfile issues
+      checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
+
+      # Calculate adjustment
+      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
+
+      # Write adjustment to head table (offset 8 within head table)
+      io.seek(head_offset + 8)
+      io.write([adjustment].pack("N"))
+
+      # Restore original position
+      io.seek(current_pos)
+    end
+
+    # Update checksumAdjustment field in head table
+    #
+    # @param path [String] Path to the font file
+    # @return [void]
+    def update_checksum_adjustment_in_file(path)
       File.open(path, "r+b") do |io|
-        checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
-
-        # Calculate adjustment
-        adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
-        # Write adjustment to head table (offset 8 within head table)
-        io.seek(head_offset + 8)
-        io.write([adjustment].pack("N"))
+        update_checksum_adjustment_in_io(io)
       end
     end
   end
