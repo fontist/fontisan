@@ -124,7 +124,6 @@ RSpec.describe "WOFF2 Round-Trip Validation", :woff2 do
       expect(compression_ratio).to be > 30.0
 
       # For reference: TestTTF achieves ~60% compression
-      
     end
   end
 

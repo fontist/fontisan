@@ -49,7 +49,8 @@ RSpec.describe "Hint Conversion Integration" do
         hints = [
           Fontisan::Models::Hint.new(
             type: :stem,
-            data: { position: 100 + (i * 50), width: 50, orientation: :vertical },
+            data: { position: 100 + (i * 50), width: 50,
+                    orientation: :vertical },
             source_format: :truetype,
           ),
         ]

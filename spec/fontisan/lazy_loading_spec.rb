@@ -104,11 +104,6 @@ RSpec.describe "Lazy Table Loading" do
         end
       end
 
-      
-      
-      
-      
-
       # Lazy loading should not be significantly slower than eager loading
       # Allow up to 50% overhead for lazy infrastructure
       expect(lazy_time).to be < (eager_time * 1.5),
@@ -145,13 +140,8 @@ RSpec.describe "Lazy Table Loading" do
         end
       end
 
-      
-      
-      
       if lazy_time < eager_time
-        
-      else
-        
+
       end
 
       # Should be within 100% of eager loading (allow 2x overhead for lazy infrastructure)
