@@ -252,11 +252,12 @@ module Fontisan
         # Write table data with updated offsets
         write_table_data_with_offsets(io)
 
+        # Update checksum adjustment in head table BEFORE closing file
+        # This avoids Windows file locking issues when Tempfiles are used
+        update_checksum_adjustment_in_io(io) if head_table
+
         io.pos
       end
-
-      # Update checksum adjustment in head table
-      update_checksum_adjustment_in_file(path) if head_table
 
       File.size(path)
     end
@@ -558,25 +559,36 @@ module Fontisan
       end
     end
 
+    # Update checksumAdjustment field in head table using an open IO object
+    #
+    # @param io [IO] Open IO object positioned at start of file
+    # @return [void]
+    def update_checksum_adjustment_in_io(io)
+      # Rewind to calculate checksum from the beginning
+      io.rewind
+
+      # Calculate checksum directly from IO to avoid Windows Tempfile issues
+      checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
+
+      # Calculate adjustment
+      adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
+
+      # Find head table position
+      head_entry = head_table
+      return unless head_entry
+
+      # Write adjustment to head table (offset 8 within head table)
+      io.seek(head_entry.offset + 8)
+      io.write([adjustment].pack("N"))
+    end
+
     # Update checksumAdjustment field in head table
     #
     # @param path [String] Path to the TTF file
     # @return [void]
     def update_checksum_adjustment_in_file(path)
       File.open(path, "r+b") do |io|
-        # Calculate checksum directly from IO to avoid Windows Tempfile issues
-        checksum = Utilities::ChecksumCalculator.calculate_checksum_from_io(io)
-
-        # Calculate adjustment
-        adjustment = Utilities::ChecksumCalculator.calculate_adjustment(checksum)
-
-        # Find head table position
-        head_entry = head_table
-        return unless head_entry
-
-        # Write adjustment to head table (offset 8 within head table)
-        io.seek(head_entry.offset + 8)
-        io.write([adjustment].pack("N"))
+        update_checksum_adjustment_in_io(io)
       end
     end
   end
