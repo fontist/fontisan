@@ -57,7 +57,9 @@ RSpec.describe "Documentation Examples" do
     it "Fontisan.info accepts font_index parameter" do
       ttf_path = font_fixture_path("MonaSans",
                                    "googlefonts/variable/MonaSans[wdth,wght].ttf")
-      expect { Fontisan.info(ttf_path, brief: true, font_index: 0) }.not_to raise_error
+      expect do
+        Fontisan.info(ttf_path, brief: true, font_index: 0)
+      end.not_to raise_error
     end
 
     it "has Fontisan.validate method" do
@@ -68,7 +70,9 @@ RSpec.describe "Documentation Examples" do
       ttf_path = font_fixture_path("MonaSans",
                                    "googlefonts/variable/MonaSans[wdth,wght].ttf")
       # Test that :production profile works
-      expect { Fontisan.validate(ttf_path, profile: :production) }.not_to raise_error
+      expect do
+        Fontisan.validate(ttf_path, profile: :production)
+      end.not_to raise_error
     end
 
     it "has Fontisan::FontLoader" do
@@ -91,12 +95,12 @@ RSpec.describe "Documentation Examples" do
         "docs/COLOR_FONTS.adoc",
         "docs/VALIDATION.adoc",
         "docs/APPLE_LEGACY_FONTS.adoc",
-        "docs/COLLECTION_VALIDATION.adoc"
+        "docs/COLLECTION_VALIDATION.adoc",
       ]
     end
     let(:md_files) do
       [
-        "docs/EXTRACT_TTC_MIGRATION.md"
+        "docs/EXTRACT_TTC_MIGRATION.md",
       ]
     end
 
@@ -104,8 +108,8 @@ RSpec.describe "Documentation Examples" do
       root_dir = File.join(__dir__, "..")
       adoc_files.each do |file|
         path = File.join(root_dir, file)
-        expect(File.exist?(path)).to eq(true),
-               "Expected #{file} to exist for documentation examples"
+        expect(File.exist?(path)).to be(true),
+                                     "Expected #{file} to exist for documentation examples"
       end
     end
 
@@ -113,8 +117,8 @@ RSpec.describe "Documentation Examples" do
       root_dir = File.join(__dir__, "..")
       md_files.each do |file|
         path = File.join(root_dir, file)
-        expect(File.exist?(path)).to eq(true),
-               "Expected #{file} to exist for documentation examples"
+        expect(File.exist?(path)).to be(true),
+                                     "Expected #{file} to exist for documentation examples"
       end
     end
   end
