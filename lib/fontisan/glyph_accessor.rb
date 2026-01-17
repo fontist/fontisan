@@ -17,6 +17,7 @@ module Fontisan
   # - Metrics retrieval (advance width, left sidebearing)
   # - Glyph closure calculation for subsetting (tracks composite dependencies)
   # - Validation of glyph IDs and character mappings
+  # - Bounded LRU cache to prevent unbounded memory growth
   #
   # @example Basic usage
   #   font = Fontisan::TrueTypeFont.from_file('font.ttf')
@@ -41,6 +42,8 @@ module Fontisan
   #
   # Reference: [`docs/ttfunk-feature-analysis.md:541-575`](docs/ttfunk-feature-analysis.md:541)
   class GlyphAccessor
+    # Maximum number of glyphs to cache before LRU eviction
+    MAX_GLYPH_CACHE_SIZE = 10_000
     # Font instance this accessor operates on
     # @return [TrueTypeFont, OpenTypeFont]
     attr_reader :font
@@ -59,6 +62,7 @@ module Fontisan
       @font = font
       @glyph_cache = {}
       @closure_cache = {}
+      @glyph_access_times = {}
     end
 
     # Get glyph object for a glyph ID
@@ -83,7 +87,11 @@ module Fontisan
     def glyph_for_id(glyph_id)
       validate_glyph_id!(glyph_id)
 
-      return @glyph_cache[glyph_id] if @glyph_cache.key?(glyph_id)
+      # Check cache first and update access time
+      if @glyph_cache.key?(glyph_id)
+        @glyph_access_times[glyph_id] = Time.now.to_f
+        return @glyph_cache[glyph_id]
+      end
 
       glyph = if truetype?
                 truetype_glyph(glyph_id)
@@ -94,7 +102,12 @@ module Fontisan
                       "Font has neither glyf nor CFF table"
               end
 
+      # Evict least recently used entry if cache is full
+      evict_lru_glyph if @glyph_cache.size >= MAX_GLYPH_CACHE_SIZE
+
       @glyph_cache[glyph_id] = glyph
+      @glyph_access_times[glyph_id] = Time.now.to_f
+      glyph
     end
 
     # Get glyph object for a Unicode character code
@@ -367,6 +380,7 @@ module Fontisan
     def clear_cache
       @glyph_cache.clear
       @closure_cache.clear
+      @glyph_access_times.clear
 
       # Also clear glyf table cache if present
       glyf = font.table("glyf")
@@ -374,6 +388,20 @@ module Fontisan
     end
 
     private
+
+    # Evict least recently used glyph from cache
+    #
+    # @return [void]
+    def evict_lru_glyph
+      return if @glyph_access_times.empty?
+
+      # Find least recently used entry
+      lru_id = @glyph_access_times.min_by { |_id, time| time }&.first
+      return unless lru_id
+
+      @glyph_cache.delete(lru_id)
+      @glyph_access_times.delete(lru_id)
+    end
 
     # Validate a glyph ID
     #

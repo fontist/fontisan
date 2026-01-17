@@ -23,8 +23,10 @@ module Fontisan
       # Initialize analyzer with fonts
       #
       # @param fonts [Array<TrueTypeFont, OpenTypeFont>] Fonts to analyze
+      # @param parallel [Boolean] Use parallel processing for large collections (default: false)
+      # @param thread_count [Integer] Number of threads for parallel processing (default: 4)
       # @raise [ArgumentError] if fonts array is empty or contains invalid fonts
-      def initialize(fonts)
+      def initialize(fonts, parallel: false, thread_count: 4)
         if fonts.nil? || fonts.empty?
           raise ArgumentError,
                 "fonts cannot be nil or empty"
@@ -32,7 +34,10 @@ module Fontisan
         raise ArgumentError, "fonts must be an array" unless fonts.is_a?(Array)
 
         @fonts = fonts
+        @parallel = parallel
+        @thread_count = thread_count
         @report = nil
+        @checksum_cache = {}
       end
 
       # Analyze tables across all fonts
@@ -103,6 +108,17 @@ module Fontisan
       #
       # @return [void]
       def collect_table_checksums
+        if @parallel && @fonts.size > 2
+          collect_table_checksums_parallel
+        else
+          collect_table_checksums_sequential
+        end
+      end
+
+      # Collect checksums sequentially (original implementation)
+      #
+      # @return [void]
+      def collect_table_checksums_sequential
         @fonts.each_with_index do |font, font_index|
           font.table_names.each do |tag|
             # Get raw table data
@@ -116,6 +132,71 @@ module Fontisan
             @report[:table_checksums][tag] ||= {}
             @report[:table_checksums][tag][checksum] ||= []
             @report[:table_checksums][tag][checksum] << font_index
+          end
+        end
+      end
+
+      # Collect checksums in parallel using thread pool (lock-free)
+      #
+      # Uses thread-local storage to avoid mutexes. Each thread processes
+      # its assigned fonts with isolated state, then results are aggregated
+      # in a single thread after all parallel work completes.
+      #
+      # @return [void]
+      def collect_table_checksums_parallel
+        # Partition fonts among threads
+        partition_size = (@fonts.size.to_f / @thread_count).ceil
+        partitions = @fonts.each_slice(partition_size).to_a
+
+        # Track starting index for each partition
+        partition_start_indices = []
+        current_index = 0
+        partitions.each do |partition|
+          partition_start_indices << current_index
+          current_index += partition.size
+        end
+
+        # Process each partition in a separate thread with isolated state
+        # No mutexes needed - each thread has its own local_checksum_cache and local_results
+        threads = partitions.each_with_index.map do |partition, partition_index|
+          start_index = partition_start_indices[partition_index]
+
+          Thread.new do
+            local_checksum_cache = {}
+            local_results = {}
+
+            partition.each_with_index do |font, relative_index|
+              font_index = start_index + relative_index
+
+              font.table_names.each do |tag|
+                table_data = font.table_data[tag]
+                next unless table_data
+
+                # Thread-local cache - no locks needed
+                checksum = local_checksum_cache[table_data.object_id] ||= Digest::SHA256.hexdigest(table_data)
+
+                local_results[tag] ||= {}
+                local_results[tag][checksum] ||= []
+                local_results[tag][checksum] << font_index
+              end
+            end
+
+            # Return thread-local results for aggregation
+            local_results
+          end
+        end
+
+        # Wait for all threads to complete and aggregate results
+        # Single-threaded aggregation - no locks needed
+        threads.each do |thread|
+          local_results = thread.value
+
+          local_results.each do |tag, checksums|
+            @report[:table_checksums][tag] ||= {}
+            checksums.each do |checksum, font_indices|
+              @report[:table_checksums][tag][checksum] ||= []
+              @report[:table_checksums][tag][checksum].concat(font_indices)
+            end
           end
         end
       end
@@ -192,12 +273,16 @@ module Fontisan
         end
       end
 
-      # Calculate SHA256 checksum for table data
+      # Calculate SHA256 checksum for table data with caching
+      #
+      # Caches checksums by data object identity to avoid recomputing
+      # SHA256 for identical table data across multiple fonts.
+      # In parallel mode, each thread has its own cache (no locks needed).
       #
       # @param data [String] Binary table data
       # @return [String] Hexadecimal checksum
       def calculate_checksum(data)
-        Digest::SHA256.hexdigest(data)
+        @checksum_cache[data.object_id] ||= Digest::SHA256.hexdigest(data)
       end
     end
   end
