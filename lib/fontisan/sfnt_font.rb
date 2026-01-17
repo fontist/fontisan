@@ -135,6 +135,9 @@ module Fontisan
       Constants::LOCA_TAG => Tables::LocaTable,
     }.freeze
 
+    # Padding bytes for table alignment (frozen to avoid reallocation)
+    PADDING_BYTES = ("\x00" * 4).freeze
+
     # Read SFNT Font from a file
     #
     # @param path [String] Path to the font file
@@ -200,14 +203,11 @@ module Fontisan
       @parsed_tables = {}
       @sfnt_tables = {}
       @table_entry_cache = {}
-      @tag_encoding_cache = {}  # Cache for normalized tag encodings
-      @table_names_cache = nil  # Cache for table names array
+      @tag_encoding_cache = {} # Cache for normalized tag encodings
+      @table_names = nil # Cache for table names array
       @loading_mode = LoadingModes::FULL
       @lazy_load_enabled = false
       @io_source = nil
-
-      # Pre-build table entry cache for O(1) lookups
-      build_table_entry_cache
     end
 
     # Read table data for all tables in the font
@@ -447,13 +447,13 @@ module Fontisan
         end
       end
 
+      # Return cached if available (fast path)
       return @parsed_tables[tag] if @parsed_tables.key?(tag)
 
       # Lazy load table data if enabled
-      if @lazy_load_enabled && !@table_data.key?(tag)
-        load_table_data(tag)
-      end
+      load_table_data(tag) if @lazy_load_enabled && !@table_data.key?(tag)
 
+      # Parse and cache
       @parsed_tables[tag] ||= parse_table(tag)
     end
 
@@ -570,15 +570,6 @@ module Fontisan
 
     private
 
-    # Build table entry cache for O(1) lookups
-    #
-    # @return [void]
-    def build_table_entry_cache
-      tables.each do |entry|
-        @table_entry_cache[entry.tag] = entry
-      end
-    end
-
     # Normalize tag encoding to UTF-8 (cached for performance)
     #
     # @param tag [String] The tag to normalize
@@ -675,7 +666,7 @@ module Fontisan
 
         # Add padding to align to 4-byte boundary
         padding = (Constants::TABLE_ALIGNMENT - (io.pos % Constants::TABLE_ALIGNMENT)) % Constants::TABLE_ALIGNMENT
-        io.write("\x00" * padding) if padding.positive?
+        io.write(PADDING_BYTES[0, padding]) if padding.positive?
 
         # Zero out checksumAdjustment field in head table
         if entry.tag == Constants::HEAD_TAG
