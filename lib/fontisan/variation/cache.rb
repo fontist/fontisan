@@ -229,6 +229,7 @@ module Fontisan
         return unless full?
 
         # Remove least recently used entry
+        # O(n) operation but acceptable for typical cache sizes (< 10,000)
         lru_key = @access_times.min_by { |_k, v| v }&.first
         return unless lru_key
 

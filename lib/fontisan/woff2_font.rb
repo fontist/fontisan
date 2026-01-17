@@ -168,7 +168,7 @@ module Fontisan
         end
 
         # Fallback to decompressed_tables
-        return @decompressed_tables.dup
+        return @decompressed_tables
       end
 
       # Tag provided - return specific table
@@ -189,8 +189,8 @@ module Fontisan
 
       # Fallback to parsed_tables hash
       # Normalize tag to UTF-8 string for hash lookup
-      # Use dup to create mutable copy since force_encoding modifies in place
-      tag_key = tag.to_s.dup.force_encoding("UTF-8")
+      tag_key = tag.to_s
+      tag_key.force_encoding("UTF-8") unless tag_key.encoding == Encoding::UTF_8
       @parsed_tables[tag_key]
     end
 
