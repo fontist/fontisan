@@ -46,7 +46,7 @@ module Fontisan
         private_dict_data, private_dict_size = build_private_dict(local_subrs)
 
         # Calculate offsets with iterative refinement
-        top_dict_index_data, charstrings_offset, private_dict_offset =
+        top_dict_index_data, =
           calculate_cff_offsets(
             header_size,
             name_index_data,
