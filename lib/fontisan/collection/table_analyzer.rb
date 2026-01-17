@@ -37,7 +37,7 @@ module Fontisan
         @parallel = parallel
         @thread_count = thread_count
         @report = nil
-        @checksum_cache = {}
+        @checksum_cache = {}.compare_by_identity
       end
 
       # Analyze tables across all fonts
@@ -162,7 +162,7 @@ module Fontisan
           start_index = partition_start_indices[partition_index]
 
           Thread.new do
-            local_checksum_cache = {}
+            local_checksum_cache = {}.compare_by_identity
             local_results = {}
 
             partition.each_with_index do |font, relative_index|
@@ -173,7 +173,7 @@ module Fontisan
                 next unless table_data
 
                 # Thread-local cache - no locks needed
-                checksum = local_checksum_cache[table_data.object_id] ||= Digest::SHA256.hexdigest(table_data)
+                checksum = local_checksum_cache[table_data] ||= Digest::SHA256.hexdigest(table_data)
 
                 local_results[tag] ||= {}
                 local_results[tag][checksum] ||= []
@@ -282,7 +282,7 @@ module Fontisan
       # @param data [String] Binary table data
       # @return [String] Hexadecimal checksum
       def calculate_checksum(data)
-        @checksum_cache[data.object_id] ||= Digest::SHA256.hexdigest(data)
+        @checksum_cache[data] ||= Digest::SHA256.hexdigest(data)
       end
     end
   end
