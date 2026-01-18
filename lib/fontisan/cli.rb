@@ -203,7 +203,7 @@ module Fontisan
 
     desc "convert FONT_FILE", "Convert font to different format"
     option :to, type: :string, required: true,
-                desc: "Target format (ttf, otf, woff, woff2)",
+                desc: "Target format (ttf, otf, type1, t1, woff, woff2)",
                 aliases: "-t"
     option :output, type: :string, required: true,
                     desc: "Output file path",
@@ -236,6 +236,7 @@ module Fontisan
     #
     # Supported conversions:
     # - TTF ↔ OTF: Outline format conversion
+    # - Type 1 ↔ TTF/OTF: Adobe Type 1 font conversion
     # - WOFF/WOFF2: Web font packaging
     # - Variable fonts: Automatic variation preservation or instance generation
     # - Collections (TTC/OTC/dfont): Preserve mixed TTF+OTF by default, or standardize with --target-format
@@ -260,6 +261,12 @@ module Fontisan
     #
     # @example Convert TTF to OTF
     #   fontisan convert font.ttf --to otf --output font.otf
+    #
+    # @example Convert Type 1 to OTF
+    #   fontisan convert font.pfb --to otf --output font.otf
+    #
+    # @example Convert OTF to Type 1
+    #   fontisan convert font.otf --to type1 --output font.pfb
     #
     # @example Convert TTC to OTC (preserves mixed formats by default)
     #   fontisan convert family.ttc --to otc --output family.otc

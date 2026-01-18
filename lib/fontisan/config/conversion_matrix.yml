@@ -6,9 +6,13 @@
 # Format identifiers:
 # - ttf: TrueType Font (with glyf/loca tables)
 # - otf: OpenType Font with CFF outlines (with CFF table)
-# - woff: Web Open Font Format (not yet implemented)
-# - woff2: Web Open Font Format 2 (implemented in Phase 2)
-# - svg: SVG Font (implemented in Phase 2)
+# - type1: Adobe Type 1 Font (PFB/PFA format)
+# - woff: Web Open Font Format (zlib compression)
+# - woff2: Web Open Font Format 2 (Brotli compression)
+# - svg: SVG Font (deprecated, for conversion/inspection)
+# - ttc: TrueType Collection
+# - otc: OpenType Collection
+# - dfont: Apple dfont suitcase
 #
 # Phase 1 (Milestone 1.3): Basic conversions
 # - Same format (copy/optimize): ttf→ttf, otf→otf
@@ -20,8 +24,11 @@
 # Phase 2 (Milestone 2.2): SVG font generation
 # - SVG export: ttf to svg, otf to svg
 #
+# Phase 3: Type 1 font support
+# - Type 1 conversions: type1↔otf, type1↔ttf
+#
 # Future phases:
-# - Phase 3: Variable font conversions
+# - Phase 4: Variable font conversions
 
 conversions:
   # Same-format conversions (copy/optimize)
@@ -57,6 +64,47 @@ conversions:
       Foundation implemented. Full conversion requires complete glyf/loca
       table generation including cubic-to-quadratic curve conversion and
       proper TrueType glyph structure encoding.
+
+  # Phase 3 conversions - Type 1 fonts
+  - from: type1
+    to: otf
+    strategy: type1_converter
+    description: "Convert Type 1 to OpenType/CFF format"
+    status: foundation
+    notes: >
+      Type 1 to OpenType conversion using CharStringConverter. Converts Type 1
+      CharStrings to CFF format and builds CFF table with proper DICT structures.
+      seac composites are expanded. Some hinting may not be preserved.
+
+  - from: otf
+    to: type1
+    strategy: type1_converter
+    description: "Convert OpenType/CFF to Type 1 format"
+    status: foundation
+    notes: >
+      OpenType to Type 1 conversion. Reverse conversion from CFF CharStrings to
+      Type 1 format. Builds PFB output with eexec encryption. Some modern
+      OpenType features may be lost in conversion.
+
+  - from: type1
+    to: ttf
+    strategy: type1_converter
+    description: "Convert Type 1 to TrueType format"
+    status: foundation
+    notes: >
+      Two-step conversion: Type 1 → OTF → TTF. First converts to OpenType/CFF,
+      then to TrueType with cubic-to-quadratic curve approximation. Hinting may
+      not be preserved in either step.
+
+  - from: ttf
+    to: type1
+    strategy: type1_converter
+    description: "Convert TrueType to Type 1 format"
+    status: foundation
+    notes: >
+      Two-step conversion: TTF → OTF → Type 1. First converts to OpenType/CFF
+      with quadratic-to-cubic curve conversion, then to Type 1. Significant
+      approximation artifacts may occur due to curve conversions.
 
   # Phase 2 conversions (Milestone 2.1) - WOFF2
   - from: ttf
@@ -146,6 +194,35 @@ conversions:
       SVG font generation with full glyph outline extraction and coordinate
       transformation. Note: SVG fonts are deprecated in favor of WOFF2, but
       useful for fallback, conversion, and inspection purposes.
+
+  # Type 1 to web formats (via OTF intermediate)
+  - from: type1
+    to: woff
+    strategy: type1_converter
+    description: "Convert Type 1 to WOFF format"
+    status: foundation
+    notes: >
+      Two-step conversion: Type 1 → OTF → WOFF. Converts Type 1 to OpenType/CFF,
+      then compresses with zlib. Useful for web delivery of legacy Type 1 fonts.
+
+  - from: type1
+    to: woff2
+    strategy: type1_converter
+    description: "Convert Type 1 to WOFF2 format"
+    status: foundation
+    notes: >
+      Two-step conversion: Type 1 → OTF → WOFF2. Converts Type 1 to OpenType/CFF,
+      then compresses with Brotli. Best for web delivery of legacy Type 1 fonts.
+
+  - from: type1
+    to: svg
+    strategy: type1_converter
+    description: "Generate SVG font from Type 1"
+    status: foundation
+    notes: >
+      Type 1 to SVG conversion. Extracts outlines from Type 1 CharStrings and
+      generates SVG font format. Note: SVG fonts are deprecated but useful for
+      inspection and conversion workflows.
 
   # WOFF2 decompression (reverse conversions)
   - from: woff2
@@ -295,6 +372,57 @@ compatibility:
           Multiple quadratic curves may be needed for accuracy.
       - hinting_loss: >
           CFF hints are not converted to TrueType hinting instructions.
+
+  type1_to_otf:
+    preserves:
+      - glyph_outlines: Type 1 CharStrings are similar to CFF
+      - font_metrics: FontBBox, metrics preserved
+      - name_table: FontInfo converted to name table
+      - hints: Some hints preserved (BlueValues, OtherBlues)
+    limitations:
+      - seac_expansion: >
+          seac composite glyphs are expanded to base glyphs.
+      - hinting_approximation: >
+          Some Type 1 hints may not translate exactly to CFF hints.
+      - lost_features: >
+          Type 1-specific features (Flex, multiple master) not preserved.
+
+  otf_to_type1:
+    preserves:
+      - glyph_outlines: CFF outlines converted to Type 1
+      - font_metrics: Basic metrics preserved
+      - name_table: name table converted to FontInfo
+    limitations:
+      - reverse_conversion: >
+          CFF to Type 1 is reverse conversion with potential data loss.
+      - modern_features_lost: >
+          Modern OpenType features (GPOS, GSUB variations) lost in Type 1.
+      - hinting_approximation: >
+          CFF hints may not translate exactly to Type 1 hints.
+
+  type1_to_ttf:
+    preserves:
+      - glyph_outlines: Via OTF intermediate
+      - font_metrics: Basic metrics preserved
+    limitations:
+      - multi_step_conversion: >
+          Type 1 → OTF → TTF, compounding approximation errors.
+      - curve_approximation: >
+          CFF cubic to TrueType quadratic approximation.
+      - significant_data_loss: >
+          Most Type 1 and OpenType features lost.
+
+  ttf_to_type1:
+    preserves:
+      - glyph_outlines: Via OTF intermediate
+      - font_metrics: Basic metrics preserved
+    limitations:
+      - multi_step_conversion: >
+          TTF → OTF → Type 1, compounding approximation errors.
+      - curve_approximation: >
+          Quadratic to cubic, then back to Type 1 curves.
+      - extreme_data_loss: >
+          Nearly all TrueType and Type 1 features lost.
 
   same_format:
     preserves:

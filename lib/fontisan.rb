@@ -83,6 +83,7 @@ require_relative "fontisan/true_type_collection"
 require_relative "fontisan/open_type_collection"
 require_relative "fontisan/woff_font"
 require_relative "fontisan/woff2_font"
+require_relative "fontisan/type1_font"
 
 # Font extensions for table-based construction
 require_relative "fontisan/true_type_font_extensions"

@@ -1,0 +1,63 @@
+= Font Fixtures
+
+This directory contains font files used for testing the Fontisan library.
+
+== Committed Fixtures
+
+The following font fixtures are committed to the repository:
+
+* link:../fonttools/README.adoc[Fonttools Test Fonts] - Test fonts from the fonttools Python library
+* link:../fonttools/[Fonttools Test Files] - TestTTF.ttf, TestOTF.otf, TestTTC.ttc, etc.
+* link:Rupali/README.Rupali.adoc[Rupali] - Bengali font fixture (broken font for testing validation)
+* link:SiyamRupaliANSI/README.SiyamRupaliANSI.adoc[Siyam Rupali ANSI] - Bengali font fixture (broken font for testing validation)
+* link:type1/README.adoc[Type 1 Fonts] - Type 1 font fixtures (Matrix, Quicksand, URW Base35)
+  * link:type1/matrix.afm[matrix.afm] - Custom Type 1 font for AFM testing
+  * link:type1/quicksand.pfb[quicksand.pfb] - Quicksand font (SIL OFL)
+  * link:type1/urw/README.adoc[URW Base35] - 35 core PostScript fonts (GPL)
+
+== Downloadable Fixtures
+
+The following font fixtures are downloaded on-demand via Rake tasks (configured in
+`spec/support/fixture_fonts.rb`). These are NOT committed to the repository.
+
+=== How to Download
+
+To download all fixtures:
+
+[source,sh]
+----
+rake fixtures:download
+----
+
+To download a specific fixture:
+
+[source,sh]
+----
+rake fixtures:download[SourceSans3]
+----
+
+=== Available Fixtures
+
+* link:https://github.com/adobe-fonts/source-sans[Adobe Source Sans 3] - Adobe's sans serif font family (OFL-1.1)
+* link:https://github.com/notofonts/notofonts.github.io[Noto Sans] - Google's sans serif font (OFL-1.1)
+* link:https://github.com/alerque/libertinus[Libertinus] - Serif/Sans/Mono/Math font family (OFL-1.1)
+* link:https://github.com/github/mona-sans[Mona Sans] - GitHub's variable font family (OFL-1.1)
+* link:https://github.com/notofonts/noto-cjk[Noto Serif CJK] - Chinese/Japanese/Korean font family (OFL-1.1)
+* link:https://github.com/zshoals/Dina-Font-TTF-Remastered[Dina Remaster II] - Programming font (Free for personal use)
+* link:https://github.com/adobe-fonts/emojione-color[EmojiOne Color] - Color emoji font (CC BY 4.0)
+* link:https://github.com/13rac1/twemoji-color-font[Twitter Color Emoji] - Twitter emoji SVGinOT (CC BY 4.0)
+* link:https://github.com/mozilla/twemoji-colr[Twemoji Mozilla] - Mozilla color emoji (MPL-2.0)
+* link:https://github.com/Fontself/TypeWithPride[Gilbert] - Type With Pride font (OFL-1.1)
+* link:https://github.com/roman0x58/tamsyn-mac-version[Tamsyn] - Monospace font (Free)
+* link:https://github.com/stgiga/UnifontEX[UnifontEX] - Extended Unicode monospace font (GPL)
+
+== License Information
+
+Each font fixture has its own license. Please refer to the individual README
+files and project sources for license information. Most fonts are under permissive
+licenses such as:
+
+* SIL Open Font License 1.1 (OFL-1.1)
+* GNU General Public License (GPL)
+* Creative Commons Attribution (CC BY)
+* Mozilla Public License (MPL)

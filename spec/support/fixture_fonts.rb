@@ -101,6 +101,12 @@ module FixtureFonts
       single_file: true,
       markers: ["UnifontExMono.dfont"],
     },
+    "URWBase35" => {
+      url: "https://github.com/ArtifexSoftware/urw-base35-fonts/archive/refs/tags/20230902.zip",
+      target_dir: "type1/urw",
+      path_prefix: "urw-base35-fonts-20230902", # Archive extracts to urw-base35-fonts-20230902/
+      markers: ["urw-base35-fonts-20230902/fonts/C059-Bold.ttf"],
+    },
   }.freeze
 
   # Get absolute path to a font fixture file
