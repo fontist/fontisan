@@ -1,0 +1,43 @@
+= Type 1 Font Fixtures
+
+This directory contains Type 1 font fixtures for testing Type 1 font parsing,
+decryption, and conversion functionality.
+
+== Fixtures
+
+=== matrix.afm / matrix.pfa
+
+The Matrix font is a custom Type 1 font used for testing AFM parsing and Type 1
+font functionality.
+
+* Font: Matrix
+* Format: PFA (Printer Font ASCII) with AFM metrics
+* Source: Custom test font (Creator: Tero Kivinen)
+* Used by: `afm_parser_spec.rb`, `type1_real_fonts_spec.rb`
+
+=== quicksand.pfb
+
+Quicksand is a geometric sans-serif typeface family designed by Thomas Jockin.
+
+* Font: Quicksand Regular
+* Format: PFB (Printer Font Binary)
+* Source: https://www.fontshare.com/fonts/quicksand
+* License: SIL Open Font License 1.1
+* Used by: `type1_real_fonts_spec.rb`
+
+=== urw/
+
+The `urw/` directory contains the URW Base35 font family - a set of 35 core
+PostScript fonts released under the GPL. See `urw/README.adoc` for details.
+
+* Source: https://github.com/ArtifexSoftware/urw-base35-fonts
+* License: GPL-2.0-or-later
+* Used by: `pfm_parser_spec.rb`, type1 integration tests
+
+== Test Scripts
+
+The `urw/` directory contains integration test scripts:
+
+* `test_pfm_generator.rb` - Tests PFM generation accuracy
+* `test_roundtrip_conversion.rb` - Tests Type 1 round-trip conversion
+* `test_urw_reference_comparison.rb` - Compares generated fonts with references

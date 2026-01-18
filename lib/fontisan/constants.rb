@@ -95,6 +95,18 @@ module Fontisan
     # CFF2 table tag identifier (CFF version 2 with variations)
     CFF2_TAG = "CFF2"
 
+    # Adobe Type 1 font format constants
+    # PFB (Printer Font Binary) chunk markers
+    PFB_ASCII_CHUNK = 0x8001
+    PFB_BINARY_CHUNK = 0x8002
+
+    # PFA (Printer Font ASCII) file signatures
+    PFA_SIGNATURE_ADOBE_1_0 = "%!PS-AdobeFont-1.0"
+    PFA_SIGNATURE_ADOBE_3_0 = "%!PS-Adobe-3.0 Resource-Font"
+
+    # Type 1 CharString operators
+    TYPE1_SEAC_ESCAPE = 6 # seac operator is escape byte 12 + 6
+
     # TrueType hinting tables
     # Font Program table (TrueType bytecode executed once at font load)
     FPGM_TAG = "fpgm"

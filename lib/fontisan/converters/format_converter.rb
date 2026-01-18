@@ -6,6 +6,7 @@ require_relative "outline_converter"
 require_relative "woff_writer"
 require_relative "woff2_encoder"
 require_relative "svg_generator"
+require_relative "type1_converter"
 require "yaml"
 
 module Fontisan
@@ -54,6 +55,7 @@ module Fontisan
         @strategies = [
           TableCopier.new,
           OutlineConverter.new,
+          Type1Converter.new,
           WoffWriter.new,
           Woff2Encoder.new,
           SvgGenerator.new,

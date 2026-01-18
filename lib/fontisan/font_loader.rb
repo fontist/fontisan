@@ -8,6 +8,7 @@ require_relative "true_type_collection"
 require_relative "open_type_collection"
 require_relative "woff_font"
 require_relative "woff2_font"
+require_relative "type1_font"
 require_relative "error"
 
 module Fontisan
@@ -15,11 +16,13 @@ module Fontisan
   #
   # This class is the primary entry point for loading fonts in Fontisan.
   # It automatically detects the font format and returns the appropriate
-  # domain object (TrueTypeFont, OpenTypeFont, TrueTypeCollection, or OpenTypeCollection).
+  # domain object (TrueTypeFont, OpenTypeFont, Type1Font, TrueTypeCollection, or OpenTypeCollection).
   #
   # @example Load any font type
   #   font = FontLoader.load("font.ttf")  # => TrueTypeFont
   #   font = FontLoader.load("font.otf")  # => OpenTypeFont
+  #   font = FontLoader.load("font.pfb")  # => Type1Font
+  #   font = FontLoader.load("font.pfa")  # => Type1Font
   #   font = FontLoader.load("fonts.ttc") # => TrueTypeFont (first in collection)
   #   font = FontLoader.load("fonts.ttc", font_index: 2) # => TrueTypeFont (third in collection)
   #
@@ -37,7 +40,7 @@ module Fontisan
     # @param font_index [Integer] Index of font in collection (0-based, default: 0)
     # @param mode [Symbol] Loading mode (:metadata or :full, default: from ENV or :full)
     # @param lazy [Boolean] If true, load tables on demand (default: false for eager loading)
-    # @return [TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font] The loaded font object
+    # @return [TrueTypeFont, OpenTypeFont, Type1Font, WoffFont, Woff2Font] The loaded font object
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [UnsupportedFormatError] for unsupported formats
     # @raise [InvalidFontError] for corrupted or unknown formats
@@ -54,6 +57,11 @@ module Fontisan
 
       # Validate mode
       LoadingModes.validate_mode!(resolved_mode)
+
+      # Check for Type 1 format first (PFB/PFA have different signatures)
+      if type1_font?(path)
+        return Type1Font.from_file(path)
+      end
 
       File.open(path, "rb") do |io|
         signature = io.read(4)
@@ -76,7 +84,7 @@ module Fontisan
                                  resolved_lazy)
         else
           raise InvalidFontError,
-                "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, or WOFF2 file."
+                "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
         end
       end
     end
@@ -387,5 +395,40 @@ mode: LoadingModes::FULL, lazy: true)
     end
 
     private_class_method :dfont_signature?
+
+    # Check if file is a Type 1 font (PFB or PFA)
+    #
+    # Type 1 fonts come in two formats:
+    # - PFB (Printer Font Binary): Binary format with chunk markers
+    # - PFA (Printer Font ASCII): ASCII text format with hex encoding
+    #
+    # @param path [String] Path to the font file
+    # @return [Boolean] true if Type 1 font
+    # @api private
+    def self.type1_font?(path)
+      # Check file extension first (quick check)
+      ext = File.extname(path).downcase
+      return true if [".pfb", ".pfa", ".ps"].include?(ext)
+
+      # Check PFB signature (first byte should be 0x80 or 0x81)
+      File.open(path, "rb") do |io|
+        first_byte = io.getbyte
+        return true if [Constants::PFB_ASCII_CHUNK, Constants::PFB_BINARY_CHUNK].include?(first_byte)
+      end
+
+      # Check PFA signature (text file with Adobe header)
+      File.open(path, "rb") do |io|
+        # Read first 100 bytes to check for PFA signature
+        header = io.read(100)
+        return true if header.include?(Constants::PFA_SIGNATURE_ADOBE_1_0) ||
+          header.include?(Constants::PFA_SIGNATURE_ADOBE_3_0)
+      end
+
+      false
+    rescue IOError, Errno::ENOENT
+      false
+    end
+
+    private_class_method :type1_font?
   end
 end

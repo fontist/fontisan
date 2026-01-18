@@ -1,0 +1,70 @@
+= URW Base35 Font Family
+
+== General
+
+URW Base35 is a set of 35 core PostScript Level 2 fonts, released by Artifex
+Software under the GPL. These fonts are based on the 35 standard PostScript fonts
+that were commonly distributed with printers and publishing systems.
+
+The font family includes:
+
+* **C059** - Courier replacement (Regular, Bold, Italic, Bold Italic)
+* **Nimbus** family (Sans, Serif, Mono)
+* **URW** Bookman, Gothic
+* **Standard** symbols (P052)
+
+== Downloadable Fixture
+
+The `urw-base35-fonts/` directory is downloaded on-demand via Rake tasks.
+It is NOT committed to the repository.
+
+To download:
+
+[source,sh]
+----
+rake fixtures:download[URWBase35]
+----
+
+== Source
+
+These fonts are from the URW Base35 fonts project:
+
+* https://github.com/ArtifexSoftware/urw-base35-fonts
+* https://www.ghostscript.com/
+
+Version: 20230902
+
+== License
+
+GNU General Public License version 2 or later (GPL-2.0-or-later)
+
+See `urw-base35-fonts/COPYING` and `urw-base35-fonts/LICENSE` for the full license text.
+
+== Usage in Testing
+
+These fonts are used as reference Type 1 fonts for testing Type 1 font parsing,
+AFM/PFM parsing, and Type 1 to TTF conversion functionality.
+
+The fonts are in multiple formats:
+* `.afm` - Adobe Font Metrics
+* `.pfm` - Printer Font Metrics
+* `.pfb` / `.t1` - Type 1 font files
+* `.ttf` / `.otf` - TrueType/OpenType fonts
+
+== Test Files
+
+The `test_*.rb` files in this directory contain integration tests that verify:
+
+* PFM generation accuracy
+* Round-trip Type 1 conversion
+* Reference comparison with original fonts
+
+These tests can be run individually:
+
+[source,sh]
+----
+cd spec/fixtures/fonts/type1/urw
+ruby test_pfm_generator.rb
+ruby test_roundtrip_conversion.rb
+ruby test_urw_reference_comparison.rb
+----

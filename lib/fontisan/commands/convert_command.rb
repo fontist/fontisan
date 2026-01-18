@@ -309,10 +309,12 @@ module Fontisan
           :woff
         when "woff2"
           :woff2
+        when "type1", "type-1", "t1", "pfb", "pfa"
+          :type1
         else
           raise ArgumentError,
                 "Unknown target format: #{format}. " \
-                "Supported: ttf, otf, ttc, otc, dfont, svg, woff, woff2"
+                "Supported: ttf, otf, type1, t1, ttc, otc, dfont, svg, woff, woff2"
         end
       end
 
