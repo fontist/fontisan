@@ -172,11 +172,12 @@ module Fontisan
         # Find the Private dictionary definition
         # Type 1 fonts have: /Private <dict_size> dict def ... end
 
-        # Look for /Private dict def pattern
-        private_match = data.match(/\/Private\s+(\d+)\s+dict\s+def(.*?)\/?end/m)
+        # Look for /Private dict def pattern - use safer pattern
+        # Match until we find the matching 'end' keyword
+        private_match = data.match(%r{/Private\s+\d+\s+dict\s+def\b(.*)end}m)
         return if private_match.nil?
 
-        private_text = private_match[2]
+        private_text = private_match[1]
         @raw_data = parse_private_dict_text(private_text)
       end
 

@@ -173,76 +173,78 @@ module Fontisan
         #   /key [array] def
         #   /key number def
 
-        # Parse FontName
-        if (match = text.match(/\/FontName\s+\/([^\s]+)\s+def/m))
+        # Parse FontName - use bounded pattern to prevent ReDoS
+        # Font names are typically 1-64 characters of alphanumeric, dash, underscore
+        if (match = text.match(%r{/FontName\s+/([A-Za-z0-9_-]{1,64})\s+def}m))
           result[:font_name] = match[1]
         end
 
         # Parse FontInfo entries
         # These are typically at the top level or in a FontInfo sub-dictionary
         # Format: /FullName (value) readonly def
-        if (match = text.match(/\/FullName\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        # Use safer patterns with bounded content and optional readonly keyword
+        if (match = text.match(%r{/FullName\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:full_name] = match[1]
         end
 
-        if (match = text.match(/\/FamilyName\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        if (match = text.match(%r{/FamilyName\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:family_name] = match[1]
         end
 
-        if (match = text.match(/\/version\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        if (match = text.match(%r{/version\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:version] = match[1]
         end
 
-        if (match = text.match(/\/Copyright\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        if (match = text.match(%r{/Copyright\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:copyright] = match[1]
         end
 
-        if (match = text.match(/\/Notice\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        if (match = text.match(%r{/Notice\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:notice] = match[1]
         end
 
-        if (match = text.match(/\/Weight\s+\(([^)]+)\)\s+(?:readonly\s+)?def/m))
+        if (match = text.match(%r{/Weight\s+\(([^)]{1,128}?)\)\s+(?:readonly\s+)?def}m))
           result[:weight] = match[1]
         end
 
-        if (match = text.match(/\/isFixedPitch\s+(true|false)\s+def/m))
+        if (match = text.match(%r{/isFixedPitch\s+(true|false)\s+def}m))
           result[:is_fixed_pitch] = match[1] == "true"
         end
 
-        if (match = text.match(/\/UnderlinePosition\s+(-?\d+)\s+def/m))
+        if (match = text.match(%r{/UnderlinePosition\s+(-?\d+)\s+def}m))
           result[:underline_position] = match[1].to_i
         end
 
-        if (match = text.match(/\/UnderlineThickness\s+(-?\d+)\s+def/m))
+        if (match = text.match(%r{/UnderlineThickness\s+(-?\d+)\s+def}m))
           result[:underline_thickness] = match[1].to_i
         end
 
-        if (match = text.match(/\/ItalicAngle\s+(-?\d+)\s+def/m))
+        if (match = text.match(%r{/ItalicAngle\s+(-?\d+)\s+def}m))
           result[:italic_angle] = match[1].to_i
         end
 
-        # Parse FontBBox
-        if (match = text.match(/\/FontBBox\s*\{([^}]+)\}\s+def/m))
+        # Parse FontBBox - use safer patterns
+        if (match = text.match(%r{/FontBBox\s*\{([^\}]{1,100}?)\}\s+(?:readonly\s+)?def}m))
           bbox_str = match[1].gsub(/[{}]/, "").strip.split
           result[:font_b_box] = bbox_str.map(&:to_i) if bbox_str.length >= 4
-        elsif (match = text.match(/\/FontBBox\s*\[([^\]]+)\]\s+def/m))
+        elsif (match = text.match(%r{/FontBBox\s*\[([^\]]{1,100}?)\]\s+(?:readonly\s+)?def}m))
           bbox_str = match[1].strip.split
           result[:font_b_box] = bbox_str.map(&:to_i) if bbox_str.length >= 4
         end
 
         # Parse FontMatrix
-        if (match = text.match(/\/FontMatrix\s*\[([^\]]+)\]\s+def/m))
+        if (match = text.match(%r{/FontMatrix\s*\[([^\]]{1,100}?)\]\s+(?:readonly\s+)?def}m))
           matrix_str = match[1].strip.split
           result[:font_matrix] = matrix_str.map(&:to_f)
         end
 
         # Parse PaintType
-        if (match = text.match(/\/PaintType\s+(\d+)\s+def/m))
+        if (match = text.match(%r{/PaintType\s+(\d+)\s+def}m))
           result[:paint_type] = match[1].to_i
         end
 
         # Parse FontType
-        if (match = text.match(/\/FontType\s+(\d+)\s+def/m))
+        if (match = text.match(%r{/FontType\s+(\d+)\s+def}m))
           result[:font_type] = match[1].to_i
         end
 

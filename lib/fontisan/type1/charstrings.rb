@@ -163,7 +163,10 @@ module Fontisan
         # etc.
 
         # Look for /CharStrings dict def begin ... end pattern
-        charstrings_match = data.match(/\/CharStrings\s+.*?dict\s+(?:dup\s+)?begin(.*?)\/end/m)
+        # Use bounded patterns to prevent ReDoS - the dict size is a number
+        # Limit capture to 100KB which is sufficient for CharStrings
+        # Use [\s\S] to match any character including newlines
+        charstrings_match = data.match(%r{/CharStrings\s+\d+(?:\s+dup)?\s+dict\s+(?:dup\s+)?begin([\s\S]{0,100000}?)end}m)
         return if charstrings_match.nil?
 
         charstrings_text = charstrings_match[1]
