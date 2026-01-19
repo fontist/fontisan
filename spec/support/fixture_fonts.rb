@@ -104,8 +104,9 @@ module FixtureFonts
     "URWBase35" => {
       url: "https://github.com/ArtifexSoftware/urw-base35-fonts/archive/refs/tags/20230902.zip",
       target_dir: "type1/urw",
-      path_prefix: "urw-base35-fonts-20230902", # Archive extracts to urw-base35-fonts-20230902/
-      markers: ["urw-base35-fonts-20230902/fonts/C059-Bold.ttf"],
+      path_prefix: "", # TTF files are at root of urw directory (copied from fonts/)
+      markers: ["C059-Bold.ttf"],
+      skip_download: true, # Already downloaded
     },
   }.freeze
 
@@ -141,10 +142,17 @@ module FixtureFonts
   def self.rakefile_config
     FONTS.transform_values do |config|
       base = File.join(FIXTURES_BASE, config[:target_dir])
+      # Construct full marker path including path_prefix
+      marker_path = if config[:path_prefix] && !config[:path_prefix].empty?
+                      File.join(base, config[:path_prefix],
+                                config[:markers].first.split("/").last)
+                    else
+                      File.join(base, config[:markers].first)
+                    end
       {
         url: config[:url],
         target_dir: base,
-        marker: File.join(base, config[:markers].first), # Use first marker for Rake task
+        marker: marker_path,
         single_file: config[:single_file] || false,
         skip_download: config[:skip_download] || false,
       }
