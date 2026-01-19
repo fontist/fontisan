@@ -171,11 +171,11 @@ module Fontisan
         end
 
         # Force bold flag
-        if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
-          dict << "/ForceBold true def"
-        else
-          dict << "/ForceBold false def"
-        end
+        dict << if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
+                  "/ForceBold true def"
+                else
+                  "/ForceBold false def"
+                end
 
         # Language group
         dict << "/LanguageGroup 0 def"
@@ -202,12 +202,12 @@ module Fontisan
       # @return [String] Binary CharString data
       def build_binary_segment
         # Convert glyphs to Type 1 CharStrings
-        if @convert_curves
-          charstrings = TTFToType1Converter.convert(@font, @scaler, @encoding)
-        else
-          # For simple curve conversion skip, generate minimal charstrings
-          charstrings = generate_simple_charstrings
-        end
+        charstrings = if @convert_curves
+                        TTFToType1Converter.convert(@font, @scaler, @encoding)
+                      else
+                        # For simple curve conversion skip, generate minimal charstrings
+                        generate_simple_charstrings
+                      end
 
         # Encode charstrings to eexec format (encrypted)
         # For now, we'll use plain format (not encrypted)

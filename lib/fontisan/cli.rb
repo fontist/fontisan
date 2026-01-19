@@ -772,7 +772,7 @@ module Fontisan
 
       # Show recommended options
       recommended = Fontisan::ConversionOptions.recommended(from: source_format,
-                                                          to: target_format)
+                                                            to: target_format)
       puts "\nOpening options:"
       if recommended.opening.any?
         recommended.opening.each do |key, value|

@@ -33,7 +33,9 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
   end
 
   describe "#convert with ConversionOptions" do
-    let(:collection_path) { "spec/fixtures/fonts/MonaSans/variable/MonaSans[wdth,wght].ttf" }
+    let(:collection_path) do
+      "spec/fixtures/fonts/MonaSans/variable/MonaSans[wdth,wght].ttf"
+    end
     let(:output_dir) { Dir.mktmpdir }
 
     after do
@@ -44,26 +46,28 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
       options = {
         output: File.join(output_dir, "output.otc"),
         target_format: :otf,
-        options: Fontisan::ConversionOptions.new(from: :ttc, to: :otc)
+        options: Fontisan::ConversionOptions.new(from: :ttc, to: :otc),
       }
 
       # Just verify it doesn't raise an error
       # The actual conversion may fail due to unsupported format,
       # but the integration should work
-      expect {
+      # Check the integration is there
+      expect do
         converter.convert(collection_path, target_type: :otc, **options)
-      }.not_to raise_error(NoMethodError) # Check the integration is there
+      end.not_to raise_error(NoMethodError)
     end
 
     it "works with Hash options (backward compatibility)" do
       options = {
         output: File.join(output_dir, "output.otc"),
-        target_format: :otf
+        target_format: :otf,
       }
 
-      expect {
+      # Check the integration is there
+      expect do
         converter.convert(collection_path, target_type: :otc, **options)
-      }.not_to raise_error(NoMethodError) # Check the integration is there
+      end.not_to raise_error(NoMethodError)
     end
   end
 end

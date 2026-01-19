@@ -354,7 +354,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         conv_options = Fontisan::ConversionOptions.new(
           from: :ttf,
           to: :otf,
-          opening: { decompose_composites: true }
+          opening: { decompose_composites: true },
         )
 
         expect(converter).to receive(:decompose_composite_glyphs).with(mock_font)
@@ -366,23 +366,23 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         conv_options = Fontisan::ConversionOptions.new(
           from: :ttf,
           to: :otf,
-          opening: {}
+          opening: {},
         )
 
         expect(converter).not_to receive(:decompose_composite_glyphs)
 
         # Just verify it runs without error
-        expect {
+        expect do
           converter.send(:apply_opening_options, mock_font, conv_options)
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it "skips opening options when conv_options is nil" do
         expect(converter).not_to receive(:decompose_composite_glyphs)
 
-        expect {
+        expect do
           converter.send(:apply_opening_options, mock_font, nil)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
