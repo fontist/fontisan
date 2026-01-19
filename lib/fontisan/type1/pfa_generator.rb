@@ -188,11 +188,11 @@ module Fontisan
         end
 
         # Force bold flag
-        if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
-          dict << "/ForceBold true def"
-        else
-          dict << "/ForceBold false def"
-        end
+        dict << if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
+                  "/ForceBold true def"
+                else
+                  "/ForceBold false def"
+                end
 
         # Language group
         dict << "/LanguageGroup 0 def"

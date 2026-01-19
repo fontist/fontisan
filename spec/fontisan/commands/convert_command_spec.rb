@@ -246,8 +246,8 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
         conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
 
         command = described_class.new(ttf_path, to: "otf",
-                                              output: File.join(output_dir, "output.otf"),
-                                              options: conv_options)
+                                                output: File.join(output_dir, "output.otf"),
+                                                options: conv_options)
 
         expect(command.instance_variable_get(:@conv_options)).to eq(conv_options)
       end
@@ -258,7 +258,7 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
         conv_options = Fontisan::ConversionOptions.new(
           from: :ttf,
           to: :otf,
-          opening: { decompose_composites: true }
+          opening: { decompose_composites: true },
         )
         output_path = File.join(output_dir, "output.otf")
 
@@ -331,7 +331,7 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
         conv_options = Fontisan::ConversionOptions.new(
           from: :ttf,
           to: :ttf,
-          generating: { optimize_tables: true }
+          generating: { optimize_tables: true },
         )
         output_path = File.join(output_dir, "output.ttc")
 

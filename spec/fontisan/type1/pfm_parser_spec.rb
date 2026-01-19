@@ -3,7 +3,9 @@
 RSpec.describe Fontisan::Type1::PFMParser, "with real PFM files" do
   describe "loading PFM format" do
     let(:pfm_path) do
-      File.expand_path("../../fixtures/fonts/type1/urw/C059-Bold-generated.pfm", __dir__)
+      File.expand_path(
+        "../../fixtures/fonts/type1/urw/C059-Bold-generated.pfm", __dir__
+      )
     end
     let(:pfm) do
       described_class.parse_file(pfm_path)
@@ -12,7 +14,9 @@ RSpec.describe Fontisan::Type1::PFMParser, "with real PFM files" do
       Fontisan::Type1::AFMParser.parse_file(afm_path) if File.exist?(afm_path)
     end
     let(:afm_path) do
-      File.expand_path("../../fixtures/fonts/type1/urw/C059-Bold-generated.afm", __dir__)
+      File.expand_path(
+        "../../fixtures/fonts/type1/urw/C059-Bold-generated.afm", __dir__
+      )
     end
 
     # Skip test if PFM file doesn't exist yet

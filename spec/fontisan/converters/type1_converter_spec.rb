@@ -37,22 +37,22 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     let(:mock_font_dictionary) { instance_double(Object) }
     let(:mock_font) do
       instance_double(Fontisan::Type1Font,
-                     charstrings: mock_charstrings,
-                     font_dictionary: mock_font_dictionary)
+                      charstrings: mock_charstrings,
+                      font_dictionary: mock_font_dictionary)
     end
 
     before do
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       # Stub the methods to call the original (no-op) implementation
-      allow(converter).to receive(:generate_unicode_mappings) { |font| nil }
-      allow(converter).to receive(:decompose_seac_glyphs) { |font| nil }
+      allow(converter).to receive_messages(generate_unicode_mappings: nil,
+                                           decompose_seac_glyphs: nil)
     end
 
     it "applies generate_unicode option when set" do
       conv_options = Fontisan::ConversionOptions.new(
         from: :type1,
         to: :otf,
-        opening: { generate_unicode: true }
+        opening: { generate_unicode: true },
       )
 
       expect(converter).to receive(:generate_unicode_mappings).with(mock_font)
@@ -64,7 +64,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       conv_options = Fontisan::ConversionOptions.new(
         from: :type1,
         to: :otf,
-        opening: { decompose_composites: true }
+        opening: { decompose_composites: true },
       )
 
       expect(converter).to receive(:decompose_seac_glyphs).with(mock_font)
@@ -76,20 +76,20 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       conv_options = Fontisan::ConversionOptions.new(
         from: :type1,
         to: :otf,
-        opening: {}
+        opening: {},
       )
 
       # Just verify it runs without error
-      expect {
+      expect do
         converter.send(:apply_opening_options, mock_font, conv_options)
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it "skips opening options when conv_options is nil" do
       # Just verify it runs without error
-      expect {
+      expect do
         converter.send(:apply_opening_options, mock_font, nil)
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 
@@ -108,14 +108,11 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     before do
       # Stub detect_format to return :type1 (called before validate)
-      allow(converter).to receive(:detect_format).and_return(:type1)
       # Stub validate to prevent errors
-      allow(converter).to receive(:validate).and_return(nil)
       # Stub apply_opening_options to prevent actual option processing
-      allow(converter).to receive(:apply_opening_options).and_return(nil)
       # Stub conversion methods
-      allow(converter).to receive(:convert_type1_to_otf).and_return({})
-      allow(converter).to receive(:convert_type1_to_ttf).and_return({})
+      allow(converter).to receive_messages(detect_format: :type1,
+                                           validate: nil, apply_opening_options: nil, convert_type1_to_otf: {}, convert_type1_to_ttf: {})
     end
 
     context "target format detection" do
@@ -123,9 +120,9 @@ RSpec.describe Fontisan::Converters::Type1Converter do
         conv_options = Fontisan::ConversionOptions.new(from: :type1, to: :otf)
         options = { options: conv_options }
 
-        expect {
+        expect do
           converter.convert(mock_font, options)
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it "uses ConversionOptions target format when not specified in options" do
@@ -133,7 +130,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
         options = { options: conv_options }
 
         # When target is TTF, convert_type1_to_ttf is called with the ConversionOptions
-        expect(converter).to receive(:convert_type1_to_ttf).with(mock_font, conv_options)
+        expect(converter).to receive(:convert_type1_to_ttf).with(mock_font,
+                                                                 conv_options)
 
         converter.convert(mock_font, options)
       end
@@ -141,11 +139,12 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     context "with recommended options" do
       it "uses recommended options for Type 1 to OTF" do
-        options = Fontisan::ConversionOptions.recommended(from: :type1, to: :otf)
+        options = Fontisan::ConversionOptions.recommended(from: :type1,
+                                                          to: :otf)
 
-        expect {
+        expect do
           converter.convert(mock_font, options: options)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
@@ -153,19 +152,18 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       it "uses type1_to_modern preset" do
         options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
 
-        expect {
+        expect do
           converter.convert(mock_font, options: options)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
 
     context "with Hash options (backward compatibility)" do
       it "accepts Hash options without ConversionOptions" do
-        expect {
+        expect do
           converter.convert(mock_font, target_format: :otf)
-        }.not_to raise_error
+        end.not_to raise_error
       end
     end
   end
 end
-
