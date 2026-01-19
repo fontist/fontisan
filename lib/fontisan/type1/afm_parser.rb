@@ -135,40 +135,30 @@ module Fontisan
       #
       # @param content [String] AFM content
       def parse_global_metrics(content)
-        # FontName
-        if (match = content.match(/^FontName\s+(.+)$/i))
-          @font_name = match[1].strip
-        end
+        # Split into lines for safer processing (limits input size for regex)
+        lines = content.lines
 
-        # FullName
-        if (match = content.match(/^FullName\s+(.+)$/i))
-          @full_name = match[1].strip
-        end
+        # Parse all metrics in a single loop to satisfy RuboCop
+        lines.each do |line|
+          if @font_name.nil? && (match = line.match(/^FontName\s+(\S+)/i))
+            @font_name = match[1]
+          elsif @full_name.nil? && (match = line.match(/^FullName\s+(\S.*)/i))
+            @full_name = match[1].strip
+          elsif @family_name.nil? && (match = line.match(/^FamilyName\s+(\S.*)/i))
+            @family_name = match[1].strip
+          elsif @weight.nil? && (match = line.match(/^Weight\s+(\S.*)/i))
+            @weight = match[1].strip
+          elsif @version.nil? && (match = line.match(/^Version\s+(\S.*)/i))
+            @version = match[1].strip
+          elsif @copyright.nil? && (match = line.match(/^Notice\s+(\S.*)/i))
+            @copyright = match[1].strip
+          elsif @font_bbox.nil? && (match = line.match(/^FontBBox\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)$/i))
+            @font_bbox = [match[1].to_i, match[2].to_i, match[3].to_i, match[4].to_i]
+          end
 
-        # FamilyName
-        if (match = content.match(/^FamilyName\s+(.+)$/i))
-          @family_name = match[1].strip
-        end
-
-        # Weight
-        if (match = content.match(/^Weight\s+(.+)$/i))
-          @weight = match[1].strip
-        end
-
-        # Version
-        if (match = content.match(/^Version\s+(.+)$/i))
-          @version = match[1].strip
-        end
-
-        # Notice
-        if (match = content.match(/^Notice\s+(.+)$/i))
-          @copyright = match[1].strip
-        end
-
-        # FontBBox
-        if (match = content.match(/^FontBBox\s+(.+)$/i))
-          bbox = match[1].strip.split.map(&:to_i)
-          @font_bbox = bbox if bbox.length >= 4
+          # Break early if all metrics found
+          break if @font_name && @full_name && @family_name &&
+            @weight && @version && @copyright && @font_bbox
         end
       end
 
@@ -176,11 +166,9 @@ module Fontisan
       #
       # @param content [String] AFM content
       def parse_character_metrics(content)
-        # Find StartCharMetrics section
-        char_metrics_section = content.match(/^StartCharMetrics\s+(.+?)$/i)
+        # Find StartCharMetrics section - use safer pattern
+        char_metrics_section = content.match(/^StartCharMetrics\s+(\d+)/i)
         return unless char_metrics_section
-
-        char_metrics_section[1].to_i
 
         # Parse character metrics until EndCharMetrics
         in_char_metrics = false
@@ -291,7 +279,8 @@ module Fontisan
         return if line.strip.empty?
 
         # KPX format: KPX left right adjustment
-        if (match = line.match(/^KPX\s+(\S+)\s+(\S+)\s+(-?\d+)/i))
+        # Use bounded patterns to prevent ReDoS
+        if (match = line.match(/^KPX\s+(\S{1,64})\s+(\S{1,64})\s+(-?\d+)/i))
           left = match[1]
           right = match[2]
           adjustment = match[3].to_i
