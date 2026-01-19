@@ -167,6 +167,7 @@ require_relative "fontisan/collection/writer"
 require_relative "fontisan/collection/builder"
 
 # Format conversion infrastructure
+require_relative "fontisan/conversion_options"
 require_relative "fontisan/converters/conversion_strategy"
 require_relative "fontisan/converters/table_copier"
 require_relative "fontisan/converters/outline_converter"

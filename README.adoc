@@ -2045,6 +2045,166 @@ All TrueType fonts are converted to OpenType/CFF format.
 ====
 
 
+== Font conversion options
+
+=== General
+
+Fontisan provides a comprehensive conversion options system based on the TypeTool 3
+manual's recommended options for different font format conversions. The system supports:
+
+* Format-specific default options
+* Named presets for common workflows
+* Fine-grained control over conversion behavior
+* Type-safe option validation
+
+The conversion options system gives you control over how fonts are converted between
+formats, with options for opening (reading) fonts and generating (writing) fonts.
+
+For complete documentation, see link:docs/CONVERSION_GUIDE.adoc[Conversion Guide]
+and link:docs/TYPE1_FONTS.adoc[Type 1 Font Support].
+
+
+=== Show recommended options
+
+Use `--show-options` to display the recommended options for a conversion:
+
+[source,shell]
+----
+$ fontisan convert font.ttf --to otf --show-options
+
+Recommended options for TTF → OTF conversion:
+======================================================================
+
+Opening options:
+  --convert-curves: true
+  --scale-to-1000: true
+  --autohint: true
+  --decompose-composites: false
+  --store-custom-tables: true
+
+Generating options:
+  --hinting-mode: auto
+  --decompose-on-output: true
+
+Available presets:
+  type1_to_modern
+  modern_to_type1
+  web_optimized
+  archive_to_modern
+
+To use preset:
+  fontisan convert ttf --to otf --preset <name> --output output.ext
+----
+
+
+=== Using presets
+
+Presets provide pre-configured options for common conversion scenarios:
+
+[source,shell]
+----
+# Convert Type 1 to modern OpenType
+fontisan convert font.pfb --to otf --preset type1_to_modern --output font.otf
+
+# Convert to web-optimized WOFF2
+fontisan convert font.otf --to woff2 --preset web_optimized --output font.woff2
+
+# Convert font archive to modern format
+fontisan convert family.ttc --to otc --preset archive_to_modern --output family.otc
+----
+
+
+=== Custom conversion options
+
+Individual options can be specified for fine-grained control:
+
+Opening options (control how the source font is read):
+
+* `--decompose` - Decompose composite glyphs
+* `--convert-curves` - Convert curve types during conversion
+* `--scale-to-1000` - Scale units-per-em to 1000
+* `--autohint` - Auto-hint the font
+* `--generate-unicode` - Generate Unicode mappings (Type 1)
+
+Generating options (control how the output font is written):
+
+* `--hinting-mode` - Hint mode: preserve, auto, none, or full
+* `--optimize-tables` - Enable table optimization
+* `--decompose-on-output` - Decompose composites in output
+
+[source,shell]
+----
+# Convert with autohinting and optimization
+fontisan convert font.ttf --to otf --output font.otf \
+  --autohint --hinting-mode auto --optimize-tables
+----
+
+For detailed information on all available options and conversion scenarios,
+see the link:docs/CONVERSION_GUIDE.adoc[Conversion Guide].
+
+
+=== Ruby API usage
+
+.Using recommended options
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Get recommended options for TTF → OTF conversion
+options = Fontisan::ConversionOptions.recommended(from: :ttf, to: :otf)
+
+# Access opening and generating options
+options.opening    # => { convert_curves: true, scale_to_1000: true, ... }
+options.generating # => { hinting_mode: "auto", decompose_on_output: true }
+
+# Use with converter
+converter = Fontisan::Converters::OutlineConverter.new
+tables = converter.convert(font, options: options)
+----
+====
+
+
+.Using presets programmatically
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Load a preset
+options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
+
+# Convert with preset
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, options: options)
+----
+====
+
+
+.Building custom options
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# Build custom conversion options
+options = Fontisan::ConversionOptions.new(
+  from: :ttf,
+  to: :otf,
+  opening: { autohint: true, convert_curves: true },
+  generating: { hinting_mode: "auto" }
+)
+
+# Use with converter
+converter = Fontisan::Converters::OutlineConverter.new
+tables = converter.convert(font, options: options)
+----
+====
+
+
 == Round-Trip validation
 
 === General

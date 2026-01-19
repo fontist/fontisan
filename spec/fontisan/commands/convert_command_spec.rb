@@ -222,4 +222,132 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
       end.to output(/TransformationPipeline/).to_stdout
     end
   end
+
+  describe "ConversionOptions integration" do
+    describe "#extract_conversion_options" do
+      it "extracts ConversionOptions from options hash" do
+        conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
+        options = { options: conv_options }
+
+        command = described_class.new(ttf_path, options)
+
+        expect(command.instance_variable_get(:@conv_options)).to eq(conv_options)
+      end
+
+      it "returns nil when no ConversionOptions provided" do
+        options = { to: "otf", output: File.join(output_dir, "output.otf") }
+
+        command = described_class.new(ttf_path, options)
+
+        expect(command.instance_variable_get(:@conv_options)).to be_nil
+      end
+
+      it "returns ConversionOptions when passed directly as options" do
+        conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
+
+        command = described_class.new(ttf_path, to: "otf",
+                                              output: File.join(output_dir, "output.otf"),
+                                              options: conv_options)
+
+        expect(command.instance_variable_get(:@conv_options)).to eq(conv_options)
+      end
+    end
+
+    describe "#run with ConversionOptions" do
+      it "passes ConversionOptions to TransformationPipeline for single fonts" do
+        conv_options = Fontisan::ConversionOptions.new(
+          from: :ttf,
+          to: :otf,
+          opening: { decompose_composites: true }
+        )
+        output_path = File.join(output_dir, "output.otf")
+
+        command = described_class.new(
+          ttf_path,
+          to: "otf",
+          output: output_path,
+          options: conv_options,
+          quiet: true,
+          no_validate: true,
+        )
+
+        # Just verify it doesn't raise an error - the integration is in place
+        expect { command.run }.not_to raise_error
+        expect(File.exist?(output_path)).to be(true)
+      end
+
+      it "accepts ConversionOptions.from_preset" do
+        options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
+        output_path = File.join(output_dir, "output.otf")
+
+        command = described_class.new(
+          ttf_path,
+          to: "otf",
+          output: output_path,
+          options: options,
+          quiet: true,
+          no_validate: true,
+        )
+
+        expect { command.run }.not_to raise_error
+        expect(File.exist?(output_path)).to be(true)
+      end
+
+      it "accepts ConversionOptions.recommended" do
+        options = Fontisan::ConversionOptions.recommended(from: :ttf, to: :otf)
+        output_path = File.join(output_dir, "output.otf")
+
+        command = described_class.new(
+          ttf_path,
+          to: "otf",
+          output: output_path,
+          options: options,
+          quiet: true,
+          no_validate: true,
+        )
+
+        expect { command.run }.not_to raise_error
+        expect(File.exist?(output_path)).to be(true)
+      end
+
+      it "works with Hash options (backward compatibility)" do
+        output_path = File.join(output_dir, "output.otf")
+
+        command = described_class.new(
+          ttf_path,
+          to: "otf",
+          output: output_path,
+          quiet: true,
+          no_validate: true,
+        )
+
+        expect { command.run }.not_to raise_error
+        expect(File.exist?(output_path)).to be(true)
+      end
+    end
+
+    describe "collection conversion with ConversionOptions" do
+      it "stores ConversionOptions for collection conversion" do
+        conv_options = Fontisan::ConversionOptions.new(
+          from: :ttf,
+          to: :ttf,
+          generating: { optimize_tables: true }
+        )
+        output_path = File.join(output_dir, "output.ttc")
+
+        # Check that the command accepts ConversionOptions for collections
+        # We use the TTF path since collection_file? will detect it as single font
+        command = described_class.new(
+          ttf_path,
+          to: "ttc",
+          output: output_path,
+          options: conv_options,
+          quiet: true,
+        )
+
+        # Verify the ConversionOptions is stored
+        expect(command.instance_variable_get(:@conv_options)).to eq(conv_options)
+      end
+    end
+  end
 end

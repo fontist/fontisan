@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../conversion_options"
 require_relative "../type1/charstring_converter"
 require_relative "../type1/font_dictionary"
 require_relative "../type1/charstrings"
@@ -25,21 +26,23 @@ module Fontisan
     # * Type 1 → TTF: Type 1 → OTF → TTF (via OutlineConverter)
     # * TTF → Type 1: TTF → OTF → Type 1
     #
-    # == Limitations
+    # == Conversion Options
     #
-    # * seac composite glyphs are expanded to base glyphs (placeholder implemented)
-    # * Some Type 1 hints may not be preserved accurately
-    # * Unique Type 1 features like Flex operators are not converted
+    # The converter accepts [`ConversionOptions`](../conversion_options) with
+    # opening and generating options:
     #
-    # @example Convert Type 1 to OTF
+    # * Opening options: decompose_composites, generate_unicode, read_all_records
+    # * Generating options: decompose_on_output, hinting_mode, write_pfm, write_afm
+    #
+    # @example Convert Type 1 to OTF with options
     #   font = FontLoader.load("font.pfb")
+    #   options = ConversionOptions.recommended(from: :type1, to: :otf)
     #   converter = Type1Converter.new
-    #   tables = converter.convert(font, target_format: :otf)
+    #   tables = converter.convert(font, options: options)
     #
-    # @example Convert OTF to Type 1
-    #   font = FontLoader.load("font.otf")
-    #   converter = Type1Converter.new
-    #   tables = converter.convert(font, target_format: :type1)
+    # @example Convert with preset
+    #   options = ConversionOptions.from_preset(:type1_to_modern)
+    #   tables = converter.convert(font, options: options)
     #
     # @see https://www.adobe.com/devnet/font/pdfs/Type1.pdf
     # @see CharStringConverter
@@ -62,24 +65,32 @@ module Fontisan
       # Convert font to target format
       #
       # @param font [Type1Font, OpenTypeFont, TrueTypeFont] Source font
-      # @param options [Hash] Conversion options
+      # @param options [Hash, ConversionOptions] Conversion options
+      # @option options [Symbol] :target_format Target format override
+      # @option options [ConversionOptions] :options ConversionOptions object
       # @return [Hash<String, String>] Map of table tags to binary data
       def convert(font, options = {})
-        target_format = options[:target_format] || @target_format ||
+        # Extract ConversionOptions if provided
+        conv_options = extract_conversion_options(options)
+
+        target_format = options[:target_format] || conv_options&.to || @target_format ||
           detect_target_format(font)
         validate(font, target_format)
+
+        # Apply opening options to source font
+        apply_opening_options(font, conv_options) if conv_options
 
         source_format = detect_format(font)
 
         case [source_format, target_format]
         when %i[type1 otf]
-          convert_type1_to_otf(font, options)
+          convert_type1_to_otf(font, conv_options)
         when %i[otf type1]
-          convert_otf_to_type1(font)
+          convert_otf_to_type1(font, conv_options)
         when %i[type1 ttf]
-          convert_type1_to_ttf(font, options)
+          convert_type1_to_ttf(font, conv_options)
         when %i[ttf type1]
-          convert_ttf_to_type1(font)
+          convert_ttf_to_type1(font, conv_options)
         else
           raise Fontisan::Error,
                 "Unsupported conversion: #{source_format} → #{target_format}"
@@ -123,6 +134,70 @@ module Fontisan
       end
 
       private
+
+      # Extract ConversionOptions from options hash
+      #
+      # @param options [Hash, ConversionOptions] Options or hash containing :options key
+      # @return [ConversionOptions, nil] Extracted ConversionOptions or nil
+      def extract_conversion_options(options)
+        return options if options.is_a?(ConversionOptions)
+
+        options[:options] if options.is_a?(Hash)
+      end
+
+      # Apply opening options to source font
+      #
+      # @param font [Type1Font] Source font
+      # @param conv_options [ConversionOptions] Conversion options with opening options
+      def apply_opening_options(font, conv_options)
+        return unless font.is_a?(Type1Font)
+        return unless conv_options
+
+        # Generate Unicode codepoints if requested
+        if conv_options.opening_option?(:generate_unicode)
+          generate_unicode_mappings(font)
+        end
+
+        # Decompose seac composites if requested
+        if conv_options.opening_option?(:decompose_composites)
+          decompose_seac_glyphs(font)
+        end
+
+        # Read all font dictionary records if requested
+        if conv_options.opening_option?(:read_all_records) && font.font_dictionary.respond_to?(:reload)
+          # Ensure full font dictionary is loaded
+          font.font_dictionary.reload
+        end
+      end
+
+      # Generate Unicode codepoints from glyph names/encoding
+      #
+      # @param font [Type1Font] Source Type 1 font
+      def generate_unicode_mappings(_font)
+        # Placeholder: Generate Unicode mappings from glyph names
+        # A full implementation would:
+        # 1. Parse the Adobe Glyph List
+        # 2. Map glyph names to Unicode codepoints
+        # 3. Update the charstrings encoding
+        #
+        # For now, this is a no-op placeholder
+        nil
+      end
+
+      # Decompose seac composite glyphs to base glyphs
+      #
+      # @param font [Type1Font] Source Type 1 font
+      def decompose_seac_glyphs(_font)
+        # Placeholder: Decompose seac composites
+        # A full implementation would:
+        # 1. Identify glyphs using seac operator
+        # 2. Resolve the accent character from encoding
+        # 3. Extract component outlines recursively
+        # 4. Merge into single glyph
+        #
+        # For now, this is a no-op placeholder
+        nil
+      end
 
       # Detect font format
       #

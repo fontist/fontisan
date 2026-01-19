@@ -3,6 +3,7 @@
 require_relative "base_command"
 require_relative "../pipeline/transformation_pipeline"
 require_relative "../converters/collection_converter"
+require_relative "../conversion_options"
 require_relative "../font_loader"
 
 module Fontisan
@@ -36,6 +37,16 @@ module Fontisan
     #     coordinates: 'wght=700,wdth=100'
     #   )
     #   command.run
+    #
+    # @example Convert with ConversionOptions
+    #   options = ConversionOptions.recommended(from: :ttf, to: :otf)
+    #   command = ConvertCommand.new(
+    #     'input.ttf',
+    #     to: 'otf',
+    #     output: 'output.otf',
+    #     options: options
+    #   )
+    #   command.run
     class ConvertCommand < BaseCommand
       # Initialize convert command
       #
@@ -52,6 +63,7 @@ module Fontisan
       # @option options [String] :target_format Target outline format for collections: 'preserve' (default), 'ttf', or 'otf'
       # @option options [Boolean] :no_validate Skip output validation
       # @option options [Boolean] :verbose Verbose output
+      # @option options [ConversionOptions] :options ConversionOptions object
       def initialize(font_path, options = {})
         super(font_path, options)
 
@@ -62,6 +74,9 @@ module Fontisan
 
         # Parse target format
         @target_format = parse_target_format(opts[:to])
+
+        # Extract ConversionOptions if provided
+        @conv_options = extract_conversion_options(opts)
 
         # Parse coordinates if string provided
         @coordinates = if opts[:coordinates]
@@ -122,6 +137,9 @@ module Fontisan
           validate: @validate,
           verbose: @options[:verbose],
         }
+
+        # Add ConversionOptions if available
+        pipeline_options[:conversion_options] = @conv_options if @conv_options
 
         # Add variation options if specified
         pipeline_options[:coordinates] = @coordinates if @coordinates
@@ -196,6 +214,7 @@ module Fontisan
             output: @output_path,
             target_format: @collection_target_format,
             verbose: @options[:verbose],
+            options: @conv_options, # Pass ConversionOptions
           },
         )
 
@@ -330,6 +349,16 @@ module Fontisan
         else
           "#{(bytes / (1024.0 * 1024)).round(1)} MB"
         end
+      end
+
+      # Extract ConversionOptions from options hash
+      #
+      # @param options [Hash, ConversionOptions] Options or hash containing :options key
+      # @return [ConversionOptions, nil] Extracted ConversionOptions or nil
+      def extract_conversion_options(options)
+        return options if options.is_a?(ConversionOptions)
+
+        options[:options] if options.is_a?(Hash)
       end
     end
   end
