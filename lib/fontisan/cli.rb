@@ -205,8 +205,8 @@ module Fontisan
     option :to, type: :string, required: true,
                 desc: "Target format (ttf, otf, type1, t1, woff, woff2)",
                 aliases: "-t"
-    option :output, type: :string, required: true,
-                    desc: "Output file path",
+    option :output, type: :string,
+                    desc: "Output file path (required unless --show-options)",
                     aliases: "-o"
     option :coordinates, type: :string,
                          desc: "Instance coordinates (e.g., wght=700,wdth=100)",
@@ -232,6 +232,29 @@ module Fontisan
                   desc: "Italic axis value (alternative to --coordinates)"
     option :opsz, type: :numeric,
                   desc: "Optical size axis value (alternative to --coordinates)"
+    # Conversion options
+    option :preset, type: :string,
+                    desc: "Use named preset (type1_to_modern, modern_to_type1, web_optimized, archive_to_modern)"
+    option :show_options, type: :boolean, default: false,
+                          desc: "Show recommended options for the conversion and exit"
+    option :decompose, type: :boolean,
+                       desc: "Decompose composite glyphs (opening option)"
+    option :convert_curves, type: :boolean,
+                            desc: "Convert curves during conversion (opening option)"
+    option :scale_to_1000, type: :boolean,
+                           desc: "Scale to 1000 units per em (opening option)"
+    option :autohint, type: :boolean,
+                      desc: "Auto-hint the font (opening option)"
+    option :generate_unicode, type: :boolean,
+                              desc: "Generate Unicode mappings (Type 1 opening option)"
+    option :hinting_mode, type: :string,
+                          desc: "Hinting mode: preserve, auto, none, or full"
+    option :optimize_cff, type: :boolean,
+                          desc: "Enable CFF subroutine optimization"
+    option :optimize_tables, type: :boolean,
+                             desc: "Enable table optimization"
+    option :decompose_on_output, type: :boolean,
+                                 desc: "Decompose on output (generating option)"
     # Convert a font to a different format using the universal transformation pipeline.
     #
     # Supported conversions:
@@ -291,16 +314,45 @@ module Fontisan
     #
     # @example Convert without validation
     #   fontisan convert font.ttf --to otf --output font.otf --no-validate
+    #
+    # @example Use named preset
+    #   fontisan convert font.pfb --to otf --output font.otf --preset type1_to_modern
+    #
+    # @example Show recommended options for conversion
+    #   fontisan convert font.ttf --to otf --show-options
+    #
+    # @example Convert with custom options
+    #   fontisan convert font.ttf --to otf --output font.otf --autohint --hinting-mode auto
     def convert(font_file)
+      # Detect source format from file
+      source_format = detect_source_format(font_file)
+
+      # Handle --show-options
+      if options[:show_options]
+        show_recommended_options(source_format, options[:to])
+        return
+      end
+
+      # Validate output is provided when not using --show-options
+      unless options[:output]
+        raise Thor::Error, "Output path is required. Use --output option."
+      end
+
+      # Build ConversionOptions
+      conv_options = build_conversion_options(source_format, options[:to],
+                                              options)
+
       # Build instance coordinates from axis options
       instance_coords = build_instance_coordinates(options)
 
-      # Merge coordinates into options
+      # Merge coordinates and ConversionOptions into convert_options
       convert_options = options.to_h.dup
       if instance_coords.any?
-        convert_options[:instance_coordinates] =
-          instance_coords
+        convert_options[:instance_coordinates] = instance_coords
       end
+
+      # Add ConversionOptions if built
+      convert_options[:options] = conv_options if conv_options
 
       command = Commands::ConvertCommand.new(font_file, convert_options)
       command.run
@@ -674,6 +726,118 @@ module Fontisan
       profiles.each do |profile_name, config|
         puts "  #{profile_name.to_s.ljust(20)} - #{config[:description]}"
       end
+    end
+
+    # Detect source format from file extension
+    #
+    # @param font_file [String] Path to the font file
+    # @return [Symbol] Detected format symbol
+    def detect_source_format(font_file)
+      ext = File.extname(font_file).downcase
+      case ext
+      when ".ttf"
+        :ttf
+      when ".otf"
+        :otf
+      when ".pfb", ".pfa"
+        :type1
+      when ".ttc"
+        :ttc
+      when ".otc"
+        :otc
+      when ".dfont"
+        :dfont
+      when ".woff"
+        :woff
+      when ".woff2"
+        :woff2
+      when ".svg"
+        :svg
+      else
+        # Default to TTF for unknown extensions
+        :ttf
+      end
+    end
+
+    # Show recommended options for a conversion
+    #
+    # @param source_format [Symbol] Source format
+    # @param target_format_str [String] Target format string
+    # @return [void]
+    def show_recommended_options(source_format, target_format_str)
+      target_format = Fontisan::ConversionOptions.normalize_format(target_format_str)
+
+      puts "\nRecommended options for #{source_format.to_s.upcase} → #{target_format.to_s.upcase} conversion:"
+      puts "=" * 70
+
+      # Show recommended options
+      recommended = Fontisan::ConversionOptions.recommended(from: source_format,
+                                                          to: target_format)
+      puts "\nOpening options:"
+      if recommended.opening.any?
+        recommended.opening.each do |key, value|
+          puts "  --#{key.to_s.gsub('_', '-')}: #{value}"
+        end
+      else
+        puts "  (none)"
+      end
+
+      puts "\nGenerating options:"
+      if recommended.generating.any?
+        recommended.generating.each do |key, value|
+          puts "  --#{key.to_s.gsub('_', '-')}: #{value}"
+        end
+      else
+        puts "  (none)"
+      end
+
+      puts "\nAvailable presets:"
+      Fontisan::ConversionOptions.available_presets.each do |preset|
+        puts "  #{preset}"
+      end
+
+      puts "\nTo use preset:"
+      puts "  fontisan convert #{source_format} --to #{target_format} --preset <name> --output output.ext"
+      puts "\n"
+    end
+
+    # Build ConversionOptions from CLI options
+    #
+    # @param source_format [Symbol] Source format
+    # @param target_format_str [String] Target format string
+    # @param opts [Hash] CLI options
+    # @return [ConversionOptions, nil] Built ConversionOptions or nil
+    def build_conversion_options(source_format, target_format_str, opts)
+      target_format = Fontisan::ConversionOptions.normalize_format(target_format_str)
+
+      # Use preset if specified
+      if opts[:preset]
+        return Fontisan::ConversionOptions.from_preset(opts[:preset])
+      end
+
+      # Build opening options from CLI flags
+      opening = {}
+      opening[:decompose_composites] = true if opts[:decompose]
+      opening[:convert_curves] = true if opts[:convert_curves]
+      opening[:scale_to_1000] = true if opts[:scale_to_1000]
+      opening[:autohint] = true if opts[:autohint]
+      opening[:generate_unicode] = true if opts[:generate_unicode]
+
+      # Build generating options from CLI flags
+      generating = {}
+      generating[:hinting_mode] = opts[:hinting_mode] if opts[:hinting_mode]
+      generating[:decompose_on_output] = true if opts[:decompose_on_output]
+      generating[:optimize_tables] = true if opts[:optimize_tables]
+
+      # Only create ConversionOptions if any options were set
+      return nil if opening.empty? && generating.empty?
+
+      Fontisan::ConversionOptions.new(
+        from: source_format,
+        to: target_format,
+        opening: opening,
+        generating: generating,
+      )
     end
   end
 end

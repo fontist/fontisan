@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../conversion_options"
 require_relative "format_converter"
 require_relative "../collection/builder"
 require_relative "../collection/dfont_builder"
@@ -27,14 +28,15 @@ module Fontisan
     #   converter = CollectionConverter.new
     #   result = converter.convert(ttc_path, target_type: :otc, output: 'family.otc')
     #
+    # @example Convert with ConversionOptions
+    #   options = ConversionOptions.recommended(from: :ttc, to: :otc)
+    #   converter = CollectionConverter.new
+    #   result = converter.convert(ttc_path, target_type: :otc, options: { output: 'family.otc', options: options })
+    #
     # @example Convert TTC to OTC with outline conversion
     #   converter = CollectionConverter.new
     #   result = converter.convert(ttc_path, target_type: :otc,
-    #                              options: { output: 'family.otc', convert_outlines: true })
-    #
-    # @example Convert dfont to TTC
-    #   converter = CollectionConverter.new
-    #   result = converter.convert(dfont_path, target_type: :ttc, output: 'family.ttc')
+    #                              options: { output: 'family.otc', target_format: 'otf' })
     class CollectionConverter
       # Convert collection to target format
       #
@@ -45,6 +47,7 @@ module Fontisan
       # @option options [String] :target_format Target outline format: 'preserve' (default), 'ttf', or 'otf'
       # @option options [Boolean] :optimize Enable table sharing (default: true, TTC/OTC only)
       # @option options [Boolean] :verbose Enable verbose output (default: false)
+      # @option options [ConversionOptions] :options ConversionOptions object
       # @return [Hash] Conversion result with:
       #   - :input [String] - Input collection path
       #   - :output [String] - Output collection path
@@ -57,9 +60,19 @@ module Fontisan
       def convert(collection_path, target_type:, options: {})
         validate_parameters!(collection_path, target_type, options)
 
+        # Extract ConversionOptions if provided
+        conv_options = extract_conversion_options(options)
+
         verbose = options.fetch(:verbose, false)
         output_path = options[:output]
-        target_format = options.fetch(:target_format, "preserve").to_s
+
+        # Determine target format from ConversionOptions or options hash
+        target_format = if conv_options&.generating_option?(:target_format,
+                                                            "otf")
+                          conv_options.generating[:target_format]
+                        else
+                          options.fetch(:target_format, "preserve").to_s
+                        end
 
         # Validate target_format
         unless %w[preserve ttf otf].include?(target_format)
@@ -84,7 +97,8 @@ module Fontisan
         # Step 2: Convert - transform fonts if requested
         puts "  Converting #{fonts.size} font(s)..." if verbose
         converted_fonts, conversions = convert_fonts(fonts, source_type,
-                                                     target_type, options.merge(target_format: target_format))
+                                                     target_type, options.merge(target_format: target_format),
+                                                     conv_options)
 
         # Step 3: Repack - build target collection
         puts "  Repacking into #{target_type.to_s.upcase} format..." if verbose
@@ -206,13 +220,20 @@ module Fontisan
       # @param source_type [Symbol] Source collection type
       # @param target_type [Symbol] Target collection type
       # @param options [Hash] Conversion options
+      # @param conv_options [ConversionOptions, nil] Conversion options object
       # @return [Array<(Array<Font>, Array<Hash>)>] [converted_fonts, conversions]
-      def convert_fonts(fonts, _source_type, target_type, options)
+      def convert_fonts(fonts, _source_type, target_type, options,
+conv_options = nil)
         converted_fonts = []
         conversions = []
 
         # Determine if outline conversion is needed
-        target_format = options.fetch(:target_format, "preserve").to_s
+        target_format = if conv_options&.generating_option?(:target_format,
+                                                            "otf")
+                          conv_options.generating[:target_format]
+                        else
+                          options.fetch(:target_format, "preserve").to_s
+                        end
 
         fonts.each_with_index do |font, index|
           source_format = detect_font_format(font)
@@ -224,8 +245,12 @@ module Fontisan
             desired_format = target_format == "preserve" ? source_format : target_format.to_sym
             converter = FormatConverter.new
 
+            # Build converter options, including ConversionOptions if provided
+            converter_opts = options.dup
+            converter_opts[:options] = conv_options if conv_options
+
             begin
-              tables = converter.convert(font, desired_format, options)
+              tables = converter.convert(font, desired_format, converter_opts)
               converted_font = build_font_from_tables(tables, desired_format)
               converted_fonts << converted_font
 
@@ -441,6 +466,16 @@ conversions)
         end
 
         puts ""
+      end
+
+      # Extract ConversionOptions from options hash
+      #
+      # @param options [Hash, ConversionOptions] Options or hash containing :options key
+      # @return [ConversionOptions, nil] Extracted ConversionOptions or nil
+      def extract_conversion_options(options)
+        return options if options.is_a?(ConversionOptions)
+
+        options[:options] if options.is_a?(Hash)
       end
     end
   end

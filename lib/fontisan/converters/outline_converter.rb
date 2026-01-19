@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "../conversion_options"
 require_relative "conversion_strategy"
 require_relative "../outline_extractor"
 require_relative "../models/outline"
@@ -54,9 +55,10 @@ module Fontisan
     #   converter = Fontisan::Converters::OutlineConverter.new
     #   otf_font = converter.convert(ttf_font, target_format: :otf)
     #
-    # @example Converting OTF to TTF
+    # @example Converting with ConversionOptions
+    #   options = ConversionOptions.recommended(from: :ttf, to: :otf)
     #   converter = Fontisan::Converters::OutlineConverter.new
-    #   ttf_font = converter.convert(otf_font, target_format: :ttf)
+    #   otf_font = converter.convert(ttf_font, options: options)
     #
     # @example Converting with hint preservation
     #   converter = Fontisan::Converters::OutlineConverter.new
@@ -89,18 +91,30 @@ module Fontisan
       # @option options [Boolean] :preserve_variations Keep variation data during conversion (default: true)
       # @option options [Boolean] :generate_instance Generate static instance instead of variable font (default: false)
       # @option options [Hash] :instance_coordinates Axis coordinates for instance generation (default: {})
+      # @option options [ConversionOptions] :options ConversionOptions object
       # @return [Hash<String, String>] Map of table tags to binary data
       def convert(font, options = {})
         @font = font
         @options = options
+
+        # Extract ConversionOptions if provided
+        conv_options = extract_conversion_options(options)
+
         @optimize_cff = options.fetch(:optimize_cff, false)
-        @preserve_hints = options.fetch(:preserve_hints, false)
+        @preserve_hints = options.fetch(:preserve_hints,
+                                        conv_options&.generating_option?(
+                                          :hinting_mode, "preserve"
+                                        ) || false)
         @preserve_variations = options.fetch(:preserve_variations, true)
         @generate_instance = options.fetch(:generate_instance, false)
         @instance_coordinates = options.fetch(:instance_coordinates, {})
-        target_format = options[:target_format] ||
+
+        target_format = options[:target_format] || conv_options&.to ||
           detect_target_format(font)
         validate(font, target_format)
+
+        # Apply opening options to source font
+        apply_opening_options(font, conv_options) if conv_options
 
         source_format = detect_format(font)
 
@@ -663,6 +677,66 @@ module Fontisan
       # @return [Boolean] True if font has variation tables
       def variable_font?(font)
         font.has_table?("fvar")
+      end
+
+      # Extract ConversionOptions from options hash
+      #
+      # @param options [Hash, ConversionOptions] Options or hash containing :options key
+      # @return [ConversionOptions, nil] Extracted ConversionOptions or nil
+      def extract_conversion_options(options)
+        return options if options.is_a?(ConversionOptions)
+
+        options[:options] if options.is_a?(Hash)
+      end
+
+      # Apply opening options to source font
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      # @param conv_options [ConversionOptions] Conversion options with opening options
+      def apply_opening_options(font, conv_options)
+        return unless conv_options
+
+        # Decompose composites if requested
+        if conv_options.opening_option?(:decompose_composites)
+          decompose_composite_glyphs(font)
+        end
+
+        # Interpret OpenType tables if requested
+        if conv_options.opening_option?(:interpret_ot)
+          # Ensure GSUB/GPOS tables are fully loaded
+          interpret_opentype_features(font)
+        end
+
+        # Note: scale_to_1000 and convert_curves are handled during conversion
+        # These options affect the conversion process itself
+      end
+
+      # Decompose composite glyphs in font
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      def decompose_composite_glyphs(_font)
+        # Placeholder: Decompose composite glyphs
+        # A full implementation would:
+        # 1. Identify composite glyphs (TrueType: flags & 0x0020, CFF: seac operator)
+        # 2. Extract component outlines
+        # 3. Merge into single glyph
+        #
+        # For now, this is a no-op placeholder
+        nil
+      end
+
+      # Interpret OpenType layout features
+      #
+      # @param font [TrueTypeFont, OpenTypeFont] Source font
+      def interpret_opentype_features(_font)
+        # Placeholder: Interpret GSUB/GPOS tables
+        # A full implementation would:
+        # 1. Parse GSUB table for substitution rules
+        # 2. Parse GPOS table for positioning rules
+        # 3. Store interpreted features for later use
+        #
+        # For now, this is a no-op placeholder
+        nil
       end
     end
   end

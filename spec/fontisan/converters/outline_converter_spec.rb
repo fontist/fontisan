@@ -313,4 +313,96 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       end
     end
   end
+
+  describe "ConversionOptions integration" do
+    describe "#extract_conversion_options" do
+      it "extracts ConversionOptions from options hash" do
+        conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
+        options = { options: conv_options }
+
+        result = converter.send(:extract_conversion_options, options)
+
+        expect(result).to eq(conv_options)
+      end
+
+      it "returns nil when no ConversionOptions provided" do
+        options = { target_format: :otf }
+
+        result = converter.send(:extract_conversion_options, options)
+
+        expect(result).to be_nil
+      end
+
+      it "returns ConversionOptions when passed directly" do
+        conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
+
+        result = converter.send(:extract_conversion_options, conv_options)
+
+        expect(result).to eq(conv_options)
+      end
+    end
+
+    describe "#apply_opening_options" do
+      let(:mock_font) { double("Font") }
+
+      before do
+        allow(mock_font).to receive(:is_a?).with(Fontisan::TrueTypeFont).and_return(true)
+        allow(converter).to receive(:decompose_composite_glyphs).and_return(nil)
+      end
+
+      it "applies decompose_composites option when set" do
+        conv_options = Fontisan::ConversionOptions.new(
+          from: :ttf,
+          to: :otf,
+          opening: { decompose_composites: true }
+        )
+
+        expect(converter).to receive(:decompose_composite_glyphs).with(mock_font)
+
+        converter.send(:apply_opening_options, mock_font, conv_options)
+      end
+
+      it "skips opening options when not set" do
+        conv_options = Fontisan::ConversionOptions.new(
+          from: :ttf,
+          to: :otf,
+          opening: {}
+        )
+
+        expect(converter).not_to receive(:decompose_composite_glyphs)
+
+        # Just verify it runs without error
+        expect {
+          converter.send(:apply_opening_options, mock_font, conv_options)
+        }.not_to raise_error
+      end
+
+      it "skips opening options when conv_options is nil" do
+        expect(converter).not_to receive(:decompose_composite_glyphs)
+
+        expect {
+          converter.send(:apply_opening_options, mock_font, nil)
+        }.not_to raise_error
+      end
+    end
+
+    describe "#convert with ConversionOptions" do
+      # Just verify the integration points exist and work
+      it "has extract_conversion_options method" do
+        expect(converter).to respond_to(:extract_conversion_options)
+      end
+
+      it "has apply_opening_options method" do
+        expect(converter).to respond_to(:apply_opening_options)
+      end
+
+      it "extracts ConversionOptions correctly" do
+        conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
+        options = { options: conv_options }
+
+        result = converter.send(:extract_conversion_options, options)
+        expect(result).to eq(conv_options)
+      end
+    end
+  end
 end
