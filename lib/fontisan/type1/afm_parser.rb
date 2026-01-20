@@ -279,13 +279,14 @@ module Fontisan
         return if line.strip.empty?
 
         # KPX format: KPX left right adjustment
-        # Use bounded patterns to prevent ReDoS
-        if (match = line.match(/^KPX\s+(\S{1,64})\s+(\S{1,64})\s+(-?\d+)/i))
+        # Use specific character class for glyph names to prevent ReDoS
+        # AFM glyph names contain letters, digits, period, underscore
+        if (match = line.match(/^KPX\s+([A-Za-z0-9._]{1,64})\s+([A-Za-z0-9._]{1,64})\s+(-?\d+)/i))
           left = match[1]
           right = match[2]
           adjustment = match[3].to_i
 
-          # Remove quotes if present
+          # Remove quotes if present (some AFM files quote glyph names)
           left = left.gsub(/['"]/, "")
           right = right.gsub(/['"]/, "")
 
