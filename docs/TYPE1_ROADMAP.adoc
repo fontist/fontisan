@@ -1,0 +1,534 @@
+# Type 1 Font Implementation Roadmap
+
+## Executive Summary
+
+This roadmap outlines the completion of Type 1 font support in Fontisan. The core infrastructure is approximately 60-70% complete, but critical conversion functionality, encryption, and integration work remains.
+
+**Current Status**: Alpha - Basic parsing works, conversions are incomplete
+**Target Status**: Production-ready with full bidirectional conversion support
+**Estimated Effort**: 3-4 weeks of focused development
+
+---
+
+## Current State Assessment
+
+### Completed Features ✓
+- PFB/PFA parsing (ASCII and binary segments)
+- eexec decryption (key 55665, Rabin-Miller cipher)
+- CharString decryption (key 4330, lenIV support)
+- Font dictionary parsing (FontInfo, Private dict, CharStrings)
+- AFM file parsing for metrics
+- Basic Type1Converter stubs
+- Test fixtures and basic specs
+
+### Incomplete Features ⚠
+- **Type 1 → CFF CharString conversion**: Returns empty byte strings
+- **CFF → Type 1 CharString conversion**: Not implemented
+- **Seac composite decomposition**: Detection works, no decomposition
+- **eexec encryption**: TODO, only decryption works
+- **SFNT table building**: Empty placeholder tables
+- **OutlineConverter integration**: Type 1 not supported
+- **Unicode mapping generation**: Placeholder implementation
+
+---
+
+## Roadmap Phases
+
+### Phase 1: Seac Composite Glyph Decomposition (Week 1)
+**Goal**: Enable proper conversion of composite glyphs like À, É, ñ
+
+**Owner**: Core conversion functionality
+**Dependencies**: None
+**Blockers**: None
+
+#### Tasks
+- [ ] **1.1** Implement `SeacExpander#decompose` method
+  - [ ] Parse seac operator arguments (asb, adx, ady, bchar, achar)
+  - [ ] Look up base and accent glyphs from CharStrings
+  - [ ] Parse base glyph CharString into outline commands
+  - [ ] Parse accent glyph CharString into outline commands
+  - [ ] Transform accent by (adx, ady) offset
+  - [ ] Merge base and accent outlines into single path
+  - [ ] Return decomposed CharString data
+
+- [ ] **1.2** Add outline transformation support
+  - [ ] Implement `apply_transform(outline, dx, dy)` for translation
+  - [ ] Handle coordinate system differences
+  - [ ] Preserve curve control points during transformation
+
+- [ ] **1.3** Update Type1Converter to use seac decomposition
+  - [ ] Call `SeacExpander#decompose` during conversion
+  - [ ] Replace seac glyphs with decomposed versions in CFF output
+  - [ ] Update glyph count and index mappings
+
+- [ ] **1.4** Add comprehensive tests
+  - [ ] Test seac decomposition with real fonts (quicksand.pfb)
+  - [ ] Verify outline correctness for common composites
+  - [ ] Test accent positioning accuracy
+  - [ ] Add edge case tests (nested composites, missing components)
+
+**Success Criteria**:
+- Seac composites convert to CFF with correct outlines
+- All tests in `spec/fontisan/type1/seac_expander_spec.rb` pass
+- Real Type 1 fonts with seac glyphs convert successfully
+
+---
+
+### Phase 2: Type 1 → CFF CharString Conversion (Week 1-2)
+**Goal**: Complete Type 1 to OTF conversion
+
+**Owner**: Core conversion functionality
+**Dependencies**: Phase 1 (seac decomposition)
+**Blockers**: Seac decomposition
+
+#### Tasks
+- [ ] **2.1** Implement Type 1 CharString parsing
+  - [ ] Complete `CharStringParser#parse` method
+  - [ ] Parse all Type 1 operators (hsbw, sbw, hstem, vstem, etc.)
+  - [ ] Build command list with proper operand handling
+  - [ ] Handle subroutine calls (callsubr, callgsubr)
+
+- [ ] **2.2** Implement CFF CharString generation
+  - [ ] Create `CFFCharStringGenerator` class
+  - [ ] Convert Type 1 operators to CFF equivalents
+  - [ ] Handle operand stack differences
+  - [ ] Generate efficient CFF bytecode
+
+- [ ] **2.3** Implement Type1Converter#generate_cff_charstrings
+  - [ ] Replace `String.new(encoding: Encoding::ASCII_8BIT)` placeholder
+  - [ ] Convert all glyphs from Type 1 to CFF format
+  - [ ] Handle encoding differences (seac → endchar)
+  - [ ] Preserve hinting information where possible
+
+- [ ] **2.4** Build CFF Private dictionary
+  - [ ] Copy BlueValues, OtherBlues from Type 1 Private dict
+  - [ ] Convert StdHW/StdVW to StemSnapH/StemSnapV
+  - [ ] Set BlueScale, BlueShift, BlueFuzz appropriately
+  - [ ] Handle lenIV differences (CFF doesn't use CharString encryption)
+
+- [ ] **2.5** Build complete CFF table structure
+  - [ ] Generate CFF header (version, OffSize, count)
+  - [ ] Build INDEX arrays for CharStrings, Strings, Subrs
+  - [ ] Encode FDSelect and FDArray if needed
+  - [ ] Calculate proper offsets and lengths
+
+- [ ] **2.6** Add conversion tests
+  - [ ] Test simple glyphs (lines, curves)
+  - [ ] Test composite glyphs (seac decomposed)
+  - [ ] Test hinting preservation
+  - [ ] Verify CFF table validity with font validation tools
+
+**Success Criteria**:
+- `Type1Converter.convert_to_otf` produces valid OTF files
+- All glyphs convert with correct outlines
+- CFF table passes font validation
+- Real Type 1 fonts convert to working OTF files
+
+---
+
+### Phase 3: CFF → Type 1 CharString Conversion (Week 2)
+**Goal**: Enable OTF to Type 1 conversion
+
+**Owner**: Core conversion functionality
+**Dependencies**: Phase 2
+**Blockers**: Type 1 → CFF conversion
+
+#### Tasks
+- [ ] **3.1** Implement CFF CharString parsing
+  - [ ] Parse all CFF operators (rmoveto, rlineto, rrcurveto, etc.)
+  - [ ] Build command list with operands
+  - [ ] Handle CFF-specific operators (hhintvh/v, hintmask)
+
+- [ ] **3.2** Implement Type 1 CharString generation
+  - [ ] Create `Type1CharStringGenerator` class
+  - [ ] Convert CFF operators to Type 1 equivalents
+  - [ ] Add width selection (hsbw/sbw) to each glyph
+  - [ ] Generate Type 1 bytecode
+
+- [ ] **3.3** Implement reverse conversion in Type1Converter
+  - [ ] Add `convert_from_otf` method
+  - [ ] Extract CFF table from OTF font
+  - [ ] Convert CFF CharStrings to Type 1 format
+  - [ ] Build Type 1 font dictionary structure
+
+- [ ] **3.4** Generate Type 1 Private dictionary
+  - [ ] Extract hinting values from CFF Private dict
+  - [ ] Convert StemSnap to StdHW/StdVW arrays
+  - [ ] Set appropriate defaults for missing values
+
+- [ ] **3.5** Implement PFB/PFA generation
+  - [ ] Complete `PFBGenerator` (currently stubbed)
+  - [ ] Implement `PFAGenerator` (currently stubbed)
+  - [ ] Generate proper ASCII/binary segment structure
+  - [ ] Calculate segment lengths correctly
+
+- [ ] **3.6** Add round-trip tests
+  - [ ] Test TTF → OTF → Type 1 → OTF → TTF
+  - [ ] Verify outline preservation
+  - [ ] Check metadata preservation
+  - [ ] Validate all intermediate formats
+
+**Success Criteria**:
+- `Type1Converter.convert_from_otf` produces valid Type 1 fonts
+- Round-trip conversion maintains glyph accuracy
+- Generated PFB/PFA files are valid and loadable
+
+---
+
+### Phase 4: eexec Encryption (Week 2-3)
+**Goal**: Complete encryption for Type 1 font generation
+
+**Owner**: Security and compatibility
+**Dependencies**: Phase 3
+**Blockers**: CFF → Type 1 conversion
+
+#### Tasks
+- [ ] **4.1** Implement eexec encryption
+  - [ ] Implement Rabin-Miller cipher with key 55665
+  - [ ] Handle encryption of font dictionary and CharStrings
+  - [ ] Generate encrypted binary sections for PFB
+  - [ ] Generate encrypted hex sections for PFA
+
+- [ ] **4.2** Implement CharString encryption
+  - [ ] Implement CharString encryption with key 4330
+  - [ ] Handle lenIV parameter (0-4 bytes of random IV)
+  - [ ] Generate and prepend IV to encrypted data
+  - [ ] Support decryption for validation
+
+- [ ] **4.3** Update PFBGenerator
+  - [ ] Add eexec encryption step to generation process
+  - [ ] Mark encrypted sections with proper markers
+  - [ ] Handle currentfile eexec syntax
+
+- [ ] **4.4** Update PFAGenerator
+  - [ ] Add eexec encryption with hex encoding
+  - [ ] Generate proper ASCII hexadecimal format
+  - [ ] Handle line breaks in hex output
+
+- [ ] **4.5** Add encryption tests
+  - [ ] Test encryption/decryption round-trip
+  - [ ] Verify compatibility with Adobe Type 1 spec
+  - [ ] Test with various lenIV values
+  - [ ] Validate encrypted fonts load correctly
+
+**Success Criteria**:
+- Generated Type 1 fonts have properly encrypted sections
+- Encrypted fonts are readable by standard tools
+- Encryption/decryption round-trip works correctly
+
+---
+
+### Phase 5: OutlineConverter Integration (Week 3)
+**Goal**: Integrate Type 1 fonts into main conversion pipeline
+
+**Owner**: Integration
+**Dependencies**: Phases 2, 3, 4
+**Blockers**: All conversion phases
+
+#### Tasks
+- [ ] **5.1** Add Type 1 support to OutlineConverter
+  - [ ] Add Type 1 font detection in `can_convert?`
+  - [ ] Implement Type 1 outline extraction
+  - [ ] Handle Type 1 → outline → TTF conversion path
+  - [ ] Handle OTF → outline → Type 1 conversion path
+
+- [ ] **5.2** Update conversion strategies
+  - [ ] Add `Type1ConversionStrategy` class
+  - [ ] Register with `ConversionStrategyRegistry`
+  - [ ] Handle format negotiation between Type 1 and others
+
+- [ ] **5.3** Update FontLoader
+  - [ ] Ensure Type 1 fonts load through FontLoader
+  - [ ] Handle format detection correctly
+  - [ ] Return proper font objects
+
+- [ ] **5.4** Add integration tests
+  - [ ] Test TTF → Type 1 conversion
+  - [ ] Test Type 1 → TTF conversion
+  - [ ] Test OTF ↔ Type 1 conversion
+  - [ ] Test collection handling with Type 1
+
+**Success Criteria**:
+- Type 1 fonts work with standard `Fontisan.convert` API
+- All conversion paths work correctly
+- Integration tests pass
+
+---
+
+### Phase 6: SFNT Table Building (Week 3-4)
+**Goal**: Generate complete SFNT tables for Type 1 conversions
+
+**Owner**: Font structure
+**Dependencies:** Phase 2, 5
+**Blockers**: Type 1 → CFF conversion
+
+#### Tasks
+- [ ] **6.1** Implement head table generation
+  - [ ] Calculate font revision from Type 1 version
+  - [ ] Set proper flags and unitsPerEm
+  - [ ] Generate created/modified timestamps
+  - [ ] Calculate checksum adjustments
+
+- [ ] **6.2** Implement hhea table generation
+  - [ ] Calculate ascender/descender from FontBBox
+  - [ ] Set lineGap and other metrics
+  - [ ] Calculate numberOfHMetrics
+
+- [ ] **6.3** Implement maxp table generation
+  - [ ] Set version to 0x00010000 (TrueType 1.0)
+  - [ ] Calculate numGlyphs from CharStrings
+  - [ ] Set max component depth for composite support
+
+- [ ] **6.4** Implement name table generation
+  - [ ] Extract names from FontInfo (Copyright, Family, etc.)
+  - [ ] Generate proper name records
+  - [ ] Handle language and platform IDs
+
+- [ ] **6.5** Implement OS/2 table generation
+  - [ ] Calculate weight class from FontInfo Weight
+  - [ ] Set width class and family class
+  - [ ] Generate Unicode and codepage ranges
+  - [ ] Set vendor ID and version
+
+- [ ] **6.6** Implement post table generation
+  - [ ] Generate glyph name list from CharStrings
+  - [ ] Set italicAngle from FontInfo
+  - [ ] Calculate underline metrics
+  - [ ] Set fixedPitch flag
+
+- [ ] **6.7** Implement cmap table generation
+  - [ ] Use AGL for Unicode mappings
+  - [ ] Generate format 4 subtable (segmented mapping)
+  - [ ] Handle mac encoding subtable
+  - [ ] Add Windows Unicode subtable
+
+- [ ] **6.8** Add table validation tests
+  - [ ] Validate all tables with Microsoft Font Validator
+  - [ ] Check checksum calculations
+  - [ ] Verify table offsets and lengths
+
+**Success Criteria**:
+- All required SFNT tables are generated correctly
+- Generated fonts pass validation tools
+- Tables contain accurate metadata
+
+---
+
+### Phase 7: CLI Commands (Week 4)
+**Goal**: Add Type 1-specific CLI commands
+
+**Owner**: User experience
+**Dependencies**: All conversion phases
+**Blockers**: None
+
+#### Tasks
+- [ ] **7.1** Implement `fontisan type1-info` command
+  - [ ] Show font name, version, copyright
+  - [ ] Display glyph count and CharString info
+  - [ ] Show Private dictionary values
+  - [ ] Display encryption status
+
+- [ ] **7.2** Implement `fontisan type1-convert` command
+  - [ ] Support Type 1 → OTF/TTF conversion
+  - [ ] Support OTF/TTF → Type 1 conversion
+  - [ ] Add options for seac handling
+  - [ ] Add options for encryption
+
+- [ ] **7.3** Implement `fontisan type1-validate` command
+  - [ ] Validate PFB/PFA file structure
+  - [ ] Check CharString validity
+  - [ ] Verify encryption integrity
+  - [ ] Report detailed validation results
+
+- [ ] **7.4** Update help documentation
+  - [ ] Add Type 1 examples to README
+  - [ ] Document Type 1 conversion options
+  - [ ] Add troubleshooting guide
+
+**Success Criteria**:
+- All Type 1 commands work correctly
+- Help text is clear and comprehensive
+- Examples in documentation are accurate
+
+---
+
+### Phase 8: Testing & Quality Assurance (Ongoing)
+**Goal**: Comprehensive test coverage
+
+**Owner**: Quality assurance
+**Dependencies**: All phases
+**Blockers**: None
+
+#### Tasks
+- [ ] **8.1** Complete unit test coverage
+  - [ ] All Type 1 classes have >90% coverage
+  - [ ] Edge cases are tested
+  - [ ] Error handling is tested
+
+- [ ] **8.2** Add integration tests
+  - [ ] Test full conversion workflows
+  - [ ] Test with diverse font samples
+  - [ ] Test error recovery
+
+- [ ] **8.3** Add property-based tests
+  - [ ] Use RSpec PropertyGen for CharString conversion
+  - [ ] Test round-trip properties
+  - [ ] Test invariant preservation
+
+- [ ] **8.4** Performance testing
+  - [ ] Benchmark conversion times
+  - [ ] Profile memory usage
+  - [ ] Optimize bottlenecks
+
+- [ ] **8.5** Font validation
+  - [ ] Test with Microsoft Font Validator
+  - [ ] Test with Adobe OTS
+  - [ ] Test with fonttools ttx
+
+**Success Criteria**:
+- All tests pass consistently
+- Code coverage >90%
+- No known critical bugs
+- Performance is acceptable
+
+---
+
+## Dependencies and Blockers
+
+### Critical Path
+```
+Phase 1 (Seac Decomposition)
+    ↓
+Phase 2 (Type 1 → CFF)
+    ↓
+Phase 3 (CFF → Type 1) ← Phase 4 (eexec Encryption)
+    ↓                    ↓
+Phase 5 (OutlineConverter Integration)
+    ↓
+Phase 6 (SFNT Tables)
+    ↓
+Phase 7 (CLI Commands)
+```
+
+### External Dependencies
+- Font validation tools (Microsoft Font Validator, Adobe OTS)
+- Test fonts (URW Base35, real-world Type 1 fonts)
+- Reference implementations (fonttools, lcdf-type1)
+
+### Risk Mitigation
+- **Risk**: Seac decomposition is complex
+  - **Mitigation**: Start with simple composites, use reference implementations
+
+- **Risk**: CharString conversion may have edge cases
+  - **Mitigation**: Comprehensive testing, property-based tests
+
+- **Risk**: Encryption bugs may corrupt fonts
+  - **Mitigation**: Round-trip tests, validation tools
+
+---
+
+## Success Metrics
+
+### Completion Criteria
+- [ ] All Type 1 → TTF conversions produce valid fonts
+- [ ] All TTF → Type 1 conversions produce valid fonts
+- [ ] All tests pass (unit, integration, property-based)
+- [ ] Code coverage >90% for Type 1 code
+- [ ] Generated fonts pass validation tools
+- [ ] CLI commands work correctly
+- [ ] Documentation is complete
+
+### Performance Targets
+- Type 1 parsing: <100ms for typical font
+- Type 1 → OTF conversion: <5 seconds for typical font
+- OTF → Type 1 conversion: <5 seconds for typical font
+- Memory usage: <100MB for typical conversion
+
+---
+
+## Open Questions
+
+1. **Subroutine optimization**: Should we implement CFF subroutine optimization for Type 1 → CFF conversion? (Low priority, can defer)
+
+2. **Variable fonts**: Should Type 1 fonts support conversion to/from variable fonts? (Out of scope for now)
+
+3. **Legacy encodings**: How much support for legacy Type 1 encodings (Expert, Old Style)? (Depends on user demand)
+
+4. **Hint preservation**: Should we attempt to preserve TrueType hints when converting TTF → Type 1? (Complex, may defer)
+
+---
+
+## References
+
+- Adobe Type 1 Font Format: https://www.adobe.com/devnet/font/pdfs/Type1.pdf
+- Adobe CFF Specification: https://www.adobe.com/devnet/font/pdfs/CFF.pdf
+- FontTools Type 1 Implementation: /Users/mulgogi/src/external/fontTools/Lib/fontTools/t1Lib/
+- lcdf-type1tools: /Users/mulgogi/src/external/lcdf-typetools/
+
+---
+
+## Checklist Summary
+
+### Phase 1: Seac Decomposition
+- [ ] 1.1 Implement `SeacExpander#decompose`
+- [ ] 1.2 Add outline transformation support
+- [ ] 1.3 Update Type1Converter to use seac decomposition
+- [ ] 1.4 Add comprehensive tests
+
+### Phase 2: Type 1 → CFF Conversion
+- [ ] 2.1 Implement Type 1 CharString parsing
+- [ ] 2.2 Implement CFF CharString generation
+- [ ] 2.3 Implement Type1Converter#generate_cff_charstrings
+- [ ] 2.4 Build CFF Private dictionary
+- [ ] 2.5 Build complete CFF table structure
+- [ ] 2.6 Add conversion tests
+
+### Phase 3: CFF → Type 1 Conversion
+- [ ] 3.1 Implement CFF CharString parsing
+- [ ] 3.2 Implement Type 1 CharString generation
+- [ ] 3.3 Implement reverse conversion in Type1Converter
+- [ ] 3.4 Generate Type 1 Private dictionary
+- [ ] 3.5 Implement PFB/PFA generation
+- [ ] 3.6 Add round-trip tests
+
+### Phase 4: eexec Encryption
+- [ ] 4.1 Implement eexec encryption
+- [ ] 4.2 Implement CharString encryption
+- [ ] 4.3 Update PFBGenerator
+- [ ] 4.4 Update PFAGenerator
+- [ ] 4.5 Add encryption tests
+
+### Phase 5: OutlineConverter Integration
+- [ ] 5.1 Add Type 1 support to OutlineConverter
+- [ ] 5.2 Update conversion strategies
+- [ ] 5.3 Update FontLoader
+- [ ] 5.4 Add integration tests
+
+### Phase 6: SFNT Table Building
+- [ ] 6.1 Implement head table generation
+- [ ] 6.2 Implement hhea table generation
+- [ ] 6.3 Implement maxp table generation
+- [ ] 6.4 Implement name table generation
+- [ ] 6.5 Implement OS/2 table generation
+- [ ] 6.6 Implement post table generation
+- [ ] 6.7 Implement cmap table generation
+- [ ] 6.8 Add table validation tests
+
+### Phase 7: CLI Commands
+- [ ] 7.1 Implement `fontisan type1-info` command
+- [ ] 7.2 Implement `fontisan type1-convert` command
+- [ ] 7.3 Implement `fontisan type1-validate` command
+- [ ] 7.4 Update help documentation
+
+### Phase 8: Testing & QA
+- [ ] 8.1 Complete unit test coverage
+- [ ] 8.2 Add integration tests
+- [ ] 8.3 Add property-based tests
+- [ ] 8.4 Performance testing
+- [ ] 8.5 Font validation
+
+---
+
+**Last Updated**: 2026-01-20
+**Status**: In Planning
+**Next Milestone**: Phase 1 - Seac Decomposition
