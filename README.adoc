@@ -9,8 +9,8 @@ image:https://github.com/fontist/fontisan/actions/workflows/test.yml/badge.svg[B
 Fontisan is a Ruby gem providing font analysis tools and utilities.
 
 It is designed as a pure Ruby implementation with full object-oriented
-architecture, supporting extraction of information from OpenType and TrueType
-fonts (OTF, TTF, OTC, TTC, dfont).
+architecture, supporting extraction of information from OpenType, TrueType,
+and Adobe Type 1 fonts (OTF, TTF, OTC, TTC, dfont, PFB, PFA).
 
 The gem provides both a Ruby library API and a command-line interface, with
 structured output formats (YAML, JSON, text) via lutaml-model.
@@ -81,6 +81,7 @@ Font operations::
 
 Font format support::
 * TTF, OTF, TTC, OTC font formats (production ready)
+* Adobe Type 1 fonts (PFB/PFA) with bidirectional conversion (see link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide])
 * WOFF/WOFF2 format support with reading, writing, and conversion (see link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Guide])
 * Apple legacy font support: 'true' signature TrueType fonts and dfont format (see link:docs/APPLE_LEGACY_FONTS.adoc[Apple Legacy Fonts Guide])
 * SVG font generation (complete)

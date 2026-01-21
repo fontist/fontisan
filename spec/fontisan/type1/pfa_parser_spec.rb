@@ -131,13 +131,14 @@ RSpec.describe Fontisan::Type1::PFAParser do
     end
 
     context "error handling" do
-      it "raises error when zero marker is missing" do
-        data = "%!PS-AdobeFont-1.0\ncurrentfile eexec\nencrypted\nbut no zeros"
+      it "accepts .t1 format without zero marker" do
+        data = "%!PS-AdobeFont-1.0\ncurrentfile eexec\nbinary_encrypted_data"
 
         parser = described_class.new
+        result = parser.parse(data)
 
-        expect { parser.parse(data) }
-          .to raise_error(Fontisan::Error, /cannot find zero marker/)
+        expect(result.encrypted_binary).to eq("binary_encrypted_data")
+        expect(result.encrypted_hex).not_to be_empty
       end
     end
   end

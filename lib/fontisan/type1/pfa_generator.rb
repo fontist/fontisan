@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "pfb_generator"
+require_relative "decryptor"
 
 module Fontisan
   module Type1
@@ -220,17 +221,20 @@ module Fontisan
                         generate_simple_charstrings
                       end
 
-        # Combine all charstrings
-        binary_data = charstrings.values.join
+        # Build CharStrings dictionary text
+        charstrings_dict = build_charstrings_dict_text(charstrings)
 
-        # Convert to hex representation
+        # Encrypt with eexec
+        encrypted_data = Decryptor.eexec_encrypt(charstrings_dict)
+
+        # Convert encrypted data to hex representation
         hex_lines = []
 
         # Start hex section marker
         hex_lines << "00" # Start binary data marker
 
-        # Encode binary data as hex with line breaks
-        hex_string = binary_data.bytes.map { |b| format("%02x", b) }.join
+        # Encode encrypted data as hex with line breaks
+        hex_string = encrypted_data.bytes.map { |b| format("%02x", b) }.join
 
         # Split into lines of HEX_LINE_LENGTH characters
         hex_string.scan(/.{#{HEX_LINE_LENGTH}}/o) do |line|
@@ -241,6 +245,28 @@ module Fontisan
         hex_lines << "00" # End binary data marker
 
         hex_lines
+      end
+
+      # Build CharStrings dictionary text for eexec encryption
+      #
+      # @param charstrings [Hash] Glyph ID to CharString mapping
+      # @return [String] CharStrings dictionary text
+      def build_charstrings_dict_text(charstrings)
+        lines = []
+        lines << "dup /FontName get exch definefont pop"
+        lines << "begin"
+        lines << "/CharStrings #{charstrings.size} dict dup begin"
+
+        charstrings.each do |gid, charstring|
+          # Convert charstring bytes to hex representation for PostScript
+          hex_data = charstring.unpack1("H*")
+          lines << "#{gid} #{charstring.bytesize} #{hex_data} RD"
+        end
+
+        lines << "end"
+        lines << "end"
+        lines << "put"
+        lines.join("\n")
       end
 
       # Generate simple CharStrings (without curve conversion)

@@ -2,6 +2,7 @@
 
 require_relative "upm_scaler"
 require_relative "ttf_to_type1_converter"
+require_relative "decryptor"
 require_relative "../tables/name"
 
 module Fontisan
@@ -197,9 +198,31 @@ module Fontisan
         "/CharStrings #{@charstrings&.size || 0} dict dup begin\nend"
       end
 
+      # Build CharStrings dictionary text for eexec encryption
+      #
+      # @param charstrings [Hash] Glyph ID to CharString mapping
+      # @return [String] CharStrings dictionary text
+      def build_charstrings_dict_text(charstrings)
+        lines = []
+        lines << "dup /FontName get exch definefont pop"
+        lines << "begin"
+        lines << "/CharStrings #{charstrings.size} dict dup begin"
+
+        charstrings.each do |gid, charstring|
+          # Convert charstring bytes to hex representation for PostScript
+          hex_data = charstring.unpack1("H*")
+          lines << "#{gid} #{charstring.bytesize} #{hex_data} RD"
+        end
+
+        lines << "end"
+        lines << "end"
+        lines << "put"
+        lines.join("\n")
+      end
+
       # Build binary segment (CharStrings)
       #
-      # @return [String] Binary CharString data
+      # @return [String] Binary CharString data (encrypted with eexec)
       def build_binary_segment
         # Convert glyphs to Type 1 CharStrings
         charstrings = if @convert_curves
@@ -209,11 +232,11 @@ module Fontisan
                         generate_simple_charstrings
                       end
 
-        # Encode charstrings to eexec format (encrypted)
-        # For now, we'll use plain format (not encrypted)
-        # TODO: Implement eexec encryption
+        # Build CharStrings dictionary text
+        charstrings_dict = build_charstrings_dict_text(charstrings)
 
-        charstrings.values.join
+        # Encrypt with eexec
+        Decryptor.eexec_encrypt(charstrings_dict)
       end
 
       # Generate simple CharStrings (without curve conversion)

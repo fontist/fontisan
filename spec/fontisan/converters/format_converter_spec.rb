@@ -578,4 +578,84 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       end
     end
   end
+
+  describe "Type 1 font support" do
+    let(:type1_font) { double("Type1Font") }
+
+    before do
+      allow(type1_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
+      allow(type1_font).to receive_messages(
+        format: :pfb,
+        font_name: "TestType1",
+        full_name: "Test Type 1 Font",
+        family_name: "Test Type 1",
+        version: "001.000",
+      )
+    end
+
+    describe "format detection" do
+      it "detects Type 1 format" do
+        format = converter.send(:detect_format, type1_font)
+        expect(format).to eq(:type1)
+      end
+
+      it "distinguishes Type 1 from TTF and OTF" do
+        ttf_format = converter.send(:detect_format, ttf_font)
+        otf_format = converter.send(:detect_format, otf_font)
+        type1_format = converter.send(:detect_format, type1_font)
+
+        expect(ttf_format).to eq(:ttf)
+        expect(otf_format).to eq(:otf)
+        expect(type1_format).to eq(:type1)
+      end
+    end
+
+    describe "validation" do
+      it "accepts Type1Font as valid font type" do
+        expect do
+          converter.send(:validate_parameters!, type1_font, :otf)
+        end.not_to raise_error
+      end
+
+      it "accepts Type1Font for TTF target" do
+        expect do
+          converter.send(:validate_parameters!, type1_font, :ttf)
+        end.not_to raise_error
+      end
+    end
+
+    describe "variable font detection" do
+      it "returns false for Type 1 fonts (never variable)" do
+        expect(converter.send(:variable_font?, type1_font)).to be false
+      end
+    end
+
+    describe "conversion support" do
+      it "includes Type 1 conversions in all_conversions" do
+        conversions = converter.all_conversions
+        type1_to_otf = conversions.find { |c| c[:from] == :type1 && c[:to] == :otf }
+        type1_to_ttf = conversions.find { |c| c[:from] == :type1 && c[:to] == :ttf }
+        otf_to_type1 = conversions.find { |c| c[:from] == :otf && c[:to] == :type1 }
+
+        expect(type1_to_otf).not_to be_nil
+        expect(type1_to_ttf).not_to be_nil
+        expect(otf_to_type1).not_to be_nil
+      end
+
+      it "includes Type 1 targets in supported_targets" do
+        targets = converter.supported_targets(:type1)
+        expect(targets).to include(:otf, :ttf)
+      end
+    end
+
+    describe "strategy selection" do
+      it "selects Type1Converter for Type 1 conversions" do
+        # Verify Type1Converter is in strategies
+        type1_converter = converter.strategies.find do |s|
+          s.is_a?(Fontisan::Converters::Type1Converter)
+        end
+        expect(type1_converter).not_to be_nil
+      end
+    end
+  end
 end

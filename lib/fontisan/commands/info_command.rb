@@ -153,12 +153,18 @@ module Fontisan
                              "truetype"
                            when OpenTypeFont
                              "cff"
+                           when Type1Font
+                             "type1"
                            else
                              "unknown"
                            end
 
-        # Check if variable font
-        info.is_variable = font.has_table?(Constants::FVAR_TAG)
+        # Check if variable font (Type1 fonts are never variable)
+        info.is_variable = if font.is_a?(Type1Font)
+                            false
+                          else
+                            font.has_table?(Constants::FVAR_TAG)
+                          end
       end
 
       # Populate essential fields for brief mode (metadata tables only).
@@ -169,6 +175,17 @@ module Fontisan
       #
       # @param info [Models::FontInfo] FontInfo instance to populate
       def populate_brief_fields(info)
+        if font.is_a?(Type1Font)
+          populate_type1_brief_fields(info)
+        else
+          populate_sfnt_brief_fields(info)
+        end
+      end
+
+      # Populate SFNT font brief fields (name, head, OS/2 tables).
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_sfnt_brief_fields(info)
         # Essential names from name table
         if font.has_table?(Constants::NAME_TAG)
           name_table = font.table(Constants::NAME_TAG)
@@ -193,18 +210,82 @@ module Fontisan
         end
       end
 
+      # Populate Type 1 font brief fields.
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_type1_brief_fields(info)
+        # Get Type 1 font metadata
+        font_dict = font.font_dictionary
+        font_info = font_dict&.font_info if font_dict
+
+        return unless font_info
+
+        # Essential names from Type 1 font
+        info.family_name = font_info.family_name
+        info.full_name = font_info.full_name
+        info.postscript_name = font.font_name
+        info.version = font_info.version
+
+        # Metrics from font dictionary
+        if font_dict&.font_b_box
+          info.bounding_box = font_dict.font_b_box
+        end
+      end
+
       # Populate all fields for full mode.
       #
       # Full mode extracts comprehensive metadata from all available tables.
       #
       # @param info [Models::FontInfo] FontInfo instance to populate
       def populate_full_fields(info)
+        if font.is_a?(Type1Font)
+          populate_type1_full_fields(info)
+        else
+          populate_sfnt_full_fields(info)
+        end
+      end
+
+      # Populate SFNT font full fields.
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_sfnt_full_fields(info)
         populate_from_name_table(info) if font.has_table?(Constants::NAME_TAG)
         populate_from_os2_table(info) if font.has_table?(Constants::OS2_TAG)
         populate_from_head_table(info) if font.has_table?(Constants::HEAD_TAG)
         populate_color_info(info) if font.has_table?("COLR") && font.has_table?("CPAL")
         populate_svg_info(info) if font.has_table?("SVG ")
         populate_bitmap_info(info) if font.has_table?("CBLC") || font.has_table?("sbix")
+      end
+
+      # Populate Type 1 font full fields.
+      #
+      # @param info [Models::FontInfo] FontInfo instance to populate
+      def populate_type1_full_fields(info)
+        font_dict = font.font_dictionary
+        font_info = font_dict&.font_info if font_dict
+
+        return unless font_info
+
+        # Names from Type 1 font
+        info.family_name = font_info.family_name
+        info.full_name = font_info.full_name
+        info.postscript_name = font.font_name
+        info.version = font_info.version
+        info.copyright = font_info.copyright
+        info.description = font_info.notice
+        info.designer = nil  # Type 1 fonts may not have designer info
+
+        # Metrics
+        if font_dict&.font_b_box
+          info.bounding_box = font_dict.font_b_box
+        end
+
+        if font_dict&.font_matrix
+          info.font_matrix = font_dict.font_matrix
+        end
+
+        # Glyph count
+        info.glyph_count = font.charstrings&.count || 0
       end
 
       # Populate FontInfo from the name table.

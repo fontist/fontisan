@@ -46,6 +46,8 @@ require_relative "type1/font_dictionary"
 require_relative "type1/private_dict"
 require_relative "type1/charstrings"
 require_relative "type1/charstring_converter"
+require_relative "type1/cff_to_type1_converter"
+require_relative "type1/seac_expander"
 
 # Infrastructure
 require_relative "type1/upm_scaler"

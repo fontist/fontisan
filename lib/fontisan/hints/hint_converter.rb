@@ -274,7 +274,10 @@ module Fontisan
                      end
 
         # Merge all extracted hints (prep_hints and fpgm_hints override stem widths if present)
-        hints.merge!(prep_hints).merge!(fpgm_hints).merge!(blue_zones)
+        # Note: fpgm_hints contains metadata (fpgm_size, has_functions, complexity)
+        # which we must filter out before merging into PostScript dict hints
+        fpgm_dict_hints = fpgm_hints.reject { |k, _| %i[fpgm_size has_functions complexity].include?(k) }
+        hints.merge!(prep_hints).merge!(fpgm_dict_hints).merge!(blue_zones)
 
         # Provide default blue_values if none were detected
         # These are standard values that work for most Latin fonts

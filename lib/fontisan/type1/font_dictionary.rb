@@ -137,6 +137,34 @@ module Fontisan
         @raw_data[key]
       end
 
+      # Convert FontDictionary to Type 1 text format
+      #
+      # Generates the PostScript code for the Font Dictionary section
+      # of a Type 1 font.
+      #
+      # @return [String] Type 1 Font Dictionary text
+      #
+      # @example Generate Type 1 format
+      #   dict = FontDictionary.new
+      #   puts dict.to_type1_format
+      def to_type1_format
+        result = []
+        result << "% Type 1 Font Dictionary"
+        result << "12 dict begin"
+        result << ""
+        result << "/FontType 1 def"
+        result << "/PaintType #{@paint_type} def"
+        result << font_matrix_to_type1
+        result << font_bbox_to_type1
+        result << ""
+        result << font_info_to_type1
+        result << ""
+        result << "currentdict end"
+        result << "/FontName #{@font_name} def"
+
+        result.join("\n")
+      end
+
       private
 
       # Extract font dictionary from data
@@ -268,6 +296,40 @@ module Fontisan
         @font_matrix = @raw_data[:font_matrix] || [0.001, 0, 0, 0.001, 0, 0]
         @paint_type = @raw_data[:paint_type] || 0
         @font_type = @raw_data[:font_type] || 1
+      end
+
+      # Format FontMatrix for Type 1 output
+      #
+      # @return [String] Formatted FontMatrix definition
+      def font_matrix_to_type1
+        "/FontMatrix [#{@font_matrix.join(' ')}] def"
+      end
+
+      # Format FontBBox for Type 1 output
+      #
+      # @return [String] Formatted FontBBox definition
+      def font_bbox_to_type1
+        "/FontBBox {#{@font_b_box.join(' ')}} def"
+      end
+
+      # Format FontInfo for Type 1 output
+      #
+      # @return [String] Formatted FontInfo definitions
+      def font_info_to_type1
+        info = @font_info
+        result = []
+        result << "/FullName (#{info.full_name || 'Untitled'}) readonly def" if info.full_name
+        result << "/FamilyName (#{info.family_name || 'Untitled'}) readonly def" if info.family_name
+        result << "/version (#{info.version || '001.000'}) readonly def" if info.version
+        result << "/Copyright (#{info.copyright || ''}) readonly def" if info.copyright
+        result << "/Notice (#{info.notice || ''}) readonly def" if info.notice
+        result << "/Weight (#{info.weight || 'Medium'}) readonly def" if info.weight
+        result << "/isFixedPitch #{info.is_fixed_pitch || false} def" if info.is_fixed_pitch
+        result << "/UnderlinePosition #{info.underline_position || -100} def" if info.underline_position
+        result << "/UnderlineThickness #{info.underline_thickness || 50} def" if info.underline_thickness
+        result << "/ItalicAngle #{info.italic_angle || 0} def" if info.italic_angle
+
+        result.join("\n")
       end
 
       # FontInfo sub-dictionary

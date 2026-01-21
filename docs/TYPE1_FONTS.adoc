@@ -1,0 +1,445 @@
+= Type 1 Font Support
+
+Fontisan provides comprehensive support for Adobe Type 1 fonts (PFB/PFA), including reading, converting, and generating Type 1 format fonts.
+
+== Implementation Status
+
+*Complete* features:
+* Reading PFB (binary) and PFA (ASCII) format files
+* eexec decryption for encrypted font portions (key: 55665)
+* CharString decryption with lenIV support (key: 4330)
+* Font dictionary and private dictionary parsing
+* CharString parsing with `seac` composite expansion
+* Type 1 → OTF conversion with CFF CharString generation
+* Type 1 → TTF conversion (via OTF intermediate)
+* OTF → Type 1 conversion with CFF → Type 1 CharString conversion
+* TTF → Type 1 conversion (via OTF intermediate)
+* Adobe Glyph List (AGL) integration for Unicode mapping
+* SFNT table generation (head, hhea, maxp, name, OS/2, post, cmap)
+* PFM, AFM, INF file generation for Type 1 fonts
+
+*Preview/Planned* features:
+* Multiple master Type 1 fonts
+* Subroutine optimization in CharStrings
+
+== Overview
+
+Type 1 is a font format developed by Adobe Systems that uses PostScript outline descriptions. Type 1 fonts were widely used in professional typography and desktop publishing before being largely superseded by OpenType.
+
+Fontisan's Type 1 support includes:
+
+* Reading PFB and PFA files
+* Converting Type 1 to modern formats (OTF, TTF, WOFF, WOFF2)
+* Converting modern formats back to Type 1
+* Preserving Type 1 metadata and hinting information
+* Generating Unicode mappings from glyph names
+
+== Type 1 Font Structure
+
+=== Encryption
+
+Type 1 fonts typically use two levels of encryption to protect font data:
+
+* *eexec encryption* - Protects the private dictionary and CharStrings with key 55665
+* *CharString encryption* - Encrypts individual CharStrings with key 4330
+
+Fontisan automatically decrypts both levels when loading Type 1 fonts using the Rabin-Miller cipher with byte shuffle:
+
+[source,ruby]
+----
+# Automatic decryption on load
+font = Fontisan::FontLoader.from_file('font.pfb')
+puts font.decrypted?  # => true
+
+# Access decrypted data
+decrypted = font.decrypted_data
+----
+
+=== PFB vs PFA Formats
+
+*PFB (Printer Font Binary)*::
+Binary format with segmented structure using chunk markers:
+* `0x8001` - ASCII text chunk
+* `0x8002` - Binary data chunk (encrypted)
+* `0x8003` - End of file marker
+
+Each chunk is prefixed with a 4-byte little-endian length. PFB is most common on Windows systems.
+
+*PFA (Printer Font ASCII)*::
+Pure ASCII text format with encrypted portions marked by `currentfile eexec`. The encrypted data is represented as hexadecimal strings, followed by 512 ASCII zeros as a separator marker. PFA is most common on Unix/Linux systems.
+
+=== Type 1 Font Structure
+
+A Type 1 font consists of three main parts:
+
+. *Font Dictionary* - Contains font-level metadata (font name, version, bounding box, etc.)
+. *Private Dictionary* - Contains hinting parameters (blue values, stem snap, etc.)
+. *CharStrings* - Contains glyph outline descriptions in PostScript format
+
+=== Font Dictionary
+
+The font dictionary contains essential font information:
+
+[source,ruby]
+----
+{
+  version: "001.000",
+  notice: "Copyright notice",
+  copyright: "Copyright string",
+  full_name: "Font Full Name",
+  family_name: "Font Family",
+  weight: "Medium",
+  font_bbox: [x_min, y_min, x_max, y_max],
+  font_matrix: [0.001, 0, 0, 0.001, 0, 0]
+}
+----
+
+Where,
+
+`version`:: Version string in the format "XXX.YYY"
+`notice`:: Copyright and license information
+`copyright`:: Copyright string
+`full_name`:: Full font name including style
+`family_name`:: Font family name
+`weight`:: Font weight (e.g., "Medium", "Bold", "Light")
+`font_bbox`:: Font bounding box as [x_min, y_min, x_max, y_max]
+`font_matrix`:: Transformation matrix for scaling coordinates
+
+=== Private Dictionary
+
+The private dictionary contains hinting parameters:
+
+[source,ruby]
+----
+{
+  blue_values: [-10, 0, 470, 480],
+  other_blues: [250, 260],
+  blue_scale: 0.039625,
+  blue_shift: 7,
+  blue_fuzz: 1,
+  std_hw: 50,
+  std_vw: 80,
+  stem_snap_h: [50, 52],
+  stem_snap_v: [80, 82],
+  force_bold: false
+}
+----
+
+Where,
+
+`blue_values`:: Alignment zones for baseline and cap heights
+`other_blues`:: Additional alignment zones
+`blue_scale`:: Scaling factor for alignment zones
+`blue_shift`:: Maximum deviation from alignment zone
+`blue_fuzz`:: Fuzz factor for alignment
+`std_hw`:: Standard horizontal stem width
+`std_vw`:: Standard vertical stem width
+`stem_snap_h`:: Array of horizontal stem widths
+`stem_snap_v`:: Array of vertical stem widths
+`force_bold`:: Whether to force bold rendering
+
+=== CharStrings
+
+CharStrings contain glyph outline descriptions using PostScript commands:
+
+[source]
+----
+hsbw 0 0                 # Horizontal sidebearings and width
+rmoveto 100 0            # Relative move to
+rlineto 50 0             # Relative line to
+rlineto 0 50             # Relative line to
+rlineto -50 0            # Relative line to (close path)
+rlineto 0 -50            # Relative line to (close path)
+endchar                  # End of glyph
+----
+
+=== Seac Composite Glyphs
+
+Type 1 fonts include composite glyphs using the `seac` operator for accented characters. For example, "À" (A grave) might be defined as a base "A" with a combining grave accent.
+
+Fontisan provides automatic `seac` expansion:
+
+[source,ruby]
+----
+# Enable seac decomposition
+options = Fontisan::ConversionOptions.new(
+  from: :type1,
+  to: :otf,
+  opening: { decompose_composites: true }
+)
+
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, options: options)
+----
+
+The `SeacExpander` resolves composite glyphs by:
+1. Extracting the base character and accent from the encoding
+2. Recursively retrieving component CharStrings
+3. Merging the outlines into a single decomposed glyph
+
+This is necessary because CFF fonts (used in OTF) do not support the `seac` operator.
+
+== Loading Type 1 Fonts
+
+Use `FontLoader.load` to load Type 1 fonts:
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Load PFB file
+font = Fontisan::FontLoader.load('font.pfb')
+
+# Load PFA file
+font = Fontisan::FontLoader.load('font.pfa')
+
+# Access font dictionary
+dict = font.font_dictionary
+puts "Font: #{dict.font_name}"
+puts "Family: #{dict.family_name}"
+----
+
+== Converting Type 1 Fonts
+
+=== Type 1 to OpenType (OTF)
+
+Convert Type 1 fonts to modern OpenType format with CFF outlines:
+
+[source,ruby]
+----
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, target_format: :otf)
+
+# Write to file
+Fontisan::FontWriter.write(tables, 'output.otf')
+----
+
+Using the CLI:
+
+[source,shell]
+----
+fontisan convert font.pfb --to otf --output font.otf
+----
+
+=== Type 1 to TrueType (TTF)
+
+Convert Type 1 fonts to TrueType format with quadratic curves:
+
+[source,ruby]
+----
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, target_format: :ttf)
+
+# Write to file
+Fontisan::FontWriter.write(tables, 'output.ttf')
+----
+
+Using the CLI:
+
+[source,shell]
+----
+fontisan convert font.pfb --to ttf --output font.ttf
+----
+
+=== Type 1 to Web Fonts
+
+Convert Type 1 fonts directly to web font formats:
+
+[source,shell]
+----
+# Convert to WOFF
+fontisan convert font.pfb --to woff --output font.woff
+
+# Convert to WOFF2
+fontisan convert font.pfb --to woff2 --output font.woff2
+----
+
+=== Conversion with Options
+
+Use ConversionOptions for advanced control:
+
+[source,ruby]
+----
+options = Fontisan::ConversionOptions.recommended(from: :type1, to: :otf)
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, options: options)
+----
+
+Using presets:
+
+[source,ruby]
+----
+options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
+tables = converter.convert(font, options: options)
+----
+
+Using the CLI:
+
+[source,shell]
+----
+fontisan convert font.pfb --to otf --output font.otf --preset type1_to_modern
+----
+
+== Converting to Type 1
+
+=== OpenType to Type 1
+
+Convert OpenType/CFF fonts back to Type 1 format:
+
+[source,ruby]
+----
+converter = Fontisan::Converters::Type1Converter.new
+type1_data = converter.convert(otf_font, target_format: :type1)
+
+# Write PFB file
+File.write('output.pfb', type1_data[:pfb])
+----
+
+Using the CLI:
+
+[source,shell]
+----
+fontisan convert font.otf --to type1 --output font.pfb --preset modern_to_type1
+----
+
+=== TrueType to Type 1
+
+Convert TrueType fonts to Type 1 (via OpenType intermediate):
+
+[source,shell]
+----
+fontisan convert font.ttf --to type1 --output font.pfb
+----
+
+== Conversion Options
+
+=== Opening Options
+
+Options applied when reading Type 1 fonts:
+
+`generate_unicode`:: Generate Unicode codepoints from glyph names using the Adobe Glyph List
+`decompose_composites`:: Decompose seac composite glyphs into base glyphs
+`read_all_records`:: Force loading of all font dictionary records
+
+=== Generating Options
+
+Options applied when writing Type 1 fonts:
+
+`write_pfm`:: Generate PFM (Printer Font Metrics) file (default: true)
+`write_afm`:: Generate AFM (Adobe Font Metrics) file (default: true)
+`write_inf`:: Generate INF file for installation (default: true)
+`select_encoding_automatically`:: Automatically select encoding (default: true)
+`hinting_mode`:: Hint preservation mode: preserve, auto, or none
+`decompose_on_output`:: Decompose composite glyphs on output
+
+=== Presets
+
+Fontisan includes predefined presets for common Type 1 workflows:
+
+* `type1_to_modern` - Optimize Type 1 fonts for modern use (generates Unicode, preserves hints)
+* `modern_to_type1` - Convert modern fonts back to Type 1 format with proper metrics
+
+[source,ruby]
+----
+# Using preset programmatically
+options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
+
+# Using preset via CLI
+fontisan convert font.pfb --to otf --preset type1_to_modern --output font.otf
+----
+
+== Working with Glyphs
+
+=== Accessing Glyph Outlines
+
+[source,ruby]
+----
+font = Fontisan::FontLoader.load('font.pfb')
+
+# Iterate over glyphs
+font.charstrings.each_charstring do |glyph_name, charstring|
+  puts "Glyph: #{glyph_name}"
+
+  # Convert to universal outline format
+  outline = charstring.to_outline
+
+  # Access contour points
+  outline.contours.each do |contour|
+    contour.points.each do |point|
+      puts "  Point: #{point.x}, #{point.y} (#{point.on_curve? ? 'on' : 'off'} curve)"
+    end
+  end
+end
+----
+
+=== Glyph Names to Unicode
+
+Type 1 fonts use glyph names rather than Unicode codepoints. Use the Adobe Glyph List to map names to codepoints:
+
+[source,ruby]
+----
+# Enable Unicode generation
+options = Fontisan::ConversionOptions.new(
+  from: :type1,
+  to: :otf,
+  opening: { generate_unicode: true }
+)
+
+converter = Fontisan::Converters::Type1Converter.new
+tables = converter.convert(font, options: options)
+----
+
+== Limitations
+
+Current limitations of Type 1 support:
+
+* Subroutines in CharStrings are not fully optimized for space efficiency
+* Multiple master Type 1 fonts are not supported (only single master fonts)
+* Some hinting parameters may not convert perfectly between Type 1 and CFF formats
+* Converting modern fonts back to Type 1 may lose some OpenType features (GSUB/GPOS)
+
+== Technical Details
+
+=== Decryption Algorithm
+
+Fontisan uses the Rabin-Miller cipher with byte shuffle for decryption:
+
+[source,ruby]
+----
+# eexec decryption (key: 55665)
+cipher = key
+data.each_byte do |byte|
+  cipher = ((cipher << 8) & 0xFFFFFFFF) | byte
+  plain = cipher >> 8
+  result << plain.chr
+  cipher = plain ^ (cipher >> 16)
+end
+
+# CharString decryption (key: 4330)
+# Same cipher, but skips lenIV bytes at start
+decrypted = decrypt(charstring_data, 4330)
+charstring = lenIV > 0 ? decrypted[lenIV..-1] : decrypted
+----
+
+=== Command Mapping
+
+Type 1 CharString commands map directly to CFF commands for conversion:
+
+| Type 1 Command | CFF Command | Notes |
+|----------------|-------------|-------|
+| hsbw           | hsbw        | Identical |
+| sbw            | sbw         | Identical |
+| endchar        | endchar     | Identical |
+| hstem/vstem    | hstem/vstem | Identical |
+| rmoveto/hmoveto/vmoveto | rmoveto/hmoveto/vmoveto | Identical |
+| rlineto/hlineto/vlineto | rlineto/hlineto/vlineto | Identical |
+| rrcurveto/hhcurveto/vvcurveto/hvhcurveto/vhcurveto | rrcurveto/hhcurveto/vvcurveto/hvhcurveto/vhcurveto | Identical |
+| seac           | -           | Decomposed (not in CFF) |
+| closepath      | endchar     | Mapped |
+| callsubr/callgsubr | callsubr/callgsubr | Identical |
+
+== See Also
+
+* https://www.adobe.com/devnet/font/pdfs/Type1.pdf[Adobe Type 1 Font Format Specification]
+* link:CONVERSION_GUIDE.adoc[Conversion Guide] - Comprehensive conversion options reference
+* link:README.adoc[README] - Main Fontisan documentation

@@ -60,7 +60,7 @@ module Fontisan
 
       # Check for Type 1 format first (PFB/PFA have different signatures)
       if type1_font?(path)
-        return Type1Font.from_file(path)
+        return Type1Font.from_file(path, mode: resolved_mode)
       end
 
       File.open(path, "rb") do |io|

@@ -193,9 +193,12 @@ module Fontisan
 
       # Check if font is a variable font
       #
-      # @param font [TrueTypeFont, OpenTypeFont] Font to check
+      # @param font [TrueTypeFont, OpenTypeFont, Type1Font] Font to check
       # @return [Boolean] True if font has fvar table
       def variable_font?(font)
+        # Type 1 fonts are never variable fonts
+        return false if font.is_a?(Type1Font)
+
         font.has_table?("fvar")
       end
 
@@ -343,8 +346,12 @@ _options)
       def validate_parameters!(font, target_format)
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.respond_to?(:table)
-          raise ArgumentError, "Font must respond to :table method"
+        # Type1Font uses a different interface (font_dictionary, charstrings, etc.)
+        # rather than the SFNT table interface
+        is_type1 = font.is_a?(Type1Font)
+
+        unless is_type1 || font.respond_to?(:table)
+          raise ArgumentError, "Font must respond to :table method or be a Type1Font"
         end
 
         unless target_format.is_a?(Symbol)
@@ -394,10 +401,13 @@ _options)
 
       # Detect font format from tables
       #
-      # @param font [TrueTypeFont, OpenTypeFont] Font to detect
-      # @return [Symbol] Format (:ttf or :otf)
+      # @param font [TrueTypeFont, OpenTypeFont, Type1Font] Font to detect
+      # @return [Symbol] Format (:ttf, :otf, or :type1)
       # @raise [Error] If format cannot be detected
       def detect_format(font)
+        # Check for Type1Font first (uses different interface)
+        return :type1 if font.is_a?(Type1Font)
+
         # Check for CFF/CFF2 tables (OpenType/CFF)
         if font.has_table?("CFF ") || font.has_table?("CFF2")
           :otf
