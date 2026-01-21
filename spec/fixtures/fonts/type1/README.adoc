@@ -5,15 +5,31 @@ decryption, and conversion functionality.
 
 == Fixtures
 
-=== matrix.afm / matrix.pfa
+=== matrix.pfa
 
-The Matrix font is a custom Type 1 font used for testing AFM parsing and Type 1
-font functionality.
+*Note: This is actually a PostScript Type 3 font (`/FontType 3 def`), not a Type 1 font.
+It is correctly rejected by the Type1Font parser.*
 
+The Matrix font is a custom PostScript font used for testing format detection.
 * Font: Matrix
 * Format: PFA (Printer Font ASCII) with AFM metrics
 * Source: Custom test font (Creator: Tero Kivinen)
-* Used by: `afm_parser_spec.rb`, `type1_real_fonts_spec.rb`
+* Status: Type 3 font, not compatible with Type1Font parser
+
+=== .t1 files (URW Base35 fonts)
+
+The `.t1` extension is an alternative format for Type 1 fonts, similar to PFA
+but with binary encrypted data instead of hex-encoded data. These files contain:
+
+* `%!PS-AdobeFont-1.0` header (like PFA)
+* ASCII font dictionary
+* `currentfile eexec` marker
+* Binary encrypted CharString data (not hex-encoded)
+* No 512-zero end marker (unlike standard PFA)
+
+The PFAParser automatically detects and handles both formats:
+* Standard PFA: hex-encoded encrypted data + 512 zeros
+* .t1 format: binary encrypted data + no zero marker
 
 === quicksand.pfb
 

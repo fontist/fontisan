@@ -36,12 +36,18 @@ module Fontisan
       # @return [String] Encrypted portion as hex string
       attr_reader :encrypted_hex
 
+      # @return [String] Encrypted portion as binary data
+      attr_reader :encrypted_binary
+
       # @return [String] Trailing text after zeros (if any)
       attr_reader :trailing_text
 
       # Parse PFA format data
       #
-      # @param data [String] ASCII PFA data
+      # Handles both standard PFA (hex-encoded encrypted data with zero marker)
+      # and .t1 format (binary encrypted data without zero marker).
+      #
+      # @param data [String] ASCII PFA data or .t1 format data
       # @return [PFAParser] Self for method chaining
       # @raise [ArgumentError] If data is nil or empty
       # @raise [Fontisan::Error] If PFA format is invalid
@@ -58,6 +64,7 @@ module Fontisan
           # No eexec marker - entire file is clear text
           @clear_text = data
           @encrypted_hex = ""
+          @encrypted_binary = ""
           @trailing_text = ""
           return self
         end
@@ -72,25 +79,31 @@ module Fontisan
         encrypted_start = skip_whitespace(after_eexec, 0)
         encrypted_data = after_eexec[encrypted_start..]
 
-        # Find zero marker
+        # Find zero marker (optional for .t1 format)
         zero_index = encrypted_data.index(ZERO_MARKER)
-        if zero_index.nil?
-          raise Fontisan::Error,
-                "Invalid PFA: cannot find zero marker after eexec"
+
+        if zero_index
+          # Standard PFA format with zero marker
+          # Extract encrypted hex data (before zeros)
+          @encrypted_hex = encrypted_data[0...zero_index].strip
+          @encrypted_binary = [@encrypted_hex.gsub(/\s/, "")].pack("H*")
+
+          # Extract trailing text (after zeros)
+          trailing_start = zero_index + ZERO_MARKER.length
+          trailing_start = skip_whitespace(encrypted_data, trailing_start)
+
+          @trailing_text = if trailing_start < encrypted_data.length
+                             encrypted_data[trailing_start..]
+                           else
+                             ""
+                           end
+        else
+          # .t1 format - binary encrypted data without zero marker
+          # Treat everything after eexec as binary encrypted data
+          @encrypted_binary = encrypted_data.lstrip
+          @encrypted_hex = @encrypted_binary.unpack1("H*")
+          @trailing_text = ""
         end
-
-        # Extract encrypted hex data (before zeros)
-        @encrypted_hex = encrypted_data[0...zero_index].strip
-
-        # Extract trailing text (after zeros)
-        trailing_start = zero_index + ZERO_MARKER.length
-        trailing_start = skip_whitespace(encrypted_data, trailing_start)
-
-        @trailing_text = if trailing_start < encrypted_data.length
-                           encrypted_data[trailing_start..]
-                         else
-                           ""
-                         end
 
         self
       end
@@ -118,18 +131,6 @@ module Fontisan
         # Check for Adobe Type 1 font header
         data.include?("%!PS-AdobeFont-1.0") ||
           data.include?("%!PS-Adobe-3.0 Resource-Font")
-      end
-
-      # Get encrypted hex as binary data
-      #
-      # Decodes the hexadecimal encrypted portion to binary.
-      #
-      # @return [String] Binary encrypted data
-      def encrypted_binary
-        return "" if @encrypted_hex.nil? || @encrypted_hex.empty?
-
-        # Convert hex string to binary
-        [@encrypted_hex.gsub(/\s/, "")].pack("H*")
       end
 
       private

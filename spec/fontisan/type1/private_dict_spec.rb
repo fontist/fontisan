@@ -317,4 +317,79 @@ RSpec.describe Fontisan::Type1::PrivateDict do
       expect(priv.has_stem_hints?).to be true
     end
   end
+
+  describe "#to_type1_format" do
+    it "returns Type 1 format with defaults" do
+      priv = described_class.new
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/BlueScale 0.039625 def")
+      expect(result).to include("/BlueShift 7 def")
+      expect(result).to include("/BlueFuzz 1 def")
+      expect(result).to include("/lenIV 4 def")
+    end
+
+    it "includes BlueValues when set" do
+      priv = described_class.new
+      priv.blue_values = [-10, 0, 470, 480]
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/BlueValues [-10 0 470 480] def")
+    end
+
+    it "includes OtherBlues when set" do
+      priv = described_class.new
+      priv.other_blues = [-250, -240]
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/OtherBlues [-250 -240] def")
+    end
+
+    it "includes StdHW when set" do
+      priv = described_class.new
+      priv.std_hw = [50.0]
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/StdHW [50.0] def")
+    end
+
+    it "includes ForceBold when true" do
+      priv = described_class.new
+      priv.force_bold = true
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/ForceBold true def")
+    end
+
+    it "excludes ForceBold when false" do
+      priv = described_class.new
+      priv.force_bold = false
+
+      result = priv.to_type1_format
+
+      expect(result).not_to include("/ForceBold")
+    end
+
+    it "formats complete dictionary correctly" do
+      priv = described_class.new
+      priv.blue_values = [-10, 0, 470, 480]
+      priv.other_blues = [-250, -240]
+      priv.blue_scale = 0.05
+      priv.blue_shift = 8
+      priv.std_hw = [50.0]
+
+      result = priv.to_type1_format
+
+      expect(result).to include("/BlueValues [-10 0 470 480] def")
+      expect(result).to include("/OtherBlues [-250 -240] def")
+      expect(result).to include("/BlueScale 0.05 def")
+      expect(result).to include("/BlueShift 8 def")
+      expect(result).to include("/StdHW [50.0] def")
+    end
+  end
 end

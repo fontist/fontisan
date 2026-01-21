@@ -1,0 +1,633 @@
+= Font Conversion Guide
+
+This guide provides comprehensive reference for Fontisan's conversion options system, including all supported formats, options, and best practices.
+
+== Overview
+
+Fontisan's conversion system is based on the TypeTool 3 manual's recommended options for different font format conversions. The system provides:
+
+* Type-safe option validation
+* Format-specific default options
+* Named presets for common workflows
+* Fine-grained control over conversion behavior
+
+== Quick Reference
+
+=== Using the CLI
+
+[source,shell]
+----
+# Basic conversion
+fontisan convert input.ttf --to otf --output output.otf
+
+# Show recommended options
+fontisan convert input.ttf --to otf --show-options
+
+# Use a preset
+fontisan convert font.pfb --to otf --preset type1_to_modern --output output.otf
+
+# Custom options
+fontisan convert input.ttf --to otf --autohint --hinting-mode auto --output output.otf
+----
+
+=== Using the API
+
+[source,ruby]
+----
+require 'fontisan'
+
+# Get recommended options
+options = Fontisan::ConversionOptions.recommended(from: :ttf, to: :otf)
+
+# Use a preset
+options = Fontisan::ConversionOptions.from_preset(:web_optimized)
+
+# Build custom options
+options = Fontisan::ConversionOptions.new(
+  from: :ttf,
+  to: :otf,
+  opening: { autohint: true, convert_curves: true },
+  generating: { hinting_mode: "auto" }
+)
+
+# Convert with options
+converter = Fontisan::Converters::OutlineConverter.new
+tables = converter.convert(font, options: options)
+----
+
+== Supported Formats
+
+=== Input Formats
+
+| Format | Description | Extensions |
+|--------|-------------|------------|
+| TTF | TrueType Font | .ttf |
+| OTF | OpenType/CFF Font | .otf |
+| Type 1 | Adobe Type 1 Font | .pfb, .pfa |
+| TTC | TrueType Collection | .ttc |
+| OTC | OpenType Collection | .otc |
+| dfont | Apple Data Fork Font | .dfont |
+| WOFF | Web Open Font Format | .woff |
+| WOFF2 | Web Open Font Format 2 | .woff2 |
+| SVG | SVG Font | .svg |
+
+=== Output Formats
+
+All input formats can be converted to: TTF, OTF, WOFF, WOFF2
+
+Collections (TTC, OTC, dfont) can be converted between each other.
+
+== Conversion Options
+
+=== Opening Options
+
+Opening options control how the source font is read and processed.
+
+| Option | Type | Description | Use Case |
+|--------|------|-------------|----------|
+| `decompose_composites` | Boolean | Decompose composite glyphs into simple glyphs | When target format doesn't support composites |
+| `convert_curves` | Boolean | Convert curve types during conversion | When converting between quadratic/cubic curves |
+| `scale_to_1000` | Boolean | Scale UPM to 1000 | Type 1 → OTF conversions |
+| `scale_from_1000` | Boolean | Scale from 1000 UPM | OTF → TTF conversions |
+| `autohint` | Boolean | Auto-hint the font | When source lacks hints or hints are incompatible |
+| `generate_unicode` | Boolean | Generate Unicode mappings from glyph names | Type 1 conversions |
+| `store_custom_tables` | Boolean | Preserve non-standard tables | When custom tables need preservation |
+| `store_native_hinting` | Boolean | Preserve native hinting data | When hints should be preserved for source format |
+| `interpret_ot` | Boolean | Interpret OpenType layout features | When GSUB/GPOS features need processing |
+| `read_all_records` | Boolean | Load all font dictionary records | Type 1 conversions with custom data |
+| `preserve_encoding` | String | Preserve specific character encoding | When custom encoding must be maintained |
+
+=== Generating Options
+
+Generating options control how the output font is written.
+
+| Option | Type | Description | Use Case |
+|--------|------|-------------|----------|
+| `write_pfm` | Boolean | Write PFM file | Type 1 output |
+| `write_afm` | Boolean | Write AFM file | Type 1 output |
+| `write_inf` | Boolean | Write INF file | Type 1 output |
+| `select_encoding_automatically` | Boolean | Auto-select encoding | Type 1 output |
+| `hinting_mode` | String | Hint mode: preserve, auto, none, full | Control hinting behavior |
+| `decompose_on_output` | Boolean | Decompose composites in output | When target doesn't support composites |
+| `write_custom_tables` | Boolean | Write custom tables | Preserve non-standard tables |
+| `optimize_tables` | Boolean | Enable table optimization | Reduce file size |
+| `reencode_first_256` | Boolean | Reencode first 256 glyphs | Type 1 output |
+| `encoding_vector` | String | Custom encoding vector | Type 1 output |
+| `compression` | String | Compression: zlib, brotli, none | Web font output |
+| `transform_tables` | Boolean | Transform tables for output | Format-specific transformations |
+| `preserve_metadata` | Boolean | Preserve copyright/license metadata | Maintain font metadata |
+| `strip_metadata` | Boolean | Remove metadata | Reduce file size |
+| `target_format` | String | Collection target format | Collection conversions |
+
+=== CLI Option Mapping
+
+==== Opening Options
+
+[source,shell]
+----
+# Decompose composite glyphs
+--decompose           # Enable decomposition
+--no-decompose        # Preserve composite glyphs
+
+# Curve conversion
+--convert-curves      # Convert curve types (quadratic ↔ cubic)
+
+# UPM scaling
+--scale-to-1000       # Scale to 1000 UPM (Type 1 standard)
+--scale-from-1000     # Scale from 1000 UPM to target
+
+# Hinting
+--autohint            # Apply automatic hinting
+
+# Unicode and encoding
+--generate-unicode    # Generate Unicode from glyph names
+--preserve-encoding   # Preserve character encoding
+
+# Table handling
+--preserve-custom-tables  # Preserve non-standard tables
+--interpret-ot            # Interpret OpenType tables (GSUB/GPOS)
+----
+
+==== Generating Options
+
+[source,shell]
+----
+# Type 1 metrics files
+--write-pfm           # Generate PFM file
+--write-afm           # Generate AFM file
+--write-inf           # Generate INF file
+
+# Encoding
+--auto-encoding        # Auto-detect encoding
+--encoding VECTOR      # Use specific encoding vector
+
+# Hinting
+--hinting-mode MODE   # preserve|auto|none|full
+
+# Optimization
+--optimize-tables      # Enable table optimization
+--no-optimization      # Disable optimization
+
+# Metadata
+--preserve-metadata    # Preserve copyright/license info
+--strip-metadata       # Remove metadata
+
+# Collections
+--target-format FORMAT # ttf|otf|preserve for collections
+----
+
+==== Preset Option
+
+[source,shell]
+----
+# Use named preset
+--preset NAME          # type1_to_modern, modern_to_type1, web_optimized, archive_to_modern
+----
+
+== Conversion Matrix
+
+=== Same-Format Conversions
+
+==== TTF → TTF
+
+Use case: Copy with optimization, metadata updates
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :ttf, to: :ttf)
+# opening: { convert_curves: false, scale_to_1000: false,
+#            decompose_composites: false, autohint: false,
+#            store_custom_tables: true, store_native_hinting: true }
+# generating: { hinting_mode: "preserve", write_custom_tables: true,
+#              optimize_tables: true }
+----
+
+Notes: Same-format copy preserves all data. Optimization includes table reordering and checksum correction.
+
+==== OTF → OTF
+
+Use case: Copy with optimization, metadata updates
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :otf, to: :otf)
+# opening: { decompose_composites: false, store_custom_tables: true,
+#            interpret_ot: true }
+# generating: { hinting_mode: "preserve", decompose_on_output: false,
+#              write_custom_tables: true, optimize_tables: true }
+----
+
+Notes: CFF-based OTF requires different handling than TTF.
+
+=== TTF → OTF
+
+Recommended options:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :ttf, to: :otf)
+# Returns:
+# opening: { convert_curves: true, scale_to_1000: true, autohint: true,
+#           decompose_composites: false, store_custom_tables: true }
+# generating: { hinting_mode: "auto", decompose_on_output: true }
+----
+
+Key considerations:
+
+* Curve conversion: Quadratic → Cubic (mathematically exact, but may increase point count)
+* Hinting: TrueType instructions → CFF hints (lossy conversion)
+* Scaling: Typically 2048 UPM → 1000 UPM
+
+Limitations:
+
+* TrueType hinting instructions are NOT converted to CFF hints
+* GSUB/GPOS features preserved but table format changes
+
+=== OTF → TTF
+
+Recommended options:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :otf, to: :ttf)
+# Returns:
+# opening: { decompose_composites: false, read_all_records: true,
+#           interpret_ot: true, store_custom_tables: true,
+#           store_native_hinting: false }
+# generating: { hinting_mode: "full", reencode_first_256: false }
+----
+
+Key considerations:
+
+* Curve conversion: Cubic → Quadratic (requires approximation)
+* Hinting: CFF hints → TrueType instructions (lossy conversion)
+* OpenType features: Interpreted before conversion
+
+Limitations:
+
+* CFF cubic curves must be approximated as TrueType quadratic curves
+* Multiple quadratic curves may be needed for accuracy
+* Some precision loss in curve approximation is unavoidable
+
+=== Type 1 Conversions
+
+==== Type 1 → OTF
+
+Recommended options:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :type1, to: :otf)
+# Returns:
+# opening: { decompose_composites: false, generate_unicode: true }
+# generating: { hinting_mode: "none", decompose_on_output: true }
+----
+
+Key considerations:
+
+* Unicode: Generated from Adobe Glyph List
+* CharStrings: Type 1 → CFF format (direct conversion)
+* Hinting: PostScript hints preserved in CFF
+* seac composites: Must be expanded (CFF doesn't support seac)
+
+==== Type 1 → TTF
+
+Recommended options:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :type1, to: :ttf)
+# Returns:
+# opening: { decompose_composites: false, generate_unicode: true }
+# generating: { hinting_mode: "full" }
+----
+
+Workflow: Type 1 → CFF (OTF) → TTF
+
+Key considerations:
+
+* Two-step conversion compounds approximation errors
+* Curve conversion: CFF cubic → TrueType quadratic
+* Unicode: Generated from glyph names
+
+==== Type 1 → Type 1 (Copy)
+
+Use case: Re-encode Type 1 font, regenerate metrics
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :type1, to: :type1)
+# opening: { decompose_composites: false, generate_unicode: true }
+# generating: { write_pfm: true, write_afm: true, write_inf: true,
+#              select_encoding_automatically: true, hinting_mode: "preserve" }
+----
+
+==== OTF → Type 1
+
+Use case: Generate Type 1 from OpenType for legacy workflows
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :otf, to: :type1)
+# opening: { decompose_composites: false }
+# generating: { write_pfm: true, write_afm: true, write_inf: true,
+#              select_encoding_automatically: true, hinting_mode: "preserve",
+#              decompose_on_output: false }
+----
+
+Limitations:
+
+* Reverse conversion from CFF to Type 1
+* Modern OpenType features (GPOS, GSUB variations) lost in Type 1
+* CFF hints may not translate exactly to Type 1 hints
+
+=== Collection Conversions
+
+==== TTC → OTC
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :ttc, to: :otc)
+# opening: { convert_curves: true, decompose_composites: false, autohint: false }
+# generating: { target_format: "otf", decompose_on_output: false,
+#              hinting_mode: "preserve" }
+----
+
+Converts all TrueType fonts to OpenType/CFF, then repacks as OTC.
+
+==== OTC → TTC
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :otc, to: :ttc)
+# opening: { convert_curves: true, decompose_composites: false, interpret_ot: true }
+# generating: { target_format: "ttf", decompose_on_output: false,
+#              hinting_mode: "auto" }
+----
+
+Converts all OpenType/CFF fonts to TrueType, then repacks as TTC.
+
+==== TTC/OTC → dfont
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.recommended(from: :ttc, to: :dfont)
+# opening: {}
+# generating: { target_format: "preserve", decompose_on_output: false,
+#              write_custom_tables: true }
+----
+
+Notes: dfont supports both TrueType and OpenType/CFF, or mixed formats.
+
+=== Web Font Conversions
+
+==== TTF/OTF → WOFF2
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:web_optimized)
+# From: :otf, To: :woff2
+# opening: {}
+# generating: { compression: "brotli", transform_tables: true,
+#              optimize_tables: true, preserve_metadata: true }
+----
+
+Benefits: 30-50% smaller than TTF/OTF
+
+==== TTF/OTF → WOFF
+
+[source,ruby]
+----
+# generating: { compression: "zlib", preserve_metadata: true,
+#              add_private_data: false }
+----
+
+==== Type 1 → WOFF/WOFF2
+
+Workflow: Type 1 → OTF → WOFF2
+
+[source,ruby]
+----
+# Via OTF intermediate
+# opening: { decompose_composites: false, generate_unicode: true }
+# generating: { compression: "brotli" }  # WOFF2
+# OR compression: "zlib"    # WOFF
+----
+
+=== SVG Font Generation
+
+==== TTF/OTF → SVG
+
+[source,ruby]
+----
+# opening: {}
+# generating: { include_metadata: true, include_unicode: true }
+----
+
+Limitations:
+
+* SVG fonts deprecated in favor of WOFF2
+* No hinting information
+* No advanced layout features
+
+== Presets
+
+=== type1_to_modern
+
+Optimize Type 1 fonts for modern use:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:type1_to_modern)
+# From: :type1, To: :otf
+# opening: { generate_unicode: true, decompose_composites: false }
+# generating: { hinting_mode: "preserve", decompose_on_output: true }
+----
+
+Use cases:
+
+* Modernizing legacy Type 1 fonts
+* Preparing fonts for web use
+* Converting fonts for modern applications
+
+=== modern_to_type1
+
+Convert modern fonts back to Type 1:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:modern_to_type1)
+# From: :otf, To: :type1
+# opening: { convert_curves: true, scale_to_1000: true,
+#           autohint: true, decompose_composites: false,
+#           store_custom_tables: false }
+# generating: { write_pfm: true, write_afm: true, write_inf: true,
+#              select_encoding_automatically: true,
+#              hinting_mode: "preserve" }
+----
+
+Use cases:
+
+* Legacy system compatibility
+* Font distribution for older applications
+* Working with Type 1 workflows
+
+=== web_optimized
+
+Optimize fonts for web delivery:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:web_optimized)
+# From: :otf, To: :woff2
+# opening: {}
+# generating: { compression: "brotli", transform_tables: true,
+#              optimize_tables: true, preserve_metadata: true }
+----
+
+Use cases:
+
+* Web font delivery
+* Reducing page load time
+* Bandwidth optimization
+
+=== archive_to_modern
+
+Convert font archives to modern format:
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:archive_to_modern)
+# From: :ttc, To: :otf
+# opening: { convert_curves: true, decompose_composites: false }
+# generating: { target_format: "otf", hinting_mode: "preserve" }
+----
+
+Use cases:
+
+* Extracting fonts from TTC archives
+* Standardizing collection formats
+* Converting legacy font collections
+
+== Hinting Modes
+
+=== preserve
+
+Preserve original hinting data when possible:
+
+* Works best when source and target formats share hinting systems
+* TTF → TTF: TrueType instructions preserved
+* OTF → OTF: PostScript hints preserved
+* Cross-format: May result in lost hints
+
+=== auto
+
+Apply automatic hinting:
+
+* TTF → OTF: Autohinting applied to CFF output
+* OTF → TTF: Autohinting applied to TrueType output
+* Type 1 → Modern: Autohinting based on outlines
+
+=== none
+
+Remove all hinting:
+
+* Smallest file size
+* No rendering optimizations
+* Useful for web fonts where file size matters more than rendering quality
+
+=== full
+
+Full hinting conversion:
+
+* Attempts to preserve all hint information
+* May generate larger files
+* Best quality for print applications
+
+== Best Practices
+
+=== Choose the Right Options
+
+1. *Use presets when possible* - Presets are optimized for common workflows
+2. *Show options first* - Use `--show-options` to understand what will be applied
+3. *Test conversions* - Always verify output fonts in target applications
+4. *Preserve metadata* - Keep copyright and license information intact
+
+=== Performance Considerations
+
+* Decompose composites only when necessary (increases file size)
+* Enable optimization only for production (slower conversion)
+* Use `--no-validate` for faster iterations during development
+
+=== Quality Considerations
+
+* Use `preserve` hinting mode for best rendering quality
+* Enable autohinting when converting between incompatible hint systems
+* Generate Unicode mappings for Type 1 fonts to ensure proper character display
+
+== Examples
+
+=== Convert Type 1 to Web Font
+
+[source,shell]
+----
+# Convert directly to WOFF2
+fontisan convert font.pfb --to woff2 --output font.woff2 --preset type1_to_modern
+
+# With custom options
+fontisan convert font.pfb --to woff2 --output font.woff2 \
+  --generate-unicode --optimize-tables
+----
+
+=== Convert Collection with Standardization
+
+[source,shell]
+----
+# Convert TTC to OTC, standardizing all to OpenType
+fontisan convert family.ttc --to otc --output family.otc \
+  --target-format otf --preset archive_to_modern
+----
+
+=== Convert with Hint Preservation
+
+[source,shell]
+----
+# Convert TTF to OTF, attempting to preserve hints
+fontisan convert font.ttf --to otf --output font.otf \
+  --hinting-mode preserve --preserve-hints
+----
+
+== Troubleshooting
+
+=== Conversion Fails
+
+1. Check if source file is valid: `fontisan info font.ttf`
+2. Validate source font: `fontisan validate font.ttf`
+3. Try with `--verbose` flag for detailed error messages
+4. Use `--no-validate` to skip output validation
+
+=== Output Font Too Large
+
+1. Enable table optimization: `--optimize-tables`
+2. Remove hinting: `--hinting-mode none`
+3. Use web font compression: `--to woff2`
+4. Decompose composites only if needed
+
+=== Poor Rendering Quality
+
+1. Use `--hinting-mode auto` or `preserve`
+2. Enable autohinting: `--autohint`
+3. Verify source font quality first
+4. Test in target application
+
+=== Missing Characters
+
+1. For Type 1: Enable `--generate-unicode`
+2. Check source font's glyph coverage
+3. Verify cmap table in output: `fontisan unicode output.ttf`
+
+== See Also
+
+* link:TYPE1_FONTS.adoc[Type 1 Font Support] - Type 1 specific documentation
+* link:README.adoc[README] - Main Fontisan documentation
+* https://github.com/fontist/fontisan[Fontisan on GitHub] - Report issues and contribute

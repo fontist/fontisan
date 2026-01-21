@@ -163,6 +163,63 @@ module Fontisan
           !@stem_snap_h.empty? || !@stem_snap_v.empty?
       end
 
+      # Convert PrivateDict to Type 1 text format
+      #
+      # Generates the PostScript code for the Private dictionary section
+      # of a Type 1 font.
+      #
+      # @return [String] Type 1 Private dictionary text
+      #
+      # @example Generate Type 1 format
+      #   priv = PrivateDict.new
+      #   priv.blue_values = [-10, 0, 470, 480]
+      #   puts priv.to_type1_format
+      def to_type1_format
+        result = []
+        result << array_to_type1(:BlueValues, @blue_values) unless @blue_values.empty?
+        result << array_to_type1(:OtherBlues, @other_blues) unless @other_blues.empty?
+        result << array_to_type1(:FamilyBlues, @family_blues) unless @family_blues.empty?
+        result << array_to_type1(:FamilyOtherBlues, @family_other_blues) unless @family_other_blues.empty?
+        result << scalar_to_type1(:BlueScale, @blue_scale)
+        result << scalar_to_type1(:BlueShift, @blue_shift)
+        result << scalar_to_type1(:BlueFuzz, @blue_fuzz)
+        result << array_to_type1(:StdHW, @std_hw) unless @std_hw.empty?
+        result << array_to_type1(:StdVW, @std_vw) unless @std_vw.empty?
+        result << array_to_type1(:StemSnapH, @stem_snap_h) unless @stem_snap_h.empty?
+        result << array_to_type1(:StemSnapV, @stem_snap_v) unless @stem_snap_v.empty?
+        result << boolean_to_type1(:ForceBold, @force_bold) unless @force_bold == false
+        result << scalar_to_type1(:lenIV, @len_iv)
+
+        result.join("\n")
+      end
+
+      # Format an array value for Type 1 output
+      #
+      # @param name [Symbol] Array name
+      # @param value [Array] Array value
+      # @return [String] Formatted Type 1 array definition
+      def array_to_type1(name, value)
+        "/#{name} [#{value.join(' ')}] def"
+      end
+
+      # Format a scalar value for Type 1 output
+      #
+      # @param name [Symbol] Value name
+      # @param value [Numeric] Numeric value
+      # @return [String] Formatted Type 1 scalar definition
+      def scalar_to_type1(name, value)
+        "/#{name} #{value} def"
+      end
+
+      # Format a boolean value for Type 1 output
+      #
+      # @param name [Symbol] Value name
+      # @param value [Boolean] Boolean value
+      # @return [String] Formatted Type 1 boolean definition
+      def boolean_to_type1(name, value)
+        "/#{name} #{value} def"
+      end
+
       private
 
       # Extract private dictionary from data

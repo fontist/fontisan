@@ -37,27 +37,41 @@ module Fontisan
     # @return [Symbol] Format type (:pfb or :pfa)
     attr_reader :format
 
+    # @return [Symbol] Loading mode (:metadata or :full)
+    attr_reader :loading_mode
+
     # @return [String, nil] Decrypted font data
     attr_reader :decrypted_data
 
     # @return [FontDictionary, nil] Font dictionary
-    attr_reader :font_dictionary
+    def font_dictionary
+      parse_dictionaries! unless @font_dictionary
+      @font_dictionary
+    end
 
     # @return [PrivateDict, nil] Private dictionary
-    attr_reader :private_dict
+    def private_dict
+      parse_dictionaries! unless @private_dict
+      @private_dict
+    end
 
     # @return [CharStrings, nil] CharStrings dictionary
-    attr_reader :charstrings
+    def charstrings
+      parse_dictionaries! unless @charstrings
+      @charstrings
+    end
 
     # Initialize a new Type1Font instance
     #
     # @param data [String] Font file data (binary or text)
     # @param format [Symbol] Format type (:pfb or :pfa, auto-detected if nil)
     # @param file_path [String, nil] Optional file path for reference
-    def initialize(data, format: nil, file_path: nil)
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
+    def initialize(data, format: nil, file_path: nil, mode: :full)
       @file_path = file_path
       @format = format || detect_format(data)
       @data = data
+      @loading_mode = mode
 
       parse_font_data
     end
@@ -65,6 +79,7 @@ module Fontisan
     # Load Type 1 font from file
     #
     # @param file_path [String] Path to PFB or PFA file
+    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
     # @return [Type1Font] Loaded font instance
     # @raise [ArgumentError] If file_path is nil
     # @raise [Fontisan::Error] If file cannot be read or parsed
@@ -74,7 +89,7 @@ module Fontisan
     #
     # @example Load PFA file
     #   font = Fontisan::Type1Font.from_file('font.pfa')
-    def self.from_file(file_path)
+    def self.from_file(file_path, mode: :full)
       raise ArgumentError, "File path cannot be nil" if file_path.nil?
 
       unless File.exist?(file_path)
@@ -84,7 +99,7 @@ module Fontisan
       # Read file
       data = File.binread(file_path)
 
-      new(data, file_path: file_path)
+      new(data, file_path: file_path, mode: mode)
     end
 
     # Get clear text portion (before eexec)
@@ -99,34 +114,6 @@ module Fontisan
     # @return [String] Encrypted portion
     def encrypted_portion
       @encrypted_portion ||= ""
-    end
-
-    # Get font name from font dictionary
-    #
-    # @return [String, nil] Font name or nil if not found
-    def font_name
-      extract_dictionary_value("/FontName")
-    end
-
-    # Get full name from FontInfo
-    #
-    # @return [String, nil] Full name or nil if not found
-    def full_name
-      extract_fontinfo_value("FullName")
-    end
-
-    # Get family name from FontInfo
-    #
-    # @return [String, nil] Family name or nil if not found
-    def family_name
-      extract_fontinfo_value("FamilyName")
-    end
-
-    # Get version from FontInfo
-    #
-    # @return [String, nil] Version or nil if not found
-    def version
-      extract_fontinfo_value("version")
     end
 
     # Check if font has been decrypted
