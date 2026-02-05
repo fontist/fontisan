@@ -327,7 +327,10 @@ module Fontisan
 
         # Get CharStrings INDEX from CFF
         charstrings_index = cff_table.charstrings_index(0)
-        raise Fontisan::Error, "CharStrings INDEX not found" unless charstrings_index
+        unless charstrings_index
+          raise Fontisan::Error,
+                "CharStrings INDEX not found"
+        end
 
         # Get Private DICT for context
         private_dict = cff_table.private_dict(0)
@@ -335,7 +338,7 @@ module Fontisan
         # Create CFF to Type 1 converter
         converter = Type1::CffToType1Converter.new(
           nominal_width: private_dict&.nominal_width || 0,
-          default_width: private_dict&.default_width || 0
+          default_width: private_dict&.default_width || 0,
         )
 
         # Convert each CFF CharString to Type 1 format
@@ -354,7 +357,7 @@ module Fontisan
           private_dict_hash = build_private_dict_hash(private_dict)
           type1_charstrings[glyph_name] = converter.convert(
             cff_charstring,
-            private_dict: private_dict_hash
+            private_dict: private_dict_hash,
           )
         end
 
@@ -551,7 +554,7 @@ module Fontisan
         # Parse version (e.g., "001.000" => 1.0)
         version_parts = version_str.split(".")
         major = version_parts[0].to_i
-        minor = version_parts[1]&.to_i || 0
+        minor = version_parts[1].to_i
         version = major + (minor / 1000.0)
 
         # Version (Fixed 16.16) - stored as int32
@@ -626,24 +629,24 @@ module Fontisan
 
         # Ascent (int16) - Distance from baseline to highest ascender
         # Use BlueValues[2] or [3] if available, otherwise font_bbox[3]
-        if blue_values.length >= 4
-          ascent = blue_values[3] # Top zone top
-        elsif blue_values.length >= 3
-          ascent = blue_values[2] # Top zone bottom
-        else
-          ascent = font_bbox[3] # y_max
-        end
+        ascent = if blue_values.length >= 4
+                   blue_values[3] # Top zone top
+                 elsif blue_values.length >= 3
+                   blue_values[2] # Top zone bottom
+                 else
+                   font_bbox[3] # y_max
+                 end
         data << [ascent].pack("s>")
 
         # Descent (int16) - Distance from baseline to lowest descender (negative)
         # Use BlueValues[0] or [1] if available, otherwise font_bbox[1]
-        if blue_values.length >= 2
-          descent = blue_values[0] # Bottom zone bottom (negative)
-        elsif blue_values.length >= 1
-          descent = blue_values[0]
-        else
-          descent = font_bbox[1] # y_min (should be negative)
-        end
+        descent = if blue_values.length >= 2
+                    blue_values[0] # Bottom zone bottom (negative)
+                  elsif blue_values.length >= 1
+                    blue_values[0]
+                  else
+                    font_bbox[1] # y_min (should be negative)
+                  end
         data << [descent].pack("s>")
 
         # Line Gap (int16) - Additional space between lines
@@ -728,33 +731,33 @@ module Fontisan
 
         # Extract font names with fallbacks
         font_name = font.font_name || font_dict&.font_name || "Unnamed"
-        family_name = if font_info&.respond_to?(:family_name)
+        family_name = if font_info.respond_to?(:family_name)
                         font_info.family_name || font_dict&.family_name || font_name
                       else
                         font_dict&.family_name || font_name
                       end
-        full_name = if font_info&.respond_to?(:full_name)
+        full_name = if font_info.respond_to?(:full_name)
                       font_info.full_name || font_dict&.full_name || family_name
                     else
                       font_dict&.full_name || family_name
                     end
-        version = if font_info&.respond_to?(:version)
+        version = if font_info.respond_to?(:version)
                     font_info.version || font.version || "001.000"
                   else
                     font.version || "001.000"
                   end
-        copyright = if font_info&.respond_to?(:copyright)
-                       font_info.copyright || font_dict&.raw_data&.dig(:copyright) || ""
-                     else
-                       font_dict&.raw_data&.dig(:copyright) || ""
-                     end
+        copyright = if font_info.respond_to?(:copyright)
+                      font_info.copyright || font_dict&.raw_data&.dig(:copyright) || ""
+                    else
+                      font_dict&.raw_data&.dig(:copyright) || ""
+                    end
         postscript_name = font_name
-        weight = if font_info&.respond_to?(:weight)
+        weight = if font_info.respond_to?(:weight)
                    font_info.weight
                  else
                    "Regular"
                  end
-        notice = if font_info&.respond_to?(:notice)
+        notice = if font_info.respond_to?(:notice)
                    font_info.notice
                  else
                    ""
@@ -782,7 +785,9 @@ module Fontisan
         ]
 
         # Filter out empty strings and build string storage
-        name_records = name_records.select { |r| !r[:string].nil? && !r[:string].empty? }
+        name_records = name_records.select do |r|
+          !r[:string].nil? && !r[:string].empty?
+        end
 
         # Build string storage (UTF-16BE encoded for Windows platform)
         string_storage = (+"").b
@@ -810,15 +815,15 @@ module Fontisan
         # Write name records
         platform_id = 3  # Windows
         encoding_id = 1  # Unicode BMP
-        language_id = 0x0409  # US English
+        language_id = 0x0409 # US English
 
         name_records.each do |record|
           data << [platform_id].pack("n")           # platform ID
           data << [encoding_id].pack("n")           # encoding ID
           data << [language_id].pack("n")           # language ID
           data << [record[:name_id]].pack("n")      # name ID
-          data << [record[:encoded].bytesize].pack("n")  # string length
-          data << [record[:offset]].pack("n")       # string offset
+          data << [record[:encoded].bytesize].pack("n") # string length
+          data << [record[:offset]].pack("n") # string offset
         end
 
         # Write string storage
@@ -926,13 +931,13 @@ module Fontisan
 
         # Unicode ranges (4 x uint32) - Basic Latin + Latin-1
         # Bits 0-31: Basic Latin, Latin-1, Latin Extended-A/B, etc.
-        data << [0x00000001].pack("N")  # Basic Latin (0-7F)
+        data << [0x00000001].pack("N") # Basic Latin (0-7F)
         data << [0x00000000].pack("N")
         data << [0x00000000].pack("N")
         data << [0x00000000].pack("N")
 
         # achVendID (4 bytes) - Vendor ID
-        data << "UKWN"  # Unknown
+        data << "UKWN" # Unknown
 
         # fsSelection (uint16) - Font selection flags
         # Bit 6 (0x40) = Regular weight if 400-500
@@ -946,25 +951,25 @@ module Fontisan
         data << [fs_selection].pack("n")
 
         # usFirstCharIndex (uint16) - First Unicode character
-        data << [32].pack("n")  # Space
+        data << [32].pack("n") # Space
 
         # usLastCharIndex (uint16) - Last Unicode character
-        data << [0xFFFD].pack("n")  # Replacement character
+        data << [0xFFFD].pack("n") # Replacement character
 
         # sTypoAscender (int16) - Use BlueValues or font bbox
-        if blue_values.length >= 4
-          typo_ascender = blue_values[3]
-        else
-          typo_ascender = font_bbox[3]
-        end
+        typo_ascender = if blue_values.length >= 4
+                          blue_values[3]
+                        else
+                          font_bbox[3]
+                        end
         data << [typo_ascender].pack("s>")
 
         # sTypoDescender (int16) - Use BlueValues or font bbox (negative)
-        if blue_values.length >= 2
-          typo_descender = blue_values[0]
-        else
-          typo_descender = font_bbox[1]
-        end
+        typo_descender = if blue_values.length >= 2
+                           blue_values[0]
+                         else
+                           font_bbox[1]
+                         end
         data << [typo_descender].pack("s>")
 
         # sTypoLineGap (int16)
@@ -1013,7 +1018,7 @@ module Fontisan
         # Version (Fixed 16.16) - Use version 3.0 for CFF fonts (no glyph names)
         # Version 2.0 would include glyph names, but for OTF output version 3.0 is fine
         # since CFF table contains the glyph names
-        data << [0x00030000].pack("N")  # Version 3.0
+        data << [0x00030000].pack("N") # Version 3.0
 
         # Italic Angle (Fixed 16.16)
         # Get from FontInfo if available, otherwise default to 0
@@ -1030,7 +1035,7 @@ module Fontisan
         data << [underline_thickness].pack("s>")
 
         # Fixed Pitch (uint32) - Boolean for monospace
-        is_fixed_pitch = (font_info.is_fixed_pitch || false) ? 1 : 0
+        is_fixed_pitch = font_info.is_fixed_pitch || false ? 1 : 0
         data << [is_fixed_pitch].pack("N")
 
         # Min/Max Memory for Type 42 (uint32 each) - Not used for CFF, set to 0
@@ -1066,10 +1071,10 @@ module Fontisan
           unicode = Type1::AGL.unicode_for_glyph_name(glyph_name)
 
           # If no Unicode mapping, try to derive from encoding position
-          if unicode.nil?
+          if unicode.nil? && (glyph_index < 128)
             # For standard encoding, try to map from position
             # This is a simplified approach - real implementation would be more robust
-            unicode = glyph_index if glyph_index < 128
+            unicode = glyph_index
           end
 
           # Map Unicode to glyph index
@@ -1088,21 +1093,21 @@ module Fontisan
         subtable_data = build_cmap_format_4(unicode_to_glyph)
 
         # Calculate offsets
-        encoding_records_offset = 4  # After version (2) + num_tables (2)
-        subtable_offset = encoding_records_offset + 8  # After one encoding record (8 bytes)
+        encoding_records_offset = 4 # After version (2) + num_tables (2)
+        subtable_offset = encoding_records_offset + 8 # After one encoding record (8 bytes)
 
         # Build cmap table header
         # Version (uint16)
         data << [0].pack("n")
 
         # Number of encoding records (uint16)
-        data << [1].pack("n")  # One encoding record
+        data << [1].pack("n") # One encoding record
 
         # Encoding record: Platform ID (uint16), Encoding ID (uint16), Subtable offset (uint32)
         # Platform 3 (Windows), Encoding 1 (Unicode BMP)
         data << [3].pack("n")           # Platform ID: Windows
         data << [1].pack("n")           # Encoding ID: Unicode BMP
-        data << [subtable_offset].pack("N")  # Subtable offset
+        data << [subtable_offset].pack("N") # Subtable offset
 
         # Append subtable data
         data << subtable_data
@@ -1160,13 +1165,13 @@ module Fontisan
         # Calculate segment count and related values
         seg_count = segments.length
         seg_count_x2 = seg_count * 2
-        search_range = 2 ** (Math.log2(seg_count).to_i) * 2
+        search_range = 2**Math.log2(seg_count).to_i * 2
         entry_selector = Math.log2(search_range / 2).to_i
         range_shift = (seg_count - search_range / 2) * 2
 
         # Build format 4 subtable header (14 bytes)
-        data << [4].pack("n")                    # Format
-        data << [calculate_cmap4_length(segments)].pack("n")  # Length (placeholder)
+        data << [4].pack("n") # Format
+        data << [calculate_cmap4_length(segments)].pack("n") # Length (placeholder)
         data << [0].pack("n")                    # Language (0 = independent)
         data << [seg_count_x2].pack("n")         # segCountX2
         data << [search_range].pack("n")         # searchRange
@@ -1203,9 +1208,9 @@ module Fontisan
 
         # Write arrays (padded to even length)
         end_codes.each { |code| data << [code].pack("n") }
-        data << [0].pack("n")  # Reserved padding
+        data << [0].pack("n") # Reserved padding
         start_codes.each { |code| data << [code].pack("n") }
-        id_deltas.each { |delta| data << [delta].pack("s>") }  # Signed
+        id_deltas.each { |delta| data << [delta].pack("s>") } # Signed
         id_range_offsets.each { |offset| data << [offset].pack("n") }
         glyph_id_array.each { |gid| data << [gid].pack("n") }
 
@@ -1227,7 +1232,7 @@ module Fontisan
         seg_count = segments.length
 
         # Rough estimate (actual calculation done during construction)
-        14 + (seg_count * 8) + (seg_count * 2) + 100  # 100 for glyph ID array estimate
+        14 + (seg_count * 8) + (seg_count * 2) + 100 # 100 for glyph ID array estimate
       end
     end
   end

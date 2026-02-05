@@ -276,7 +276,8 @@ module Fontisan
         # Merge all extracted hints (prep_hints and fpgm_hints override stem widths if present)
         # Note: fpgm_hints contains metadata (fpgm_size, has_functions, complexity)
         # which we must filter out before merging into PostScript dict hints
-        fpgm_dict_hints = fpgm_hints.reject { |k, _| %i[fpgm_size has_functions complexity].include?(k) }
+        fpgm_dict_hints = fpgm_hints.except(:fpgm_size, :has_functions,
+                                            :complexity)
         hints.merge!(prep_hints).merge!(fpgm_dict_hints).merge!(blue_zones)
 
         # Provide default blue_values if none were detected

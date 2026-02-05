@@ -170,23 +170,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   describe "#build_private_dict_hash" do
     let(:mock_private_dict) do
       dict = double("Tables::Cff::PrivateDict")
-      allow(dict).to receive(:nominal_width).and_return(0)
-      allow(dict).to receive(:default_width).and_return(500)
-      allow(dict).to receive(:blue_values).and_return([-10, 0, 470, 480])
-      allow(dict).to receive(:other_blues).and_return([-250, -240])
-      allow(dict).to receive(:family_blues).and_return([])
-      allow(dict).to receive(:family_other_blues).and_return([])
-      allow(dict).to receive(:blue_scale).and_return(0.039625)
-      allow(dict).to receive(:blue_shift).and_return(7)
-      allow(dict).to receive(:blue_fuzz).and_return(1)
-      allow(dict).to receive(:std_hw).and_return([50])
-      allow(dict).to receive(:std_vw).and_return([60])
-      allow(dict).to receive(:stem_snap_h).and_return([])
-      allow(dict).to receive(:stem_snap_v).and_return([])
-      allow(dict).to receive(:force_bold).and_return(false)
-      allow(dict).to receive(:language_group).and_return(0)
-      allow(dict).to receive(:expansion_factor).and_return(0.06)
-      allow(dict).to receive(:initial_random_seed).and_return(0)
+      allow(dict).to receive_messages(nominal_width: 0, default_width: 500,
+                                      blue_values: [-10, 0, 470, 480], other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [50], std_vw: [60], stem_snap_h: [], stem_snap_v: [], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
@@ -214,23 +199,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "uses defaults for missing values" do
       dict = double("Tables::Cff::PrivateDict")
-      allow(dict).to receive(:nominal_width).and_return(nil)
-      allow(dict).to receive(:default_width).and_return(nil)
-      allow(dict).to receive(:blue_values).and_return(nil)
-      allow(dict).to receive(:other_blues).and_return(nil)
-      allow(dict).to receive(:family_blues).and_return(nil)
-      allow(dict).to receive(:family_other_blues).and_return(nil)
-      allow(dict).to receive(:blue_scale).and_return(nil)
-      allow(dict).to receive(:blue_shift).and_return(nil)
-      allow(dict).to receive(:blue_fuzz).and_return(nil)
-      allow(dict).to receive(:std_hw).and_return(nil)
-      allow(dict).to receive(:std_vw).and_return(nil)
-      allow(dict).to receive(:stem_snap_h).and_return(nil)
-      allow(dict).to receive(:stem_snap_v).and_return(nil)
-      allow(dict).to receive(:force_bold).and_return(nil)
-      allow(dict).to receive(:language_group).and_return(nil)
-      allow(dict).to receive(:expansion_factor).and_return(nil)
-      allow(dict).to receive(:initial_random_seed).and_return(nil)
+      allow(dict).to receive_messages(nominal_width: nil, default_width: nil,
+                                      blue_values: nil, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
       result = converter.send(:build_private_dict_hash, dict)
 
@@ -259,23 +229,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_private_dict) do
       dict = double("Tables::Cff::PrivateDict")
-      allow(dict).to receive(:nominal_width).and_return(0)
-      allow(dict).to receive(:default_width).and_return(500)
-      allow(dict).to receive(:blue_values).and_return([])
-      allow(dict).to receive(:other_blues).and_return([])
-      allow(dict).to receive(:family_blues).and_return([])
-      allow(dict).to receive(:family_other_blues).and_return([])
-      allow(dict).to receive(:blue_scale).and_return(0.039625)
-      allow(dict).to receive(:blue_shift).and_return(7)
-      allow(dict).to receive(:blue_fuzz).and_return(1)
-      allow(dict).to receive(:std_hw).and_return([])
-      allow(dict).to receive(:std_vw).and_return([])
-      allow(dict).to receive(:stem_snap_h).and_return([])
-      allow(dict).to receive(:stem_snap_v).and_return([])
-      allow(dict).to receive(:force_bold).and_return(false)
-      allow(dict).to receive(:language_group).and_return(0)
-      allow(dict).to receive(:expansion_factor).and_return(0.06)
-      allow(dict).to receive(:initial_random_seed).and_return(0)
+      allow(dict).to receive_messages(nominal_width: 0, default_width: 500,
+                                      blue_values: [], other_blues: [], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [], std_vw: [], stem_snap_h: [], stem_snap_v: [], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
@@ -324,8 +279,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_type1_font) do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:version).and_return("001.000")
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      version: "001.000")
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       font
     end
@@ -334,7 +289,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       result = converter.send(:build_head_table, mock_type1_font)
 
       expect(result).to be_a(String)
-      expect(result.bytesize).to be >= 54  # Minimum head table size
+      expect(result.bytesize).to be >= 54 # Minimum head table size
     end
 
     it "includes correct magic number" do
@@ -370,8 +325,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "handles missing font dictionary" do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(nil)
-      allow(font).to receive(:version).and_return("001.000")
+      allow(font).to receive_messages(font_dictionary: nil, version: "001.000")
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_head_table, font)
@@ -390,8 +344,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "parses version string correctly" do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:version).and_return("002.500")
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      version: "002.500")
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_head_table, font)
@@ -424,9 +378,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_type1_font) do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:private_dict).and_return(mock_private_dict)
-      allow(font).to receive(:charstrings).and_return(mock_charstrings)
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      private_dict: mock_private_dict, charstrings: mock_charstrings)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       font
     end
@@ -435,7 +388,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       result = converter.send(:build_hhea_table, mock_type1_font)
 
       expect(result).to be_a(String)
-      expect(result.bytesize).to be >= 36  # hhea table size
+      expect(result.bytesize).to be >= 36 # hhea table size
     end
 
     it "uses BlueValues for ascent when available" do
@@ -443,7 +396,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Ascent is at offset 4-5 (int16)
       ascent = result[4..5].unpack1("s>")
-      expect(ascent).to eq(770)  # BlueValues[3]
+      expect(ascent).to eq(770) # BlueValues[3]
     end
 
     it "uses BlueValues for descent when available" do
@@ -456,9 +409,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "falls back to font bbox when no BlueValues" do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:private_dict).and_return(nil)
-      allow(font).to receive(:charstrings).and_return(mock_charstrings)
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      private_dict: nil, charstrings: mock_charstrings)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_hhea_table, font)
@@ -467,7 +419,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       descent = result[6..7].unpack1("s>")
 
       expect(ascent).to eq(800)   # font_bbox[3]
-      expect(descent).to eq(-200)  # font_bbox[1]
+      expect(descent).to eq(-200) # font_bbox[1]
     end
 
     it "sets number of HMetrics correctly" do
@@ -480,9 +432,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "ensures minimum glyph count of 1" do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:private_dict).and_return(mock_private_dict)
-      allow(font).to receive(:charstrings).and_return(nil)
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      private_dict: mock_private_dict, charstrings: nil)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_hhea_table, font)
@@ -511,7 +462,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Version is at offset 0-3 (Fixed 16.16)
       version = result[0..3].unpack1("N")
-      expect(version).to eq(0x00005000)  # Version 0.5
+      expect(version).to eq(0x00005000) # Version 0.5
     end
 
     it "sets number of glyphs correctly" do
@@ -536,19 +487,15 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     it "has minimum table size of 6 bytes" do
       result = converter.send(:build_maxp_table, mock_type1_font)
 
-      expect(result.bytesize).to eq(6)  # Version (4) + num_glyphs (2)
+      expect(result.bytesize).to eq(6) # Version (4) + num_glyphs (2)
     end
   end
 
   describe "#build_name_table" do
     let(:mock_font_info) do
       info = double("font_info")
-      allow(info).to receive(:family_name).and_return("TestFamily")
-      allow(info).to receive(:full_name).and_return("TestFont Regular")
-      allow(info).to receive(:weight).and_return("Regular")
-      allow(info).to receive(:version).and_return("001.000")
-      allow(info).to receive(:copyright).and_return("Copyright 2024")
-      allow(info).to receive(:notice).and_return("Test Font")
+      allow(info).to receive_messages(family_name: "TestFamily",
+                                      full_name: "TestFont Regular", weight: "Regular", version: "001.000", copyright: "Copyright 2024", notice: "Test Font")
       info
     end
 
@@ -560,9 +507,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_type1_font) do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:font_name).and_return("TestFont")
-      allow(font).to receive(:version).and_return("001.000")
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      font_name: "TestFont", version: "001.000")
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       font
     end
@@ -571,7 +517,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       result = converter.send(:build_name_table, mock_type1_font)
 
       expect(result).to be_a(String)
-      expect(result.bytesize).to be >= 6  # Minimum header size
+      expect(result.bytesize).to be >= 6 # Minimum header size
     end
 
     it "sets format selector to 0" do
@@ -619,9 +565,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "filters out empty name records" do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(nil)
-      allow(font).to receive(:font_name).and_return("TestFont")
-      allow(font).to receive(:version).and_return("001.000")
+      allow(font).to receive_messages(font_dictionary: nil,
+                                      font_name: "TestFont", version: "001.000")
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_name_table, font)
@@ -641,8 +586,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_font_dict) do
       dict = double("font_dictionary")
-      allow(dict).to receive(:font_bbox).and_return([50, -250, 900, 750])
-      allow(dict).to receive(:font_info).and_return(mock_font_info)
+      allow(dict).to receive_messages(font_bbox: [50, -250, 900, 750],
+                                      font_info: mock_font_info)
       dict
     end
 
@@ -654,8 +599,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_type1_font) do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:private_dict).and_return(mock_private_dict)
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      private_dict: mock_private_dict)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       font
     end
@@ -673,7 +618,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Weight class is at offset 4-5 (uint16)
       weight_class = result[4..5].unpack1("n")
-      expect(weight_class).to eq(700)  # Bold
+      expect(weight_class).to eq(700) # Bold
     end
 
     it "maps weight names to correct classes" do
@@ -694,12 +639,12 @@ RSpec.describe Fontisan::Converters::Type1Converter do
         allow(info).to receive(:weight).and_return(weight_name)
 
         dict = double("font_dictionary")
-        allow(dict).to receive(:font_bbox).and_return([0, 0, 1000, 1000])
-        allow(dict).to receive(:font_info).and_return(info)
+        allow(dict).to receive_messages(font_bbox: [0, 0, 1000, 1000],
+                                        font_info: info)
 
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(dict)
-        allow(font).to receive(:private_dict).and_return(nil)
+        allow(font).to receive_messages(font_dictionary: dict,
+                                        private_dict: nil)
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
         result = converter.send(:build_os2_table, font)
@@ -715,7 +660,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       # PANOSE is at offset 32-41 (10 bytes)
       panose = result[32..41].unpack("C*")
       expect(panose.length).to eq(10)
-      expect(panose[0]).to eq(2)  # Latin Text
+      expect(panose[0]).to eq(2) # Latin Text
     end
 
     it "includes vendor ID" do
@@ -723,7 +668,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Vendor ID is at offset 58-61 (4 bytes)
       vendor_id = result[58..61]
-      expect(vendor_id).to eq("UKWN")  # Unknown
+      expect(vendor_id).to eq("UKWN") # Unknown
     end
 
     it "sets fsSelection for regular weight" do
@@ -731,12 +676,11 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(info).to receive(:weight).and_return("Regular")
 
       dict = double("font_dictionary")
-      allow(dict).to receive(:font_bbox).and_return([0, 0, 1000, 1000])
-      allow(dict).to receive(:font_info).and_return(info)
+      allow(dict).to receive_messages(font_bbox: [0, 0, 1000, 1000],
+                                      font_info: info)
 
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(dict)
-      allow(font).to receive(:private_dict).and_return(nil)
+      allow(font).to receive_messages(font_dictionary: dict, private_dict: nil)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       result = converter.send(:build_os2_table, font)
@@ -757,10 +701,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   describe "#build_post_table" do
     let(:mock_font_info) do
       info = double("font_info")
-      allow(info).to receive(:italic_angle).and_return(0)
-      allow(info).to receive(:underline_position).and_return(-100)
-      allow(info).to receive(:underline_thickness).and_return(50)
-      allow(info).to receive(:is_fixed_pitch).and_return(false)
+      allow(info).to receive_messages(italic_angle: 0,
+                                      underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
       info
     end
 
@@ -782,7 +724,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Version is at offset 0-3 (Fixed 16.16)
       version = result[0..3].unpack1("N")
-      expect(version).to eq(0x00030000)  # Version 3.0
+      expect(version).to eq(0x00030000) # Version 3.0
     end
 
     it "sets italic angle correctly" do
@@ -790,7 +732,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Italic angle is at offset 4-7 (Fixed 16.16)
       italic_angle = result[4..7].unpack1("N")
-      expect(italic_angle).to eq(0)  # 0 degrees
+      expect(italic_angle).to eq(0) # 0 degrees
     end
 
     it "sets underline position" do
@@ -819,10 +761,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "handles monospace font" do
       info = double("font_info")
-      allow(info).to receive(:italic_angle).and_return(0)
-      allow(info).to receive(:underline_position).and_return(-100)
-      allow(info).to receive(:underline_thickness).and_return(50)
-      allow(info).to receive(:is_fixed_pitch).and_return(true)
+      allow(info).to receive_messages(italic_angle: 0,
+                                      underline_position: -100, underline_thickness: 50, is_fixed_pitch: true)
 
       dict = double("font_dictionary")
       allow(dict).to receive(:font_info).and_return(info)
@@ -840,20 +780,19 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     it "has minimum table size of 32 bytes" do
       result = converter.send(:build_post_table, mock_type1_font)
 
-      expect(result.bytesize).to eq(32)  # Version 3.0 post table size
+      expect(result.bytesize).to eq(32) # Version 3.0 post table size
     end
   end
 
   describe "#build_cmap_table" do
     let(:mock_charstrings) do
       cs = double("charstrings")
-      allow(cs).to receive(:encoding).and_return({
-        ".notdef" => 0,
-        "A" => 1,
-        "B" => 2,
-        "C" => 3,
-      })
-      allow(cs).to receive(:glyph_names).and_return([".notdef", "A", "B", "C"])
+      allow(cs).to receive_messages(encoding: {
+                                      ".notdef" => 0,
+                                      "A" => 1,
+                                      "B" => 2,
+                                      "C" => 3,
+                                    }, glyph_names: [".notdef", "A", "B", "C"])
       cs
     end
 
@@ -868,7 +807,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       result = converter.send(:build_cmap_table, mock_type1_font)
 
       expect(result).to be_a(String)
-      expect(result.bytesize).to be >= 4  # Minimum header size
+      expect(result.bytesize).to be >= 4 # Minimum header size
     end
 
     it "sets cmap version to 0" do
@@ -904,13 +843,12 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       subtable_offset = result[8..11].unpack1("N")
       format = result[subtable_offset..subtable_offset + 1].unpack1("n")
-      expect(format).to eq(4)  # Format 4
+      expect(format).to eq(4) # Format 4
     end
 
     it "handles empty encoding" do
       cs = double("charstrings")
-      allow(cs).to receive(:encoding).and_return({})
-      allow(cs).to receive(:glyph_names).and_return([])
+      allow(cs).to receive_messages(encoding: {}, glyph_names: [])
 
       font = double("Type1Font")
       allow(font).to receive(:charstrings).and_return(cs)
@@ -926,26 +864,15 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   describe "#build_cff_font_dict" do
     let(:mock_font_info) do
       info = double("font_info")
-      allow(info).to receive(:version).and_return("001.000")
-      allow(info).to receive(:notice).and_return("Copyright notice")
-      allow(info).to receive(:copyright).and_return("Copyright 2024")
-      allow(info).to receive(:full_name).and_return("TestFont")
-      allow(info).to receive(:family_name).and_return("TestFamily")
-      allow(info).to receive(:weight).and_return("Regular")
+      allow(info).to receive_messages(version: "001.000",
+                                      notice: "Copyright notice", copyright: "Copyright 2024", full_name: "TestFont", family_name: "TestFamily", weight: "Regular")
       info
     end
 
     let(:mock_font_dict) do
       dict = double("font_dictionary")
-      allow(dict).to receive(:version).and_return("001.000")
-      allow(dict).to receive(:notice).and_return("Copyright notice")
-      allow(dict).to receive(:copyright).and_return("Copyright 2024")
-      allow(dict).to receive(:full_name).and_return("TestFont")
-      allow(dict).to receive(:family_name).and_return("TestFamily")
-      allow(dict).to receive(:weight).and_return("Regular")
-      allow(dict).to receive(:font_bbox).and_return([0, -100, 1000, 900])
-      allow(dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-      allow(dict).to receive(:font_info).and_return(mock_font_info)
+      allow(dict).to receive_messages(version: "001.000", notice: "Copyright notice", copyright: "Copyright 2024", full_name: "TestFont", family_name: "TestFamily", weight: "Regular", font_bbox: [0, -100, 1000, 900], font_matrix: [0.001, 0, 0, 0.001, 0,
+                                                                                                                                                                                                                                       0], font_info: mock_font_info)
       dict
     end
 
@@ -957,9 +884,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_type1_font) do
       font = double("Type1Font")
-      allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-      allow(font).to receive(:font_name).and_return("TestFont")
-      allow(font).to receive(:charstrings).and_return(mock_charstrings)
+      allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                      font_name: "TestFont", charstrings: mock_charstrings)
       allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
       font
     end
@@ -1001,21 +927,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   describe "#build_cff_private_dict" do
     let(:mock_private_dict) do
       dict = double("private_dict")
-      allow(dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(dict).to receive(:other_blues).and_return([-250, -240])
-      allow(dict).to receive(:family_blues).and_return([])
-      allow(dict).to receive(:family_other_blues).and_return([])
-      allow(dict).to receive(:blue_scale).and_return(0.039625)
-      allow(dict).to receive(:blue_shift).and_return(7)
-      allow(dict).to receive(:blue_fuzz).and_return(1)
-      allow(dict).to receive(:std_hw).and_return(50)
-      allow(dict).to receive(:std_vw).and_return(60)
-      allow(dict).to receive(:stem_snap_h).and_return([50, 51])
-      allow(dict).to receive(:stem_snap_v).and_return([60, 61])
-      allow(dict).to receive(:force_bold).and_return(false)
-      allow(dict).to receive(:language_group).and_return(0)
-      allow(dict).to receive(:expansion_factor).and_return(0.06)
-      allow(dict).to receive(:initial_random_seed).and_return(0)
+      allow(dict).to receive_messages(blue_values: [-20, 0, 750, 770],
+                                      other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: 50, std_vw: 60, stem_snap_h: [50, 51], stem_snap_v: [60, 61], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
@@ -1045,21 +958,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "uses defaults when values are missing" do
       dict = double("private_dict")
-      allow(dict).to receive(:blue_values).and_return(nil)
-      allow(dict).to receive(:other_blues).and_return(nil)
-      allow(dict).to receive(:family_blues).and_return(nil)
-      allow(dict).to receive(:family_other_blues).and_return(nil)
-      allow(dict).to receive(:blue_scale).and_return(nil)
-      allow(dict).to receive(:blue_shift).and_return(nil)
-      allow(dict).to receive(:blue_fuzz).and_return(nil)
-      allow(dict).to receive(:std_hw).and_return(nil)
-      allow(dict).to receive(:std_vw).and_return(nil)
-      allow(dict).to receive(:stem_snap_h).and_return(nil)
-      allow(dict).to receive(:stem_snap_v).and_return(nil)
-      allow(dict).to receive(:force_bold).and_return(nil)
-      allow(dict).to receive(:language_group).and_return(nil)
-      allow(dict).to receive(:expansion_factor).and_return(nil)
-      allow(dict).to receive(:initial_random_seed).and_return(nil)
+      allow(dict).to receive_messages(blue_values: nil, other_blues: nil,
+                                      family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
       font = double("Type1Font")
       allow(font).to receive(:private_dict).and_return(dict)

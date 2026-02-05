@@ -49,7 +49,7 @@ module Fontisan
         cntrmask: 20,     # CFF: 20, Type 1: Not supported (skip)
 
         # End char
-        endchar: 14,      # CFF: 14, Type 1: 14
+        endchar: 14, # CFF: 14, Type 1: 14
 
         # Miscellaneous
         callsubr: 10,     # CFF: 10, Type 1: 10
@@ -83,7 +83,7 @@ module Fontisan
       def convert(cff_charstring, private_dict: {})
         # Parse CFF CharString into operations
         parser = Tables::Cff::CharStringParser.new(cff_charstring,
-                                                       stem_count: private_dict[:stem_count]&.to_i || 0)
+                                                   stem_count: private_dict[:stem_count].to_i)
         operations = parser.parse
 
         # Extract width from operations (CFF spec: odd stack before first move = width)
@@ -106,13 +106,14 @@ module Fontisan
 
         # Find first move operator
         first_move_idx = operations.index do |op|
-          %i[rmoveto hmoveto vmoveto rcurveline rrcurveline vvcurveto hhcurveto].include?(op[:name])
+          %i[rmoveto hmoveto vmoveto rcurveline rrcurveline vvcurveto
+             hhcurveto].include?(op[:name])
         end
 
         return @default_width unless first_move_idx
 
         # Count operands before first move
-        operand_count = operations[0...first_move_idx].sum(0) do |op|
+        operand_count = operations[0...first_move_idx].sum do |op|
           op[:operands]&.length || 0
         end
 
@@ -140,10 +141,10 @@ module Fontisan
 
         # Add hsbw (horizontal sidebearing and width) at start
         # This is the standard width operator for horizontal fonts
-        result << encode_number(0)  # left sidebearing (usually 0 for CFF)
+        result << encode_number(0) # left sidebearing (usually 0 for CFF)
         result << encode_number(glyph_width)
         result << ESCAPE_BYTE
-        result << 34  # hsbw operator (two-byte: 12 34)
+        result << 34 # hsbw operator (two-byte: 12 34)
 
         x = 0
         y = 0
@@ -154,11 +155,12 @@ module Fontisan
         if width && operations.any?
           # Count operands before first move to determine if width was in stack
           first_move_idx = operations.index do |op|
-            %i[rmoveto hmoveto vmoveto rcurveline rrcurveline vvcurveto hhcurveto].include?(op[:name])
+            %i[rmoveto hmoveto vmoveto rcurveline rrcurveline vvcurveto
+               hhcurveto].include?(op[:name])
           end
 
           if first_move_idx
-            operand_count = operations[0...first_move_idx].sum(0) do |op|
+            operand_count = operations[0...first_move_idx].sum do |op|
               op[:operands]&.length || 0
             end
 
@@ -182,16 +184,17 @@ module Fontisan
             end
 
             if operands.length >= 2
-              dx, dy = operands[0], operands[1]
+              dx = operands[0]
+              dy = operands[1]
               x += dx
               y += dy
               result << encode_number(dx)
               result << encode_number(dy)
-              result << 21  # rmoveto
+              result << 21 # rmoveto
             elsif operands.length == 1
               # Only dy (hmoveto/vmoveto style)
               result << encode_number(operands.first)
-              result << 4  # vmoveto (closest approximation)
+              result << 4 # vmoveto (closest approximation)
             end
             first_move = false
           when :hmoveto
@@ -205,14 +208,14 @@ module Fontisan
             dx = operands.first
             x += dx if dx
             result << encode_number(dx)
-            result << 22  # hmoveto
+            result << 22 # hmoveto
             first_move = false
           when :vmoveto
             # vmoveto dy
             dy = op[:operands].first
             y += dy if dy
             result << encode_number(dy)
-            result << 4  # vmoveto
+            result << 4 # vmoveto
             first_move = false
           when :rlineto
             # rlineto dx dy
@@ -221,29 +224,31 @@ module Fontisan
             y += dy
             result << encode_number(dx)
             result << encode_number(dy)
-            result << 5  # rlineto
+            result << 5 # rlineto
             first_move = false
           when :hlineto
             # hlineto dx
             dx = op[:operands].first
             x += dx
             result << encode_number(dx)
-            result << 6  # hlineto
+            result << 6 # hlineto
             first_move = false
           when :vlineto
             # vlineto dy
             dy = op[:operands].first
             y += dy
             result << encode_number(dy)
-            result << 7  # vlineto
+            result << 7 # vlineto
             first_move = false
           when :rrcurveto
             # rrcurveto dx1 dy1 dx2 dy2 dx3 dy3
             dx1, dy1, dx2, dy2, dx3, dy3 = op[:operands]
             x += dx1 + dx2 + dx3
             y += dy1 + dy2 + dy3
-            [dx1, dy1, dx2, dy2, dx3, dy3].each { |val| result << encode_number(val) }
-            result << 8  # rrcurveto
+            [dx1, dy1, dx2, dy2, dx3, dy3].each do |val|
+              result << encode_number(val)
+            end
+            result << 8 # rrcurveto
             first_move = false
           when :hhcurveto, :hvcurveto, :vhcurveto
             # Flexible curve operators
@@ -293,7 +298,7 @@ module Fontisan
           [num + 139].pack("C")
         else
           # Use escape sequence (255) followed by 2-byte signed integer
-          num += 32768 if num < 0
+          num += 32768 if num.negative?
           [255, num % 256, num >> 8].pack("C*")
         end
       end

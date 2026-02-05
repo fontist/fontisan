@@ -161,10 +161,10 @@ module Fontisan
 
         # Check if variable font (Type1 fonts are never variable)
         info.is_variable = if font.is_a?(Type1Font)
-                            false
-                          else
-                            font.has_table?(Constants::FVAR_TAG)
-                          end
+                             false
+                           else
+                             font.has_table?(Constants::FVAR_TAG)
+                           end
       end
 
       # Populate essential fields for brief mode (metadata tables only).
@@ -273,7 +273,7 @@ module Fontisan
         info.version = font_info.version
         info.copyright = font_info.copyright
         info.description = font_info.notice
-        info.designer = nil  # Type 1 fonts may not have designer info
+        info.designer = nil # Type 1 fonts may not have designer info
 
         # Metrics
         if font_dict&.font_b_box
