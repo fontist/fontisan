@@ -9,6 +9,15 @@ RSpec.describe Fontisan::Woff2Font do
   let(:otf_flavor) { "OTTO" }
 
   describe ".from_file" do
+    context "with valid WOFF2 file" do
+      it "returns a Woff2Font instance" do
+        woff2_path = fixture_path("fonttools/TestWOFF2.woff2")
+        font = described_class.from_file(woff2_path)
+
+        expect(font).to be_a(described_class)
+      end
+    end
+
     context "with invalid inputs" do
       it "raises ArgumentError when path is nil" do
         expect { described_class.from_file(nil) }

@@ -32,46 +32,6 @@ module Fontisan
     # Page size for lazy loading alignment (typical filesystem page size)
     PAGE_SIZE = 4096
 
-    # Read OpenType Font from a file
-    #
-    # @param path [String] Path to the OTF file
-    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
-    # @param lazy [Boolean] If true, load tables on demand (default: false)
-    # @return [OpenTypeFont] A new instance
-    # @raise [ArgumentError] if path is nil or empty, or if mode is invalid
-    # @raise [Errno::ENOENT] if file does not exist
-    # @raise [RuntimeError] if file format is invalid
-    def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
-      if path.nil? || path.to_s.empty?
-        raise ArgumentError,
-              "path cannot be nil or empty"
-      end
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      # Validate mode
-      LoadingModes.validate_mode!(mode)
-
-      File.open(path, "rb") do |io|
-        font = read(io)
-        font.initialize_storage
-        font.loading_mode = mode
-        font.lazy_load_enabled = lazy
-
-        if lazy
-          # Keep file handle open for lazy loading
-          font.io_source = File.open(path, "rb")
-          font.setup_finalizer
-        else
-          # Read tables upfront
-          font.read_table_data(io)
-        end
-
-        font
-      end
-    rescue BinData::ValidityError, EOFError => e
-      raise "Invalid OTF file: #{e.message}"
-    end
-
     # Initialize storage hashes
     #
     # Extends base class to add page_cache for lazy loading.

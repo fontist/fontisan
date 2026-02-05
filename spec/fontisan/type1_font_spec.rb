@@ -2,14 +2,32 @@
 
 RSpec.describe Fontisan::Type1Font do
   describe ".from_file" do
-    it "raises ArgumentError for nil file path" do
-      expect { described_class.from_file(nil) }
-        .to raise_error(ArgumentError, /File path cannot be nil/)
+    context "with valid Type1 file" do
+      it "returns a Type1Font instance" do
+        type1_path = fixture_path("fonts/type1/quicksand.pfb")
+        font = described_class.from_file(type1_path)
+
+        expect(font).to be_a(described_class)
+      end
+
+      it "sets the loading mode correctly" do
+        type1_path = fixture_path("fonts/type1/quicksand.pfb")
+        font = described_class.from_file(type1_path, mode: :metadata)
+
+        expect(font.loading_mode).to eq(:metadata)
+      end
     end
 
-    it "raises Error for non-existent file" do
-      expect { described_class.from_file("/nonexistent/file.pfb") }
-        .to raise_error(Fontisan::Error, /File not found/)
+    context "with invalid inputs" do
+      it "raises ArgumentError for nil file path" do
+        expect { described_class.from_file(nil) }
+          .to raise_error(ArgumentError, /File path cannot be nil/)
+      end
+
+      it "raises Error for non-existent file" do
+        expect { described_class.from_file("/nonexistent/file.pfb") }
+          .to raise_error(Fontisan::Error, /File not found/)
+      end
     end
   end
 

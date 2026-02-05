@@ -11,7 +11,6 @@ gem "get_process_mem", "~> 0.2"
 gem "bigdecimal"
 gem "openssl", "~> 3.0"
 # sys-proctable is required by get_process_mem on Windows
-gem "sys-proctable", platforms: %i[mswin mingw mswin64]
 gem "rake"
 gem "rspec"
 gem "rubocop"
@@ -19,3 +18,4 @@ gem "rubocop-performance"
 gem "rubocop-rake"
 gem "rubocop-rspec"
 gem "rubyzip"
+gem "sys-proctable", platforms: %i[mswin mingw mswin64]

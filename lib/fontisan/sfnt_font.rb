@@ -149,34 +149,52 @@ module Fontisan
     # @raise [RuntimeError] if file format is invalid
     def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
       if path.nil? || path.to_s.empty?
-        raise ArgumentError,
-              "path cannot be nil or empty"
+        raise ArgumentError, "path cannot be nil or empty"
       end
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
 
-      # Validate mode
       LoadingModes.validate_mode!(mode)
 
-      File.open(path, "rb") do |io|
-        font = read(io)
-        font.initialize_storage
-        font.loading_mode = mode
-        font.lazy_load_enabled = lazy
+      font = new
+      font.initialize_storage
+      font.loading_mode = mode
+      font.lazy_load_enabled = lazy
 
-        if lazy
-          # Keep file handle open for lazy loading
-          font.io_source = File.open(path, "rb")
-          font.setup_finalizer
-        else
-          # Read tables upfront
-          font.read_table_data(io)
-        end
-
-        font
-      end
-    rescue BinData::ValidityError, EOFError => e
-      raise "Invalid font file: #{e.message}"
+      lazy ? load_lazy(path, font) : load_eager(path, font)
     end
+
+    # Load font with lazy loading (keeps file handle open)
+    #
+    # @param path [String] Path to the font file
+    # @param font [SfntFont] Font instance to populate
+    # @return [SfntFont] The populated font instance
+    def self.load_lazy(path, font)
+      font.io_source = File.open(path, "rb")
+      font.setup_finalizer
+      font.io_source.rewind
+      font.read(font.io_source)
+      font
+    rescue BinData::ValidityError, EOFError => e
+      font_type = name.split("::").last
+      raise "Invalid #{font_type} file: #{e.message}"
+    end
+
+    # Load font with eager loading (reads all data, closes file)
+    #
+    # @param path [String] Path to the font file
+    # @param font [SfntFont] Font instance to populate
+    # @return [SfntFont] The populated font instance
+    def self.load_eager(path, font)
+      File.open(path, "rb") do |io|
+        font.read(io)
+        font.read_table_data(io)
+      end
+      font
+    rescue BinData::ValidityError, EOFError => e
+      font_type = name.split("::").last
+      raise "Invalid #{font_type} file: #{e.message}"
+    end
+    private_class_method :load_lazy, :load_eager
 
     # Read SFNT Font from collection at specific offset
     #

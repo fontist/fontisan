@@ -32,7 +32,7 @@ module Fontisan
 
     # Get a single font from the collection
     #
-    # Overrides BaseCollection to use TrueType-specific from_ttc method.
+    # Uses the base class from_collection method.
     #
     # @param index [Integer] Index of the font (0-based)
     # @param io [IO] Open file handle
@@ -42,13 +42,13 @@ module Fontisan
       return nil if index >= num_fonts
 
       require_relative "true_type_font"
-      TrueTypeFont.from_ttc(io, font_offsets[index], mode: mode)
+      TrueTypeFont.from_collection(io, font_offsets[index], mode: mode)
     end
 
     # Extract fonts as TrueTypeFont objects
     #
     # Reads each font from the TTC file and returns them as TrueTypeFont objects.
-    # This method uses the TTC-specific from_ttc method.
+    # Uses the base class from_collection method.
     #
     # @param io [IO] Open file handle to read fonts from
     # @return [Array<TrueTypeFont>] Array of font objects
@@ -56,13 +56,13 @@ module Fontisan
       require_relative "true_type_font"
 
       font_offsets.map do |offset|
-        TrueTypeFont.from_ttc(io, offset)
+        TrueTypeFont.from_collection(io, offset)
       end
     end
 
     # List all fonts in the collection with basic metadata
     #
-    # Overrides BaseCollection to use TrueType-specific from_ttc method.
+    # Uses the base class from_collection method.
     #
     # @param io [IO] Open file handle to read fonts from
     # @return [CollectionListInfo] List of fonts with metadata
@@ -73,7 +73,7 @@ module Fontisan
       require_relative "tables/name"
 
       fonts = font_offsets.map.with_index do |offset, index|
-        font = TrueTypeFont.from_ttc(io, offset)
+        font = TrueTypeFont.from_collection(io, offset)
 
         # Extract basic font info
         name_table = font.table("name")
@@ -119,7 +119,7 @@ module Fontisan
 
     # Calculate table sharing statistics
     #
-    # Overrides BaseCollection to use TrueType-specific from_ttc method.
+    # Uses the base class from_collection method.
     #
     # @param io [IO] Open file handle
     # @return [TableSharingInfo] Sharing statistics
@@ -129,7 +129,7 @@ module Fontisan
 
       # Extract all fonts
       fonts = font_offsets.map do |offset|
-        TrueTypeFont.from_ttc(io, offset)
+        TrueTypeFont.from_collection(io, offset)
       end
 
       # Build table hash map (checksum -> size)
