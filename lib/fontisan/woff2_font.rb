@@ -373,11 +373,11 @@ module Fontisan
           raise InvalidFontError,
                 "Unknown WOFF2 flavor: 0x#{woff2.header.flavor.to_s(16)}"
         end
+      rescue BinData::ValidityError, EOFError => e
+        raise InvalidFontError, "Invalid WOFF2 file: #{e.message}"
       end
 
       woff2
-    rescue BinData::ValidityError, EOFError => e
-      raise InvalidFontError, "Invalid WOFF2 file: #{e.message}"
     end
 
     # Read table directory from IO

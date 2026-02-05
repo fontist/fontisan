@@ -23,66 +23,8 @@ module Fontisan
   #   ttf.to_file("output.ttf")
   #
   # @example Reading from TTC collection
-  #   ttf = TrueTypeFont.from_ttc(io, offset)
+  #   ttf = TrueTypeFont.from_collection(io, offset)
   class TrueTypeFont < SfntFont
-    # Read TrueType Font from a file
-    #
-    # @param path [String] Path to the TTF file
-    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
-    # @param lazy [Boolean] If true, load tables on demand (default: false)
-    # @return [TrueTypeFont] A new instance
-    # @raise [ArgumentError] if path is nil or empty, or if mode is invalid
-    # @raise [Errno::ENOENT] if file does not exist
-    # @raise [RuntimeError] if file format is invalid
-    def self.from_file(path, mode: LoadingModes::FULL, lazy: false)
-      if path.nil? || path.to_s.empty?
-        raise ArgumentError,
-              "path cannot be nil or empty"
-      end
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      # Validate mode
-      LoadingModes.validate_mode!(mode)
-
-      File.open(path, "rb") do |io|
-        font = read(io)
-        font.initialize_storage
-        font.loading_mode = mode
-        font.lazy_load_enabled = lazy
-
-        if lazy
-          # Reuse existing IO handle by duplicating it to prevent double file open
-          # The dup ensures the handle stays open after this block closes
-          font.io_source = io.dup
-          font.setup_finalizer
-        else
-          # Read tables upfront
-          font.read_table_data(io)
-        end
-
-        font
-      end
-    rescue BinData::ValidityError, EOFError => e
-      raise "Invalid TTF file: #{e.message}"
-    end
-
-    # Read TrueType Font from TTC at specific offset
-    #
-    # @param io [IO] Open file handle
-    # @param offset [Integer] Byte offset to the font
-    # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
-    # @return [TrueTypeFont] A new instance
-    def self.from_ttc(io, offset, mode: LoadingModes::FULL)
-      LoadingModes.validate_mode!(mode)
-
-      io.seek(offset)
-      font = read(io)
-      font.initialize_storage
-      font.loading_mode = mode
-      font.read_table_data(io)
-      font
-    end
-
     # Check if font is TrueType flavored
     #
     # @return [Boolean] true for TrueType fonts

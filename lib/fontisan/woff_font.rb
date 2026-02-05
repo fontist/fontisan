@@ -98,10 +98,10 @@ module Fontisan
         font.io_source = io
         font.read_compressed_table_data(io)
         font
+      rescue BinData::ValidityError, EOFError => e
+        Kernel.raise(::Fontisan::InvalidFontError,
+                     "Invalid WOFF file: #{e.message}")
       end
-    rescue BinData::ValidityError, EOFError => e
-      Kernel.raise(::Fontisan::InvalidFontError,
-                   "Invalid WOFF file: #{e.message}")
     end
 
     # Initialize storage hashes
