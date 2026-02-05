@@ -54,14 +54,15 @@ RSpec.describe "Type 1 Performance Benchmarks" do
       time = Benchmark.realtime do
         # Access CharStrings to trigger conversion
         font.charstrings.glyph_names.each do |glyph_name|
-          charstring = font.charstrings[glyph_name]
+          font.charstrings[glyph_name]
           # Just accessing ensures conversion is triggered
         end
       end
 
       # Conversion should be fast (< 1 second per 1000 glyphs)
       time_per_glyph = time / [charstrings_count, 1].max
-      expect(time_per_glyph).to be < 0.001, "CharString access took #{time_per_glyph}s per glyph"
+      expect(time_per_glyph).to be < 0.001,
+                                "CharString access took #{time_per_glyph}s per glyph"
     end
   end
 
@@ -76,43 +77,25 @@ RSpec.describe "Type 1 Performance Benchmarks" do
       # For SFNT tables, we need properly mocked data
       # Create a comprehensive mock with all required attributes
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:font_bbox).and_return([50, -200, 950, 800])
-      allow(font_dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-      allow(font_dict).to receive(:font_name).and_return("TestFont")
-      allow(font_dict).to receive(:family_name).and_return("TestFamily")
-      allow(font_dict).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_dict).to receive(:weight).and_return("Regular")
 
       font_info = double("font_info")
-      allow(font_info).to receive(:version).and_return("001.000")
-      allow(font_info).to receive(:copyright).and_return("Copyright 2024")
-      allow(font_info).to receive(:notice).and_return("Test Font")
-      allow(font_info).to receive(:family_name).and_return("TestFamily")
-      allow(font_info).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_info).to receive(:weight).and_return("Regular")
-      allow(font_info).to receive(:italic_angle).and_return(0)
-      allow(font_info).to receive(:underline_position).and_return(-100)
-      allow(font_info).to receive(:underline_thickness).and_return(50)
-      allow(font_info).to receive(:is_fixed_pitch).and_return(false)
-      allow(font_dict).to receive(:font_info).and_return(font_info)
+      allow(font_info).to receive_messages(version: "001.000",
+                                           copyright: "Copyright 2024", notice: "Test Font", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", italic_angle: 0, underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
+      allow(font_dict).to receive_messages(font_bbox: [50, -200, 950, 800], font_matrix: [0.001, 0, 0, 0.001,
+                                                                                          0, 0], font_name: "TestFont", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", font_info: font_info)
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
-      allow(private_dict).to receive(:family_blues).and_return([])
-      allow(private_dict).to receive(:family_other_blues).and_return([])
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240], family_blues: [], family_other_blues: [])
 
       charstrings = double("charstrings")
-      allow(charstrings).to receive(:count).and_return(250)
-      allow(charstrings).to receive(:encoding).and_return({ ".notdef" => 0, "A" => 1, "B" => 2 })
-      allow(charstrings).to receive(:glyph_names).and_return([".notdef", "A", "B"])
+      allow(charstrings).to receive_messages(count: 250, encoding: { ".notdef" => 0,
+                                                                     "A" => 1, "B" => 2 }, glyph_names: [".notdef", "A",
+                                                                                                         "B"])
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
-      allow(mock_font).to receive(:charstrings).and_return(charstrings)
-      allow(mock_font).to receive(:font_name).and_return("TestFont")
-      allow(mock_font).to receive(:version).and_return("001.000")
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict, charstrings: charstrings, font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       # Benchmark: Building all SFNT tables should be fast
@@ -148,7 +131,8 @@ RSpec.describe "Type 1 Performance Benchmarks" do
 
       # Each table should build in < 0.1 seconds
       times.each do |table_name, table_time|
-        expect(table_time).to be < 0.1, "#{table_name} table building took #{table_time}s"
+        expect(table_time).to be < 0.1,
+                              "#{table_name} table building took #{table_time}s"
       end
     end
   end
@@ -211,7 +195,7 @@ RSpec.describe "Type 1 Performance Benchmarks" do
       # This is a reasonable threshold for Type 1 to OTF conversion
       memory_increase_mb = after_mb - before_mb
       expect(memory_increase_mb).to be < 50,
-        "Memory usage increased by #{memory_increase_mb.round(2)} MB, expected < 50 MB"
+                                    "Memory usage increased by #{memory_increase_mb.round(2)} MB, expected < 50 MB"
     end
   end
 
@@ -234,7 +218,8 @@ RSpec.describe "Type 1 Performance Benchmarks" do
 
       # Performance should be better than 1 second per 100 glyphs
       time_per_100_glyphs = (time / glyph_count) * 100
-      expect(time_per_100_glyphs).to be < 1.0, "Conversion took #{time_per_100_glyphs}s per 100 glyphs"
+      expect(time_per_100_glyphs).to be < 1.0,
+                                     "Conversion took #{time_per_100_glyphs}s per 100 glyphs"
     end
   end
 end

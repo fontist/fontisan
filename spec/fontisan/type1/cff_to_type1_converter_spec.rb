@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-RSpec.describe Fontisan::Type1::CffToType1Converter, "CFF to Type 1 CharString conversion" do
+RSpec.describe Fontisan::Type1::CffToType1Converter,
+               "CFF to Type 1 CharString conversion" do
   subject(:converter) { described_class.new }
 
   describe "#initialize" do
@@ -23,7 +24,7 @@ RSpec.describe Fontisan::Type1::CffToType1Converter, "CFF to Type 1 CharString c
     context "with simple move command" do
       let(:cff_charstring) do
         # rmoveto 100 50
-        [226, 50, 21].pack("C*")  # 100 (226 = 100+139-5), 50 (189 = 50+139), rmoveto(21)
+        [226, 50, 21].pack("C*") # 100 (226 = 100+139-5), 50 (189 = 50+139), rmoveto(21)
       end
 
       it "converts to Type 1 format" do
@@ -38,20 +39,20 @@ RSpec.describe Fontisan::Type1::CffToType1Converter, "CFF to Type 1 CharString c
 
         # hsbw is two-byte operator: 12 34
         # First we encode left sidebearing (0) and width, then 12 34
-        expect(result).to include("\x0C\x22")  # ESCAPE_BYTE (12) + 34
+        expect(result).to include("\x0C\x22") # ESCAPE_BYTE (12) + 34
       end
 
       it "includes endchar at end" do
         result = converter.convert(cff_charstring)
 
-        expect(result.getbyte(-1)).to eq(14)  # endchar operator
+        expect(result.getbyte(-1)).to eq(14) # endchar operator
       end
     end
 
     context "with line command" do
       let(:cff_charstring) do
         # hlineto 50
-        [189, 6].pack("C*")  # 50 (189 = 50+139), hlineto(6)
+        [189, 6].pack("C*") # 50 (189 = 50+139), hlineto(6)
       end
 
       it "converts to Type 1 format" do
@@ -80,7 +81,7 @@ RSpec.describe Fontisan::Type1::CffToType1Converter, "CFF to Type 1 CharString c
       let(:cff_charstring) do
         # Width 500, then rmoveto 100 0
         # In CFF: first odd operand is width
-        [358, 139, 21].pack("C*")  # 500 (358 = 500-139+139), rmoveto with implied 0
+        [358, 139, 21].pack("C*") # 500 (358 = 500-139+139), rmoveto with implied 0
       end
 
       it "uses explicit width in hsbw" do
@@ -118,13 +119,13 @@ RSpec.describe Fontisan::Type1::CffToType1Converter, "CFF to Type 1 CharString c
         # The 12 (ESCAPE_BYTE) comes after the two encoded numbers
         # Check for 12 somewhere in the first several bytes
         first_bytes = result[0..5].unpack("C*")
-        expect(first_bytes).to include(12)  # ESCAPE_BYTE
+        expect(first_bytes).to include(12) # ESCAPE_BYTE
       end
 
       it "includes endchar at end" do
         result = converter.convert_operations(operations)
 
-        expect(result.getbyte(-1)).to eq(14)  # endchar
+        expect(result.getbyte(-1)).to eq(14) # endchar
       end
     end
 

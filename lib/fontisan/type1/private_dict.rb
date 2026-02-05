@@ -176,18 +176,39 @@ module Fontisan
       #   puts priv.to_type1_format
       def to_type1_format
         result = []
-        result << array_to_type1(:BlueValues, @blue_values) unless @blue_values.empty?
-        result << array_to_type1(:OtherBlues, @other_blues) unless @other_blues.empty?
-        result << array_to_type1(:FamilyBlues, @family_blues) unless @family_blues.empty?
-        result << array_to_type1(:FamilyOtherBlues, @family_other_blues) unless @family_other_blues.empty?
+        unless @blue_values.empty?
+          result << array_to_type1(:BlueValues,
+                                   @blue_values)
+        end
+        unless @other_blues.empty?
+          result << array_to_type1(:OtherBlues,
+                                   @other_blues)
+        end
+        unless @family_blues.empty?
+          result << array_to_type1(:FamilyBlues,
+                                   @family_blues)
+        end
+        unless @family_other_blues.empty?
+          result << array_to_type1(:FamilyOtherBlues,
+                                   @family_other_blues)
+        end
         result << scalar_to_type1(:BlueScale, @blue_scale)
         result << scalar_to_type1(:BlueShift, @blue_shift)
         result << scalar_to_type1(:BlueFuzz, @blue_fuzz)
         result << array_to_type1(:StdHW, @std_hw) unless @std_hw.empty?
         result << array_to_type1(:StdVW, @std_vw) unless @std_vw.empty?
-        result << array_to_type1(:StemSnapH, @stem_snap_h) unless @stem_snap_h.empty?
-        result << array_to_type1(:StemSnapV, @stem_snap_v) unless @stem_snap_v.empty?
-        result << boolean_to_type1(:ForceBold, @force_bold) unless @force_bold == false
+        unless @stem_snap_h.empty?
+          result << array_to_type1(:StemSnapH,
+                                   @stem_snap_h)
+        end
+        unless @stem_snap_v.empty?
+          result << array_to_type1(:StemSnapV,
+                                   @stem_snap_v)
+        end
+        unless @force_bold == false
+          result << boolean_to_type1(:ForceBold,
+                                     @force_bold)
+        end
         result << scalar_to_type1(:lenIV, @len_iv)
 
         result.join("\n")

@@ -351,7 +351,8 @@ _options)
         is_type1 = font.is_a?(Type1Font)
 
         unless is_type1 || font.respond_to?(:table)
-          raise ArgumentError, "Font must respond to :table method or be a Type1Font"
+          raise ArgumentError,
+                "Font must respond to :table method or be a Type1Font"
         end
 
         unless target_format.is_a?(Symbol)

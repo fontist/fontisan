@@ -12,56 +12,41 @@ RSpec.describe "Type 1 Font Conversion Integration" do
     context "SFNT table building" do
       let(:mock_font_dict) do
         dict = double("font_dictionary")
-        allow(dict).to receive(:font_bbox).and_return([50, -200, 950, 800])
-        allow(dict).to receive(:font_name).and_return("TestFont")
-        allow(dict).to receive(:family_name).and_return("TestFamily")
-        allow(dict).to receive(:full_name).and_return("TestFont Regular")
-        allow(dict).to receive(:weight).and_return("Regular")
-        allow(dict).to receive(:font_info).and_return(mock_font_info)
+        allow(dict).to receive_messages(font_bbox: [50, -200, 950, 800],
+                                        font_name: "TestFont", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", font_info: mock_font_info)
         dict
       end
 
       let(:mock_font_info) do
         info = double("font_info")
-        allow(info).to receive(:version).and_return("001.000")
-        allow(info).to receive(:copyright).and_return("Copyright 2024")
-        allow(info).to receive(:notice).and_return("Test Font")
-        allow(info).to receive(:family_name).and_return("TestFamily")
-        allow(info).to receive(:full_name).and_return("TestFont Regular")
-        allow(info).to receive(:weight).and_return("Regular")
-        allow(info).to receive(:italic_angle).and_return(0)
-        allow(info).to receive(:underline_position).and_return(-100)
-        allow(info).to receive(:underline_thickness).and_return(50)
-        allow(info).to receive(:is_fixed_pitch).and_return(false)
+        allow(info).to receive_messages(version: "001.000",
+                                        copyright: "Copyright 2024", notice: "Test Font", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", italic_angle: 0, underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
         info
       end
 
       let(:mock_private_dict) do
         dict = double("private_dict")
-        allow(dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-        allow(dict).to receive(:other_blues).and_return([-250, -240])
+        allow(dict).to receive_messages(blue_values: [-20, 0, 750, 770],
+                                        other_blues: [
+                                          -250, -240
+                                        ])
         dict
       end
 
       let(:mock_charstrings) do
         cs = double("charstrings")
-        allow(cs).to receive(:count).and_return(250)
-        allow(cs).to receive(:encoding).and_return({
-          ".notdef" => 0,
-          "A" => 1,
-          "B" => 2,
-        })
-        allow(cs).to receive(:glyph_names).and_return([".notdef", "A", "B"])
+        allow(cs).to receive_messages(count: 250, encoding: {
+                                        ".notdef" => 0,
+                                        "A" => 1,
+                                        "B" => 2,
+                                      }, glyph_names: [".notdef", "A", "B"])
         cs
       end
 
       let(:mock_type1_font) do
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-        allow(font).to receive(:private_dict).and_return(mock_private_dict)
-        allow(font).to receive(:charstrings).and_return(mock_charstrings)
-        allow(font).to receive(:font_name).and_return("TestFont")
-        allow(font).to receive(:version).and_return("001.000")
+        allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                        private_dict: mock_private_dict, charstrings: mock_charstrings, font_name: "TestFont", version: "001.000")
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
         font
       end
@@ -78,7 +63,8 @@ RSpec.describe "Type 1 Font Conversion Integration" do
         }
 
         # Note: CFF table is built by OutlineConverter, not by individual table builders
-        expect(tables.keys.sort).to eq(["OS/2", "cmap", "head", "hhea", "maxp", "name", "post"])
+        expect(tables.keys.sort).to eq(["OS/2", "cmap", "head", "hhea", "maxp",
+                                        "name", "post"])
       end
 
       it "produces valid head table" do
@@ -166,46 +152,22 @@ RSpec.describe "Type 1 Font Conversion Integration" do
     context "CFF dictionary building" do
       let(:mock_font_info) do
         info = double("font_info")
-        allow(info).to receive(:version).and_return("001.000")
-        allow(info).to receive(:notice).and_return("Copyright notice")
-        allow(info).to receive(:copyright).and_return("Copyright 2024")
-        allow(info).to receive(:full_name).and_return("TestFont")
-        allow(info).to receive(:family_name).and_return("TestFamily")
-        allow(info).to receive(:weight).and_return("Regular")
+        allow(info).to receive_messages(version: "001.000",
+                                        notice: "Copyright notice", copyright: "Copyright 2024", full_name: "TestFont", family_name: "TestFamily", weight: "Regular")
         info
       end
 
       let(:mock_font_dict) do
         dict = double("font_dictionary")
-        allow(dict).to receive(:version).and_return("001.000")
-        allow(dict).to receive(:notice).and_return("Copyright notice")
-        allow(dict).to receive(:copyright).and_return("Copyright 2024")
-        allow(dict).to receive(:full_name).and_return("TestFont")
-        allow(dict).to receive(:family_name).and_return("TestFamily")
-        allow(dict).to receive(:weight).and_return("Regular")
-        allow(dict).to receive(:font_bbox).and_return([0, -100, 1000, 900])
-        allow(dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-        allow(dict).to receive(:font_info).and_return(mock_font_info)
+        allow(dict).to receive_messages(version: "001.000", notice: "Copyright notice", copyright: "Copyright 2024", full_name: "TestFont", family_name: "TestFamily", weight: "Regular", font_bbox: [0, -100, 1000, 900], font_matrix: [0.001, 0, 0, 0.001, 0,
+                                                                                                                                                                                                                                         0], font_info: mock_font_info)
         dict
       end
 
       let(:mock_private_dict) do
         dict = double("private_dict")
-        allow(dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-        allow(dict).to receive(:other_blues).and_return([-250, -240])
-        allow(dict).to receive(:family_blues).and_return([])
-        allow(dict).to receive(:family_other_blues).and_return([])
-        allow(dict).to receive(:blue_scale).and_return(0.039625)
-        allow(dict).to receive(:blue_shift).and_return(7)
-        allow(dict).to receive(:blue_fuzz).and_return(1)
-        allow(dict).to receive(:std_hw).and_return(50)
-        allow(dict).to receive(:std_vw).and_return(60)
-        allow(dict).to receive(:stem_snap_h).and_return([50, 51])
-        allow(dict).to receive(:stem_snap_v).and_return([60, 61])
-        allow(dict).to receive(:force_bold).and_return(false)
-        allow(dict).to receive(:language_group).and_return(0)
-        allow(dict).to receive(:expansion_factor).and_return(0.06)
-        allow(dict).to receive(:initial_random_seed).and_return(0)
+        allow(dict).to receive_messages(blue_values: [-20, 0, 750, 770],
+                                        other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: 50, std_vw: 60, stem_snap_h: [50, 51], stem_snap_v: [60, 61], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
         dict
       end
 
@@ -217,10 +179,8 @@ RSpec.describe "Type 1 Font Conversion Integration" do
 
       let(:mock_type1_font) do
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-        allow(font).to receive(:private_dict).and_return(mock_private_dict)
-        allow(font).to receive(:font_name).and_return("TestFont")
-        allow(font).to receive(:charstrings).and_return(mock_charstrings)
+        allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                        private_dict: mock_private_dict, font_name: "TestFont", charstrings: mock_charstrings)
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
         font
       end
@@ -249,25 +209,34 @@ RSpec.describe "Type 1 Font Conversion Integration" do
     context "error handling" do
       let(:mock_font) do
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(nil)
-        allow(font).to receive(:private_dict).and_return(nil)
-        allow(font).to receive(:charstrings).and_return(nil)
-        allow(font).to receive(:font_name).and_return("TestFont")
-        allow(font).to receive(:version).and_return("001.000")
+        allow(font).to receive_messages(font_dictionary: nil,
+                                        private_dict: nil, charstrings: nil, font_name: "TestFont", version: "001.000")
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
         font
       end
 
       it "handles missing font dictionary gracefully" do
-        expect { converter.send(:build_head_table, mock_font) }.not_to raise_error
-        expect { converter.send(:build_hhea_table, mock_font) }.not_to raise_error
-        expect { converter.send(:build_name_table, mock_font) }.not_to raise_error
+        expect do
+          converter.send(:build_head_table, mock_font)
+        end.not_to raise_error
+        expect do
+          converter.send(:build_hhea_table, mock_font)
+        end.not_to raise_error
+        expect do
+          converter.send(:build_name_table, mock_font)
+        end.not_to raise_error
       end
 
       it "handles missing charstrings gracefully" do
-        expect { converter.send(:build_maxp_table, mock_font) }.not_to raise_error
-        expect { converter.send(:build_hhea_table, mock_font) }.not_to raise_error
-        expect { converter.send(:build_cmap_table, mock_font) }.not_to raise_error
+        expect do
+          converter.send(:build_maxp_table, mock_font)
+        end.not_to raise_error
+        expect do
+          converter.send(:build_hhea_table, mock_font)
+        end.not_to raise_error
+        expect do
+          converter.send(:build_cmap_table, mock_font)
+        end.not_to raise_error
       end
     end
 
@@ -280,8 +249,8 @@ RSpec.describe "Type 1 Font Conversion Integration" do
 
       let(:mock_type1_font) do
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(mock_font_dict)
-        allow(font).to receive(:private_dict).and_return(nil)
+        allow(font).to receive_messages(font_dictionary: mock_font_dict,
+                                        private_dict: nil)
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
         font
       end
@@ -308,7 +277,8 @@ RSpec.describe "Type 1 Font Conversion Integration" do
           os2_data = converter.send(:build_os2_table, mock_type1_font)
           weight_class = os2_data[4..5].unpack1("n")
 
-          expect(weight_class).to eq(expected_class), "#{weight_name} should map to #{expected_class}"
+          expect(weight_class).to eq(expected_class),
+                                  "#{weight_name} should map to #{expected_class}"
         end
       end
     end
@@ -316,11 +286,8 @@ RSpec.describe "Type 1 Font Conversion Integration" do
     context "integration with FormatConverter" do
       let(:mock_type1_font) do
         font = double("Type1Font")
-        allow(font).to receive(:font_dictionary).and_return(nil)
-        allow(font).to receive(:private_dict).and_return(nil)
-        allow(font).to receive(:charstrings).and_return(nil)
-        allow(font).to receive(:font_name).and_return("TestFont")
-        allow(font).to receive(:version).and_return("001.000")
+        allow(font).to receive_messages(font_dictionary: nil,
+                                        private_dict: nil, charstrings: nil, font_name: "TestFont", version: "001.000")
         allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
         font
       end

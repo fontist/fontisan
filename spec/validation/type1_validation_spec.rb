@@ -11,6 +11,7 @@ RSpec.describe "Type 1 Font Validation" do
     fixture_dir = File.join(gem_root, "spec", "fixtures", "fonts", "type1")
     quicksand = File.join(fixture_dir, "quicksand.pfb")
     return quicksand if File.exist?(quicksand)
+
     Dir.glob(File.join(fixture_dir, "**", "*.{pfb,t1}")).first
   end
 
@@ -24,43 +25,25 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Mock up required data for SFNT table building
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:font_bbox).and_return([50, -200, 950, 800])
-      allow(font_dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-      allow(font_dict).to receive(:font_name).and_return("TestFont")
-      allow(font_dict).to receive(:family_name).and_return("TestFamily")
-      allow(font_dict).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_dict).to receive(:weight).and_return("Regular")
 
       font_info = double("font_info")
-      allow(font_info).to receive(:version).and_return("001.000")
-      allow(font_info).to receive(:copyright).and_return("Copyright 2024")
-      allow(font_info).to receive(:notice).and_return("Test Font")
-      allow(font_info).to receive(:family_name).and_return("TestFamily")
-      allow(font_info).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_info).to receive(:weight).and_return("Regular")
-      allow(font_info).to receive(:italic_angle).and_return(0)
-      allow(font_info).to receive(:underline_position).and_return(-100)
-      allow(font_info).to receive(:underline_thickness).and_return(50)
-      allow(font_info).to receive(:is_fixed_pitch).and_return(false)
-      allow(font_dict).to receive(:font_info).and_return(font_info)
+      allow(font_info).to receive_messages(version: "001.000",
+                                           copyright: "Copyright 2024", notice: "Test Font", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", italic_angle: 0, underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
+      allow(font_dict).to receive_messages(font_bbox: [50, -200, 950, 800], font_matrix: [0.001, 0, 0, 0.001,
+                                                                                          0, 0], font_name: "TestFont", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", font_info: font_info)
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
-      allow(private_dict).to receive(:family_blues).and_return([])
-      allow(private_dict).to receive(:family_other_blues).and_return([])
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240], family_blues: [], family_other_blues: [])
 
       charstrings = double("charstrings")
-      allow(charstrings).to receive(:count).and_return(250)
-      allow(charstrings).to receive(:encoding).and_return({ ".notdef" => 0, "A" => 1, "B" => 2 })
-      allow(charstrings).to receive(:glyph_names).and_return([".notdef", "A", "B"])
+      allow(charstrings).to receive_messages(count: 250, encoding: { ".notdef" => 0,
+                                                                     "A" => 1, "B" => 2 }, glyph_names: [".notdef", "A",
+                                                                                                         "B"])
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
-      allow(mock_font).to receive(:charstrings).and_return(charstrings)
-      allow(mock_font).to receive(:font_name).and_return("TestFont")
-      allow(mock_font).to receive(:version).and_return("001.000")
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict, charstrings: charstrings, font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       # Build SFNT header
@@ -76,7 +59,7 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Build SFNT header
       num_tables = tables.size
-      entry_selector = (2 ** Math.log2(num_tables).ceil).to_i
+      entry_selector = (2**Math.log2(num_tables).ceil).to_i
       search_range = entry_selector * 16
       range_shift = (num_tables - entry_selector / 16) * 16 if num_tables > entry_selector / 16
 
@@ -91,8 +74,10 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Verify SFNT header structure
       expect(header.bytesize).to eq(12), "SFNT header should be 12 bytes"
-      expect(header[0..3].unpack1("N")).to eq(0x4F54544F), "SFNT version should be 'OTTO'"
-      expect(header[4..5].unpack1("n")).to eq(num_tables), "Table count should match"
+      expect(header[0..3].unpack1("N")).to eq(0x4F54544F),
+                                           "SFNT version should be 'OTTO'"
+      expect(header[4..5].unpack1("n")).to eq(num_tables),
+                                           "Table count should match"
     end
   end
 
@@ -106,49 +91,32 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Mock font with required attributes
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:font_bbox).and_return([50, -200, 950, 800])
-      allow(font_dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-      allow(font_dict).to receive(:font_name).and_return("TestFont")
-      allow(font_dict).to receive(:family_name).and_return("TestFamily")
-      allow(font_dict).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_dict).to receive(:weight).and_return("Regular")
 
       font_info = double("font_info")
-      allow(font_info).to receive(:version).and_return("001.000")
-      allow(font_info).to receive(:copyright).and_return("Copyright 2024")
-      allow(font_info).to receive(:notice).and_return("Test Font")
-      allow(font_info).to receive(:family_name).and_return("TestFamily")
-      allow(font_info).to receive(:full_name).and_return("TestFont Regular")
-      allow(font_info).to receive(:weight).and_return("Regular")
-      allow(font_info).to receive(:italic_angle).and_return(0)
-      allow(font_info).to receive(:underline_position).and_return(-100)
-      allow(font_info).to receive(:underline_thickness).and_return(50)
-      allow(font_info).to receive(:is_fixed_pitch).and_return(false)
-      allow(font_dict).to receive(:font_info).and_return(font_info)
+      allow(font_info).to receive_messages(version: "001.000",
+                                           copyright: "Copyright 2024", notice: "Test Font", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", italic_angle: 0, underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
+      allow(font_dict).to receive_messages(font_bbox: [50, -200, 950, 800], font_matrix: [0.001, 0, 0, 0.001,
+                                                                                          0, 0], font_name: "TestFont", family_name: "TestFamily", full_name: "TestFont Regular", weight: "Regular", font_info: font_info)
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
-      allow(private_dict).to receive(:family_blues).and_return([])
-      allow(private_dict).to receive(:family_other_blues).and_return([])
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240], family_blues: [], family_other_blues: [])
 
       charstrings = double("charstrings")
-      allow(charstrings).to receive(:count).and_return(250)
-      allow(charstrings).to receive(:encoding).and_return({ ".notdef" => 0, "A" => 1, "B" => 2 })
-      allow(charstrings).to receive(:glyph_names).and_return([".notdef", "A", "B"])
+      allow(charstrings).to receive_messages(count: 250, encoding: { ".notdef" => 0,
+                                                                     "A" => 1, "B" => 2 }, glyph_names: [".notdef", "A",
+                                                                                                         "B"])
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
-      allow(mock_font).to receive(:charstrings).and_return(charstrings)
-      allow(mock_font).to receive(:font_name).and_return("TestFont")
-      allow(mock_font).to receive(:version).and_return("001.000")
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict, charstrings: charstrings, font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       head_data = converter.send(:build_head_table, mock_font)
 
       # Validate head table structure
-      expect(head_data.bytesize).to be >= 54, "head table should be at least 54 bytes"
+      expect(head_data.bytesize).to be >= 54,
+                                    "head table should be at least 54 bytes"
 
       # Table version (Fixed: 1.0)
       version = head_data[0..3].unpack1("N")
@@ -156,7 +124,8 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Magic number
       magic = head_data[12..15].unpack1("N")
-      expect(magic).to eq(0x5F0F3CF5), "head table magic number should be 0x5F0F3CF5"
+      expect(magic).to eq(0x5F0F3CF5),
+                       "head table magic number should be 0x5F0F3CF5"
 
       # Flags (bit 0 = baseline at y=0, bit 1 = left sidebearing at x=0, bit 2 = instructions may depend on point size)
       flags = head_data[16..17].unpack1("n")
@@ -173,7 +142,8 @@ RSpec.describe "Type 1 Font Validation" do
       created = head_data[20..27].unpack1("Q>")
       modified = head_data[28..35].unpack1("Q>")
       expect(created).to be_a(Integer), "Created timestamp should be an integer"
-      expect(modified).to be_a(Integer), "Modified timestamp should be an integer"
+      expect(modified).to be_a(Integer),
+                          "Modified timestamp should be an integer"
     end
   end
 
@@ -196,7 +166,8 @@ RSpec.describe "Type 1 Font Validation" do
       maxp_data = converter.send(:build_maxp_table, mock_font)
 
       # Validate maxp table structure for CFF (version 0.5)
-      expect(maxp_data.bytesize).to eq(6), "CFF maxp table should be exactly 6 bytes"
+      expect(maxp_data.bytesize).to eq(6),
+                                    "CFF maxp table should be exactly 6 bytes"
 
       # Version 0.5 for CFF fonts
       version = maxp_data[0..3].unpack1("N")
@@ -217,15 +188,15 @@ RSpec.describe "Type 1 Font Validation" do
       skip "Font loading failed" unless font
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(nil)
-      allow(mock_font).to receive(:font_name).and_return("TestFont")
-      allow(mock_font).to receive(:version).and_return("001.000")
+      allow(mock_font).to receive_messages(font_dictionary: nil,
+                                           font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       name_data = converter.send(:build_name_table, mock_font)
 
       # Validate name table structure
-      expect(name_data.bytesize).to be >= 6, "name table should have at least header"
+      expect(name_data.bytesize).to be >= 6,
+                                    "name table should have at least header"
 
       # Format selector
       format = name_data[0..1].unpack1("n")
@@ -251,10 +222,8 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Mock font with required attributes
       font_info = double("font_info")
-      allow(font_info).to receive(:italic_angle).and_return(0)
-      allow(font_info).to receive(:underline_position).and_return(-100)
-      allow(font_info).to receive(:underline_thickness).and_return(50)
-      allow(font_info).to receive(:is_fixed_pitch).and_return(false)
+      allow(font_info).to receive_messages(italic_angle: 0,
+                                           underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
 
       font_dict = double("font_dict")
       allow(font_dict).to receive(:font_info).and_return(font_info)
@@ -266,7 +235,8 @@ RSpec.describe "Type 1 Font Validation" do
       post_data = converter.send(:build_post_table, mock_font)
 
       # Validate post table structure for version 3.0
-      expect(post_data.bytesize).to eq(32), "post table version 3.0 should be exactly 32 bytes"
+      expect(post_data.bytesize).to eq(32),
+                                    "post table version 3.0 should be exactly 32 bytes"
 
       # Version 3.0 for CFF fonts
       version = post_data[0..3].unpack1("N")
@@ -278,11 +248,13 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Underline position
       underline_position = post_data[8..9].unpack1("s>")
-      expect(underline_position).to be_a(Integer), "Underline position should be an integer"
+      expect(underline_position).to be_a(Integer),
+                                    "Underline position should be an integer"
 
       # Underline thickness
       underline_thickness = post_data[10..11].unpack1("s>")
-      expect(underline_thickness).to be_a(Integer), "Underline thickness should be an integer"
+      expect(underline_thickness).to be_a(Integer),
+                                     "Underline thickness should be an integer"
 
       # Is fixed pitch (uint32)
       is_fixed_pitch = post_data[12..15].unpack1("N")
@@ -300,13 +272,13 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Create a simple encoding map
       charstrings = double("charstrings")
-      allow(charstrings).to receive(:encoding).and_return({
-        ".notdef" => 0,
-        "A" => 1,
-        "B" => 2,
-        "C" => 3,
-      })
-      allow(charstrings).to receive(:glyph_names).and_return([".notdef", "A", "B", "C"])
+      allow(charstrings).to receive_messages(encoding: {
+                                               ".notdef" => 0,
+                                               "A" => 1,
+                                               "B" => 2,
+                                               "C" => 3,
+                                             }, glyph_names: [".notdef", "A",
+                                                              "B", "C"])
 
       mock_font = double("Type1Font")
       allow(mock_font).to receive(:charstrings).and_return(charstrings)
@@ -315,7 +287,8 @@ RSpec.describe "Type 1 Font Validation" do
       cmap_data = converter.send(:build_cmap_table, mock_font)
 
       # Validate cmap table structure
-      expect(cmap_data.bytesize).to be >= 12, "cmap table should have at least header"
+      expect(cmap_data.bytesize).to be >= 12,
+                                    "cmap table should have at least header"
 
       # Table version (should be 0)
       version = cmap_data[0..1].unpack1("n")
@@ -348,22 +321,23 @@ RSpec.describe "Type 1 Font Validation" do
       allow(font_info).to receive(:weight).and_return("Regular")
 
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:font_bbox).and_return([0, 0, 1000, 1000])
-      allow(font_dict).to receive(:font_info).and_return(font_info)
+      allow(font_dict).to receive_messages(font_bbox: [0, 0, 1000, 1000],
+                                           font_info: font_info)
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240])
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       os2_data = converter.send(:build_os2_table, mock_font)
 
       # Validate OS/2 table structure
-      expect(os2_data.bytesize).to be >= 78, "OS/2 table version 4 should be at least 78 bytes"
+      expect(os2_data.bytesize).to be >= 78,
+                                   "OS/2 table version 4 should be at least 78 bytes"
 
       # Version
       version = os2_data[0..1].unpack1("n")
@@ -371,7 +345,8 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Weight class (should be in range 100-900)
       weight_class = os2_data[4..5].unpack1("n")
-      expect(weight_class).to be_between(100, 900), "Weight class should be in valid range"
+      expect(weight_class).to be_between(100, 900),
+                              "Weight class should be in valid range"
 
       # Unicode ranges and codepage ranges should be present
       # (The exact values depend on the encoding)
@@ -388,26 +363,26 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Mock font with required attributes
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:font_bbox).and_return([50, -200, 950, 800])
-      allow(font_dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
+      allow(font_dict).to receive_messages(font_bbox: [50, -200, 950, 800], font_matrix: [0.001, 0, 0, 0.001,
+                                                                                          0, 0])
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240])
 
       charstrings = double("charstrings")
       allow(charstrings).to receive(:count).and_return(250)
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
-      allow(mock_font).to receive(:charstrings).and_return(charstrings)
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict, charstrings: charstrings)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       hhea_data = converter.send(:build_hhea_table, mock_font)
 
       # Validate hhea table structure
-      expect(hhea_data.bytesize).to be >= 36, "hhea table should be at least 36 bytes"
+      expect(hhea_data.bytesize).to be >= 36,
+                                    "hhea table should be at least 36 bytes"
 
       # Version (Fixed: 1.0)
       version = hhea_data[0..3].unpack1("N")
@@ -424,7 +399,8 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Number of horizontal metrics (must match numGlyphs)
       num_hmetrics = hhea_data[34..35].unpack1("n")
-      expect(num_hmetrics).to eq(250), "Number of hmetrics should match glyph count"
+      expect(num_hmetrics).to eq(250),
+                              "Number of hmetrics should match glyph count"
     end
   end
 
@@ -438,41 +414,19 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Mock font with required attributes
       font_dict = double("font_dictionary")
-      allow(font_dict).to receive(:version).and_return("001.000")
-      allow(font_dict).to receive(:notice).and_return("Copyright notice")
-      allow(font_dict).to receive(:copyright).and_return("Copyright 2024")
-      allow(font_dict).to receive(:full_name).and_return("TestFont")
-      allow(font_dict).to receive(:family_name).and_return("TestFamily")
-      allow(font_dict).to receive(:weight).and_return("Regular")
-      allow(font_dict).to receive(:font_bbox).and_return([0, -100, 1000, 900])
-      allow(font_dict).to receive(:font_matrix).and_return([0.001, 0, 0, 0.001, 0, 0])
-      allow(font_dict).to receive(:font_info).and_return(nil)
+      allow(font_dict).to receive_messages(version: "001.000", notice: "Copyright notice", copyright: "Copyright 2024", full_name: "TestFont", family_name: "TestFamily", weight: "Regular", font_bbox: [0, -100, 1000, 900], font_matrix: [0.001, 0, 0, 0.001,
+                                                                                                                                                                                                                                            0, 0], font_info: nil)
 
       private_dict = double("private_dict")
-      allow(private_dict).to receive(:blue_values).and_return([-20, 0, 750, 770])
-      allow(private_dict).to receive(:other_blues).and_return([-250, -240])
-      allow(private_dict).to receive(:family_blues).and_return([])
-      allow(private_dict).to receive(:family_other_blues).and_return([])
-      allow(private_dict).to receive(:blue_scale).and_return(0.039625)
-      allow(private_dict).to receive(:blue_shift).and_return(7)
-      allow(private_dict).to receive(:blue_fuzz).and_return(1)
-      allow(private_dict).to receive(:std_hw).and_return(nil)
-      allow(private_dict).to receive(:std_vw).and_return(nil)
-      allow(private_dict).to receive(:stem_snap_h).and_return(nil)
-      allow(private_dict).to receive(:stem_snap_v).and_return(nil)
-      allow(private_dict).to receive(:force_bold).and_return(nil)
-      allow(private_dict).to receive(:language_group).and_return(nil)
-      allow(private_dict).to receive(:expansion_factor).and_return(nil)
-      allow(private_dict).to receive(:initial_random_seed).and_return(nil)
+      allow(private_dict).to receive_messages(blue_values: [-20, 0, 750,
+                                                            770], other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
       charstrings = double("charstrings")
       allow(charstrings).to receive(:encoding).and_return({ "A" => 1 })
 
       mock_font = double("Type1Font")
-      allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
-      allow(mock_font).to receive(:private_dict).and_return(private_dict)
-      allow(mock_font).to receive(:font_name).and_return("TestFont")
-      allow(mock_font).to receive(:charstrings).and_return(charstrings)
+      allow(mock_font).to receive_messages(font_dictionary: font_dict,
+                                           private_dict: private_dict, font_name: "TestFont", charstrings: charstrings)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       # Build CFF font and private dictionaries
@@ -481,14 +435,20 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Validate CFF font dictionary
       expect(cff_font_dict).to be_a(Hash), "CFF font dict should be a Hash"
-      expect(cff_font_dict).to have_key(:version), "CFF font dict should have version"
-      expect(cff_font_dict).to have_key(:font_b_box), "CFF font dict should have font_bbox"
-      expect(cff_font_dict).to have_key(:font_matrix), "CFF font dict should have font_matrix"
+      expect(cff_font_dict).to have_key(:version),
+                               "CFF font dict should have version"
+      expect(cff_font_dict).to have_key(:font_b_box),
+                               "CFF font dict should have font_bbox"
+      expect(cff_font_dict).to have_key(:font_matrix),
+                               "CFF font dict should have font_matrix"
 
       # Validate CFF private dictionary
-      expect(cff_private_dict).to be_a(Hash), "CFF private dict should be a Hash"
-      expect(cff_private_dict).to have_key(:blue_scale), "CFF private dict should have blue_scale"
-      expect(cff_private_dict[:blue_scale]).to eq(0.039625), "blue_scale should have default value"
+      expect(cff_private_dict).to be_a(Hash),
+                                  "CFF private dict should be a Hash"
+      expect(cff_private_dict).to have_key(:blue_scale),
+                                  "CFF private dict should have blue_scale"
+      expect(cff_private_dict[:blue_scale]).to eq(0.039625),
+                                               "blue_scale should have default value"
     end
   end
 end

@@ -153,7 +153,8 @@ module Fontisan
           elsif @copyright.nil? && (match = line.match(/^Notice\s+(\S.*)/i))
             @copyright = match[1].strip
           elsif @font_bbox.nil? && (match = line.match(/^FontBBox\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)$/i))
-            @font_bbox = [match[1].to_i, match[2].to_i, match[3].to_i, match[4].to_i]
+            @font_bbox = [match[1].to_i, match[2].to_i, match[3].to_i,
+                          match[4].to_i]
           end
 
           # Break early if all metrics found

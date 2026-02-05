@@ -68,11 +68,13 @@ module Fontisan
         accent_glyph_name = @charstrings.encoding[components[:accent]]
 
         if base_glyph_name.nil?
-          raise Fontisan::Error, "Base glyph for char code #{components[:base]} not found"
+          raise Fontisan::Error,
+                "Base glyph for char code #{components[:base]} not found"
         end
 
         if accent_glyph_name.nil?
-          raise Fontisan::Error, "Accent glyph for char code #{components[:accent]} not found"
+          raise Fontisan::Error,
+                "Accent glyph for char code #{components[:accent]} not found"
         end
 
         # Get CharStrings for base and accent
@@ -80,11 +82,13 @@ module Fontisan
         accent_charstring = @charstrings[accent_glyph_name]
 
         if base_charstring.nil?
-          raise Fontisan::Error, "CharString not found for base glyph #{base_glyph_name}"
+          raise Fontisan::Error,
+                "CharString not found for base glyph #{base_glyph_name}"
         end
 
         if accent_charstring.nil?
-          raise Fontisan::Error, "CharString not found for accent glyph #{accent_glyph_name}"
+          raise Fontisan::Error,
+                "CharString not found for accent glyph #{accent_glyph_name}"
         end
 
         # Parse both CharStrings into command sequences
@@ -92,7 +96,8 @@ module Fontisan
         accent_commands = parse_charstring_to_commands(accent_charstring)
 
         # Transform accent by (adx, ady) offset
-        accent_commands = transform_commands(accent_commands, components[:adx], components[:ady])
+        accent_commands = transform_commands(accent_commands, components[:adx],
+                                             components[:ady])
 
         # Merge base and accent commands
         merged_commands = merge_outline_commands(base_commands, accent_commands)
@@ -278,8 +283,8 @@ module Fontisan
             dx1, dy1, dx2, dy2, dx3, dy3 = cmd[1..6]
             control_x = x + dx1
             control_y = y + dy1
-            anchor_x = x + dx1 + dx2
-            anchor_y = y + dy1 + dy2
+            x + dx1 + dx2
+            y + dy1 + dy2
             end_x = x + dx1 + dx2 + dx3
             end_y = y + dy1 + dy2 + dy3
 
@@ -288,7 +293,7 @@ module Fontisan
               cx: control_x,
               cy: control_y,
               x: end_x,
-              y: end_y
+              y: end_y,
             }
             x = end_x
             y = end_y
@@ -326,13 +331,13 @@ module Fontisan
         # vhcurveto: dy1 dx2 dy2 dx3
         # hvcurveto: dx1 dy2 dx3 dy3
         if cmd[0] == :vhcurveto
-          dy1, dx2, dy2, dx3 = cmd[1..4]
+          dy1, dx2, dy2, = cmd[1..4]
           control_x = x
           control_y = y + dy1
           end_x = x + dx2
           end_y = y + dy1 + dy2
         else
-          dx1, dy2, dx3, dy3 = cmd[1..4]
+          dx1, dy2, _, dy3 = cmd[1..4]
           control_x = x + dx1
           control_y = y
           end_x = x + dx1 + dx2
@@ -344,7 +349,7 @@ module Fontisan
           cx: control_x,
           cy: control_y,
           x: end_x,
-          y: end_y
+          y: end_y,
         }
       end
 
@@ -355,7 +360,7 @@ module Fontisan
       # @param dy [Integer] Y offset
       # @return [Array<Hash>] Transformed commands
       def transform_commands(commands, dx, dy)
-        return commands if dx == 0 && dy == 0
+        return commands if dx.zero? && dy.zero?
 
         commands.map do |cmd|
           case cmd[:type]
@@ -367,7 +372,7 @@ module Fontisan
               cx: cmd[:cx] + dx,
               cy: cmd[:cy] + dy,
               x: cmd[:x] + dx,
-              y: cmd[:y] + dy
+              y: cmd[:y] + dy,
             }
           when :curve_to
             {
@@ -377,7 +382,7 @@ module Fontisan
               cx2: cmd[:cx2] + dx,
               cy2: cmd[:cy2] + dy,
               x: cmd[:x] + dx,
-              y: cmd[:y] + dy
+              y: cmd[:y] + dy,
             }
           else
             cmd # close_path, etc. pass through
@@ -428,8 +433,8 @@ module Fontisan
             # Use hsbw to set initial position
             dx = cmd[:x] - x
             # hsbw is a two-byte operator: 12 34
-            charstring << encode_number(dx)  # sbw value
-            charstring << encode_number(0)    # width (always 0 for decomposed glyphs)
+            charstring << encode_number(dx) # sbw value
+            charstring << encode_number(0) # width (always 0 for decomposed glyphs)
             charstring << 12  # First byte of two-byte operator
             charstring << 34  # Second byte - hsbw
             x = cmd[:x]
@@ -492,7 +497,7 @@ module Fontisan
           [num + 139].pack("C*")
         else
           # Use escape sequence (255) followed by 2-byte signed integer
-          num += 32768 if num < 0
+          num += 32768 if num.negative?
           [255, num % 256, num >> 8].pack("C*")
         end
       end

@@ -1,24 +1,25 @@
 # frozen_string_literal: true
 
 RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
+  subject(:expander) { described_class.new(charstrings, private_dict) }
+
   let(:charstrings) { Fontisan::Type1::CharStrings.new }
   let(:private_dict) { Fontisan::Type1::PrivateDict.new }
-
-  subject(:expander) { described_class.new(charstrings, private_dict) }
 
   before do
     # Set up sample CharStrings data
     charstrings.instance_variable_set(:@charstrings, {
-      "A" => create_charstring([:hsbw, 100, 0]),            # Base 'A'
-      "grave" => create_charstring([:hsbw, 50, 100, :endchar]),  # Accent 'grave'
-      ".notdef" => create_charstring([:hsbw, 500, 0, :endchar]),
-    })
+                                        "A" => create_charstring([:hsbw, 100, 0]), # Base 'A'
+                                        "grave" => create_charstring([:hsbw, 50, 100, :endchar]), # Accent 'grave'
+                                        ".notdef" => create_charstring([:hsbw,
+                                                                        500, 0, :endchar]),
+                                      })
     charstrings.instance_variable_set(:@glyph_names, ["A", "grave", ".notdef"])
     # Set up encoding map: character code -> glyph name
     charstrings.instance_variable_set(:@encoding, {
-      65 => "A",      # ASCII 'A'
-      96 => "grave",  # ASCII '`' (grave/quoteleft)
-    })
+                                        65 => "A", # ASCII 'A'
+                                        96 => "grave", # ASCII '`' (grave/quoteleft)
+                                      })
   end
 
   describe "#initialize" do
@@ -32,7 +33,8 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
     it "returns false for non-composite glyphs" do
       # Add a simple glyph (no seac operator)
       simple_charstring = create_charstring([:hsbw, 100, 0, :endchar])
-      charstrings.instance_variable_set(:@charstrings, { "B" => simple_charstring })
+      charstrings.instance_variable_set(:@charstrings,
+                                        { "B" => simple_charstring })
 
       expect(expander.composite?("B")).to be false
     end
@@ -40,7 +42,8 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
     it "returns true for seac composite glyphs" do
       # Add a seac composite
       seac_charstring = create_seac_charstring(100, 200, 50, 65, 96) # A + grave
-      charstrings.instance_variable_set(:@charstrings, { "Agrave" => seac_charstring })
+      charstrings.instance_variable_set(:@charstrings,
+                                        { "Agrave" => seac_charstring })
 
       expect(expander.composite?("Agrave")).to be true
     end
@@ -61,16 +64,17 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
         seac_data = create_seac_charstring(100, 200, 50, 65, 96)
 
         charstrings.instance_variable_set(:@charstrings, {
-          "Agrave" => seac_data,
-          "A" => base_charstring,
-          "grave" => accent_charstring
-        })
-        charstrings.instance_variable_set(:@glyph_names, ["Agrave", "A", "grave"])
+                                            "Agrave" => seac_data,
+                                            "A" => base_charstring,
+                                            "grave" => accent_charstring,
+                                          })
+        charstrings.instance_variable_set(:@glyph_names,
+                                          ["Agrave", "A", "grave"])
         # Set up encoding map for character code to glyph name lookup
         charstrings.instance_variable_set(:@encoding, {
-          65 => "A",      # ASCII 'A'
-          96 => "grave",  # ASCII '`' (grave/quoteleft)
-        })
+                                            65 => "A", # ASCII 'A'
+                                            96 => "grave", # ASCII '`' (grave/quoteleft)
+                                          })
       end
 
       it "decomposes a seac composite into merged CharString" do
@@ -97,19 +101,19 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
       before do
         seac_data = create_seac_charstring(100, 200, 50, 65, 96)
         charstrings.instance_variable_set(:@charstrings, {
-          "Agrave" => seac_data
-          # Missing "A" base glyph
-        })
+                                            "Agrave" => seac_data,
+                                            # Missing "A" base glyph
+                                          })
         # Set up encoding map without the base glyph
         charstrings.instance_variable_set(:@encoding, {
-          96 => "grave",  # Only accent glyph available
-        })
+                                            96 => "grave", # Only accent glyph available
+                                          })
       end
 
       it "raises an error" do
-        expect {
+        expect do
           expander.decompose("Agrave")
-        }.to raise_error(Fontisan::Error, /Base glyph.*not found/)
+        end.to raise_error(Fontisan::Error, /Base glyph.*not found/)
       end
     end
 
@@ -117,20 +121,21 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
       before do
         seac_data = create_seac_charstring(100, 200, 50, 65, 96)
         charstrings.instance_variable_set(:@charstrings, {
-          "Agrave" => seac_data,
-          "A" => create_charstring([:hsbw, 100, 0])
-          # Missing "grave" accent glyph
-        })
+                                            "Agrave" => seac_data,
+                                            "A" => create_charstring([:hsbw,
+                                                                      100, 0]),
+                                            # Missing "grave" accent glyph
+                                          })
         # Set up encoding map without the accent glyph
         charstrings.instance_variable_set(:@encoding, {
-          65 => "A",  # Only base glyph available
-        })
+                                            65 => "A", # Only base glyph available
+                                          })
       end
 
       it "raises an error" do
-        expect {
+        expect do
           expander.decompose("Agrave")
-        }.to raise_error(Fontisan::Error, /Accent glyph.*not found/)
+        end.to raise_error(Fontisan::Error, /Accent glyph.*not found/)
       end
     end
   end
@@ -143,10 +148,15 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
     it "returns list of composite glyph names" do
       # Add multiple seac composites
       charstrings.instance_variable_set(:@charstrings, {
-        "Agrave" => create_seac_charstring(100, 200, 50, 65, 96),
-        "Eacute" => create_seac_charstring(100, 200, 30, 69, 39),
-        "B" => create_charstring([:hsbw, 100, 0, :endchar])
-      })
+                                          "Agrave" => create_seac_charstring(
+                                            100, 200, 50, 65, 96
+                                          ),
+                                          "Eacute" => create_seac_charstring(
+                                            100, 200, 30, 69, 39
+                                          ),
+                                          "B" => create_charstring([:hsbw, 100,
+                                                                    0, :endchar]),
+                                        })
 
       composites = expander.composite_glyphs
       expect(composites).to include("Agrave", "Eacute")
@@ -160,8 +170,9 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
         { type: :move_to, x: 100, y: 0 },
         { type: :line_to, x: 200, y: 100 },
         { type: :quad_to, cx: 150, cy: 50, x: 200, y: 100 },
-        { type: :curve_to, cx1: 120, cy1: 30, cx2: 180, cy2: 70, x: 200, y: 100 },
-        { type: :close_path }
+        { type: :curve_to, cx1: 120, cy1: 30, cx2: 180, cy2: 70, x: 200,
+          y: 100 },
+        { type: :close_path },
       ]
     end
 
@@ -206,7 +217,7 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
         { type: :move_to, x: 100, y: 0 },
         { type: :line_to, x: 200, y: 100 },
         { type: :line_to, x: 100, y: 200 },
-        { type: :close_path }
+        { type: :close_path },
       ]
     end
 
@@ -214,12 +225,13 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
       [
         { type: :move_to, x: 120, y: 80 },
         { type: :line_to, x: 150, y: 120 },
-        { type: :close_path }
+        { type: :close_path },
       ]
     end
 
     it "merges base and accent commands" do
-      result = expander.send(:merge_outline_commands, base_commands, accent_commands)
+      result = expander.send(:merge_outline_commands, base_commands,
+                             accent_commands)
 
       # Base commands (without final close_path)
       expect(result[0..2]).to eq(base_commands[0..2])
@@ -229,7 +241,8 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
     end
 
     it "removes close_path from base before merging" do
-      result = expander.send(:merge_outline_commands, base_commands, accent_commands)
+      result = expander.send(:merge_outline_commands, base_commands,
+                             accent_commands)
 
       # The merged result should not have the base's close_path in the middle
       expect(result[2][:type]).not_to eq(:close_path)
@@ -255,20 +268,20 @@ RSpec.describe Fontisan::Type1::SeacExpander, "seac composite decomposition" do
         # rmoveto: dx (encoded) dy (encoded) 21 (rmoveto operator)
         charstring << encode_number(cmd[1])  # dx
         charstring << encode_number(cmd[2])  # dy
-        charstring << 21  # rmoveto
+        charstring << 21 # rmoveto
       when :hmoveto
         # hmoveto: dx (encoded) 22 (hmoveto operator)
-        charstring << encode_number(cmd[1])  # dx
-        charstring << 22  # hmoveto
+        charstring << encode_number(cmd[1]) # dx
+        charstring << 22 # hmoveto
       when :vmoveto
         # vmoveto: dy (encoded) 4 (vmoveto operator)
-        charstring << encode_number(cmd[1])  # dy
-        charstring << 4  # vmoveto
+        charstring << encode_number(cmd[1]) # dy
+        charstring << 4 # vmoveto
       when :rlineto
         # rlineto: dx (encoded) dy (encoded) 5 (rlineto operator)
         charstring << encode_number(cmd[1])  # dx
         charstring << encode_number(cmd[2])  # dy
-        charstring << 5  # rlineto
+        charstring << 5 # rlineto
       when :endchar
         # endchar: 14
         charstring << 14

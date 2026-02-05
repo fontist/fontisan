@@ -633,9 +633,15 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     describe "conversion support" do
       it "includes Type 1 conversions in all_conversions" do
         conversions = converter.all_conversions
-        type1_to_otf = conversions.find { |c| c[:from] == :type1 && c[:to] == :otf }
-        type1_to_ttf = conversions.find { |c| c[:from] == :type1 && c[:to] == :ttf }
-        otf_to_type1 = conversions.find { |c| c[:from] == :otf && c[:to] == :type1 }
+        type1_to_otf = conversions.find do |c|
+          c[:from] == :type1 && c[:to] == :otf
+        end
+        type1_to_ttf = conversions.find do |c|
+          c[:from] == :type1 && c[:to] == :ttf
+        end
+        otf_to_type1 = conversions.find do |c|
+          c[:from] == :otf && c[:to] == :type1
+        end
 
         expect(type1_to_otf).not_to be_nil
         expect(type1_to_ttf).not_to be_nil
