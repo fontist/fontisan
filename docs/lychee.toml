@@ -34,3 +34,4 @@ exclude_path = [
 ############################# Other ###############################
 verbose = "info"
 index_files = ["index.html"]
+fallback_extensions = ["html"]
