@@ -14,7 +14,7 @@ recursive = true
 
 # File types to check
 include = [
-  "dist/**/*.html"
+  ".vitepress/dist/**/*.html"
 ]
 
 # Excluded paths
