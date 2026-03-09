@@ -54,7 +54,7 @@ jobs:
           fi
           echo "Site built successfully"
           ls -la dist/
-        working-directory: docs
+        working-directory: docs/.vitepress
 
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -63,9 +63,9 @@ jobs:
             --verbose
             --no-progress
             --config lychee.toml
-            --root-dir "$(pwd)/dist"
-            --base-url file://${{ github.workspace }}/docs/dist
-            'dist/**/*.html'
+            --root-dir "$(pwd)/.vitepress/dist"
+            --base-url file://${{ github.workspace }}/docs/.vitepress/dist
+            '.vitepress/dist/**/*.html'
           fail: true
           output: link-check-results.md
           format: markdown
