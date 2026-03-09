@@ -136,13 +136,13 @@ module Fontisan
         normalized_coords = @axis_normalizer.normalize(user_coords)
         region_scalars = @region_matcher.match(normalized_coords)
 
-        glyph_ids.each_with_object({}) do |glyph_id, results|
-          results[glyph_id] = {
+        glyph_ids.to_h do |glyph_id|
+          [glyph_id, {
             outline_deltas: @glyph_delta_processor&.apply_deltas(glyph_id,
                                                                  region_scalars),
             metric_deltas: @metric_delta_processor.apply_deltas(glyph_id,
                                                                 region_scalars),
-          }
+          }]
         end
       end
 

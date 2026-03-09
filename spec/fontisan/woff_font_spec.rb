@@ -383,7 +383,9 @@ RSpec.describe Fontisan::WoffFont do
           f.write("\x00" * 200)
           f.close
 
+          # rubocop:disable Security/Open -- File closed in ensure block
           woff.io_source = File.open(f.path, "rb")
+          # rubocop:enable Security/Open
 
           expect { woff.metadata }.to output(/Failed to decompress/).to_stderr
 

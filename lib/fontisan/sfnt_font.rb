@@ -169,7 +169,10 @@ module Fontisan
     # @param font [SfntFont] Font instance to populate
     # @return [SfntFont] The populated font instance
     def self.load_lazy(path, font)
+      # rubocop:disable Security/Open -- Intentionally kept open for lazy loading
+      # Finalizer handles cleanup when object is GC'd
       font.io_source = File.open(path, "rb")
+      # rubocop:enable Security/Open
       font.setup_finalizer
       font.io_source.rewind
       font.read(font.io_source)
@@ -440,9 +443,7 @@ module Fontisan
     #
     # @return [Hash<String, SfntTable>] Hash mapping tag => SfntTable instance
     def all_sfnt_tables
-      table_names.each_with_object({}) do |tag, hash|
-        hash[tag] = sfnt_table(tag)
-      end
+      table_names.to_h { |tag| [tag, sfnt_table(tag)] }
     end
 
     # Get parsed table instance
