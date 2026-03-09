@@ -75,9 +75,7 @@ RSpec.describe Fontisan::Pipeline::Strategies::InstanceStrategy do
       # If font has multiple axes
       fvar = variable_font.table("fvar")
       if fvar.axes.length > 1
-        coords = fvar.axes.each_with_object({}) do |axis, hash|
-          hash[axis.axis_tag] = axis.default_value
-        end
+        coords = fvar.axes.to_h { |axis| [axis.axis_tag, axis.default_value] }
 
         strategy = described_class.new(coordinates: coords)
         tables = strategy.resolve(variable_font)

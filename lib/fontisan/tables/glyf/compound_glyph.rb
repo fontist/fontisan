@@ -61,7 +61,6 @@ module Fontisan
         :scale_y,
         :scale_01,
         :scale_10,
-        keyword_init: true,
       ) do
         # Check if arguments are x,y offsets (vs point numbers)
         def args_are_xy?
