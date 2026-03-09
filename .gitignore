@@ -37,3 +37,7 @@ Gemfile.lock
 /spec/fixtures/fonts/tamsyn/
 /spec/fixtures/fonts/type1/urw/urw-base35-fonts/
 /spec/fixtures/fonts/unifontex/
+
+CLAUDE.md
+
+.rubocop-remote*
