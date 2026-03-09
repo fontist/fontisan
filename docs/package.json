@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "format": "prettier -w ."
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vitepress": "^1.6.4"
+  }
+}
