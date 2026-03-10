@@ -69,6 +69,7 @@ export default defineConfig({
       { text: "CLI", link: "/cli/" },
       { text: "API", link: "/api/" },
       { text: "Fontist", link: "https://www.fontist.org/fontist/", target: "_self" },
+      { text: "Formulas", link: "https://www.fontist.org/formulas/", target: "_self" },
     ],
 
     // Sidebar configuration

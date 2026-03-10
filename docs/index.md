@@ -36,6 +36,10 @@ features:
     details: Zero external dependencies. No Python, no C++, no C# required. Works anywhere Ruby runs.
 ---
 
+<WithinHero>
+<HeroCodeBlock title="fontisan"><div class="line"><span class="comment"># Get detailed font information</span></div><div class="line"><span class="prompt">$</span> <span class="cmd">fontisan</span> info OpenSans-Regular.ttf</div><div class="line">Family: Open Sans    Style: Regular    Format: TTF</div><div class="line"><span class="comment"># Convert between formats</span></div><div class="line"><span class="prompt">$</span> <span class="cmd">fontisan</span> convert font.ttf --to woff2</div><div class="line"><span class="success">✓</span> font.woff2 created (45% smaller)</div><div class="line"><span class="comment"># Validate with Google Fonts profile</span></div><div class="line"><span class="prompt">$</span> <span class="cmd">fontisan</span> validate font.ttf -p google_fonts</div><div class="line"><span class="success">✓</span> All 56 checks passed</div></HeroCodeBlock>
+</WithinHero>
+
 <style>
 .pure-ruby-hero {
   display: inline-flex;
@@ -81,7 +85,23 @@ Fontisan is the **most comprehensive font processing library in pure Ruby**, com
 
 [See full comparison →](/guide/comparisons/)
 
-## Quick Start
+## CLI Usage
+
+```bash
+# Get font information
+fontisan info font.ttf
+
+# Convert fonts
+fontisan convert input.ttf --to otf --output output.otf
+
+# Validate fonts
+fontisan validate font.ttf --profile google_fonts
+
+# Work with collections
+fontisan unpack fonts.ttc --output-dir ./extracted
+```
+
+## Ruby API
 
 ```ruby
 require 'fontisan'
@@ -100,22 +120,6 @@ Fontisan::FontWriter.write(font, 'output.woff2')
 # Validate a font
 result = Fontisan::FontValidator.validate('font.otf', profile: :google_fonts)
 puts result.passed?
-```
-
-## CLI Usage
-
-```bash
-# Get font information
-fontisan info font.ttf
-
-# Convert fonts
-fontisan convert input.ttf --to otf --output output.otf
-
-# Validate fonts
-fontisan validate font.ttf --profile google_fonts
-
-# Work with collections
-fontisan unpack fonts.ttc --output-dir ./extracted
 ```
 
 ## Migration Guides
