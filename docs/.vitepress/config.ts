@@ -13,8 +13,8 @@ export default defineConfig({
 
   lastUpdated: true,
 
-  // https://github.com/vuejs/vitepress/issues/3508
-  base: process.env.BASE_PATH,
+  // Base path for deployment (e.g., /fontisan/ for fontist.org/fontisan/)
+  base: process.env.BASE_PATH || "/fontisan/",
 
   head: [
     [
