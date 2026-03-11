@@ -188,6 +188,20 @@ export default defineConfig({
             { text: "vs Font-Validator", link: "/guide/comparisons/font-validator" },
           ],
         },
+        {
+          text: "Advanced Topics",
+          collapsed: true,
+          items: [
+            { text: "Universal Outline Model", link: "/guide/universal-outline" },
+          ],
+        },
+        {
+          text: "Contributing",
+          collapsed: true,
+          items: [
+            { text: "Contributing Guide", link: "/guide/contributing" },
+          ],
+        },
       ],
       "/cli/": [
         {
@@ -228,6 +242,13 @@ export default defineConfig({
           collapsed: true,
           items: [
             { text: "pack/unpack", link: "/cli/pack" },
+          ],
+        },
+        {
+          text: "Utilities",
+          collapsed: true,
+          items: [
+            { text: "version", link: "/cli/version" },
           ],
         },
       ],
