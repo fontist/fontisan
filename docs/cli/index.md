@@ -182,12 +182,27 @@ fontisan export font.ttf --format ttx --tables head,name,cmap
 
 Detailed documentation for each command:
 
-- [convert](/cli/convert) — Format conversion for individual fonts
-- [info](/cli/info) — Extract font metadata and properties
+### Font Information
+- [info](/cli/info) — Extract font metadata and properties (includes brief mode)
+- [ls](/cli/ls) — List fonts in collections
+- [tables](/cli/tables) — Show OpenType table directory
+- [glyphs](/cli/glyphs) — List glyph names and indices
+- [unicode](/cli/unicode) — Show Unicode character mappings
+- [scripts](/cli/scripts) — List supported writing scripts
+- [features](/cli/features) — List OpenType layout features
+- [variable](/cli/variable) — Show variable font axes and instances
+- [optical-size](/cli/optical-size) — Display optical size information
+
+### Font Operations
+- [convert](/cli/convert) — Format conversion (TTF, OTF, WOFF, WOFF2)
+- [subset](/cli/subset) — Create character subsets
 - [validate](/cli/validate) — Validate fonts against profiles
-- [subset](/cli/subset) — Create font subsets
-- [pack/unpack](/cli/pack) — Work with font collections
-- [export](/cli/export) — Export to TTX, SVG, and other formats
-- [instance](/cli/instance) — Generate variable font instances
-- [glyphs](/cli/glyphs) — List and inspect glyphs
-- [tables](/cli/tables) — Inspect font tables
+- [instance](/cli/instance) — Generate static instances from variable fonts
+- [export](/cli/export) — Export to TTX, YAML, JSON
+- [dump-table](/cli/dump-table) — Extract raw binary table data
+
+### Collection Operations
+- [pack](/cli/pack) — Create and extract font collections (TTC/OTC)
+
+### Utilities
+- [version](/cli/version) — Show Fontisan version
