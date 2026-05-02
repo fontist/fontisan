@@ -352,7 +352,6 @@ module Fontisan
       #
       # @return [Set<Integer>] Set of used indices
       def collect_used_variation_indices
-        require "set"
         used = Set.new
 
         glyph_count = @cff2.glyph_count

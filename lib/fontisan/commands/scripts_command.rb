@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "set"
 require "yaml"
 require_relative "base_command"
 require_relative "../models/scripts_info"

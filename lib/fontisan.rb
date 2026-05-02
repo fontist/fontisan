@@ -33,10 +33,11 @@ require "bindata"
 require "zlib"
 require "stringio"
 require "lutaml/model"
-require "lutaml/model/xml_adapter/nokogiri_adapter"
 
 # Configure lutaml-model to use Nokogiri adapter for XML serialization
-Lutaml::Model::Config.xml_adapter = Lutaml::Model::Xml::NokogiriAdapter
+Lutaml::Model::Config.configure do |config|
+  config.xml_adapter_type = :nokogiri
+end
 
 # Core
 require_relative "fontisan/version"
