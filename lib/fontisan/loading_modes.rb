@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "set"
-
 module Fontisan
   # Loading modes module that defines which tables are loaded in each mode.
   #

@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "base64"
   spec.add_dependency "bindata", "~> 2.5"
   spec.add_dependency "brotli", "~> 0.5"
-  spec.add_dependency "lutaml-model", "~> 0.7"
+  spec.add_dependency "lutaml-model", "~> 0.8"
   spec.add_dependency "nokogiri", "~> 1.16"
   spec.add_dependency "thor", "~> 1.3"
 end
