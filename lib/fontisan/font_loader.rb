@@ -118,6 +118,55 @@ module Fontisan
       end
     end
 
+    # Identify a font file by inspecting its magic bytes (content-based detection).
+    #
+    # Returns the actual on-disk format regardless of the file extension. This is
+    # the authoritative way to determine how a file should be parsed, because
+    # vendors occasionally ship files with a misleading extension (for example,
+    # Apple ships a single OpenType-CFF font as `.ttc` in macOS's private
+    # FontServices framework).
+    #
+    # @param path [String] Path to the font file
+    # @return [Symbol, nil] One of `:ttc`, `:ttf`, `:otf`, `:woff`, `:woff2`,
+    #   `:dfont`, `:type1`, or `nil` when the format is not recognised. TTC and
+    #   OTC share the same magic ('ttcf') and are both reported as `:ttc`; the
+    #   collection loader resolves the distinction by scanning inner fonts.
+    # @raise [Errno::ENOENT] if the file does not exist
+    #
+    # @example Detect a real collection
+    #   FontLoader.detect_format("fonts.ttc")          # => :ttc
+    #
+    # @example Detect a single OTF mislabeled as .ttc
+    #   FontLoader.detect_format("SauberScript.ttc")   # => :otf
+    def self.detect_format(path)
+      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+
+      # Type 1 fonts have their own magic and are not SFNT-based.
+      return :type1 if type1_font?(path)
+
+      File.open(path, "rb") do |io|
+        signature = io.read(4)
+        return nil if signature.nil? || signature.bytesize < 4
+
+        case signature
+        when Constants::TTC_TAG
+          :ttc
+        when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
+          :ttf
+        when "OTTO"
+          :otf
+        when "wOFF"
+          :woff
+        when "wOF2"
+          :woff2
+        when Constants::DFONT_RESOURCE_HEADER
+          io.rewind
+          require_relative "parsers/dfont_parser"
+          Parsers::DfontParser.dfont?(io) ? :dfont : nil
+        end
+      end
+    end
+
     # Load a collection object without extracting fonts
     #
     # Returns the collection object (TrueTypeCollection, OpenTypeCollection, or DfontCollection)
@@ -418,8 +467,11 @@ mode: LoadingModes::FULL, lazy: true)
 
       # Check PFA signature (text file with Adobe header)
       File.open(path, "rb") do |io|
-        # Read first 100 bytes to check for PFA signature
+        # Read first 100 bytes to check for PFA signature.
+        # io.read returns nil for an empty file, so guard against that.
         header = io.read(100)
+        next if header.nil?
+
         return true if header.include?(Constants::PFA_SIGNATURE_ADOBE_1_0) ||
           header.include?(Constants::PFA_SIGNATURE_ADOBE_3_0)
       end
