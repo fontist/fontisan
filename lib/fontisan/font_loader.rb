@@ -6,17 +6,25 @@ require_relative "true_type_font"
 require_relative "open_type_font"
 require_relative "true_type_collection"
 require_relative "open_type_collection"
+require_relative "dfont_collection"
 require_relative "woff_font"
 require_relative "woff2_font"
 require_relative "type1_font"
+require_relative "parsers/dfont_parser"
 require_relative "error"
 
 module Fontisan
-  # FontLoader provides unified font loading with automatic format detection.
+  # FontLoader provides unified font loading with content-based format detection.
   #
   # This class is the primary entry point for loading fonts in Fontisan.
-  # It automatically detects the font format and returns the appropriate
-  # domain object (TrueTypeFont, OpenTypeFont, Type1Font, TrueTypeCollection, or OpenTypeCollection).
+  # It inspects each file's magic bytes to determine the on-disk format and
+  # returns the appropriate domain object (TrueTypeFont, OpenTypeFont,
+  # Type1Font, TrueTypeCollection, or OpenTypeCollection).
+  #
+  # Detection is purely content-based — the file extension is ignored. This
+  # matters because vendors occasionally ship files with a misleading
+  # extension (e.g. Apple ships a single OpenType-CFF font as `.ttc` in
+  # macOS's private FontServices framework).
   #
   # @example Load any font type
   #   font = FontLoader.load("font.ttf")  # => TrueTypeFont
@@ -34,7 +42,68 @@ module Fontisan
   #   font = FontLoader.load("font.ttf", lazy: true)   # Tables loaded on-demand
   #   font = FontLoader.load("font.ttf", lazy: false)  # All tables loaded upfront
   class FontLoader
-    # Load a font from file with automatic format detection
+    # Number of bytes read from the start of a file to identify its format.
+    # 100 bytes is enough to comfortably contain the Adobe Type 1 PFA header
+    # plus its leading whitespace, and far more than the 4 bytes needed for
+    # any SFNT-style or dfont magic.
+    PFA_PROBE_LENGTH = 100
+    private_constant :PFA_PROBE_LENGTH
+
+    # Map of single-font format symbols to the class that loads them.
+    SFNT_FONT_CLASSES = {
+      ttf: TrueTypeFont,
+      otf: OpenTypeFont,
+      woff: WoffFont,
+      woff2: Woff2Font,
+    }.freeze
+    private_constant :SFNT_FONT_CLASSES
+
+    # Map of collection format symbols to the class that loads them. The keys
+    # are the single source of truth for "what counts as a collection"; both
+    # {.collection?} and {.load_collection} dispatch off this table.
+    COLLECTION_CLASSES = {
+      ttc: TrueTypeCollection,
+      otc: OpenTypeCollection,
+      dfont: DfontCollection,
+    }.freeze
+    private_constant :COLLECTION_CLASSES
+
+    # Collection formats whose inner fonts share the ttcf header layout, so
+    # they're loaded through {.load_from_collection}. `:dfont` lives in
+    # {COLLECTION_CLASSES} but takes a different load path (a resource-fork
+    # extractor), so it's not in this subset.
+    TTCF_FORMATS = %i[ttc otc].freeze
+    private_constant :TTCF_FORMATS
+
+    # 4-byte magics that count as TrueType when scanning either a top-level
+    # SFNT signature or an inner font in a ttcf collection. Apple ships both
+    # the canonical 0x00010000 magic and the legacy ASCII "true" magic.
+    TRUETYPE_MAGICS = [
+      Constants::SFNT_TRUETYPE_MAGIC,
+      Constants::SFNT_TRUE_MAGIC,
+    ].freeze
+    private_constant :TRUETYPE_MAGICS
+
+    # Result of content-based format detection.
+    #
+    # For a ttcf-headed collection, `num_fonts` carries the parsed inner-font
+    # count so callers can validate `font_index` without re-reading the
+    # header. For non-collections (or for malformed/unrecognised inputs),
+    # `num_fonts` is nil.
+    DetectionResult = Struct.new(:format, :num_fonts)
+    private_constant :DetectionResult
+
+    # Sentinel for "could not identify this file" — returned by every
+    # detection path that gives up, so each one doesn't allocate a fresh
+    # `DetectionResult.new(nil, nil)`.
+    UNRECOGNISED = DetectionResult.new(nil, nil).freeze
+    private_constant :UNRECOGNISED
+
+    # Load a font from file with content-based format detection.
+    #
+    # The file's bytes determine its format; the extension is ignored. See
+    # {.detect_format} for the full list of recognised formats and how they
+    # are detected.
     #
     # @param path [String] Path to the font file
     # @param font_index [Integer] Index of font in collection (0-based, default: 0)
@@ -45,92 +114,69 @@ module Fontisan
     # @raise [UnsupportedFormatError] for unsupported formats
     # @raise [InvalidFontError] for corrupted or unknown formats
     def self.load(path, font_index: 0, mode: nil, lazy: nil)
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
+      detection = detect(path)
 
-      # Resolve mode and lazy parameters with environment variables
       resolved_mode = mode || env_mode || LoadingModes::FULL
       resolved_lazy = if lazy.nil?
                         env_lazy.nil? ? false : env_lazy
                       else
                         lazy
                       end
-
-      # Validate mode
       LoadingModes.validate_mode!(resolved_mode)
 
-      # Check for Type 1 format first (PFB/PFA have different signatures)
-      if type1_font?(path)
-        return Type1Font.from_file(path, mode: resolved_mode)
-      end
-
-      File.open(path, "rb") do |io|
-        signature = io.read(4)
-        io.rewind
-
-        case signature
-        when Constants::TTC_TAG
-          load_from_collection(io, path, font_index, mode: resolved_mode,
-                                                     lazy: resolved_lazy)
-        when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
-          TrueTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-        when "OTTO"
-          OpenTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-        when "wOFF"
-          WoffFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-        when "wOF2"
-          Woff2Font.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-        when Constants::DFONT_RESOURCE_HEADER
-          extract_and_load_dfont(io, path, font_index, resolved_mode,
-                                 resolved_lazy)
-        else
-          raise InvalidFontError,
-                "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
-        end
+      case detection.format
+      when :pfa, :pfb
+        Type1Font.from_file(path, mode: resolved_mode)
+      when *SFNT_FONT_CLASSES.keys
+        SFNT_FONT_CLASSES.fetch(detection.format)
+          .from_file(path, mode: resolved_mode, lazy: resolved_lazy)
+      when *TTCF_FORMATS
+        load_from_collection(path, detection, font_index, mode: resolved_mode)
+      when :dfont
+        load_dfont(path, font_index, resolved_mode, resolved_lazy)
+      else
+        raise InvalidFontError,
+              "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
       end
     end
 
-    # Check if a file is a collection (TTC or OTC)
+    # Check if a file is a collection (TTC, OTC, or dfont).
+    #
+    # Returns `false` for a ttcf-headed file whose inner fonts can't be
+    # classified (truncated header, offsets past EOF, unrecognised inner
+    # SFNT versions). Such a file is structurally invalid as a collection
+    # and would fail to load, so reporting it as "not a collection" matches
+    # what callers can actually do with it.
     #
     # @param path [String] Path to the font file
-    # @return [Boolean] true if file is a TTC/OTC collection
+    # @return [Boolean] true if file is a loadable collection
     # @raise [Errno::ENOENT] if file does not exist
     #
     # @example Check if file is collection
     #   FontLoader.collection?("fonts.ttc") # => true
     #   FontLoader.collection?("font.ttf")  # => false
     def self.collection?(path)
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      File.open(path, "rb") do |io|
-        signature = io.read(4)
-        io.rewind
-
-        # Check for TTC/OTC signature
-        return true if signature == Constants::TTC_TAG
-
-        # Check for dfont - dfont is a collection format even if it contains only one font
-        if signature == Constants::DFONT_RESOURCE_HEADER
-          require_relative "parsers/dfont_parser"
-          return Parsers::DfontParser.dfont?(io)
-        end
-
-        false
-      end
+      COLLECTION_CLASSES.key?(detect(path).format)
     end
 
     # Identify a font file by inspecting its magic bytes (content-based detection).
     #
-    # Returns the actual on-disk format regardless of the file extension. This is
-    # the authoritative way to determine how a file should be parsed, because
-    # vendors occasionally ship files with a misleading extension (for example,
-    # Apple ships a single OpenType-CFF font as `.ttc` in macOS's private
-    # FontServices framework).
+    # Returns the actual on-disk format regardless of the file extension. This
+    # is the authoritative way to determine how a file should be parsed,
+    # because vendors occasionally ship files with a misleading extension
+    # (for example, Apple ships a single OpenType-CFF font as `.ttc` in
+    # macOS's private FontServices framework).
+    #
+    # Collections are distinguished by scanning the inner fonts: if any inner
+    # font is OpenType (CFF), the file is reported as `:otc`; otherwise (all
+    # inner fonts are TrueType) it is reported as `:ttc`. A ttcf-headed file
+    # whose inner fonts can't be classified (truncated header, offsets past
+    # EOF, unrecognised inner SFNT versions) returns `nil`.
     #
     # @param path [String] Path to the font file
-    # @return [Symbol, nil] One of `:ttc`, `:ttf`, `:otf`, `:woff`, `:woff2`,
-    #   `:dfont`, `:type1`, or `nil` when the format is not recognised. TTC and
-    #   OTC share the same magic ('ttcf') and are both reported as `:ttc`; the
-    #   collection loader resolves the distinction by scanning inner fonts.
+    # @return [Symbol, nil] One of `:ttf`, `:otf`, `:ttc`, `:otc`, `:woff`,
+    #   `:woff2`, `:dfont`, `:pfa`, `:pfb`, or `nil` when the format is not
+    #   recognised.
     # @raise [Errno::ENOENT] if the file does not exist
     #
     # @example Detect a real collection
@@ -139,80 +185,20 @@ module Fontisan
     # @example Detect a single OTF mislabeled as .ttc
     #   FontLoader.detect_format("SauberScript.ttc")   # => :otf
     def self.detect_format(path)
-      raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
-
-      # Type 1 fonts have their own magic and are not SFNT-based.
-      return :type1 if type1_font?(path)
-
-      File.open(path, "rb") do |io|
-        signature = io.read(4)
-        return nil if signature.nil? || signature.bytesize < 4
-
-        case signature
-        when Constants::TTC_TAG
-          :ttc
-        when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
-          :ttf
-        when "OTTO"
-          :otf
-        when "wOFF"
-          :woff
-        when "wOF2"
-          :woff2
-        when Constants::DFONT_RESOURCE_HEADER
-          io.rewind
-          require_relative "parsers/dfont_parser"
-          Parsers::DfontParser.dfont?(io) ? :dfont : nil
-        end
-      end
+      detect(path).format
     end
 
     # Load a collection object without extracting fonts
     #
-    # Returns the collection object (TrueTypeCollection, OpenTypeCollection, or DfontCollection)
-    # without extracting individual fonts. Useful for inspecting collection
-    # metadata and structure.
+    # Returns the collection object (TrueTypeCollection, OpenTypeCollection,
+    # or DfontCollection) without extracting individual fonts. Useful for
+    # inspecting collection metadata and structure.
     #
-    # = Collection Format Understanding
-    #
-    # Both TTC (TrueType Collection) and OTC (OpenType Collection) files use
-    # the same "ttcf" signature. The distinction between TTC and OTC is NOT
-    # in the collection format itself, but in the fonts contained within:
-    #
-    # - TTC typically contains TrueType fonts (glyf outlines)
-    # - OTC typically contains OpenType fonts (CFF/CFF2 outlines)
-    # - Mixed collections are possible (both TTF and OTF in same collection)
-    #
-    # dfont (Data Fork Font) is an Apple-specific format that contains Mac
-    # font suitcase resources. It can contain multiple SFNT fonts (TrueType
-    # or OpenType).
-    #
-    # Each collection can contain multiple SFNT-format font files, with table
-    # deduplication to save space. Individual fonts within a collection are
-    # stored at different offsets within the file, each with their own table
-    # directory and data tables.
-    #
-    # = Detection Strategy
-    #
-    # This method scans ALL fonts in the collection to determine the collection
-    # type accurately:
-    #
-    # 1. Reads all font offsets from the collection header
-    # 2. Examines the sfnt_version of each font in the collection
-    # 3. Counts TrueType fonts (0x00010000 or 0x74727565 "true") vs OpenType fonts (0x4F54544F "OTTO")
-    # 4. If ANY font is OpenType (CFF), returns OpenTypeCollection
-    # 5. Only returns TrueTypeCollection if ALL fonts are TrueType
-    #
-    # For dfont files, returns DfontCollection.
-    #
-    # This approach correctly handles:
-    # - Homogeneous collections (all TTF or all OTF)
-    # - Mixed collections (both TTF and OTF fonts) - uses OpenTypeCollection
-    # - Large collections with many fonts (like NotoSerifCJK.ttc with 35 fonts)
-    # - dfont suitcases (Apple-specific)
+    # The TTC vs. OTC distinction is resolved by {.detect_format}, which
+    # scans the inner fonts; see that method for details.
     #
     # @param path [String] Path to the collection file
-    # @return [TrueTypeCollection, OpenTypeCollection, DfontCollection] The collection object
+    # @return [TrueTypeCollection, OpenTypeCollection, DfontCollection]
     # @raise [Errno::ENOENT] if file does not exist
     # @raise [InvalidFontError] if file is not a collection or type cannot be determined
     #
@@ -220,63 +206,148 @@ module Fontisan
     #   collection = FontLoader.load_collection("fonts.ttc")
     #   puts "Collection has #{collection.num_fonts} fonts"
     def self.load_collection(path)
+      format = detect(path).format
+
+      case format
+      when *COLLECTION_CLASSES.keys
+        COLLECTION_CLASSES.fetch(format).from_file(path)
+      else
+        # Lenient fallback: a dfont whose resource-data offset isn't the
+        # canonical 256 fails the strict magic test in {.detect} but may
+        # still be structurally valid. Try the structural check before
+        # giving up.
+        File.open(path, "rb") do |io|
+          return DfontCollection.from_file(path) if Parsers::DfontParser.dfont?(io)
+        end
+        raise InvalidFontError,
+              "File is not a collection (TTC/OTC/dfont). Use FontLoader.load instead."
+      end
+    end
+
+    # Run content-based detection once and return the full result. This is
+    # the single source of truth for the file's format and, for ttcf
+    # collections, the parsed `num_fonts`. Consumers use the returned struct
+    # instead of re-scanning the file.
+    #
+    # @param path [String]
+    # @return [DetectionResult]
+    # @raise [Errno::ENOENT] if the file does not exist
+    # @api private
+    def self.detect(path)
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
 
       File.open(path, "rb") do |io|
-        signature = io.read(4)
-        io.rewind
+        header = io.read(PFA_PROBE_LENGTH)
+        return UNRECOGNISED if header.nil? || header.empty?
 
-        # Check for dfont
-        if signature == Constants::DFONT_RESOURCE_HEADER || dfont_signature?(io)
-          require_relative "dfont_collection"
-          return DfontCollection.from_file(path)
-        end
+        type1 = type1_format_from_header(header)
+        return DetectionResult.new(type1, nil) if type1
 
-        # Check for TTC/OTC
-        unless signature == Constants::TTC_TAG
-          raise InvalidFontError,
-                "File is not a collection (TTC/OTC/dfont). Use FontLoader.load instead."
-        end
+        return UNRECOGNISED if header.bytesize < 4
 
-        # Read version and num_fonts
-        io.seek(8) # Skip tag (4) + version (4)
-        num_fonts = io.read(4).unpack1("N")
+        sfnt_detection(header.byteslice(0, 4), io)
+      end
+    end
 
-        # Read all font offsets
-        font_offsets = Array.new(num_fonts) { io.read(4).unpack1("N") }
-
-        # Scan all fonts to determine collection type (not just first)
-        truetype_count = 0
-        opentype_count = 0
-
-        font_offsets.each do |offset|
-          io.rewind
-          io.seek(offset)
-          sfnt_version = io.read(4).unpack1("N")
-
-          case sfnt_version
-          when Constants::SFNT_VERSION_TRUETYPE, 0x74727565 # 0x74727565 = 'true'
-            truetype_count += 1
-          when Constants::SFNT_VERSION_OTTO
-            opentype_count += 1
-          else
-            raise InvalidFontError,
-                  "Unknown font type in collection at offset #{offset} (sfnt version: 0x#{sfnt_version.to_s(16)})"
-          end
-        end
-
-        io.rewind
-
-        # Determine collection type based on what fonts are inside
-        # If ANY font is OpenType, use OpenTypeCollection (more general format)
-        # Only use TrueTypeCollection if ALL fonts are TrueType
-        if opentype_count.positive?
-          OpenTypeCollection.from_file(path)
-        else
-          # All fonts are TrueType
-          TrueTypeCollection.from_file(path)
+    # Identify the Type 1 sub-format (`:pfa` or `:pfb`) from a probe of the
+    # file's leading bytes. Returns nil if the bytes don't match Type 1.
+    #
+    # @param header [String] First ~100 bytes of the file (binary)
+    # @return [Symbol, nil]
+    # @api private
+    def self.type1_format_from_header(header)
+      if header.bytesize >= 2
+        marker = (header.getbyte(0) << 8) | header.getbyte(1)
+        if [Constants::PFB_ASCII_CHUNK, Constants::PFB_BINARY_CHUNK].include?(marker)
+          return :pfb
         end
       end
+
+      # PFA is plain text — the Adobe Type 1 header must appear at the very
+      # start (allowing only leading ASCII whitespace), not anywhere in the
+      # probe. Using start_with? avoids matching a non-Type-1 PostScript file
+      # that happens to mention the signature in a comment.
+      stripped = header.lstrip
+      if stripped.start_with?(Constants::PFA_SIGNATURE_ADOBE_1_0, Constants::PFA_SIGNATURE_ADOBE_3_0)
+        return :pfa
+      end
+
+      nil
+    end
+
+    # Map a 4-byte SFNT-style signature to a DetectionResult. For `ttcf`
+    # files, scans the inner fonts (and carries `num_fonts` through); for
+    # dfont magic, delegates to {Parsers::DfontParser.dfont?} for structural
+    # validation.
+    #
+    # @param signature [String] 4-byte binary signature
+    # @param io [IO] open IO positioned anywhere (will be seeked as needed)
+    # @return [DetectionResult]
+    # @api private
+    def self.sfnt_detection(signature, io)
+      case signature
+      when Constants::TTC_TAG
+        scan_collection(io)
+      when *TRUETYPE_MAGICS
+        DetectionResult.new(:ttf, nil)
+      when Constants::SFNT_OTTO_MAGIC
+        DetectionResult.new(:otf, nil)
+      when Constants::WOFF_MAGIC
+        DetectionResult.new(:woff, nil)
+      when Constants::WOFF2_MAGIC
+        DetectionResult.new(:woff2, nil)
+      when Constants::DFONT_RESOURCE_HEADER
+        io.rewind
+        DetectionResult.new(Parsers::DfontParser.dfont?(io) ? :dfont : nil, nil)
+      else
+        UNRECOGNISED
+      end
+    end
+
+    # Scan a ttcf-headed file: read num_fonts, the offset table, and every
+    # inner SFNT magic. All comparisons are bytes-domain against
+    # `Constants::SFNT_*_MAGIC`, so detection is the single authority on
+    # what counts as a valid inner SFNT and no caller has to re-validate.
+    #
+    # Returns a DetectionResult with `:ttc` or `:otc` and `num_fonts` set
+    # when every inner font has a recognised magic; returns `UNRECOGNISED`
+    # for any truncation, unreadable offset, or unknown inner magic —
+    # those collections are not loadable and callers should reject them.
+    #
+    # @param io [IO] open IO on a `ttcf`-headed file
+    # @return [DetectionResult]
+    # @api private
+    def self.scan_collection(io)
+      io.seek(8) # skip tag (4) + version (4)
+
+      num_fonts_bytes = io.read(4)
+      return UNRECOGNISED if num_fonts_bytes.nil? || num_fonts_bytes.bytesize < 4
+
+      num_fonts = num_fonts_bytes.unpack1("N")
+      return UNRECOGNISED if num_fonts.zero?
+
+      offset_bytes = io.read(4 * num_fonts)
+      return UNRECOGNISED if offset_bytes.nil? || offset_bytes.bytesize < 4 * num_fonts
+
+      offsets = offset_bytes.unpack("N#{num_fonts}")
+
+      has_otf = false
+      offsets.each do |offset|
+        io.seek(offset)
+        sfnt = io.read(4)
+        return UNRECOGNISED if sfnt.nil? || sfnt.bytesize < 4
+
+        case sfnt
+        when Constants::SFNT_OTTO_MAGIC
+          has_otf = true
+        when *TRUETYPE_MAGICS
+          next
+        else
+          return UNRECOGNISED
+        end
+      end
+
+      DetectionResult.new(has_otf ? :otc : :ttc, num_fonts)
     end
 
     # Get mode from environment variable
@@ -302,185 +373,102 @@ module Fontisan
       env_value.downcase == "true"
     end
 
-    # Load from a collection file (TTC or OTC)
+    # Load an inner font from a TTC/OTC collection using the already-parsed
+    # DetectionResult. `num_fonts` is known, so no header re-read; the
+    # collection class is a direct lookup in {COLLECTION_CLASSES}.
     #
-    # This is the internal method that handles loading individual fonts from
-    # collection files. It reads the collection header to determine the type
-    # (TTC vs OTC) and extracts the requested font.
-    #
-    # = Collection Header Structure
-    #
-    # TTC/OTC files start with:
-    # - Bytes 0-3: "ttcf" tag (4 bytes)
-    # - Bytes 4-7: version (2 bytes major + 2 bytes minor)
-    # - Bytes 8-11: num_fonts (4 bytes, big-endian uint32)
-    # - Bytes 12+: font offset array (4 bytes per font, big-endian uint32)
-    #
-    # CRITICAL: The method seeks to position 8 (after tag and version) to read
-    # num_fonts, NOT position 12 which is where the offset array starts. This
-    # was a bug that caused "Unknown font type" errors when the first offset
-    # was misread as num_fonts.
-    #
-    # @param io [IO] Open file handle
     # @param path [String] Path to the collection file
+    # @param detection [DetectionResult] Result from {.detect}
     # @param font_index [Integer] Index of font to extract
     # @param mode [Symbol] Loading mode (:metadata or :full)
-    # @param lazy [Boolean] If true, load tables on demand
-    # @return [TrueTypeFont, OpenTypeFont] The loaded font object
-    # @raise [InvalidFontError] if collection type cannot be determined
-    def self.load_from_collection(io, path, font_index,
-mode: LoadingModes::FULL, lazy: true)
-      # Read collection header to get font offsets
-      io.seek(8) # Skip tag (4) + version (4)
-      num_fonts = io.read(4).unpack1("N")
-
-      if font_index >= num_fonts
+    # @return [TrueTypeFont, OpenTypeFont]
+    # @raise [InvalidFontError] if font_index is out of range
+    # @api private
+    def self.load_from_collection(path, detection, font_index, mode:)
+      if font_index >= detection.num_fonts
         raise InvalidFontError,
-              "Font index #{font_index} out of range (collection has #{num_fonts} fonts)"
+              "Font index #{font_index} out of range (collection has #{detection.num_fonts} fonts)"
       end
 
-      # Read all font offsets
-      font_offsets = Array.new(num_fonts) { io.read(4).unpack1("N") }
+      collection = COLLECTION_CLASSES.fetch(detection.format).from_file(path)
+      File.open(path, "rb") { |io| collection.font(font_index, io, mode: mode) }
+    end
 
-      # Scan all fonts to determine collection type (not just first)
-      truetype_count = 0
-      opentype_count = 0
-
-      font_offsets.each do |offset|
-        io.rewind
-        io.seek(offset)
-        sfnt_version = io.read(4).unpack1("N")
-
-        case sfnt_version
-        when Constants::SFNT_VERSION_TRUETYPE, 0x74727565 # 0x74727565 = 'true'
-          truetype_count += 1
-        when Constants::SFNT_VERSION_OTTO
-          opentype_count += 1
-        else
-          raise InvalidFontError,
-                "Unknown font type in collection at offset #{offset} (sfnt version: 0x#{sfnt_version.to_s(16)})"
-        end
-      end
-
-      io.rewind
-
-      # If ANY font is OpenType, use OpenTypeCollection (more general format)
-      # Only use TrueTypeCollection if ALL fonts are TrueType
-      if opentype_count.positive?
-        # OpenType Collection
-        otc = OpenTypeCollection.from_file(path)
-        File.open(path, "rb") { |f| otc.font(font_index, f, mode: mode) }
-      else
-        # TrueType Collection (all fonts are TrueType)
-        ttc = TrueTypeCollection.from_file(path)
-        File.open(path, "rb") { |f| ttc.font(font_index, f, mode: mode) }
+    # Open a dfont file and extract the requested inner font. Owns the
+    # file-open boundary so {.load}'s top-level dispatch stays IO-free and
+    # symmetric with the other format arms.
+    #
+    # @param path [String] Path to dfont file
+    # @param font_index [Integer] Font index in suitcase
+    # @param mode [Symbol] Loading mode
+    # @param lazy [Boolean] Lazy loading flag
+    # @return [TrueTypeFont, OpenTypeFont]
+    # @api private
+    def self.load_dfont(path, font_index, mode, lazy)
+      File.open(path, "rb") do |io|
+        extract_and_load_dfont(io, font_index, mode, lazy)
       end
     end
 
     # Extract and load font from dfont resource fork
     #
     # @param io [IO] Open file handle
-    # @param path [String] Path to dfont file
     # @param font_index [Integer] Font index in suitcase
     # @param mode [Symbol] Loading mode
     # @param lazy [Boolean] Lazy loading flag
     # @return [TrueTypeFont, OpenTypeFont] Loaded font
     # @api private
-    def self.extract_and_load_dfont(io, _path, font_index, mode, lazy)
-      require_relative "parsers/dfont_parser"
-
-      # Extract SFNT data from resource fork
+    def self.extract_and_load_dfont(io, font_index, mode, lazy)
       sfnt_data = Parsers::DfontParser.extract_sfnt(io, index: font_index)
-
-      # Create StringIO with SFNT data
       sfnt_io = StringIO.new(sfnt_data)
 
-      # Detect SFNT signature
       signature = sfnt_io.read(4)
       sfnt_io.rewind
 
-      # Read and setup font based on signature
-      case signature
-      when pack_uint32(Constants::SFNT_VERSION_TRUETYPE), "true"
-        font = TrueTypeFont.read(sfnt_io)
+      klass = case signature
+              when *TRUETYPE_MAGICS
+                TrueTypeFont
+              when Constants::SFNT_OTTO_MAGIC
+                OpenTypeFont
+              else
+                raise InvalidFontError,
+                      "Invalid SFNT data in dfont resource (signature: #{signature.inspect})"
+              end
+
+      build_sfnt_font(klass, sfnt_io, mode, lazy)
+    end
+
+    # Read an SFNT font from an IO using the given class and apply the
+    # loading-mode / lazy-load configuration. Used by {.extract_and_load_dfont}
+    # to keep the TT and OT branches free of duplication.
+    #
+    # @param klass [Class] TrueTypeFont or OpenTypeFont
+    # @param sfnt_io [IO] IO positioned at the start of the SFNT data
+    # @param mode [Symbol] Loading mode
+    # @param lazy [Boolean] If true, defer table reads
+    # @return [TrueTypeFont, OpenTypeFont]
+    # @api private
+    def self.build_sfnt_font(klass, sfnt_io, mode, lazy)
+      klass.read(sfnt_io).tap do |font|
         font.initialize_storage
         font.loading_mode = mode
         font.lazy_load_enabled = lazy
         font.read_table_data(sfnt_io) unless lazy
-        font
-      when "OTTO"
-        font = OpenTypeFont.read(sfnt_io)
-        font.initialize_storage
-        font.loading_mode = mode
-        font.lazy_load_enabled = lazy
-        font.read_table_data(sfnt_io) unless lazy
-        font
-      else
-        raise InvalidFontError,
-              "Invalid SFNT data in dfont resource (signature: #{signature.inspect})"
       end
     end
 
-    # Pack uint32 value to big-endian bytes
-    #
-    # @param value [Integer] The uint32 value
-    # @return [String] 4-byte binary string
-    # @api private
-    def self.pack_uint32(value)
-      [value].pack("N")
-    end
-
-    private_class_method :load_from_collection, :pack_uint32, :env_mode,
-                         :env_lazy, :extract_and_load_dfont
-
-    # Check if file has dfont signature
-    #
-    # @param io [IO] Open file handle
-    # @return [Boolean] true if dfont
-    # @api private
-    def self.dfont_signature?(io)
-      require_relative "parsers/dfont_parser"
-      Parsers::DfontParser.dfont?(io)
-    end
-
-    private_class_method :dfont_signature?
-
-    # Check if file is a Type 1 font (PFB or PFA)
-    #
-    # Type 1 fonts come in two formats:
-    # - PFB (Printer Font Binary): Binary format with chunk markers
-    # - PFA (Printer Font ASCII): ASCII text format with hex encoding
-    #
-    # @param path [String] Path to the font file
-    # @return [Boolean] true if Type 1 font
-    # @api private
-    def self.type1_font?(path)
-      # Check file extension first (quick check)
-      ext = File.extname(path).downcase
-      return true if [".pfb", ".pfa", ".ps"].include?(ext)
-
-      # Check PFB signature (first byte should be 0x80 or 0x81)
-      File.open(path, "rb") do |io|
-        first_byte = io.getbyte
-        return true if [Constants::PFB_ASCII_CHUNK, Constants::PFB_BINARY_CHUNK].include?(first_byte)
-      end
-
-      # Check PFA signature (text file with Adobe header)
-      File.open(path, "rb") do |io|
-        # Read first 100 bytes to check for PFA signature.
-        # io.read returns nil for an empty file, so guard against that.
-        header = io.read(100)
-        next if header.nil?
-
-        return true if header.include?(Constants::PFA_SIGNATURE_ADOBE_1_0) ||
-          header.include?(Constants::PFA_SIGNATURE_ADOBE_3_0)
-      end
-
-      false
-    rescue IOError, Errno::ENOENT
-      false
-    end
-
-    private_class_method :type1_font?
+    # All internal helpers — declared in one place so it's obvious at a
+    # glance what's public surface (load, collection?, detect_format,
+    # load_collection) vs. private machinery.
+    private_class_method :detect,
+                         :type1_format_from_header,
+                         :sfnt_detection,
+                         :scan_collection,
+                         :env_mode,
+                         :env_lazy,
+                         :load_from_collection,
+                         :load_dfont,
+                         :extract_and_load_dfont,
+                         :build_sfnt_font
   end
 end

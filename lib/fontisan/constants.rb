@@ -9,7 +9,7 @@ module Fontisan
   module Constants
     # TrueType Collection file signature tag.
     # All valid TTC files must begin with this 4-byte tag.
-    TTC_TAG = "ttcf"
+    TTC_TAG = "ttcf".b.freeze
 
     # TrueType Collection Version 1.0 identifier.
     # Represents the original TTC format version.
@@ -25,11 +25,23 @@ module Fontisan
     # SFNT version for OpenType fonts with CFF outlines ('OTTO')
     SFNT_VERSION_OTTO = 0x4F54544F
 
-    # Apple 'true' TrueType signature (alternate to 0x00010000)
-    SFNT_VERSION_TRUE = 0x74727965 # 'true' in ASCII
+    # Apple 'true' TrueType signature (alternate to 0x00010000).
+    # Bytes: 0x74 ('t') 0x72 ('r') 0x75 ('u') 0x65 ('e').
+    SFNT_VERSION_TRUE = 0x74727565
 
-    # dfont resource fork signatures
-    DFONT_RESOURCE_HEADER = "\x00\x00\x01\x00"
+    # Four-byte file signatures used for content-based format detection.
+    # Pre-packed once here so format detection doesn't repack on every call.
+    SFNT_TRUETYPE_MAGIC = "\x00\x01\x00\x00".b.freeze # packed SFNT_VERSION_TRUETYPE
+    SFNT_TRUE_MAGIC     = "true".b.freeze             # Apple legacy TrueType
+    SFNT_OTTO_MAGIC     = "OTTO".b.freeze             # OpenType / CFF
+    WOFF_MAGIC          = "wOFF".b.freeze
+    WOFF2_MAGIC         = "wOF2".b.freeze
+
+    # dfont resource fork signatures.
+    # Note: bytes differ from SFNT_TRUETYPE_MAGIC despite the visual similarity —
+    # dfont is "\x00\x00\x01\x00" (resource-data offset 256, big-endian),
+    # SFNT_TRUETYPE_MAGIC is "\x00\x01\x00\x00" (sfnt version 0x00010000).
+    DFONT_RESOURCE_HEADER = "\x00\x00\x01\x00".b.freeze
     SFNT_RESOURCE_TYPE = "sfnt"
     FOND_RESOURCE_TYPE = "FOND"
 

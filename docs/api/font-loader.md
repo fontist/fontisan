@@ -40,9 +40,11 @@ font = Fontisan::FontLoader.load(File.read('font.ttf', mode: 'rb'))
 
 **Raises:** Fontisan::FormatError if format is unsupported
 
-### detect_format(source)
+### detect_format(path)
 
-Detect font format without loading.
+Detect a font's on-disk format from its content (magic bytes). The file
+extension is ignored — a `.ttc` that actually contains a single OpenType-CFF
+font is reported as `:otf`.
 
 ```ruby
 format = Fontisan::FontLoader.detect_format('font.ttf')
@@ -52,24 +54,28 @@ format = Fontisan::FontLoader.detect_format('font.otf')
 # => :otf
 
 format = Fontisan::FontLoader.detect_format('font.pfb')
-# => :type1
+# => :pfb
+
+format = Fontisan::FontLoader.detect_format('font.pfa')
+# => :pfa
 ```
 
-**Returns:** Symbol or nil
+**Returns:** Symbol (`:ttf`, `:otf`, `:ttc`, `:otc`, `:woff`, `:woff2`,
+`:dfont`, `:pfa`, `:pfb`) or `nil` if the format is not recognised.
 
 ## Supported Formats
 
-| Format | Detection | Notes |
-|--------|-----------|-------|
-| TTF | Magic number | TrueType |
-| OTF | Magic number | OpenType/CFF |
-| TTC | Magic number | TrueType Collection |
-| OTC | Magic number | OpenType Collection |
-| WOFF | Magic number | Web Open Font Format |
-| WOFF2 | Magic number | Web Open Font Format 2 |
-| PFB | Marker byte | Adobe Type 1 Binary |
-| PFA | Text | Adobe Type 1 ASCII |
-| dfont | Magic number | Apple Data Fork |
+| Symbol  | Detection   | Notes                          |
+|---------|-------------|--------------------------------|
+| `:ttf`   | Magic bytes | TrueType                       |
+| `:otf`   | Magic bytes | OpenType / CFF                 |
+| `:ttc`   | Magic bytes | TrueType Collection            |
+| `:otc`   | Magic bytes | OpenType Collection            |
+| `:woff`  | Magic bytes | Web Open Font Format           |
+| `:woff2` | Magic bytes | Web Open Font Format 2         |
+| `:pfb`   | Marker byte | Adobe Type 1 Binary            |
+| `:pfa`   | Text header | Adobe Type 1 ASCII             |
+| `:dfont` | Magic bytes | Apple Data-Fork resource fork  |
 
 ## Examples
 
