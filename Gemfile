@@ -8,6 +8,7 @@ gemspec
 gem "canon", "~> 0.1.3"
 gem "get_process_mem", "~> 0.2"
 # bigdecimal is required by get_process_mem for Ruby 3.4+ compatibility
+gem "benchmark"
 gem "bigdecimal"
 gem "openssl", "~> 3.0"
 # sys-proctable is required by get_process_mem on Windows
