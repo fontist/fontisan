@@ -185,5 +185,16 @@ module Fontisan
     def self.intern_string(str)
       STRING_POOL[str] || str.freeze
     end
+
+    # Classify a 4-byte SFNT-style signature read from a font file's magic.
+    #
+    # @param signature [String, nil]
+    # @return [Symbol, nil] :ttf, :otf, or nil for unrecognised signatures
+    def self.sfnt_format_for(signature)
+      case signature
+      when SFNT_TRUETYPE_MAGIC, SFNT_TRUE_MAGIC then :ttf
+      when SFNT_OTTO_MAGIC then :otf
+      end
+    end
   end
 end
