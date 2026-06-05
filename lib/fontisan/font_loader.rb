@@ -76,7 +76,11 @@ module Fontisan
     # @raise [InvalidFontError] for corrupted or unknown formats
     def self.load(path, font_index: 0, mode: nil, lazy: nil)
       resolved_mode = mode || env_mode || LoadingModes::FULL
-      resolved_lazy = lazy.nil? ? (env_lazy.nil? ? false : env_lazy) : lazy
+      resolved_lazy = if lazy.nil?
+                        env_lazy.nil? ? false : env_lazy
+                      else
+                        lazy
+                      end
       LoadingModes.validate_mode!(resolved_mode)
 
       format = detect(path)
@@ -236,7 +240,7 @@ module Fontisan
         end
       end
       has_otf ? :otc : :ttc
-    rescue BinData::ValidityError, EOFError, IOError
+    rescue BinData::ValidityError, IOError
       nil
     end
 
