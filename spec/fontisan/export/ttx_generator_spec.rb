@@ -30,7 +30,7 @@ RSpec.describe Fontisan::Export::TtxGenerator do
       ttx_xml = generator.generate
       expect(ttx_xml).
 
-        to match(/sfntVersion="/)
+        to include('sfntVersion="')
     end
 
     it "includes ttLibVersion attribute" do

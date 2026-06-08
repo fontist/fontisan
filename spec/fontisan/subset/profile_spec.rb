@@ -134,13 +134,13 @@ RSpec.describe Fontisan::Subset::Profile do
     it "returns description for pdf profile" do
       desc = described_class.description("pdf")
       expect(desc).to be_a(String)
-      expect(desc).to match(/PDF/i)
+      expect(desc).to include("PDF")
     end
 
     it "returns description for web profile" do
       desc = described_class.description("web")
       expect(desc).to be_a(String)
-      expect(desc).to match(/web/i)
+      expect(desc).to include("web")
     end
 
     it "returns nil for unknown profile" do
