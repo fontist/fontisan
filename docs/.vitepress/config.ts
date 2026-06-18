@@ -22,6 +22,18 @@ export default defineConfig({
   // https://vitepress.dev/guide/routing#generating-clean-url
   cleanUrls: true,
 
+  // Exclude standalone guide stubs that collide with directory routes.
+  // Both guide/<name>.md and guide/<name>/index.md exist for these three
+  // (hinting, validation, conversion); the directory version is the canonical
+  // one (sidebar-linked, richer content). Excluding the standalone stub from
+  // the build resolves the duplicate-route collision while keeping the source
+  // files in the repo.
+  srcExclude: [
+    "guide/hinting.md",
+    "guide/validation.md",
+    "guide/conversion.md",
+  ],
+
   title: "Fontisan",
   description:
     "The most comprehensive font processing library for Ruby — 100% Pure Ruby, no Python, no C++, no C# dependencies.",
