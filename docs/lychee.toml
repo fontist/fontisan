@@ -23,7 +23,11 @@ include_verbatim = true
 # Exclude URLs (regex patterns)
 exclude = [
   'github\.com/fontist/fontisan/issues',
-  'github\.com/fontist/extract_ttc',
+  'github\.com/extract_ttc',
+  # Exclude internal /fontisan/ links — these are deployment base paths that
+  # resolve correctly when deployed but fail lychee's local file:// checks
+  # (the built HTML has /fontisan/<path>; the file lives at dist/<path>).
+  '^file://.*/fontisan/',
 ]
 
 # Exclude paths from checking (regex patterns)

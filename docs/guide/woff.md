@@ -56,4 +56,4 @@ Fontisan.convert('font.woff2', output_format: :otf)
 
 ## Related
 
-- [Font Conversion](/guide/conversion) - General conversion guide
+- [Font Conversion](/guide/conversion/) - General conversion guide

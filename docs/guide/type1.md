@@ -55,4 +55,4 @@ end
 
 ## Related
 
-- [Font Conversion](/guide/conversion) - General conversion guide
+- [Font Conversion](/guide/conversion/) - General conversion guide
