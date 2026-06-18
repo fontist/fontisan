@@ -246,7 +246,7 @@ fontisan maintains 100% backward compatibility:
 
 = ExtractTTC to Fontisan Migration Guide
 
-This guide helps users migrate from https://github.com/fontist/extract_ttc[ExtractTTC] to Fontisan.
+This guide helps users migrate from [ExtractTTC](https://github.com/fontist/extract_ttc) to Fontisan.
 
 Fontisan provides complete compatibility with all ExtractTTC functionality while adding comprehensive font analysis, subsetting, validation, and format conversion capabilities.
 
