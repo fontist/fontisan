@@ -1,4 +1,19 @@
-import { defineConfig } from "vitepress";
+import { defineConfig, type HeadConfig } from "vitepress";
+
+const SITE_ORIGIN = "https://www.fontist.org";
+const BASE_PATH = "/fontisan/";
+const DEFAULT_DESCRIPTION =
+  "The most comprehensive font processing library for Ruby — 100% Pure Ruby, no Python, no C++, no C# dependencies.";
+const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/og-image.png`;
+
+// Map a page's source path to its canonical public URL (origin + base + clean path).
+function pathToUrl(relativePath: string): string {
+  const bare = relativePath.replace(/\.md$/, "").replace(/\\/g, "/");
+  if (bare === "index") return `${SITE_ORIGIN}${BASE_PATH}`;
+  if (bare.endsWith("/index"))
+    return `${SITE_ORIGIN}${BASE_PATH}${bare.slice(0, -6)}/`;
+  return `${SITE_ORIGIN}${BASE_PATH}${bare}`;
+}
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -12,6 +27,11 @@ export default defineConfig({
     "The most comprehensive font processing library for Ruby — 100% Pure Ruby, no Python, no C++, no C# dependencies.",
 
   lastUpdated: true,
+
+  // https://vitepress.dev/reference/site-config#sitemap
+  sitemap: {
+    hostname: SITE_ORIGIN,
+  },
 
   // Base path for deployment (e.g., /fontisan/ for fontist.org/fontisan/)
   base: process.env.BASE_PATH || "/fontisan/",
@@ -29,18 +49,30 @@ export default defineConfig({
     ],
     ["link", { rel: "manifest", href: "/site.webmanifest" }],
     ["meta", { property: "og:type", content: "website" }],
-    ["meta", { property: "og:title", content: "Fontisan" }],
-    [
-      "meta",
-      {
-        property: "og:description",
-        content:
-          "The most comprehensive font processing library for Ruby — 100% Pure Ruby.",
-      },
-    ],
-    ["meta", { property: "og:image", content: "/logo-full.svg" }],
-    ["meta", { name: "twitter:card", content: "summary_large_image" }],
   ],
+
+  // Per-page og:* and twitter:* tags are derived from each page's frontmatter.
+  // https://vitepress.dev/reference/site-config#transformhead
+  transformHead(ctx) {
+    const { pageData } = ctx;
+    const url = pathToUrl(pageData.relativePath);
+    const title = pageData.title || "Fontisan";
+    const description = pageData.description || DEFAULT_DESCRIPTION;
+    const image = pageData.frontmatter.image || DEFAULT_OG_IMAGE;
+
+    const tags: HeadConfig[] = [
+      ["meta", { property: "og:title", content: title }],
+      ["meta", { property: "og:description", content: description }],
+      ["meta", { property: "og:url", content: url }],
+      ["meta", { property: "og:image", content: image }],
+      ["meta", { name: "twitter:card", content: "summary_large_image" }],
+      ["meta", { name: "twitter:title", content: title }],
+      ["meta", { name: "twitter:description", content: description }],
+      ["meta", { name: "twitter:image", content: image }],
+    ];
+
+    return tags;
+  },
 
   // https://vitepress.dev/reference/default-theme-config
   themeConfig: {
