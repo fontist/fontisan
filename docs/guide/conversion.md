@@ -18,10 +18,10 @@ Fontisan supports conversion between various font formats.
 require 'fontisan'
 
 # Convert TTF to WOFF2
-Fontisan.convert('font.ttf', output_format: :woff2)
+Fontisan.convert('font.ttf', to: :woff2, output: 'font.woff2')
 
-# Convert with custom output path
-Fontisan.convert('font.ttf', output_path: 'output/font.woff2')
+# Convert TTF to OTF
+Fontisan.convert('font.ttf', to: :otf, output: 'font.otf')
 ```
 
 ## Batch Conversion
@@ -30,10 +30,11 @@ Fontisan.convert('font.ttf', output_path: 'output/font.woff2')
 # Convert multiple files
 fonts = Dir.glob('fonts/*.ttf')
 fonts.each do |font|
-  Fontisan.convert(font, output_format: :otf)
+  out = font.sub(/\.ttf$/, '.otf')
+  Fontisan.convert(font, to: :otf, output: out)
 end
 ```
 
 ## Related
 
-- [WOFF/WOFF2 Formats](/guide/woff) - Details on web font formats
+- [WOFF/WOFF2 Formats](/guide/conversion/web) - Details on web font formats

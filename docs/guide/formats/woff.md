@@ -10,8 +10,13 @@ Web Open Font Format (WOFF and WOFF2) are optimized for web delivery.
 
 | Format | Compression | Browser Support |
 |--------|-------------|-----------------|
-| WOFF | zlib | All modern browsers |
-| WOFF2 | brotli | Modern browsers |
+| WOFF | zlib | All modern browsers (IE 9+) |
+| WOFF2 | Brotli | Modern browsers |
+
+The format you pick **is** the algorithm choice — WOFF 1.0 mandates zlib,
+WOFF2 mandates Brotli. Each format exposes its algorithm's parameters
+(level, quality, transform) rather than offering a separate algorithm
+selector.
 
 ## WOFF2 Benefits
 
@@ -27,6 +32,9 @@ fontisan convert font.ttf --to woff --output font.woff
 
 # From OTF
 fontisan convert font.otf --to woff --output font.woff
+
+# Max zlib compression
+fontisan convert font.ttf --to woff --output font.woff --zlib-level 9
 ```
 
 ## Converting to WOFF2
@@ -40,6 +48,10 @@ fontisan convert font.otf --to woff2 --output font.woff2
 
 # From Type 1
 fontisan convert font.pfb --to woff2 --output font.woff2
+
+# Smallest possible output (max Brotli + table transforms)
+fontisan convert font.ttf --to woff2 --output font.woff2 \
+  --brotli-quality 11 --transform-tables
 ```
 
 ## API Usage
@@ -47,28 +59,40 @@ fontisan convert font.pfb --to woff2 --output font.woff2
 ```ruby
 options = Fontisan::ConversionOptions.from_preset(:web_optimized)
 # From: :otf, To: :woff2
-# generating: { compression: "brotli", transform_tables: true }
+# generating: { brotli_quality: 11, transform_tables: true,
+#              optimize_tables: true, preserve_metadata: true }
 
 Fontisan::FontWriter.write(font, 'font.woff2', options: options)
 ```
 
-## Compression Options
+## Compression Knobs
 
-### brotli (WOFF2)
+### WOFF (zlib)
 
-```ruby
-generating: { compression: "brotli" }
-```
-
-Best compression ratio.
-
-### zlib (WOFF)
+| Option | CLI | Range | Default |
+|--------|-----|-------|---------|
+| `zlib_level` | `--zlib-level=N` | 0–9 | 6 |
+| `uncompressed` | `--uncompressed` | bool | false |
+| `compression_threshold` | `--compression-threshold=N` | bytes | 100 |
 
 ```ruby
-generating: { compression: "zlib" }
+generating: { zlib_level: 9 }           # max zlib
+generating: { uncompressed: true }      # legal per WOFF 1.0 §5.1
 ```
 
-Wide compatibility.
+### WOFF2 (Brotli)
+
+| Option | CLI | Range | Default |
+|--------|-----|-------|---------|
+| `brotli_quality` | `--brotli-quality=N` | 0–11 | 11 |
+| `transform_tables` | `--[no-]transform-tables` | bool | false |
+
+```ruby
+generating: { brotli_quality: 11, transform_tables: true }
+```
+
+Cross-format misuse (e.g. `brotli_quality` on `:woff`) raises
+`ArgumentError` from `FormatConverter.validate_options_for_target!`.
 
 ## Table Transforms
 
@@ -110,6 +134,6 @@ fontisan convert font.woff2 --to otf --output font.otf
 ## Best Practices
 
 1. **Use WOFF2 primarily** — Best compression
-2. **Provide WOFF fallback** — For older browsers
+2. **Provide WOFF fallback** — For older browsers (IE 9+)
 3. **Keep original** — For editing
 4. **Preserve metadata** — Unless stripping for size

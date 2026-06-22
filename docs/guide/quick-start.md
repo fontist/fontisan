@@ -70,13 +70,13 @@ fontisan info font.ttf --format json
 
 ```ruby
 # TTF to OTF
-Fontisan.convert('input.ttf', output_format: :otf)
+Fontisan.convert('input.ttf', to: :otf, output: 'output.otf')
 
 # OTF to WOFF2
-Fontisan.convert('input.otf', output_format: :woff2)
+Fontisan.convert('input.otf', to: :woff2, output: 'output.woff2')
 
 # Type 1 to OTF
-Fontisan.convert('input.pfb', output_format: :otf)
+Fontisan.convert('input.pfb', to: :otf, output: 'output.otf')
 ```
 
 ### With Options
@@ -89,7 +89,7 @@ options = Fontisan::ConversionOptions.new(
   generating: { hinting_mode: 'auto' }
 )
 
-Fontisan.convert('input.ttf', output_format: :otf, options: options)
+Fontisan.convert('input.ttf', to: :otf, output: 'output.otf', options: options)
 ```
 
 ### Using CLI

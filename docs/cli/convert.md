@@ -36,6 +36,15 @@ These are individual font formats that can be converted:
 | `--output FILE` | Output file path |
 | `--optimize` | Enable outline optimization |
 | `--flatten` | Flatten composite glyphs |
+| `--zlib-level=N` | WOFF only: zlib compression level (0–9, default 6) |
+| `--uncompressed` | WOFF only: store tables uncompressed (legal per WOFF 1.0 §5.1) |
+| `--compression-threshold=N` | WOFF only: skip compression for tables smaller than N bytes (default 100) |
+| `--brotli-quality=N` | WOFF2 only: Brotli quality (0–11, default 11) |
+| `--transform-tables` / `--no-transform-tables` | WOFF2 only: apply glyf/loca + hmtx transformations |
+
+The format you pick (`--to woff` vs `--to woff2`) **is** the algorithm
+choice — WOFF mandates zlib, WOFF2 mandates Brotli. Passing a WOFF knob
+to a WOFF2 target (or vice versa) exits 1 with a clear error.
 
 ## Common Workflows
 
@@ -45,8 +54,18 @@ These are individual font formats that can be converted:
 # TTF to WOFF2 (recommended for modern browsers)
 fontisan convert font.ttf --to woff2 --output font.woff2
 
-# OTF to WOFF (broader compatibility)
+# OTF to WOFF (broader compatibility — works on IE 9+)
 fontisan convert font.otf --to woff --output font.woff
+
+# Smallest possible WOFF2 (max Brotli + table transforms)
+fontisan convert font.ttf --to woff2 --output font.woff2 \
+  --brotli-quality 11 --transform-tables
+
+# WOFF with max zlib compression
+fontisan convert font.ttf --to woff --output font.woff --zlib-level 9
+
+# WOFF stored uncompressed (legal per WOFF 1.0 §5.1; useful for tooling)
+fontisan convert font.ttf --to woff --output font.woff --uncompressed
 ```
 
 ### Convert Between Outline Formats

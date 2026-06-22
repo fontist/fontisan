@@ -43,7 +43,7 @@ end
 
 ```ruby
 # Convert color font to WOFF2
-Fontisan.convert('color-font.ttf', output_format: :woff2)
+Fontisan.convert('color-font.ttf', to: :woff2, output: 'color-font.woff2')
 ```
 
 ## Related
