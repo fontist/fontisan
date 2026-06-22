@@ -2133,11 +2133,33 @@ Generating options (control how the output font is written):
 * `--optimize-tables` - Enable table optimization
 * `--decompose-on-output` - Decompose composites in output
 
+WOFF compression knobs (apply to `--to woff` only):
+
+* `--zlib-level=N` - zlib level (0–9, default 6)
+* `--uncompressed` - store tables uncompressed (legal per WOFF 1.0 §5.1)
+* `--compression-threshold=N` - skip compression for tables smaller than N bytes
+
+WOFF2 compression knobs (apply to `--to woff2` only):
+
+* `--brotli-quality=N` - Brotli quality (0–11, default 11)
+* `--transform-tables` / `--no-transform-tables` - apply glyf/loca + hmtx transformations
+
+The format selection (`--to woff` vs `--to woff2`) **is** the algorithm
+choice: WOFF mandates zlib, WOFF2 mandates Brotli. Passing a knob that
+doesn't apply to the requested target exits 1 with a clear error.
+
 [source,shell]
 ----
 # Convert with autohinting and optimization
 fontisan convert font.ttf --to otf --output font.otf \
   --autohint --hinting-mode auto --optimize-tables
+
+# Smallest WOFF2 (max Brotli + table transforms)
+fontisan convert font.ttf --to woff2 --output font.woff2 \
+  --brotli-quality 11 --transform-tables
+
+# WOFF for IE 9+ legacy reach (max zlib)
+fontisan convert font.ttf --to woff --output font.woff --zlib-level 9
 ----
 
 For detailed information on all available options and conversion scenarios,
@@ -2202,6 +2224,26 @@ options = Fontisan::ConversionOptions.new(
 # Use with converter
 converter = Fontisan::Converters::OutlineConverter.new
 tables = converter.convert(font, options: options)
+----
+====
+
+
+.One-shot conversion via Fontisan.convert
+[example]
+====
+[source,ruby]
+----
+require 'fontisan'
+
+# TTF → WOFF2 (modern browsers)
+Fontisan.convert('font.ttf', to: :woff2, output: 'font.woff2',
+                 brotli_quality: 11, transform_tables: true)
+
+# TTF → WOFF (IE 9+ legacy reach, max zlib)
+Fontisan.convert('font.ttf', to: :woff, output: 'font.woff', zlib_level: 9)
+
+# WOFF stored uncompressed (legal per WOFF 1.0 §5.1; useful for tooling)
+Fontisan.convert('font.ttf', to: :woff, output: 'font.woff', uncompressed: true)
 ----
 ====
 

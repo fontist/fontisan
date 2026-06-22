@@ -113,11 +113,20 @@ Generating options control how the output font is written.
 | `optimize_tables` | Boolean | Enable table optimization | Reduce file size |
 | `reencode_first_256` | Boolean | Reencode first 256 glyphs | Type 1 output |
 | `encoding_vector` | String | Custom encoding vector | Type 1 output |
-| `compression` | String | Compression: zlib, brotli, none | Web font output |
-| `transform_tables` | Boolean | Transform tables for output | Format-specific transformations |
+| `zlib_level` | Integer (0–9) | zlib compression level | WOFF output (default 6) |
+| `uncompressed` | Boolean | Store tables uncompressed | WOFF only (legal per WOFF 1.0 §5.1) |
+| `compression_threshold` | Integer | Skip compression for tables < N bytes | WOFF only (default 100) |
+| `brotli_quality` | Integer (0–11) | Brotli quality | WOFF2 output (default 11) |
+| `transform_tables` | Boolean | Apply glyf/loca + hmtx transformations | WOFF2 only |
+| `metadata_xml` | String | Optional WOFF metadata XML | WOFF only |
+| `private_data` | String | Optional WOFF private data | WOFF only |
 | `preserve_metadata` | Boolean | Preserve copyright/license metadata | Maintain font metadata |
 | `strip_metadata` | Boolean | Remove metadata | Reduce file size |
 | `target_format` | String | Collection target format | Collection conversions |
+
+Compression knobs are declared by each strategy (`WoffWriter`, `Woff2Encoder`)
+via the `ConversionStrategy` DSL. `FormatConverter.validate_options_for_target!`
+rejects knobs that don't apply to the requested target format.
 
 === CLI Option Mapping
 
@@ -388,7 +397,7 @@ Notes: dfont supports both TrueType and OpenType/CFF, or mixed formats.
 Fontisan::ConversionOptions.from_preset(:web_optimized)
 # From: :otf, To: :woff2
 # opening: {}
-# generating: { compression: "brotli", transform_tables: true,
+# generating: { brotli_quality: 11, transform_tables: true,
 #              optimize_tables: true, preserve_metadata: true }
 ----
 
@@ -398,8 +407,10 @@ Benefits: 30-50% smaller than TTF/OTF
 
 [source,ruby]
 ----
-# generating: { compression: "zlib", preserve_metadata: true,
-#              add_private_data: false }
+Fontisan::ConversionOptions.from_preset(:legacy_web)
+# From: :otf, To: :woff
+# generating: { zlib_level: 9, optimize_tables: true,
+#              preserve_metadata: true }
 ----
 
 ==== Type 1 → WOFF/WOFF2
@@ -410,8 +421,8 @@ Workflow: Type 1 → OTF → WOFF2
 ----
 # Via OTF intermediate
 # opening: { decompose_composites: false, generate_unicode: true }
-# generating: { compression: "brotli" }  # WOFF2
-# OR compression: "zlib"    # WOFF
+# generating: { brotli_quality: 11 }    # WOFF2
+# OR generating: { zlib_level: 9 }      # WOFF
 ----
 
 === SVG Font Generation
@@ -481,7 +492,7 @@ Optimize fonts for web delivery:
 Fontisan::ConversionOptions.from_preset(:web_optimized)
 # From: :otf, To: :woff2
 # opening: {}
-# generating: { compression: "brotli", transform_tables: true,
+# generating: { brotli_quality: 11, transform_tables: true,
 #              optimize_tables: true, preserve_metadata: true }
 ----
 
@@ -490,6 +501,18 @@ Use cases:
 * Web font delivery
 * Reducing page load time
 * Bandwidth optimization
+
+=== legacy_web
+
+WOFF with maximum zlib compression for legacy browser reach (IE 9+):
+
+[source,ruby]
+----
+Fontisan::ConversionOptions.from_preset(:legacy_web)
+# From: :otf, To: :woff
+# generating: { zlib_level: 9, optimize_tables: true,
+#              preserve_metadata: true }
+----
 
 === archive_to_modern
 

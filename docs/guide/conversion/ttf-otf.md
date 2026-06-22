@@ -157,7 +157,7 @@ Result: Some precision loss unavoidable.
 # Convert all TTF files in a directory
 Dir.glob('fonts/*.ttf').each do |input|
   output = input.sub('.ttf', '.otf')
-  Fontisan.convert(input, output_format: :otf, output_path: output)
+  Fontisan.convert(input, to: :otf, output: output)
 end
 ```
 

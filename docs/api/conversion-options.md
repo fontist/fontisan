@@ -51,6 +51,7 @@ options = Fontisan::ConversionOptions.from_preset(:type1_to_modern)
 | `type1_to_modern` | Type 1 | OTF |
 | `modern_to_type1` | OTF | Type 1 |
 | `web_optimized` | OTF | WOFF2 |
+| `legacy_web` | OTF | WOFF |
 | `archive_to_modern` | TTC | OTF |
 
 ### new(**kwargs)
@@ -96,19 +97,28 @@ Opening options control source font processing.
 
 Generating options control output font writing.
 
-| Option | Type | Default |
-|--------|------|---------|
-| `write_pfm` | Boolean | false |
-| `write_afm` | Boolean | false |
-| `write_inf` | Boolean | false |
-| `select_encoding_automatically` | Boolean | false |
-| `hinting_mode` | String | 'preserve' |
-| `decompose_on_output` | Boolean | false |
-| `write_custom_tables` | Boolean | true |
-| `optimize_tables` | Boolean | false |
-| `compression` | String | nil |
-| `transform_tables` | Boolean | false |
-| `preserve_metadata` | Boolean | true |
+| Option | Type | Default | Applies to |
+|--------|------|---------|------------|
+| `write_pfm` | Boolean | false | Type 1 output |
+| `write_afm` | Boolean | false | Type 1 output |
+| `write_inf` | Boolean | false | Type 1 output |
+| `select_encoding_automatically` | Boolean | false | Type 1 output |
+| `hinting_mode` | String | 'preserve' | All outline conversions |
+| `decompose_on_output` | Boolean | false | All outline conversions |
+| `write_custom_tables` | Boolean | true | All |
+| `optimize_tables` | Boolean | false | All |
+| `zlib_level` | Integer (0–9) | 6 | WOFF only |
+| `uncompressed` | Boolean | false | WOFF only |
+| `compression_threshold` | Integer (bytes) | 100 | WOFF only |
+| `brotli_quality` | Integer (0–11) | 11 | WOFF2 only |
+| `transform_tables` | Boolean | false | WOFF2 only |
+| `metadata_xml` | String | nil | WOFF only |
+| `private_data` | String | nil | WOFF only |
+| `preserve_metadata` | Boolean | true | All |
+
+Compression knobs are declared by each strategy (`WoffWriter`, `Woff2Encoder`)
+via the `ConversionStrategy` DSL. `FormatConverter.validate_options_for_target!`
+rejects knobs that don't apply to the requested target format.
 
 ## Examples
 
@@ -131,11 +141,24 @@ Fontisan::FontWriter.write(font, 'output.woff2', options: options)
 
 ```ruby
 options = Fontisan::ConversionOptions.new(
+  from: :ttf,
+  to: :woff2,
   opening: { autohint: true },
   generating: {
     hinting_mode: 'auto',
     optimize_tables: true,
-    compression: 'brotli'
+    brotli_quality: 11,
+    transform_tables: true
   }
+)
+```
+
+### WOFF with Max zlib (Legacy Browser Reach)
+
+```ruby
+options = Fontisan::ConversionOptions.new(
+  from: :ttf,
+  to: :woff,
+  generating: { zlib_level: 9, preserve_metadata: true }
 )
 ```

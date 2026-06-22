@@ -86,7 +86,7 @@ puts tables.keys
 
 ```ruby
 # Simple conversion
-Fontisan.convert('input.ttf', output_format: :woff2)
+Fontisan.convert('input.ttf', to: :woff2, output: 'output.woff2')
 
 # With custom options
 options = Fontisan::ConversionOptions.new(
@@ -94,7 +94,7 @@ options = Fontisan::ConversionOptions.new(
   to: :otf,
   opening: { autohint: true, convert_curves: true }
 )
-Fontisan.convert('input.ttf', output_format: :otf, options: options)
+Fontisan.convert('input.ttf', to: :otf, output: 'output.otf', options: options)
 ```
 
 ### Validate Fonts

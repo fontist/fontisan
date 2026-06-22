@@ -28,13 +28,13 @@ puts font.num_glyphs
 
 ```ruby
 # Convert to TrueType
-Fontisan.convert('font.pfb', output_format: :ttf)
+Fontisan.convert('font.pfb', to: :ttf, output: 'font.ttf')
 
 # Convert to OpenType
-Fontisan.convert('font.pfb', output_format: :otf)
+Fontisan.convert('font.pfb', to: :otf, output: 'font.otf')
 
 # Convert to WOFF2
-Fontisan.convert('font.pfb', output_format: :woff2)
+Fontisan.convert('font.pfb', to: :woff2, output: 'font.woff2')
 ```
 
 ## Handling Encodings

@@ -40,12 +40,21 @@ Generating options control how the output font is written.
 | `optimize_tables` | Boolean | Enable table optimization | Reduce file size |
 | `reencode_first_256` | Boolean | Reencode first 256 glyphs | Type 1 output |
 | `encoding_vector` | String | Custom encoding vector | Type 1 output |
-| `compression` | String | Compression: zlib, brotli, none | Web font output |
-| `transform_tables` | Boolean | Transform tables for output | Format-specific |
+| `zlib_level` | Integer (0–9) | zlib compression level for WOFF | WOFF output (default 6) |
+| `uncompressed` | Boolean | Store WOFF tables uncompressed (legal per WOFF 1.0 §5.1) | Tooling pipelines |
+| `compression_threshold` | Integer | Skip compression for tables smaller than N bytes | Tiny-table edge cases |
+| `brotli_quality` | Integer (0–11) | Brotli quality for WOFF2 | WOFF2 output (default 11) |
+| `transform_tables` | Boolean | Apply WOFF2 glyf/loca + hmtx transformations | Smaller WOFF2 output |
+| `metadata_xml` | String | Optional WOFF metadata XML block | WOFF metadata block |
+| `private_data` | String | Optional WOFF private data block | WOFF private block |
 | `preserve_metadata` | Boolean | Preserve copyright/license metadata | Maintain metadata |
 | `strip_metadata` | Boolean | Remove metadata | Reduce file size |
 | `target_format` | String | Collection target format | Collection conversions |
 | `curve_tolerance` | Float | Curve approximation tolerance | OTF → TTF |
+
+Compression knobs come from each strategy's `ConversionStrategy` DSL
+declarations. Knobs that don't apply to the requested target format are
+rejected by `FormatConverter.validate_options_for_target!`.
 
 ## CLI Option Mapping
 
@@ -103,6 +112,16 @@ Generating options control how the output font is written.
 
 # Curves
 --curve-tolerance N   # Approximation tolerance (0.1-2.0)
+
+# WOFF only (zlib)
+--zlib-level=N              # 0–9, default 6
+--uncompressed              # Store tables uncompressed (legal per WOFF 1.0 §5.1)
+--compression-threshold=N   # Skip compression for tables < N bytes (default 100)
+
+# WOFF2 only (Brotli)
+--brotli-quality=N          # 0–11, default 11
+--transform-tables          # Apply glyf/loca + hmtx transformations
+--no-transform-tables       # Disable transformations (default)
 ```
 
 ### Preset Option
@@ -194,8 +213,18 @@ Fonts optimized for web delivery.
 Fontisan::ConversionOptions.from_preset(:web_optimized)
 # From: :otf, To: :woff2
 # opening: {}
-# generating: { compression: "brotli", transform_tables: true,
+# generating: { brotli_quality: 11, transform_tables: true,
 #              optimize_tables: true, preserve_metadata: true }
+```
+
+### legacy_web
+
+WOFF with maximum zlib compression for legacy browser reach (IE 9+).
+
+```ruby
+Fontisan::ConversionOptions.from_preset(:legacy_web)
+# From: :otf, To: :woff
+# generating: { zlib_level: 9, optimize_tables: true, preserve_metadata: true }
 ```
 
 ### archive_to_modern

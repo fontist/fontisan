@@ -203,6 +203,6 @@ fontisan convert font.pfb --to woff2 --output font.woff2 \
 ```ruby
 Dir.glob('legacy/*.pfb').each do |input|
   output = input.sub('.pfb', '.otf').sub('legacy/', 'modern/')
-  Fontisan.convert(input, output_format: :otf, output_path: output)
+  Fontisan.convert(input, to: :otf, output: output)
 end
 ```
