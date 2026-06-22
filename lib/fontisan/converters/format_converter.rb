@@ -17,18 +17,14 @@ module Fontisan
     # primary entry point for all format conversion operations. It:
     # - Selects appropriate conversion strategy based on source/target formats
     # - Validates conversions against the conversion matrix
+    # - Validates user-supplied options against the selected strategy's schema
     # - Delegates actual conversion to strategy implementations
     # - Provides clean error messages for unsupported conversions
     #
     # The converter uses a strategy pattern with pluggable strategies for
-    # different conversion types:
-    # - OutlineConverter: TTF ↔ OTF conversions
-    # - TableCopier: Same-format operations
-    # - Woff2Encoder: TTF/OTF → WOFF2 compression
-    # - SvgGenerator: TTF/OTF → SVG font generation
-    #
-    # Supported conversions are defined in the conversion matrix configuration
-    # file, making it easy to extend without modifying code.
+    # different conversion types. Each strategy declares its own options via
+    # the `ConversionStrategy.option` DSL; the converter enforces the
+    # format ↔ option mapping at runtime.
     #
     # @example Converting TTF to OTF
     #   converter = Fontisan::Converters::FormatConverter.new
@@ -41,6 +37,81 @@ module Fontisan
     #   tables = converter.convert(font, :ttf)  # TTF to TTF
     #   FontWriter.write_to_file(tables, 'copy.ttf')
     class FormatConverter
+      # Registry of all strategy classes. Single source of truth for option
+      # discovery and strategy lookup. Add a new format by appending its
+      # strategy class here.
+      STRATEGY_CLASSES = [
+        TableCopier,
+        OutlineConverter,
+        Type1Converter,
+        WoffWriter,
+        Woff2Encoder,
+        SvgGenerator,
+      ].freeze
+
+      class << self
+        # All option names declared by any strategy. Used by ConversionOptions
+        # to keep its generating-options list in sync without duplicating the
+        # schema.
+        #
+        # @return [Array<Symbol>]
+        def all_strategy_option_names
+          STRATEGY_CLASSES.flat_map { |k| k.supported_options.map(&:name) }.uniq
+        end
+
+        # Look up the strategy class that handles a given conversion.
+        #
+        # @param source_format [Symbol]
+        # @param target_format [Symbol]
+        # @return [Class, nil]
+        def strategy_class_for(source_format, target_format)
+          STRATEGY_CLASSES.find do |klass|
+            klass.new.supports?(source_format, target_format)
+          rescue NotImplementedError
+            false
+          end
+        end
+
+        # Strategies whose supported_conversions include the given target.
+        #
+        # @param target_format [Symbol]
+        # @return [Array[Class]]
+        def strategies_for_target(target_format)
+          STRATEGY_CLASSES.select do |klass|
+            klass.new.supported_conversions.any? { |(_, t)| t == target_format }
+          rescue NotImplementedError
+            false
+          end
+        end
+
+        # Cross-format option check, independent of source format. Used by
+        # OutputWriter (which doesn't know the source format at write time)
+        # to catch e.g. `--brotli-quality` passed with `--to woff`.
+        #
+        # @param target_format [Symbol]
+        # @param options [Hash]
+        # @return [void]
+        # @raise [ArgumentError] if a user-supplied option is declared only by
+        #   strategies that don't handle this target
+        def validate_options_for_target!(target_format, options)
+          handlers = strategies_for_target(target_format)
+          handler_names = handlers.flat_map do |k|
+            k.supported_options.map(&:name)
+          end.to_set
+          non_handler_names = (STRATEGY_CLASSES - handlers)
+            .flat_map { |k| k.supported_options.map(&:name) }
+
+          conflicts = options.keys.select do |k|
+            non_handler_names.include?(k.to_sym)
+          end
+          return if conflicts.empty?
+
+          accepted = handler_names.empty? ? "(none)" : handler_names.join(", ")
+          raise ArgumentError,
+                "Option(s) #{conflicts.map(&:inspect).join(', ')} do not apply " \
+                "to --to #{target_format}. Accepted for #{target_format}: #{accepted}"
+        end
+      end
       # @return [Hash] Conversion matrix loaded from config
       attr_reader :conversion_matrix
 
@@ -52,15 +123,7 @@ module Fontisan
       # @param conversion_matrix_path [String, nil] Path to conversion matrix
       #   config. If nil, uses default.
       def initialize(conversion_matrix_path: nil)
-        @strategies = [
-          TableCopier.new,
-          OutlineConverter.new,
-          Type1Converter.new,
-          WoffWriter.new,
-          Woff2Encoder.new,
-          SvgGenerator.new,
-        ]
-
+        @strategies = self.class::STRATEGY_CLASSES.map(&:new)
         load_conversion_matrix(conversion_matrix_path)
       end
 
@@ -105,8 +168,20 @@ module Fontisan
         end
 
         strategy = select_strategy(source_format, target_format)
-        tables = strategy.convert(font,
-                                  options.merge(target_format: target_format))
+
+        # Enforce format ↔ option mapping at the orchestrator level so each
+        # strategy only sees options it declared. Cross-format misuse
+        # (e.g., `--zlib-level` on a WOFF2 conversion) raises here with a
+        # clear message; the strategy itself never has to defensively
+        # ignore unknown keys.
+        validate_strategy_options!(strategy, source_format, target_format,
+                                   options)
+        sliced = slice_strategy_options(options, strategy)
+
+        tables = strategy.convert(
+          font,
+          sliced.merge(target_format: target_format),
+        )
 
         # Preserve variation data if requested and font is variable
         if options.fetch(:preserve_variation, true) && variable_font?(font)
@@ -419,6 +494,55 @@ _options)
           raise Fontisan::Error,
                 "Cannot detect font format: missing both CFF and glyf tables"
         end
+      end
+
+      # Cross-format option check. Any user-supplied key that belongs to
+      # another strategy (i.e., is valid for some other format) raises
+      # immediately — this is what makes `--zlib-level --to woff2` fail
+      # predictably.
+      #
+      # @param strategy [Object] Selected strategy instance
+      # @param source_format [Symbol]
+      # @param target_format [Symbol]
+      # @param options [Hash]
+      # @return [void]
+      # @raise [ArgumentError] if a user option is declared by another strategy
+      # @raise [ArgumentError] if a user option fails type/range validation
+      def validate_strategy_options!(strategy, source_format, target_format,
+                                     options)
+        this_class = strategy.class
+        other_classes = self.class::STRATEGY_CLASSES.reject do |k|
+          k == this_class
+        end
+        other_names = other_classes.flat_map do |k|
+          k.supported_options.map(&:name)
+        end
+
+        conflicts = options.keys.select do |k|
+          other_names.include?(k.to_sym)
+        end
+
+        if conflicts.any?
+          accepted = this_class.supported_options.map(&:name)
+          accepted_list = accepted.empty? ? "(none)" : accepted.join(", ")
+          raise ArgumentError,
+                "Option(s) #{conflicts.map(&:inspect).join(', ')} do not apply " \
+                "to #{source_format}→#{target_format} " \
+                "(#{this_class.name.demodulize}). " \
+                "Accepted: #{accepted_list}"
+        end
+
+        this_class.validate_options!(slice_strategy_options(options, strategy))
+      end
+
+      # Slice an options hash to only the keys declared by the given strategy.
+      #
+      # @param options [Hash]
+      # @param strategy [Object]
+      # @return [Hash]
+      def slice_strategy_options(options, strategy)
+        names = strategy.class.supported_options.to_set(&:name)
+        options.select { |k, _| names.include?(k.to_sym) }
       end
     end
   end

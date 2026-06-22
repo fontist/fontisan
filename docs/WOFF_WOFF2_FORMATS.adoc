@@ -74,6 +74,59 @@ $ fontisan convert INPUT.ttf --to woff --output output.woff
 $ fontisan convert INPUT.ttf --to woff2 --output output.woff2
 ----
 
+=== Choosing between WOFF and WOFF2
+
+WOFF and WOFF2 use different compression algorithms, fixed by their specs.
+The format you choose **is** the choice of algorithm — there is no separate
+`--compression` flag.
+
+[options="header"]
+|====
+| Format | Algorithm | Compatibility              | Typical size
+| WOFF  | zlib   | All browsers (legacy-safe)    | baseline
+| WOFF2 | Brotli | Modern browsers only          | ~30% smaller than WOFF
+|====
+
+If you need to support old browsers that lack Brotli decoders, use WOFF:
+
+[source,shell]
+----
+$ fontisan convert INPUT.ttf --to woff --output out.woff --zlib-level 9
+----
+
+For modern-only delivery, WOFF2 is preferred:
+
+[source,shell]
+----
+$ fontisan convert INPUT.ttf --to woff2 --output out.woff2
+----
+
+Note: WOFF2 mandates Brotli, WOFF mandates zlib. The container format is the
+algorithm selector — you cannot mix and match.
+
+==== Per-format compression knobs
+
+Each container exposes only the knobs that apply to it. Options declared for
+the wrong target format raise a clear `ArgumentError` at convert time.
+
+[options="header"]
+|====
+| Format | Knob                       | Range / values | Default
+| WOFF   | `--zlib-level`             | 0–9            | 6
+| WOFF   | `--uncompressed`           | (flag)         | off
+| WOFF   | `--compression-threshold`  | bytes          | 100
+| WOFF2  | `--brotli-quality`         | 0–11           | 11
+| WOFF2  | `--[no-]transform-tables`  | (flag)         | off
+|====
+
+The same knobs are available on the Ruby API via keyword arguments:
+
+[source,ruby]
+----
+Fontisan.convert("f.ttf", to: :woff,  output: "f.woff",  zlib_level: 9)
+Fontisan.convert("f.ttf", to: :woff2, output: "f.woff2", brotli_quality: 11)
+----
+
 .Conversion with optimization
 [example]
 ====

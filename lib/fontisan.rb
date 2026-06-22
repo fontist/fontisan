@@ -168,11 +168,13 @@ require_relative "fontisan/collection/writer"
 require_relative "fontisan/collection/builder"
 
 # Format conversion infrastructure
-require_relative "fontisan/conversion_options"
+# Strategies loaded first so ConversionOptions can introspect their declared
+# options via FormatConverter.all_strategy_option_names.
 require_relative "fontisan/converters/conversion_strategy"
 require_relative "fontisan/converters/table_copier"
 require_relative "fontisan/converters/outline_converter"
 require_relative "fontisan/converters/format_converter"
+require_relative "fontisan/conversion_options"
 
 # Variation infrastructure
 require_relative "fontisan/variation/interpolator"
@@ -277,6 +279,41 @@ module Fontisan
   #   puts info.to_json
   def self.info(path, brief: false, font_index: 0)
     Commands::InfoCommand.new(path, brief: brief, font_index: font_index).run
+  end
+
+  # Convert a font to a different format.
+  #
+  # Delegates to {Commands::ConvertCommand}. Format-specific compression knobs
+  # are declared by each strategy (single source of truth) and forwarded
+  # through the transformation pipeline.
+  #
+  # WOFF uses zlib and runs on every browser that supports web fonts (IE9+,
+  # all evergreen browsers). WOFF2 uses Brotli for ~30% smaller output but
+  # requires modern browsers — use WOFF when legacy support matters.
+  #
+  # @param path [String] Input font file
+  # @param to [Symbol, String] Target format: :ttf, :otf, :type1, :woff,
+  #   :woff2, :svg, :ttc, :otc, :dfont
+  # @param output [String] Output font file path
+  # @param opts [Hash] Conversion options. Format-specific knobs:
+  #   - WOFF:  :zlib_level (0–9, default 6), :uncompressed (bool),
+  #     :compression_threshold (bytes)
+  #   - WOFF2: :brotli_quality (0–11, default 11), :transform_tables (bool)
+  #   - Variable fonts: :coordinates, :instance_index, :preserve_variation
+  #   - Collections: :target_format ("preserve"|"ttf"|"otf")
+  # @return [Hash] Result hash with :success, :output_path, source/target
+  #   format, input/output sizes, and variation strategy.
+  #
+  # @example TTF → WOFF2 (modern browsers)
+  #   Fontisan.convert("f.ttf", to: :woff2, output: "f.woff2", brotli_quality: 11)
+  #
+  # @example TTF → WOFF (legacy browsers, max zlib)
+  #   Fontisan.convert("f.ttf", to: :woff, output: "f.woff", zlib_level: 9)
+  #
+  # @example WOFF with no compression (legal per WOFF 1.0 §5.1)
+  #   Fontisan.convert("f.ttf", to: :woff, output: "f.woff", uncompressed: true)
+  def self.convert(path, to:, output:, **)
+    Commands::ConvertCommand.new(path, { to: to, output: output, ** }).run
   end
 
   # Validate a font file using specified profile

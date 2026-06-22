@@ -85,12 +85,18 @@ module Fontisan
 
       format = detect(path)
       case format
-      when :ttf   then TrueTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-      when :otf   then OpenTypeFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-      when :woff  then WoffFont.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-      when :woff2 then Woff2Font.from_file(path, mode: resolved_mode, lazy: resolved_lazy)
-      when :ttc, :otc then load_from_collection(path, format, font_index, mode: resolved_mode)
-      when :dfont then load_dfont(path, font_index: font_index, mode: resolved_mode)
+      when :ttf   then TrueTypeFont.from_file(path, mode: resolved_mode,
+                                                    lazy: resolved_lazy)
+      when :otf   then OpenTypeFont.from_file(path, mode: resolved_mode,
+                                                    lazy: resolved_lazy)
+      when :woff  then WoffFont.from_file(path, mode: resolved_mode,
+                                                lazy: resolved_lazy)
+      when :woff2 then Woff2Font.from_file(path, mode: resolved_mode,
+                                                 lazy: resolved_lazy)
+      when :ttc, :otc then load_from_collection(path, format, font_index,
+                                                mode: resolved_mode)
+      when :dfont then load_dfont(path, font_index: font_index,
+                                        mode: resolved_mode)
       when :pfa, :pfb then Type1Font.from_file(path, mode: resolved_mode)
       else
         raise InvalidFontError,
@@ -279,7 +285,8 @@ module Fontisan
     # public `lazy:` flag is not threaded through this path.
     def self.load_dfont(path, font_index:, mode:)
       File.open(path, "rb") do |io|
-        sfnt_io = StringIO.new(Parsers::DfontParser.extract_sfnt(io, index: font_index))
+        sfnt_io = StringIO.new(Parsers::DfontParser.extract_sfnt(io,
+                                                                 index: font_index))
         klass = case Constants.sfnt_format_for(sfnt_io.read(4))
                 when :ttf then TrueTypeFont
                 when :otf then OpenTypeFont

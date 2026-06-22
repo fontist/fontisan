@@ -67,29 +67,33 @@ module Fontisan
       def initialize(font_path, options = {})
         super(font_path, options)
 
-        # Convert string keys to symbols for Thor compatibility
-        opts = options.transform_keys(&:to_sym)
+        # Convert string keys to symbols for Thor compatibility. All command
+        # code reads @options with symbol keys (e.g., @options[:quiet]);
+        # normalizing once at construction is cleaner than threading a
+        # second opts hash alongside @options.
+        @options = options.transform_keys(&:to_sym)
 
-        @output_path = opts[:output]
+        @output_path = @options[:output]
 
         # Parse target format
-        @target_format = parse_target_format(opts[:to])
+        @target_format = parse_target_format(@options[:to])
 
         # Extract ConversionOptions if provided
-        @conv_options = extract_conversion_options(opts)
+        @conv_options = extract_conversion_options(@options)
 
         # Parse coordinates if string provided
-        @coordinates = if opts[:coordinates]
-                         parse_coordinates(opts[:coordinates])
-                       elsif opts[:instance_coordinates]
-                         opts[:instance_coordinates]
+        @coordinates = if @options[:coordinates]
+                         parse_coordinates(@options[:coordinates])
+                       elsif @options[:instance_coordinates]
+                         @options[:instance_coordinates]
                        end
 
-        @instance_index = opts[:instance_index]
-        @preserve_variation = opts[:preserve_variation]
-        @preserve_hints = opts.fetch(:preserve_hints, false)
-        @collection_target_format = opts.fetch(:target_format, "preserve").to_s
-        @validate = !opts[:no_validate]
+        @instance_index = @options[:instance_index]
+        @preserve_variation = @options[:preserve_variation]
+        @preserve_hints = @options.fetch(:preserve_hints, false)
+        @collection_target_format = @options.fetch(:target_format,
+                                                   "preserve").to_s
+        @validate = !@options[:no_validate]
       end
 
       # Execute the conversion
@@ -151,6 +155,13 @@ module Fontisan
 
         # Add hint preservation option
         pipeline_options[:preserve_hints] = @preserve_hints if @preserve_hints
+
+        # Forward format-specific compression knobs declared by strategies
+        # (zlib_level, brotli_quality, etc.). Cross-format misuse is caught
+        # downstream by FormatConverter.validate_options_for_target!.
+        Converters::FormatConverter.all_strategy_option_names.each do |opt|
+          pipeline_options[opt] = @options[opt] if @options.key?(opt)
+        end
 
         # Use TransformationPipeline for universal conversion
         pipeline = Pipeline::TransformationPipeline.new(

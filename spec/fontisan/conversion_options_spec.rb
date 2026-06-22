@@ -112,7 +112,14 @@ RSpec.describe Fontisan::ConversionOptions do
       opts = described_class.from_preset(:web_optimized)
       expect(opts.from).to eq(:otf)
       expect(opts.to).to eq(:woff2)
-      expect(opts.generating[:compression]).to eq("brotli")
+      expect(opts.generating[:brotli_quality]).to eq(11)
+    end
+
+    it "loads legacy_web preset" do
+      opts = described_class.from_preset(:legacy_web)
+      expect(opts.from).to eq(:otf)
+      expect(opts.to).to eq(:woff)
+      expect(opts.generating[:zlib_level]).to eq(9)
     end
 
     it "raises error for unknown preset" do
@@ -212,14 +219,29 @@ RSpec.describe Fontisan::ConversionOptions do
       end.to raise_error(ArgumentError, /Invalid hinting_mode/)
     end
 
-    it "raises error for invalid compression mode" do
+    it "rejects the removed :compression field as unknown" do
       expect do
         described_class.new(
           from: :ttf,
           to: :woff2,
-          generating: { compression: "invalid" },
+          generating: { compression: "brotli" },
         )
-      end.to raise_error(ArgumentError, /Invalid compression/)
+      end.to raise_error(ArgumentError, /Unknown generating option/)
+    end
+
+    it "accepts strategy-declared compression knobs (zlib_level, brotli_quality)" do
+      expect do
+        described_class.new(
+          from: :ttf,
+          to: :woff,
+          generating: { zlib_level: 9 },
+        )
+        described_class.new(
+          from: :ttf,
+          to: :woff2,
+          generating: { brotli_quality: 11 },
+        )
+      end.not_to raise_error
     end
 
     it "accepts valid hinting modes" do
@@ -230,17 +252,6 @@ RSpec.describe Fontisan::ConversionOptions do
           generating: { hinting_mode: mode },
         )
         expect(opts.generating[:hinting_mode]).to eq(mode)
-      end
-    end
-
-    it "accepts valid compression modes" do
-      %w[zlib brotli none].each do |comp|
-        opts = described_class.new(
-          from: :ttf,
-          to: :woff2,
-          generating: { compression: comp },
-        )
-        expect(opts.generating[:compression]).to eq(comp)
       end
     end
   end

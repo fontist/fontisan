@@ -203,7 +203,9 @@ module Fontisan
 
     desc "convert FONT_FILE", "Convert font to different format"
     option :to, type: :string, required: true,
-                desc: "Target format (ttf, otf, type1, t1, woff, woff2)",
+                desc: "Target format: ttf, otf, type1, t1, ttc, otc, dfont, svg, " \
+                      "woff (zlib — works on all browsers incl. legacy), " \
+                      "woff2 (Brotli — ~30% smaller, modern browsers only)",
                 aliases: "-t"
     option :output, type: :string,
                     desc: "Output file path (required unless --show-options)",
@@ -255,6 +257,19 @@ module Fontisan
                              desc: "Enable table optimization"
     option :decompose_on_output, type: :boolean,
                                  desc: "Decompose on output (generating option)"
+    # Compression knobs — declared by each strategy (single source of truth:
+    # Converters::* strategies). Cross-format misuse is caught at convert time
+    # by FormatConverter.validate_options_for_target! with a clear ArgumentError.
+    option :zlib_level, type: :numeric,
+                        desc: "WOFF only: zlib compression level (0–9, default 6)"
+    option :uncompressed, type: :boolean,
+                          desc: "WOFF only: store tables uncompressed (legal per WOFF 1.0 §5.1)"
+    option :compression_threshold, type: :numeric,
+                                   desc: "WOFF only: skip compression for tables smaller than N bytes (default 100)"
+    option :brotli_quality, type: :numeric,
+                            desc: "WOFF2 only: Brotli quality (0–11, default 11)"
+    option :transform_tables, type: :boolean,
+                              desc: "WOFF2 only: apply glyf/loca and hmtx transformations"
     # Convert a font to a different format using the universal transformation pipeline.
     #
     # Supported conversions:
@@ -263,6 +278,14 @@ module Fontisan
     # - WOFF/WOFF2: Web font packaging
     # - Variable fonts: Automatic variation preservation or instance generation
     # - Collections (TTC/OTC/dfont): Preserve mixed TTF+OTF by default, or standardize with --target-format
+    #
+    # Web fonts — WOFF vs WOFF2:
+    # WOFF uses zlib compression and works on every browser that supports
+    # web fonts at all (IE9+, all evergreen browsers). WOFF2 uses Brotli and
+    # is ~30% smaller but requires modern browsers (Chrome 36+, Firefox 39+,
+    # Safari 12+, Edge 14+). Old browsers cannot decode Brotli, so for legacy
+    # support serve WOFF. Tune knobs with --zlib-level / --brotli-quality /
+    # --uncompressed (WOFF only) / --transform-tables (WOFF2 only).
     #
     # Collection Format Support:
     # TTC, OTC, and dfont all support mixed TrueType and OpenType fonts. By default, original font formats

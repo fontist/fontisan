@@ -432,6 +432,81 @@ RSpec.describe Fontisan::Cli do
     end
   end
 
+  describe "#convert" do
+    let(:ttf_path) do
+      fixture_path("fonts/NotoSans/NotoSans-Regular.ttf")
+    end
+
+    it "exposes the new compression flags in --help" do
+      help_output = capture_output do
+        described_class.start(["help", "convert"])
+      end
+      expect(help_output).to include("--zlib-level")
+      expect(help_output).to include("--brotli-quality")
+      expect(help_output).to include("--uncompressed")
+      expect(help_output).to include("--transform-tables")
+      expect(help_output).to include("--compression-threshold")
+    end
+
+    it "names the algorithm in the --to description" do
+      help_output = capture_output do
+        described_class.start(["help", "convert"])
+      end
+      expect(help_output).to match(/woff.*zlib/i)
+      expect(help_output).to match(/woff2.*brotli/i)
+    end
+
+    it "converts TTF to WOFF with --zlib-level" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff")
+        expect do
+          capture_output do
+            described_class.start(["convert", ttf_path,
+                                   "--to", "woff",
+                                   "--output", out,
+                                   "--zlib-level", "9"])
+          end
+        end.not_to raise_error
+        expect(File.exist?(out)).to be true
+        signature = File.binread(out, 4).unpack1("N")
+        expect(signature).to eq(0x774F4646) # 'wOFF'
+      end
+    end
+
+    it "converts TTF to WOFF2 with --brotli-quality" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff2")
+        expect do
+          capture_output do
+            described_class.start(["convert", ttf_path,
+                                   "--to", "woff2",
+                                   "--output", out,
+                                   "--brotli-quality", "5"])
+          end
+        end.not_to raise_error
+        expect(File.exist?(out)).to be true
+        signature = File.binread(out, 4).unpack1("N")
+        expect(signature).to eq(0x774F4632) # 'wOF2'
+      end
+    end
+
+    it "rejects --brotli-quality on --to woff (cross-format misuse)" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff")
+        # CLI catches Fontisan::Error (pipeline wraps the ArgumentError) and
+        # exits 1 via handle_error.
+        expect do
+          capture_output do
+            described_class.start(["convert", ttf_path,
+                                   "--to", "woff",
+                                   "--output", out,
+                                   "--brotli-quality", "5"])
+          end
+        end.to raise_error(SystemExit)
+      end
+    end
+  end
+
   private
 
   def capture_output
