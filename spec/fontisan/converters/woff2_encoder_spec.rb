@@ -284,4 +284,44 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
       expect(encoder.config["brotli"]).to be_a(Hash)
     end
   end
+
+  describe "options DSL — convert with real font" do
+    let(:ttf_path) do
+      File.join(__dir__, "../../fixtures/fonts/NotoSans/NotoSans-Regular.ttf")
+    end
+    let(:font) { Fontisan::FontLoader.load(ttf_path) }
+
+    it "accepts brotli_quality: 11 and produces valid WOFF2" do
+      result = encoder.convert(font, brotli_quality: 11)
+      binary = result[:woff2_binary]
+
+      signature = binary[0, 4].unpack1("N")
+      expect(signature).to eq(0x774F4632) # 'wOF2'
+    end
+
+    it "produces larger output at brotli_quality 0 than at quality 11" do
+      result_max = encoder.convert(font, brotli_quality: 11)
+      result_min = encoder.convert(font, brotli_quality: 0)
+
+      # Lower quality = less compression = larger output
+      expect(result_min[:woff2_binary].bytesize).to be > result_max[:woff2_binary].bytesize
+    end
+
+    it "rejects out-of-range brotli_quality" do
+      expect do
+        encoder.convert(font, brotli_quality: 99)
+      end.to raise_error(ArgumentError, /brotli_quality/)
+    end
+
+    it "honors legacy :quality alias as brotli_quality" do
+      result = encoder.convert(font, quality: 5)
+      expect(result[:woff2_binary].bytesize).to be > 0
+    end
+
+    it "transform_tables: false produces a valid WOFF2" do
+      result = encoder.convert(font, transform_tables: false)
+      signature = result[:woff2_binary][0, 4].unpack1("N")
+      expect(signature).to eq(0x774F4632)
+    end
+  end
 end

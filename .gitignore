@@ -22,6 +22,9 @@ Gemfile.lock
 *.tmp
 *.log
 
+# Transient task / TODO scratch files (per-feature working notes)
+TODO.*
+
 # Downloaded test fixtures (use rake fixtures:download)
 /spec/fixtures/fonts/DinaRemasterII/
 /spec/fixtures/fonts/EmojiOneColor/

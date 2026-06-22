@@ -9,9 +9,15 @@ RSpec.describe Fontisan::FontLoader, ".detect_format" do
   let(:otf_fixture)   { File.join(FIXTURES_DIR, "fonttools", "TestOTF.otf") }
   let(:ttc_fixture)   { File.join(FIXTURES_DIR, "fonttools", "TestTTC.ttc") }
   let(:woff_fixture)  { File.join(FIXTURES_DIR, "fonttools", "TestWOFF.woff") }
-  let(:woff2_fixture) { File.join(FIXTURES_DIR, "fonttools", "TestWOFF2.woff2") }
-  let(:dfont_fixture) { File.join(FIXTURES_DIR, "fonttools", "TestDFONT.dfont") }
-  let(:pfb_fixture)   { File.join(FIXTURES_DIR, "fonts", "type1", "quicksand.pfb") }
+  let(:woff2_fixture) do
+    File.join(FIXTURES_DIR, "fonttools", "TestWOFF2.woff2")
+  end
+  let(:dfont_fixture) do
+    File.join(FIXTURES_DIR, "fonttools", "TestDFONT.dfont")
+  end
+  let(:pfb_fixture) do
+    File.join(FIXTURES_DIR, "fonts", "type1", "quicksand.pfb")
+  end
   let(:otc_fixture) do
     File.join(FIXTURES_DIR, "fonts", "NotoSerifCJK-VF", "Variable", "OTC",
               "NotoSerifCJK-VF.otf.ttc")
@@ -152,7 +158,9 @@ RSpec.describe Fontisan::FontLoader, ".detect_format" do
 
   it "raises a system error when given a directory path" do
     Dir.mktmpdir do |dir|
-      expect { described_class.detect_format(dir) }.to raise_error(SystemCallError)
+      expect do
+        described_class.detect_format(dir)
+      end.to raise_error(SystemCallError)
     end
   end
 

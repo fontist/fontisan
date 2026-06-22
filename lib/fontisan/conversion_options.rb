@@ -35,8 +35,12 @@ module Fontisan
       preserve_encoding
     ].freeze
 
-    # Generating options (output processing)
-    GENERATING_OPTIONS = %i[
+    # Generating options (output processing) declared statically by
+    # ConversionOptions itself. Format-specific compression knobs (zlib_level,
+    # brotli_quality, transform_tables, etc.) are declared by each strategy
+    # via the ConversionStrategy DSL and discovered via
+    # FormatConverter.all_strategy_option_names — see `.generating_options`.
+    STATIC_GENERATING_OPTIONS = %i[
       write_pfm
       write_afm
       write_inf
@@ -47,18 +51,27 @@ module Fontisan
       optimize_tables
       reencode_first_256
       encoding_vector
-      compression
-      transform_tables
       preserve_metadata
       strip_metadata
       target_format
     ].freeze
 
+    # Full list of recognized generating options, computed lazily because
+    # converters `require_relative` this file, creating a load cycle that
+    # prevents resolving `FormatConverter` at class-definition time. The first
+    # call resolves all strategies (which are loaded before any conversion
+    # actually runs) and caches the result.
+    #
+    # @return [Array<Symbol>]
+    def self.generating_options
+      @generating_options ||= (
+        STATIC_GENERATING_OPTIONS +
+        Converters::FormatConverter.all_strategy_option_names
+      ).uniq.freeze
+    end
+
     # Valid hinting modes
     HINTING_MODES = %w[preserve auto none full].freeze
-
-    # Valid compression modes
-    COMPRESSION_MODES = %w[zlib brotli none].freeze
 
     attr_reader :from, :to, :opening, :generating
 
@@ -199,9 +212,9 @@ module Fontisan
     # Validate generating options
     def validate_generating_options!
       @generating.each_key do |key|
-        unless GENERATING_OPTIONS.include?(key)
+        unless self.class.generating_options.include?(key)
           raise ArgumentError, "Unknown generating option: #{key}. " \
-                              "Available: #{GENERATING_OPTIONS.join(', ')}"
+                              "Available: #{self.class.generating_options.join(', ')}"
         end
       end
 
@@ -211,15 +224,6 @@ module Fontisan
         unless HINTING_MODES.include?(mode)
           raise ArgumentError, "Invalid hinting_mode: #{mode}. " \
                               "Available: #{HINTING_MODES.join(', ')}"
-        end
-      end
-
-      # Validate compression mode
-      if @generating[:compression]
-        comp = @generating[:compression].to_s
-        unless COMPRESSION_MODES.include?(comp)
-          raise ArgumentError, "Invalid compression: #{comp}. " \
-                              "Available: #{COMPRESSION_MODES.join(', ')}"
         end
       end
 
@@ -364,8 +368,15 @@ module Fontisan
         from: :otf,
         to: :woff2,
         opening: {},
-        generating: { compression: "brotli", transform_tables: true,
+        generating: { brotli_quality: 11, transform_tables: true,
                       optimize_tables: true, preserve_metadata: true },
+      },
+      legacy_web: {
+        from: :otf,
+        to: :woff,
+        opening: {},
+        generating: { zlib_level: 9, optimize_tables: true,
+                      preserve_metadata: true },
       },
       archive_to_modern: {
         from: :ttc,

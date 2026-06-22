@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../font_writer"
+require_relative "../converters/format_converter"
 
 module Fontisan
   module Pipeline
@@ -33,8 +34,9 @@ module Fontisan
       # Initialize output writer
       #
       # @param output_path [String] Path to write output
-      # @param format [Symbol] Target format (:ttf, :otf, :woff, :woff2)
-      # @param options [Hash] Writing options
+      # @param format [Symbol] Target format (:ttf, :otf, :woff, :woff2, :svg)
+      # @param options [Hash] Writing options. Format-specific compression
+      #   knobs (zlib_level, brotli_quality, etc.) pass through to the strategy.
       def initialize(output_path, format, options = {})
         @output_path = output_path
         @format = format
@@ -45,8 +47,15 @@ module Fontisan
       #
       # @param tables [Hash<String, String>, Hash] Font tables (tag => binary data) or special format result
       # @return [Integer] Number of bytes written
-      # @raise [ArgumentError] If format is unsupported
+      # @raise [ArgumentError] If format is unsupported or options don't apply
       def write(tables)
+        # Catch cross-format misuse before delegating, so the error message
+        # is consistent regardless of whether the format goes through
+        # FormatConverter (outline conversions) or this writer (packaging
+        # changes for WOFF/WOFF2).
+        Converters::FormatConverter.validate_options_for_target!(@format,
+                                                                 @options)
+
         case @format
         when :ttf, :otf
           write_sfnt(tables)

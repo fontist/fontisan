@@ -67,18 +67,82 @@ RSpec.describe Fontisan::Converters::WoffWriter do
     end
 
     context "with compression options" do
-      it "respects compression level" do
+      it "respects zlib_level per call" do
         ttf_path = File.join(fixture_path, "NotoSans/NotoSans-Regular.ttf")
         font = Fontisan::FontLoader.load(ttf_path)
 
-        writer_level_9 = described_class.new(compression_level: 9)
-        writer_level_1 = described_class.new(compression_level: 1)
-
-        result_max = writer_level_9.convert(font)
-        result_min = writer_level_1.convert(font)
+        result_max = writer.convert(font, zlib_level: 9)
+        result_min = writer.convert(font, zlib_level: 1)
 
         # Higher compression should produce smaller file
         expect(result_max.bytesize).to be < result_min.bytesize
+      end
+    end
+  end
+
+  describe "#convert with new options DSL" do
+    let(:ttf_path) { File.join(fixture_path, "NotoSans/NotoSans-Regular.ttf") }
+    let(:font) { Fontisan::FontLoader.load(ttf_path) }
+
+    it "accepts zlib_level: 9 and produces a valid WOFF" do
+      result = writer.convert(font, zlib_level: 9)
+
+      expect(result).to be_a(String)
+      signature = result[0..3].unpack1("N")
+      expect(signature).to eq(0x774F4646) # 'wOFF'
+    end
+
+    it "rejects out-of-range zlib_level (ArgumentError before writing)" do
+      expect do
+        writer.convert(font, zlib_level: 99)
+      end.to raise_error(ArgumentError, /zlib_level/)
+    end
+
+    context "with uncompressed: true" do
+      it "produces WOFF where every table entry has compLength == origLength" do
+        woff_data = writer.convert(font, uncompressed: true)
+
+        # Parse the table directory (starts at offset 44, 20 bytes per entry)
+        num_tables = woff_data[12..13].unpack1("n")
+        directory_offset = 44
+        entries = (0...num_tables).map do |i|
+          offset = directory_offset + (i * 20)
+          {
+            tag: woff_data[offset, 4],
+            offset_val: woff_data[offset + 4, 4].unpack1("N"),
+            comp_length: woff_data[offset + 8, 4].unpack1("N"),
+            orig_length: woff_data[offset + 12, 4].unpack1("N"),
+          }
+        end
+
+        entries.each do |e|
+          expect(e[:comp_length]).to eq(e[:orig_length]),
+                                     "table #{e[:tag]} should have compLength == origLength"
+        end
+      end
+    end
+
+    context "with compression_threshold higher than any table" do
+      it "keeps every table entry's compLength == origLength" do
+        # Threshold is inclusive lower bound: tables with size >= threshold
+        # are compressed. A threshold larger than any table means nothing
+        # gets compressed.
+        woff_data = writer.convert(font, compression_threshold: 10_000_000)
+
+        num_tables = woff_data[12..13].unpack1("n")
+        directory_offset = 44
+        entries = (0...num_tables).map do |i|
+          offset = directory_offset + (i * 20)
+          {
+            tag: woff_data[offset, 4],
+            comp_length: woff_data[offset + 8, 4].unpack1("N"),
+            orig_length: woff_data[offset + 12, 4].unpack1("N"),
+          }
+        end
+
+        entries.each do |e|
+          expect(e[:comp_length]).to eq(e[:orig_length])
+        end
       end
     end
   end

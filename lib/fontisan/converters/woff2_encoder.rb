@@ -50,31 +50,45 @@ module Fontisan
       # @return [Hash] Configuration settings
       attr_reader :config
 
-      # Initialize encoder with configuration
+      # Initialize encoder with configuration.
+      #
+      # The encoder is stateless per call; all conversion knobs come through
+      # the per-convert options hash. The config file supplies default values
+      # only for fields not expressed via the DSL.
       #
       # @param config_path [String, nil] Path to config file
       def initialize(config_path: nil)
         @config = load_configuration(config_path)
       end
 
-      # Convert font to WOFF2 format
+      option :brotli_quality, type: :integer, range: 0..11, default: 11,
+                              cli: "--brotli-quality=N",
+                              desc: "Brotli quality (0=fastest, 11=smallest)"
+      option :transform_tables, type: :boolean, default: false,
+                                cli: "--[no-]transform-tables",
+                                desc: "apply glyf/loca and hmtx transformations"
+
+      # Convert font to WOFF2 format.
       #
-      # Returns a hash with :woff2_binary key containing complete WOFF2 file.
-      # This is different from other converters that return table data.
+      # Returns a hash with `:woff2_binary` containing the complete WOFF2 file.
       #
       # @param font [TrueTypeFont, OpenTypeFont] Source font
-      # @param options [Hash] Conversion options
-      # @option options [Integer] :quality Brotli quality (0-11)
-      # @option options [Boolean] :transform_tables Apply table transformations
-      # @option options [Boolean] :validate Run validation after encoding
-      # @option options [Symbol] :validation_level Validation level (:strict, :standard, :lenient)
-      # @return [Hash] Hash with :woff2_binary and optional :validation_report keys
-      # @raise [Error] If encoding fails
+      # @param options [Hash{Symbol => Object}] Per-call options:
+      #   - `:brotli_quality` (0–11, default from config or 11)
+      #   - `:transform_tables` (bool, default false)
+      #   - `:quality` — legacy alias for `:brotli_quality` (backward compat)
+      # @return [Hash{Symbol => String}] `{ woff2_binary: <bytes> }`
+      # @raise [ArgumentError] if any option fails validation
+      # @raise [Fontisan::Error] if encoding fails
       def convert(font, options = {})
         validate(font, :woff2)
 
-        # Get Brotli quality from options or config
-        quality = options[:quality] || config["brotli"]["quality"]
+        resolved = normalize_legacy_quality(options)
+        self.class.validate_options!(strategy_options(resolved))
+
+        quality = resolved.fetch(:brotli_quality) do
+          config["brotli"]["quality"]
+        end
 
         # Detect font flavor
         flavor = detect_flavor(font)
@@ -84,7 +98,7 @@ module Fontisan
 
         # Transform tables (if enabled)
         transformer = Woff2::TableTransformer.new(font)
-        transform_enabled = options.fetch(:transform_tables, false)
+        transform_enabled = resolved.fetch(:transform_tables, false)
 
         # Build table directory entries
         entries = build_table_entries(table_data, transformer,
@@ -200,6 +214,27 @@ module Fontisan
 
       # Extend Woff2Font with in-memory loading
       Woff2Font.singleton_class.prepend(Woff2FontMemoryLoader)
+
+      # Normalize legacy `:quality` option to `:brotli_quality`.
+      # Internal callers and older specs use `:quality`; the public DSL uses
+      # `:brotli_quality`. Returns a new hash; does not mutate the input.
+      #
+      # @param options [Hash]
+      # @return [Hash]
+      def normalize_legacy_quality(options)
+        return options unless options.key?(:quality) && !options.key?(:brotli_quality)
+
+        options.merge(brotli_quality: options[:quality])
+      end
+
+      # Slice options to those declared by this strategy.
+      #
+      # @param options [Hash]
+      # @return [Hash]
+      def strategy_options(options)
+        names = self.class.supported_options.to_set(&:name)
+        options.select { |k, _| names.include?(k.to_sym) }
+      end
 
       # Load configuration from YAML file
       #

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "tmpdir"
 
 RSpec.describe Fontisan do
   describe ".info with brief mode" do
@@ -55,6 +56,50 @@ RSpec.describe Fontisan do
 
       expect(yaml).to include("family_name:")
       expect(yaml).to include("font_format:")
+    end
+  end
+
+  describe ".convert" do
+    let(:ttf_path) do
+      fixture_path("fonts/NotoSans/NotoSans-Regular.ttf")
+    end
+
+    it "converts TTF to WOFF with zlib_level" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff")
+        result = described_class.convert(ttf_path, to: :woff, output: out,
+                                                   zlib_level: 9)
+
+        expect(result[:success]).to be true
+        expect(File.exist?(out)).to be true
+        signature = File.binread(out, 4).unpack1("N")
+        expect(signature).to eq(0x774F4646) # 'wOFF'
+      end
+    end
+
+    it "converts TTF to WOFF2 with brotli_quality" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff2")
+        result = described_class.convert(ttf_path, to: :woff2, output: out,
+                                                   brotli_quality: 11)
+
+        expect(result[:success]).to be true
+        expect(File.exist?(out)).to be true
+        signature = File.binread(out, 4).unpack1("N")
+        expect(signature).to eq(0x774F4632) # 'wOF2'
+      end
+    end
+
+    it "rejects cross-format options (brotli_quality on WOFF target)" do
+      Dir.mktmpdir do |dir|
+        out = File.join(dir, "out.woff")
+        # Pipeline wraps the ArgumentError raised by
+        # FormatConverter.validate_options_for_target! as Fontisan::Error.
+        expect do
+          described_class.convert(ttf_path, to: :woff, output: out,
+                                            brotli_quality: 5)
+        end.to raise_error(Fontisan::Error, /do not apply.*woff/)
+      end
     end
   end
 end
