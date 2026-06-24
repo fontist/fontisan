@@ -16,6 +16,7 @@ module Fontisan
         Extractors::Identity,
         Extractors::Style,
         Extractors::Licensing,
+        Extractors::Metrics,
         Extractors::Coverage,
         Extractors::Aggregations,
       ].freeze
