@@ -47,7 +47,7 @@ module Fontisan
   # first reference.
 
   # Core
-  autoload :Version, "fontisan/version"
+  require "fontisan/version"
   autoload :Constants, "fontisan/constants"
   autoload :LoadingModes, "fontisan/loading_modes"
   autoload :ConversionOptions, "fontisan/conversion_options"
