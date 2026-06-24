@@ -35,14 +35,12 @@ module Fontisan
         attribute :version, :string
         attribute :font_revision, :float
 
-        # Style (OS/2 + head + fvar)
+        # Style (OS/2 + head)
         attribute :weight_class, :integer
         attribute :width_class, :integer
         attribute :italic, Lutaml::Model::Type::Boolean
         attribute :bold, Lutaml::Model::Type::Boolean
         attribute :panose, :string
-        attribute :is_variable, Lutaml::Model::Type::Boolean
-        attribute :axes, AuditAxis, collection: true
 
         # Coverage
         attribute :total_codepoints, :integer
@@ -69,6 +67,10 @@ module Fontisan
         # Color-font capability summary from COLR/CPAL/SVG/CBDT/CBLC/sbix
         # (nil for Type 1)
         attribute :color_capabilities, ColorCapabilities
+
+        # Variable-font detail from fvar + variation side-tables
+        # (nil for non-variable faces and Type 1)
+        attribute :variation, VariationDetail
 
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
@@ -99,8 +101,6 @@ module Fontisan
           map "italic",       to: :italic
           map "bold",         to: :bold
           map "panose",       to: :panose
-          map "is_variable",  to: :is_variable
-          map "axes",         to: :axes
 
           # Coverage
           map "total_codepoints", to: :total_codepoints
@@ -126,6 +126,9 @@ module Fontisan
 
           # Color capabilities
           map "color_capabilities", to: :color_capabilities
+
+          # Variation detail
+          map "variation", to: :variation
 
           # Warning
           map "warning", to: :warning

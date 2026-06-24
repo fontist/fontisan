@@ -19,6 +19,7 @@ module Fontisan
         Extractors::Metrics,
         Extractors::Hinting,
         Extractors::ColorCapabilities,
+        Extractors::VariationDetail,
         Extractors::Coverage,
         Extractors::Aggregations,
       ].freeze

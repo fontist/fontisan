@@ -17,6 +17,8 @@ module Fontisan
       autoload :Hinting, "fontisan/models/audit/hinting"
       autoload :Licensing, "fontisan/models/audit/licensing"
       autoload :Metrics, "fontisan/models/audit/metrics"
+      autoload :NamedInstance, "fontisan/models/audit/named_instance"
+      autoload :VariationDetail, "fontisan/models/audit/variation_detail"
     end
   end
 end

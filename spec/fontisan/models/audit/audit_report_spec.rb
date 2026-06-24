@@ -24,8 +24,7 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
       italic: false,
       bold: false,
       panose: "2 0 5 3 0 0 0 0 0 0",
-      is_variable: false,
-      axes: [],
+      variation: nil,
       total_codepoints: 128,
       total_glyphs: 256,
       cmap_subtables: [4, 12],
@@ -43,7 +42,7 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
     it "exposes all set fields" do
       expect(report.family_name).to eq("NotoSans")
       expect(report.weight_class).to eq(400)
-      expect(report.is_variable).to be false
+      expect(report.variation).to be_nil
       expect(report.total_glyphs).to eq(256)
       expect(report.cmap_subtables).to eq([4, 12])
       expect(report.unicode_scripts).to eq(["Latin"])
@@ -66,7 +65,7 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
       expect(restored.weight_class).to eq(400)
       expect(restored.source_sha256).to eq("abc123")
       expect(restored.cmap_subtables).to eq([4, 12])
-      expect(restored.is_variable).to be false
+      expect(restored.variation).to be_nil
     end
   end
 
@@ -103,8 +102,8 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
     end
   end
 
-  describe "nested AuditAxis collection" do
-    it "serializes axes as nested models" do
+  describe "nested VariationDetail" do
+    it "serializes variation as a nested model" do
       axis = Fontisan::Models::Audit::AuditAxis.new(
         tag: "wght",
         min_value: 100.0,
@@ -112,13 +111,28 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
         max_value: 900.0,
         name: "Weight",
       )
-      report.axes = [axis]
+      instance = Fontisan::Models::Audit::NamedInstance.new(
+        subfamily_name: "Bold",
+        postscript_name: "Foo-Bold",
+        coordinates: "wght=700",
+      )
+      report.variation = Fontisan::Models::Audit::VariationDetail.new(
+        axes: [axis],
+        named_instances: [instance],
+        has_avar: true,
+        has_cvar: false,
+        has_hvar: true,
+        has_vvar: false,
+        has_mvar: false,
+        has_gvar: false,
+      )
 
       yaml = report.to_yaml
       restored = described_class.from_yaml(yaml)
-      expect(restored.axes.first).to be_a(Fontisan::Models::Audit::AuditAxis)
-      expect(restored.axes.first.tag).to eq("wght")
-      expect(restored.axes.first.default_value).to eq(400.0)
+      expect(restored.variation).to be_a(Fontisan::Models::Audit::VariationDetail)
+      expect(restored.variation.axes.first.tag).to eq("wght")
+      expect(restored.variation.named_instances.first.subfamily_name).to eq("Bold")
+      expect(restored.variation.has_avar).to be true
     end
   end
 end

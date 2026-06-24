@@ -2,12 +2,16 @@
 
 module Fontisan
   module Audit
-    # Extracts style descriptors from a loaded font's OS/2, head, and fvar
-    # tables. One extractor per font; cheap to construct.
+    # Extracts style descriptors from a loaded font's OS/2 and head tables.
+    # One extractor per font; cheap to construct.
     #
     # All fields return nil when the underlying table is absent or the
     # value is unset (e.g., Type 1 fonts have no OS/2). Callers must
     # tolerate nils.
+    #
+    # Scope: OS/2 + head only. fvar-derived fields (axes, named instances,
+    # variable presence) live on {Extractors::VariationDetail} — this is
+    # the MECE split between static style metadata and variation metadata.
     #
     # Duck typing: uses only `font.has_table?(tag)` and `font.table(tag)`.
     # No class-specific branching — any object that honors the SFNT
@@ -58,28 +62,6 @@ module Fontisan
         bytes.join(" ")
       end
 
-      def variable?
-        @font.has_table?("fvar")
-      end
-
-      # @return [Array<Models::Audit::AuditAxis>]
-      def axes
-        return [] unless variable?
-
-        fvar = @font.table("fvar")
-        return [] unless fvar&.axes
-
-        fvar.axes.map do |axis|
-          Models::Audit::AuditAxis.new(
-            tag: axis.axis_tag,
-            min_value: axis.min_value,
-            default_value: axis.default_value,
-            max_value: axis.max_value,
-            name: lookup_axis_name(axis.axis_name_id),
-          )
-        end
-      end
-
       private
 
       def os2
@@ -92,13 +74,6 @@ module Fontisan
         return @head if defined?(@head)
 
         @head = @font.has_table?("head") ? @font.table("head") : nil
-      end
-
-      def lookup_axis_name(name_id)
-        return nil unless name_id && @font.has_table?("name")
-
-        name = @font.table("name")
-        name.english_name(name_id)
       end
     end
   end
