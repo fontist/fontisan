@@ -39,216 +39,94 @@ Lutaml::Model::Config.configure do |config|
   config.xml_adapter_type = :nokogiri
 end
 
-# Core
-require_relative "fontisan/version"
-require_relative "fontisan/error"
-require_relative "fontisan/constants"
-
-# Binary structures and parsers
-require_relative "fontisan/parsers/tag"
-require_relative "fontisan/binary/base_record"
-
-# Table parsers
-require_relative "fontisan/tables/head"
-require_relative "fontisan/tables/hhea"
-require_relative "fontisan/tables/hmtx"
-require_relative "fontisan/tables/maxp"
-require_relative "fontisan/tables/loca"
-require_relative "fontisan/tables/glyf"
-require_relative "fontisan/tables/name"
-require_relative "fontisan/tables/os2"
-require_relative "fontisan/tables/post"
-require_relative "fontisan/tables/cmap"
-require_relative "fontisan/tables/fvar"
-require_relative "fontisan/tables/variation_common"
-require_relative "fontisan/tables/hvar"
-require_relative "fontisan/tables/vvar"
-require_relative "fontisan/tables/mvar"
-require_relative "fontisan/tables/gvar"
-require_relative "fontisan/tables/cvar"
-require_relative "fontisan/tables/cff"
-require_relative "fontisan/tables/layout_common"
-require_relative "fontisan/tables/gsub"
-require_relative "fontisan/tables/gpos"
-require_relative "fontisan/tables/colr"
-require_relative "fontisan/tables/cpal"
-require_relative "fontisan/tables/svg"
-require_relative "fontisan/tables/sbix"
-require_relative "fontisan/tables/cblc"
-require_relative "fontisan/tables/cbdt"
-
-# Domain objects (BinData::Record)
-require_relative "fontisan/true_type_font"
-require_relative "fontisan/open_type_font"
-require_relative "fontisan/true_type_collection"
-require_relative "fontisan/open_type_collection"
-require_relative "fontisan/woff_font"
-require_relative "fontisan/woff2_font"
-require_relative "fontisan/type1_font"
-
-# Font extensions for table-based construction
-require_relative "fontisan/true_type_font_extensions"
-require_relative "fontisan/open_type_font_extensions"
-
-# Font loading
-require_relative "fontisan/font_loader"
-
-# Utilities
-require_relative "fontisan/metrics_calculator"
-require_relative "fontisan/glyph_accessor"
-require_relative "fontisan/outline_extractor"
-require_relative "fontisan/utilities/checksum_calculator"
-require_relative "fontisan/font_writer"
-
-# Information models (Lutaml::Model)
-require_relative "fontisan/models/bitmap_strike"
-require_relative "fontisan/models/bitmap_glyph"
-require_relative "fontisan/models/font_info"
-require_relative "fontisan/models/table_info"
-require_relative "fontisan/models/glyph_info"
-require_relative "fontisan/models/glyph_outline"
-require_relative "fontisan/models/unicode_mappings"
-require_relative "fontisan/models/variable_font_info"
-require_relative "fontisan/models/optical_size_info"
-require_relative "fontisan/models/scripts_info"
-require_relative "fontisan/models/features_info"
-require_relative "fontisan/models/all_scripts_features_info"
-require_relative "fontisan/models/validation_report"
-require_relative "fontisan/models/font_report"
-require_relative "fontisan/models/collection_validation_report"
-require_relative "fontisan/models/font_export"
-require_relative "fontisan/models/collection_font_summary"
-require_relative "fontisan/models/collection_info"
-require_relative "fontisan/models/collection_brief_info"
-require_relative "fontisan/models/collection_list_info"
-require_relative "fontisan/models/font_summary"
-require_relative "fontisan/models/table_sharing_info"
-require_relative "fontisan/models/color_glyph"
-require_relative "fontisan/models/color_layer"
-require_relative "fontisan/models/color_palette"
-require_relative "fontisan/models/svg_glyph"
-
-# Audit + UCD models (Lutaml::Model)
-require_relative "fontisan/models/audit"
-require_relative "fontisan/models/ucd"
-
-# Validators infrastructure (NEW - DSL-based framework from Week 2+)
-require_relative "fontisan/validators/validator"
-require_relative "fontisan/validators/basic_validator"
-require_relative "fontisan/validators/font_book_validator"
-require_relative "fontisan/validators/opentype_validator"
-require_relative "fontisan/validators/web_font_validator"
-require_relative "fontisan/validators/profile_loader"
-
-# Export infrastructure
-require_relative "fontisan/export/table_serializer"
-require_relative "fontisan/export/ttx_generator"
-require_relative "fontisan/export/ttx_parser"
-require_relative "fontisan/export/exporter"
-
-# Validation infrastructure (OLD - commented out for new DSL framework)
-# Week 1 deleted these, Week 2-5 building new DSL-based framework
-# require_relative "fontisan/validation/checks/base_check"
-# require_relative "fontisan/validation/check_registry"
-# require_relative "fontisan/validation/profile"
-# require_relative "fontisan/validation/table_validator"
-# require_relative "fontisan/validation/structure_validator"
-# require_relative "fontisan/validation/consistency_validator"
-# require_relative "fontisan/validation/checksum_validator"
-# require_relative "fontisan/validation/validator"
-
-# Subsetting infrastructure
-require_relative "fontisan/subset/options"
-require_relative "fontisan/subset/profile"
-require_relative "fontisan/subset/glyph_mapping"
-require_relative "fontisan/subset/table_subsetter"
-require_relative "fontisan/subset/builder"
-
-# Collection infrastructure
-require_relative "fontisan/collection/table_analyzer"
-require_relative "fontisan/collection/table_deduplicator"
-require_relative "fontisan/collection/offset_calculator"
-require_relative "fontisan/collection/writer"
-require_relative "fontisan/collection/builder"
-
-# Format conversion infrastructure
-# Strategies loaded first so ConversionOptions can introspect their declared
-# options via FormatConverter.all_strategy_option_names.
-require_relative "fontisan/converters/conversion_strategy"
-require_relative "fontisan/converters/table_copier"
-require_relative "fontisan/converters/outline_converter"
-require_relative "fontisan/converters/format_converter"
-require_relative "fontisan/conversion_options"
-
-# Variation infrastructure
-require_relative "fontisan/variation/interpolator"
-require_relative "fontisan/variation/region_matcher"
-require_relative "fontisan/variation/data_extractor"
-require_relative "fontisan/variation/instance_generator"
-require_relative "fontisan/variation/metrics_adjuster"
-require_relative "fontisan/variation/converter"
-require_relative "fontisan/variation/variation_preserver"
-require_relative "fontisan/variation/delta_parser"
-require_relative "fontisan/variation/delta_applier"
-require_relative "fontisan/variation/blend_applier"
-require_relative "fontisan/variation/variable_svg_generator"
-
-# Pipeline infrastructure
-require_relative "fontisan/pipeline/format_detector"
-require_relative "fontisan/pipeline/variation_resolver"
-require_relative "fontisan/pipeline/output_writer"
-require_relative "fontisan/pipeline/transformation_pipeline"
-
-# UCD infrastructure (Unicode Character Database)
-require_relative "fontisan/ucd"
-
-# Audit infrastructure
-require_relative "fontisan/audit"
-
-# Optimization infrastructure
-require_relative "fontisan/optimizers/pattern_analyzer"
-require_relative "fontisan/optimizers/subroutine_builder"
-require_relative "fontisan/optimizers/charstring_rewriter"
-require_relative "fontisan/optimizers/subroutine_optimizer"
-require_relative "fontisan/optimizers/subroutine_generator"
-
-# Hints infrastructure
-require_relative "fontisan/models/hint"
-require_relative "fontisan/hints/truetype_instruction_analyzer"
-require_relative "fontisan/hints/truetype_instruction_generator"
-require_relative "fontisan/hints/truetype_hint_extractor"
-require_relative "fontisan/hints/truetype_hint_applier"
-require_relative "fontisan/hints/postscript_hint_extractor"
-require_relative "fontisan/hints/postscript_hint_applier"
-require_relative "fontisan/hints/hint_converter"
-require_relative "fontisan/hints/hint_validator"
-
-# Commands
-require_relative "fontisan/commands/base_command"
-require_relative "fontisan/commands/info_command"
-require_relative "fontisan/commands/ls_command"
-require_relative "fontisan/commands/tables_command"
-require_relative "fontisan/commands/glyphs_command"
-require_relative "fontisan/commands/unicode_command"
-require_relative "fontisan/commands/variable_command"
-require_relative "fontisan/commands/optical_size_command"
-require_relative "fontisan/commands/scripts_command"
-require_relative "fontisan/commands/features_command"
-require_relative "fontisan/commands/dump_table_command"
-require_relative "fontisan/commands/subset_command"
-require_relative "fontisan/commands/convert_command"
-require_relative "fontisan/commands/pack_command"
-require_relative "fontisan/commands/unpack_command"
-require_relative "fontisan/commands/validate_command"
-require_relative "fontisan/commands/audit_command"
-
-# Formatters
-require_relative "fontisan/formatters/text_formatter"
-
-# CLI
-require_relative "fontisan/cli"
-
 module Fontisan
+  #
+  # Each namespace under Fontisan has a hub file at lib/fontisan/<ns>.rb
+  # that declares autoloads for its children. This file autoloads those
+  # hubs plus the flat Fontisan::* classes. Files are loaded lazily on
+  # first reference.
+
+  # Core
+  autoload :Version, "fontisan/version"
+  autoload :Constants, "fontisan/constants"
+  autoload :LoadingModes, "fontisan/loading_modes"
+  autoload :ConversionOptions, "fontisan/conversion_options"
+
+  # Errors (all defined in fontisan/error)
+  autoload :Error, "fontisan/error"
+  autoload :InvalidFontError, "fontisan/error"
+  autoload :UnsupportedFormatError, "fontisan/error"
+  autoload :CorruptedTableError, "fontisan/error"
+  autoload :MissingTableError, "fontisan/error"
+  autoload :ParseError, "fontisan/error"
+  autoload :SubsettingError, "fontisan/error"
+  autoload :VariationError, "fontisan/error"
+  autoload :InvalidCoordinatesError, "fontisan/error"
+  autoload :MissingVariationTableError, "fontisan/error"
+  autoload :InvalidAxisError, "fontisan/error"
+  autoload :RegionOverlapError, "fontisan/error"
+  autoload :DeltaMismatchError, "fontisan/error"
+  autoload :InvalidInstanceIndexError, "fontisan/error"
+  autoload :CorruptedVariationDataError, "fontisan/error"
+  autoload :InvalidVariationDataError, "fontisan/error"
+  autoload :VariationDataCorruptedError, "fontisan/error"
+
+  # Namespace hubs (each hub declares its own child autoloads)
+  autoload :Audit, "fontisan/audit"
+  autoload :Binary, "fontisan/binary"
+  autoload :Collection, "fontisan/collection"
+  autoload :Commands, "fontisan/commands"
+  autoload :Converters, "fontisan/converters"
+  autoload :Export, "fontisan/export"
+  autoload :Formatters, "fontisan/formatters"
+  autoload :Hints, "fontisan/hints"
+  autoload :Models, "fontisan/models"
+  autoload :Optimizers, "fontisan/optimizers"
+  autoload :Parsers, "fontisan/parsers"
+  autoload :Pipeline, "fontisan/pipeline"
+  autoload :Subset, "fontisan/subset"
+  autoload :Svg, "fontisan/svg"
+  autoload :Tables, "fontisan/tables"
+  autoload :Type1, "fontisan/type1"
+  autoload :Ucd, "fontisan/ucd"
+  autoload :Utilities, "fontisan/utilities"
+  autoload :Utils, "fontisan/utils"
+  autoload :Validation, "fontisan/validation"
+  autoload :Validators, "fontisan/validators"
+  autoload :Variable, "fontisan/variable"
+  autoload :Variation, "fontisan/variation"
+  autoload :Woff2, "fontisan/woff2"
+
+  # Flat classes (no inner namespace)
+  autoload :BaseCollection, "fontisan/base_collection"
+  autoload :Cli, "fontisan/cli"
+  autoload :DfontCollection, "fontisan/dfont_collection"
+  autoload :FontLoader, "fontisan/font_loader"
+  autoload :FontWriter, "fontisan/font_writer"
+  autoload :GlyphAccessor, "fontisan/glyph_accessor"
+  autoload :MetricsCalculator, "fontisan/metrics_calculator"
+  autoload :OpenTypeCollection, "fontisan/open_type_collection"
+  autoload :OpenTypeFont, "fontisan/open_type_font"
+  autoload :OpenTypeFontExtensions, "fontisan/open_type_font_extensions"
+  autoload :OutlineExtractor, "fontisan/outline_extractor"
+  autoload :SfntFont, "fontisan/sfnt_font"
+  autoload :SfntTable, "fontisan/sfnt_table"
+  autoload :TrueTypeCollection, "fontisan/true_type_collection"
+  autoload :TrueTypeFont, "fontisan/true_type_font"
+  autoload :TrueTypeFontExtensions, "fontisan/true_type_font_extensions"
+  autoload :Type1Font, "fontisan/type1_font"
+  autoload :UcdCli, "fontisan/cli/ucd_cli"
+  autoload :Woff2Font, "fontisan/woff2_font"
+  autoload :WoffFont, "fontisan/woff_font"
+
+  # SFNT offset table and table directory (defined in sfnt_font.rb)
+  autoload :OffsetTable, "fontisan/sfnt_font"
+  autoload :TableDirectory, "fontisan/sfnt_font"
+
+  # WOFF headers and table directory entries
+  autoload :WoffHeader, "fontisan/woff_font"
+  autoload :WoffTableDirectoryEntry, "fontisan/woff_font"
+  autoload :Woff2TableDirectoryEntry, "fontisan/woff2_font"
   class << self
     attr_accessor :logger
 

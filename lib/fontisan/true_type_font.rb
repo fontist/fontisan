@@ -25,6 +25,8 @@ module Fontisan
   # @example Reading from TTC collection
   #   ttf = TrueTypeFont.from_collection(io, offset)
   class TrueTypeFont < SfntFont
+    extend TrueTypeFontExtensions
+
     # High-level pipeline format identifier. Owned by the font class so the
     # conversion pipeline can dispatch without case statements (OCP).
     #
