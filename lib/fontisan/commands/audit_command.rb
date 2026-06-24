@@ -93,7 +93,7 @@ module Fontisan
         )
 
         fields = {}
-        Audit::Registry.each do |extractor_class|
+        Audit::Registry.each(mode: audit_mode) do |extractor_class|
           fields.merge!(extractor_class.new.extract(context))
         end
 
@@ -103,6 +103,15 @@ module Fontisan
         )
 
         Models::Audit::AuditReport.new(**fields)
+      end
+
+      # Audit's --brief selects a cheap extractor subset (identity, style,
+      # licensing, coverage) but still requires FULL font loading — the
+      # Coverage extractor reads `cmap`. The CLI translates the user-facing
+      # `--brief` flag into `:audit_brief` so BaseCommand's `:brief →
+      # LoadingModes::METADATA` shortcut doesn't fire.
+      def audit_mode
+        @options[:audit_brief] ? :brief : :full
       end
 
       def combine_warnings(*warnings)

@@ -31,10 +31,28 @@ module Fontisan
     desc "cldr", "Manage local CLDR cache (subcommands)", hide: true
     subcommand "cldr", CldrCli
 
-    desc "audit PATH",
-         "Produce a per-face font audit report (identity, style, coverage, " \
-         "Unicode blocks/scripts, OpenType features). " \
-         "Use --compare with two paths to diff two fonts or two saved reports."
+    desc "audit PATH", "Produce a per-face font audit report, or diff/summarize"
+    long_desc <<~DESC
+      Produce a complete per-face font audit report covering identity, style,
+      metrics, coverage (Unicode blocks/scripts), licensing, hinting, color
+      capabilities, variable font detail, and OpenType layout features.
+
+      For TTC/OTC/dfont collections, one report per face is produced. Use
+      --output to write reports to disk; --font-index to audit a single face.
+
+      Variants:
+        fontisan audit FONT.ttf
+        fontisan audit COLLECTION.ttc
+        fontisan audit DIR/ --recursive --summary
+        fontisan audit --compare A.ttf B.ttf
+        fontisan audit --compare A.yaml B.yaml
+
+      Output formats: text (default), yaml, json.
+
+      Use --brief for a fast inventory pass that skips metrics, hinting,
+      color, variable-font detail, OpenType layout, and UCD/CLDR
+      aggregation — only identity, style, licensing, and codepoint coverage.
+    DESC
     option :font_index, type: :numeric,
                         desc: "Audit only this face in a collection (default: all)"
     option :all_codepoints, type: :boolean, default: false,
@@ -49,6 +67,9 @@ module Fontisan
     option :cldr_version, type: :string,
                           desc: "CLDR version (default: configured default; " \
                                 "'latest' to probe)"
+    option :brief, type: :boolean, default: false,
+                   desc: "Skip metrics/hinting/color/layout/UCD/CLDR for a " \
+                         "fast inventory pass"
     option :compare, type: :boolean, default: false,
                      desc: "Diff two fonts or two saved reports " \
                            "(requires exactly two PATHs)"
@@ -58,13 +79,16 @@ module Fontisan
     option :summary, type: :boolean, default: false,
                      desc: "Produce a LibrarySummary over a directory of fonts"
     option :output, type: :string,
-                    desc: "Output directory (collections) or file (single font)",
+                    desc: "Output directory (collections/library) or file " \
+                          "(single font / compare)",
                     aliases: "-o"
     # Produce a complete font audit report, or diff two fonts/reports,
     # or summarize a whole library.
     #
     # @param paths [Array<String>] one path (audit/library), or two paths (--compare)
     def audit(*paths)
+      raise Thor::Error, "audit requires one PATH (or two with --compare)" if paths.empty?
+
       if options[:compare]
         unless paths.length == 2
           raise Thor::Error,
@@ -77,10 +101,14 @@ module Fontisan
       raise Thor::Error, "audit requires exactly one PATH" unless paths.length == 1
 
       path = paths[0]
+      if Dir.exist?(path) && !library_mode?(path)
+        raise Thor::Error,
+              "audit on a directory requires --recursive or --summary"
+      end
       return run_library_audit(path) if library_mode?(path)
 
       run_single_audit(path)
-    rescue Errno::ENOENT, Error => e
+    rescue Errno::ENOENT, Error, Thor::Error => e
       handle_error(e)
     end
 
@@ -785,6 +813,10 @@ module Fontisan
     def run_single_audit(path)
       cmd_options = options.dup
       cmd_options.delete(:output)
+      # Audit's --brief selects a cheap extractor subset but still needs FULL
+      # font loading (Coverage reads cmap). Translate to :audit_brief so
+      # BaseCommand's :brief → METADATA shortcut does not fire.
+      cmd_options[:audit_brief] = cmd_options.delete(:brief) if cmd_options.key?(:brief)
       command = Commands::AuditCommand.new(path, cmd_options)
       reports = Array(command.run)
 

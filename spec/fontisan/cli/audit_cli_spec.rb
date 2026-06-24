@@ -72,4 +72,38 @@ RSpec.describe "fontisan audit CLI dispatch" do
       end.to raise_error(SystemExit)
     end
   end
+
+  describe "compare mode" do
+    it "errors when --compare is given fewer than two paths" do
+      expect do
+        Fontisan::Cli.start(["audit", "--compare", "--format", "yaml"])
+      end.to raise_error(SystemExit)
+    end
+  end
+
+  describe "argument validation" do
+    it "errors when no path is given" do
+      expect do
+        Fontisan::Cli.start(["audit", "--format", "yaml"])
+      end.to raise_error(SystemExit)
+    end
+  end
+
+  describe "--brief" do
+    it "produces a report that omits metrics, hinting, layout, and aggregation" do
+      Dir.mktmpdir do |dir|
+        FileUtils.cp(ttf_path, File.join(dir, "a.ttf"))
+        output = capture_stdout do
+          Fontisan::Cli.start(["audit", File.join(dir, "a.ttf"),
+                               "--brief", "--format", "yaml"])
+        end
+        # Brief skips the expensive extractors. Verify the resulting report
+        # has no metrics/blocks/etc fields populated.
+        expect(output).to include("family_name:")
+        expect(output).not_to include("metrics:")
+        expect(output).not_to include("hinting:")
+        expect(output).not_to include("opentype_layout:")
+      end
+    end
+  end
 end
