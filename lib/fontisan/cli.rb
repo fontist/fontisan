@@ -33,7 +33,8 @@ module Fontisan
 
     desc "audit PATH",
          "Produce a per-face font audit report (identity, style, coverage, " \
-         "Unicode blocks/scripts, OpenType features)"
+         "Unicode blocks/scripts, OpenType features). " \
+         "Use --compare with two paths to diff two fonts or two saved reports."
     option :font_index, type: :numeric,
                         desc: "Audit only this face in a collection (default: all)"
     option :all_codepoints, type: :boolean, default: false,
@@ -48,23 +49,28 @@ module Fontisan
     option :cldr_version, type: :string,
                           desc: "CLDR version (default: configured default; " \
                                 "'latest' to probe)"
+    option :compare, type: :boolean, default: false,
+                     desc: "Diff two fonts or two saved reports " \
+                           "(requires exactly two PATHs)"
     option :output, type: :string,
                     desc: "Output directory (collections) or file (single font)",
                     aliases: "-o"
-    # Produce a complete font audit report.
+    # Produce a complete font audit report, or diff two fonts/reports.
     #
-    # @param path [String] path to a font file or collection
-    def audit(path)
-      cmd_options = options.dup
-      cmd_options.delete(:output)
-      command = Commands::AuditCommand.new(path, cmd_options)
-      reports = Array(command.run)
+    # @param paths [Array<String>] one path (audit) or two paths (--compare)
+    def audit(*paths)
+      if options[:compare]
+        unless paths.length == 2
+          raise Thor::Error,
+                "audit --compare requires exactly two paths"
+        end
 
-      if options[:output]
-        write_audit_outputs(reports, options[:output], options[:format])
-      else
-        reports.each { |r| output_result(r) }
+        return run_compare(paths[0], paths[1])
       end
+
+      raise Thor::Error, "audit requires exactly one PATH" unless paths.length == 1
+
+      run_single_audit(paths[0])
     rescue Errno::ENOENT, Error => e
       handle_error(e)
     end
@@ -765,6 +771,33 @@ module Fontisan
       paths = Commands::AuditCommand.write_reports(reports, to: target,
                                                             format: sym_format)
       paths.each { |p| puts "Wrote #{p}" unless options[:quiet] }
+    end
+
+    def run_single_audit(path)
+      cmd_options = options.dup
+      cmd_options.delete(:output)
+      command = Commands::AuditCommand.new(path, cmd_options)
+      reports = Array(command.run)
+
+      if options[:output]
+        write_audit_outputs(reports, options[:output], options[:format])
+      else
+        reports.each { |r| output_result(r) }
+      end
+    end
+
+    def run_compare(left_path, right_path)
+      cmd = Commands::AuditCompareCommand.new(left_path, right_path, options)
+      diff = cmd.run
+      return if options[:quiet]
+
+      if options[:output]
+        File.write(options[:output], serialize_report(diff, options[:format].to_sym))
+        puts "Wrote #{options[:output]}"
+        return
+      end
+
+      output_result(diff)
     end
 
     def serialize_report(report, format)
