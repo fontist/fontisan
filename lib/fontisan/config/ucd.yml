@@ -1,0 +1,23 @@
+# UCD (Unicode Character Database) configuration.
+#
+# This file is the single source of truth for which UCD version Fontisan
+# uses by default, what versions are recognized, and where to fetch them.
+#
+# Update `default_version` and `known_versions` when a new Unicode version
+# is released (typically twice a year). Users may override at runtime via
+# `fontisan ucd download --version X.Y.Z` or `fontisan audit --ucd-version X.Y.Z`.
+
+default_version: "17.0.0"
+
+known_versions:
+  - "15.0.0"
+  - "15.1.0"
+  - "16.0.0"
+  - "17.0.0"
+
+# Base URL for fetching UCDXML artifacts.
+# Full URL: <base_url>/<version>/ucdxml/ucd.all.flat.zip
+base_url: "https://www.unicode.org/Public"
+
+# Listing URL for `--latest` probing. HTML scraping, best-effort.
+listing_url: "https://www.unicode.org/Public/ucdxml/"

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "thor"
+require_relative "cli/ucd_cli"
 
 module Fontisan
   # Command-line interface for Fontisan.
@@ -24,6 +25,40 @@ module Fontisan
     class_option :quiet, type: :boolean, default: false,
                          desc: "Suppress non-error output",
                          aliases: "-q"
+
+    desc "ucd", "Manage local UCD cache (subcommands)", hide: true
+    subcommand "ucd", UcdCli
+
+    desc "audit PATH",
+         "Produce a per-face font audit report (identity, style, coverage, " \
+         "Unicode blocks/scripts, OpenType features)"
+    option :font_index, type: :numeric,
+                        desc: "Audit only this face in a collection (default: all)"
+    option :no_codepoints, type: :boolean, default: false,
+                           desc: "Omit the per-codepoint list from the report"
+    option :ucd_version, type: :string,
+                         desc: "UCD version to aggregate against " \
+                               "(default: configured default; 'latest' to probe)"
+    option :output, type: :string,
+                    desc: "Output directory (collections) or file (single font)",
+                    aliases: "-o"
+    # Produce a complete font audit report.
+    #
+    # @param path [String] path to a font file or collection
+    def audit(path)
+      cmd_options = options.dup
+      cmd_options.delete(:output)
+      command = Commands::AuditCommand.new(path, cmd_options)
+      reports = Array(command.run)
+
+      if options[:output]
+        write_audit_outputs(reports, options[:output], options[:format])
+      else
+        reports.each { |r| output_result(r) }
+      end
+    rescue Errno::ENOENT, Error => e
+      handle_error(e)
+    end
 
     desc "info PATH", "Display font information"
     option :brief, type: :boolean, default: false,
@@ -699,6 +734,32 @@ module Fontisan
                end
 
       puts output unless options[:quiet]
+    end
+
+    # Write audit reports to disk. If `target` is a directory (or there are
+    # multiple reports), one file per face is written under it. If `target`
+    # is a file path and there's exactly one report, that exact path is used.
+    #
+    # @param reports [Array<Models::Audit::AuditReport>]
+    # @param target [String] directory (collection) or file path (single)
+    # @param format [String] "yaml" or "json"
+    # @return [void]
+    def write_audit_outputs(reports, target, format)
+      sym_format = format.to_sym
+
+      if reports.one? && !Dir.exist?(target) && File.extname(target) != ""
+        File.write(target, serialize_report(reports.first, sym_format))
+        puts "Wrote #{target}" unless options[:quiet]
+        return
+      end
+
+      paths = Commands::AuditCommand.write_reports(reports, to: target,
+                                                            format: sym_format)
+      paths.each { |p| puts "Wrote #{p}" unless options[:quiet] }
+    end
+
+    def serialize_report(report, format)
+      format == :json ? report.to_json : report.to_yaml
     end
 
     # Format result as human-readable text.
