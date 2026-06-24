@@ -132,6 +132,19 @@ module Fontisan
     # Grid-fitting And Scan-conversion Procedure table (per-ppem hinting policy)
     GASP_TAG = "gasp"
 
+    # Color font tables.
+    # COLR: COLR vector color glyph table (v0 or v1).
+    # CPAL: Color Palette table.
+    # SVG:  SVG-in-OpenType color glyph table (tag is "SVG " — 4 bytes incl. trailing space).
+    # CBDT/CBLC: Color Bitmap Data / Location (paired — EBLC/EBDT equivalents for color).
+    # sbix: Apple bitmap glyph table.
+    COLR_TAG = "COLR"
+    CPAL_TAG = "CPAL"
+    SVG_TAG  = "SVG "
+    CBDT_TAG = "CBDT"
+    CBLC_TAG = "CBLC"
+    SBIX_TAG = "sbix"
+
     # Magic number used for font file checksum adjustment calculation.
     # This constant is used in conjunction with the file checksum to compute
     # the checksumAdjustment value stored in the 'head' table.

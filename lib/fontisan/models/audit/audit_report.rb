@@ -66,6 +66,10 @@ module Fontisan
         # Hinting summary from fpgm/prep/cvt/gasp/CFF charstrings (nil for Type 1)
         attribute :hinting, Hinting
 
+        # Color-font capability summary from COLR/CPAL/SVG/CBDT/CBLC/sbix
+        # (nil for Type 1)
+        attribute :color_capabilities, ColorCapabilities
+
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
 
@@ -119,6 +123,9 @@ module Fontisan
 
           # Hinting
           map "hinting", to: :hinting
+
+          # Color capabilities
+          map "color_capabilities", to: :color_capabilities
 
           # Warning
           map "warning", to: :warning
