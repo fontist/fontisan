@@ -9,6 +9,7 @@
 module Fontisan
   module Audit
     autoload :Context, "fontisan/audit/context"
+    autoload :CodepointRangeCoalescer, "fontisan/audit/codepoint_range_coalescer"
     autoload :Registry, "fontisan/audit/registry"
     autoload :Extractors, "fontisan/audit/extractors"
     autoload :StyleExtractor, "fontisan/audit/style_extractor"

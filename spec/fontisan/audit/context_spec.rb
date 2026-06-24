@@ -51,17 +51,17 @@ RSpec.describe Fontisan::Audit::Context do
     end
   end
 
-  describe "#no_codepoints?" do
+  describe "#all_codepoints?" do
     it "returns false by default" do
-      expect(context.no_codepoints?).to be false
+      expect(context.all_codepoints?).to be false
     end
 
-    it "returns true when :no_codepoints is set" do
+    it "returns true when :all_codepoints is set" do
       ctx = described_class.new(
         font: font, font_path: ttf_path, font_index: 0,
-        num_fonts_in_source: 1, options: { no_codepoints: true }
+        num_fonts_in_source: 1, options: { all_codepoints: true }
       )
-      expect(ctx.no_codepoints?).to be true
+      expect(ctx.all_codepoints?).to be true
     end
   end
 

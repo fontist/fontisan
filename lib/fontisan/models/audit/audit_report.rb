@@ -46,6 +46,7 @@ module Fontisan
         attribute :total_codepoints, :integer
         attribute :total_glyphs, :integer
         attribute :cmap_subtables, :integer, collection: true
+        attribute :codepoint_ranges, CodepointRange, collection: true
         attribute :codepoints, :string, collection: true
 
         # Aggregations (require UCD)
@@ -108,6 +109,7 @@ module Fontisan
           map "total_codepoints", to: :total_codepoints
           map "total_glyphs",     to: :total_glyphs
           map "cmap_subtables",   to: :cmap_subtables
+          map "codepoint_ranges", to: :codepoint_ranges
           map "codepoints",       to: :codepoints
 
           # Aggregations
