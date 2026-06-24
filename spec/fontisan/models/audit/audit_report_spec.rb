@@ -32,8 +32,8 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
       ucd_version: "17.0.0",
       blocks: [],
       unicode_scripts: ["Latin"],
-      opentype_scripts: ["latn"],
       features: ["kern"],
+      opentype_layout: nil,
       warning: nil,
     )
   end
@@ -133,6 +133,31 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
       expect(restored.variation.axes.first.tag).to eq("wght")
       expect(restored.variation.named_instances.first.subfamily_name).to eq("Bold")
       expect(restored.variation.has_avar).to be true
+    end
+  end
+
+  describe "nested OpenTypeLayout" do
+    it "serializes opentype_layout as a nested model" do
+      sf = Fontisan::Models::Audit::ScriptFeatures.new(
+        script: "latn",
+        gsub_features: ["liga"],
+        gpos_features: ["kern"],
+      )
+      report.opentype_layout = Fontisan::Models::Audit::OpenTypeLayout.new(
+        scripts: ["latn"],
+        features: %w[kern liga],
+        by_script: [sf],
+        has_gsub: true,
+        has_gpos: true,
+      )
+
+      yaml = report.to_yaml
+      restored = described_class.from_yaml(yaml)
+      expect(restored.opentype_layout).to be_a(Fontisan::Models::Audit::OpenTypeLayout)
+      expect(restored.opentype_layout.scripts).to eq(["latn"])
+      expect(restored.opentype_layout.by_script.first.script).to eq("latn")
+      expect(restored.opentype_layout.by_script.first.gsub_features).to eq(["liga"])
+      expect(restored.opentype_layout.has_gpos).to be true
     end
   end
 end

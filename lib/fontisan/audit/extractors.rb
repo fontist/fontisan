@@ -18,6 +18,7 @@ module Fontisan
       autoload :Hinting, "fontisan/audit/extractors/hinting"
       autoload :ColorCapabilities, "fontisan/audit/extractors/color_capabilities"
       autoload :VariationDetail, "fontisan/audit/extractors/variation_detail"
+      autoload :OpenTypeLayout, "fontisan/audit/extractors/opentype_layout"
       autoload :Coverage, "fontisan/audit/extractors/coverage"
       autoload :Aggregations, "fontisan/audit/extractors/aggregations"
     end

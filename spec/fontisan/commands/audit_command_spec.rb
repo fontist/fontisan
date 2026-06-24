@@ -89,12 +89,13 @@ RSpec.describe Fontisan::Commands::AuditCommand do
       expect(report.cmap_subtables).not_to be_empty
     end
 
-    it "populates OpenType scripts and features" do
+    it "populates OpenType layout summary" do
       cmd = described_class.new(ttf_path, ucd_version: "17.0.0")
       report = cmd.run
 
-      expect(report.opentype_scripts).to be_an(Array)
-      expect(report.features).to be_an(Array)
+      expect(report.opentype_layout).to be_a(Fontisan::Models::Audit::OpenTypeLayout)
+      expect(report.opentype_layout.scripts).to be_an(Array)
+      expect(report.opentype_layout.features).to be_an(Array)
     end
 
     it "sets source layout to single face" do

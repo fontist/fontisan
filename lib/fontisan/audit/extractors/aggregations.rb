@@ -3,20 +3,17 @@
 module Fontisan
   module Audit
     module Extractors
-      # Aggregation fields: UCD block/script coverage and the font's
-      # OpenType script/feature inventory.
+      # Aggregation fields: UCD block/script coverage.
       #
       # Returned fields:
-      #   ucd_version, blocks, unicode_scripts,
-      #   opentype_scripts, features
+      #   ucd_version, blocks, unicode_scripts
+      #
+      # OpenType script/feature inventory lives in {Extractors::OpenTypeLayout}
+      # (MECE: this extractor is UCD-driven, that one is SFNT-table-driven).
       class Aggregations < Base
         def extract(context)
           ucd = context.ucd
-          {
-            **ucd_aggregations(context.codepoints, ucd),
-            opentype_scripts: opentype_scripts(context.font),
-            features: all_features(context.font),
-          }
+          ucd_aggregations(context.codepoints, ucd)
         end
 
         private
@@ -50,30 +47,6 @@ module Fontisan
             fill_ratio: block_hash[:fill_ratio],
             complete: block_hash[:complete],
           )
-        end
-
-        def opentype_scripts(font)
-          scripts = Set.new
-          scripts.merge(font.table(Constants::GSUB_TAG).scripts) if font.has_table?(Constants::GSUB_TAG)
-          scripts.merge(font.table(Constants::GPOS_TAG).scripts) if font.has_table?(Constants::GPOS_TAG)
-          scripts.sort
-        end
-
-        def all_features(font)
-          features = Set.new
-          scripts = opentype_scripts(font)
-
-          if font.has_table?(Constants::GSUB_TAG)
-            gsub = font.table(Constants::GSUB_TAG)
-            scripts.each { |tag| features.merge(gsub.features(script_tag: tag)) }
-          end
-
-          if font.has_table?(Constants::GPOS_TAG)
-            gpos = font.table(Constants::GPOS_TAG)
-            scripts.each { |tag| features.merge(gpos.features(script_tag: tag)) }
-          end
-
-          features.sort
         end
       end
     end
