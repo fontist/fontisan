@@ -37,14 +37,6 @@ RSpec.describe Fontisan::Audit::StyleExtractor do
     it "panose is a 10-digit space-joined string" do
       expect(extractor.panose).to match(/\A(\d+ ){9}\d+\z/)
     end
-
-    it "variable? returns a boolean" do
-      expect(extractor.variable?).to be(true).or be(false)
-    end
-
-    it "axes is an array (possibly empty)" do
-      expect(extractor.axes).to be_an(Array)
-    end
   end
 
   describe "with an OpenType/CFF font" do

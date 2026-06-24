@@ -4,14 +4,17 @@ module Fontisan
   module Audit
     module Extractors
       # Style fields: weight, width, italic/bold flags, Panose family
-      # classification, and variable-font axis inventory.
+      # classification.
       #
       # Returned fields:
-      #   weight_class, width_class, italic, bold, panose,
-      #   is_variable, axes
+      #   weight_class, width_class, italic, bold, panose
+      #
+      # Variable-font axis inventory lives in {Extractors::VariationDetail}
+      # (MECE: this extractor is the OS/2 + head specialist, that one owns
+      # everything fvar-derived).
       #
       # Delegates to {Audit::StyleExtractor} — the existing specialist
-      # class that owns the OS/2 + head + fvar interpretation rules.
+      # class that owns the OS/2 + head interpretation rules.
       class Style < Base
         def extract(context)
           style = StyleExtractor.new(context.font)
@@ -21,8 +24,6 @@ module Fontisan
             italic: style.italic,
             bold: style.bold,
             panose: style.panose,
-            is_variable: style.variable?,
-            axes: style.axes,
           }
         end
       end

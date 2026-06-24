@@ -89,6 +89,9 @@ module Fontisan
     # Fvar table tag identifier (Font Variations)
     FVAR_TAG = "fvar"
 
+    # Avar table tag identifier (Axis Variation)
+    AVAR_TAG = "avar"
+
     # Gvar table tag identifier (Glyph Variations for TrueType)
     GVAR_TAG = "gvar"
 

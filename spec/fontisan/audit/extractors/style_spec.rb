@@ -26,8 +26,7 @@ RSpec.describe Fontisan::Audit::Extractors::Style do
   it "returns style fields keyed by AuditReport attribute names" do
     fields = described_class.new.extract(ttf_context)
     expect(fields.keys).to contain_exactly(
-      :weight_class, :width_class, :italic, :bold,
-      :panose, :is_variable, :axes
+      :weight_class, :width_class, :italic, :bold, :panose
     )
   end
 
@@ -40,16 +39,6 @@ RSpec.describe Fontisan::Audit::Extractors::Style do
   it "exposes panose as a 10-digit space-joined string" do
     fields = described_class.new.extract(ttf_context)
     expect(fields[:panose]).to match(/\A(\d+ ){9}\d+\z/)
-  end
-
-  it "exposes is_variable as a boolean" do
-    fields = described_class.new.extract(ttf_context)
-    expect(fields[:is_variable]).to(satisfy { |v| [true, false].include?(v) })
-  end
-
-  it "exposes axes as an array" do
-    fields = described_class.new.extract(ttf_context)
-    expect(fields[:axes]).to be_an(Array)
   end
 
   it "works for OTF/CFF fonts" do
