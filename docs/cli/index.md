@@ -20,6 +20,18 @@ Always check your font's End User License Agreement (EULA) before processing. Ma
 
 ## Quick Reference
 
+### Font Audit
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `audit` | Comprehensive per-face audit (replaces `otfinfo`) | `fontisan audit font.ttf` |
+
+The `audit` command covers identity, style, metrics, codepoint coverage,
+licensing, hinting, color capabilities, variable-font detail, and
+OpenType layout — and supports collections, `--compare` mode, and
+whole-library `--recursive --summary` mode. See
+[audit](/cli/audit) for details.
+
 ### Font Information Commands
 
 | Command | Description | Example |
@@ -165,6 +177,22 @@ fontisan validate font.ttf --profile google_fonts
 fontisan validate font.ttf --profile production
 ```
 
+### Audit a Font (or Library)
+
+```bash
+# Full per-face audit
+fontisan audit font.ttf
+
+# Diff two fonts (or saved reports)
+fontisan audit --compare baseline.yaml new.ttf
+
+# Whole-library summary
+fontisan audit lib/ --recursive --summary
+
+# Fast inventory pass
+fontisan audit lib/ --recursive --summary --brief
+```
+
 ### Export Font Data
 
 ```bash
@@ -181,6 +209,9 @@ fontisan export font.ttf --format ttx --tables head,name,cmap
 ## Command Documentation
 
 Detailed documentation for each command:
+
+### Font Audit
+- [audit](/cli/audit) — Comprehensive per-face audit (replaces `otfinfo`); supports collections, compare, library summary
 
 ### Font Information
 - [info](/cli/info) — Extract font metadata and properties (includes brief mode)

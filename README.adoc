@@ -61,6 +61,7 @@ Color fonts and collections::
 * Font collection validation with per-font reporting (see link:docs/COLLECTION_VALIDATION.adoc[Collection Validation Guide])
 
 Font analysis and information::
+* Comprehensive per-face font audit (replaces `otfinfo`) covering identity, style, metrics, codepoint coverage, licensing, hinting, color capabilities, variable-font detail, OpenType layout features, UCD block/script aggregation, and CLDR language coverage — plus `--compare` mode and whole-library `--recursive --summary` mode
 * Bidirectional font hint conversion (see link:docs/FONT_HINTING.adoc[Font Hinting Guide])
 * Extract comprehensive font metadata (name, version, designer, license, etc.)
 * Brief mode for fast font indexing (5x faster, metadata-only loading)
@@ -99,9 +100,222 @@ Font engineering::
 
 Export and interfaces::
 * TTX/YAML/JSON export (complete)
-* Command-line interface with 18 commands
+* Command-line interface with 19 commands
 * Ruby library API for programmatic access
 * Structured output in YAML, JSON, and text formats
+
+
+== Font audit
+
+=== General
+
+The `audit` command produces a complete per-face font audit report —
+the successor to `otfinfo`, covering everything `otfinfo` reports plus
+codepoint coverage, licensing, hinting, color capabilities, variable-font
+detail, OpenType layout, UCD block/script aggregation, and CLDR language
+coverage. It also supports collections, `--compare` mode, and whole-
+library `--recursive --summary` mode.
+
+For each face, audit reports:
+
+Identity & provenance:: `family_name`, `subfamily_name`, `full_name`,
+  `postscript_name`, `version`, `font_revision`, `source_sha256`,
+  `source_format`, `fontisan_version`, `generated_at`.
+Style:: `weight_class` (+ human label), `width_class`, `bold`, `italic`,
+  `panose`, `fs_selection_flags`.
+Coverage:: `total_codepoints`, `total_glyphs`, `cmap_subtables`,
+  `codepoint_ranges` (compact by default; `--all-codepoints` for the
+  flat list).
+Licensing:: `license_url`, `license_description`, `embedding_type`
+  (decoded `fsType`).
+Metrics:: `units_per_em`, ascender/descender/etc., x-height, cap height,
+  `metrics_consistent?` flag.
+Hinting:: `has_fpgm`, `has_prep`, `gasp_ranges`, TrueType vs PostScript
+  hint presence.
+Color capabilities:: COLR/CPAL, sbix, CBDT/CBLC, SVG table presence.
+Variable-font detail:: axes (`fvar`), named instances.
+OpenType layout:: scripts/features in GSUB and GPOS.
+Aggregations (UCD):: per-block coverage rows, per-script roll-up.
+Language coverage (opt-in via `--with-language-coverage`):: per-language
+  coverage % using CLDR exemplar sets.
+
+[source,shell]
+----
+$ fontisan audit PATH [--compare LEFT RIGHT] [--recursive] [--summary]
+                     [--brief] [--all-codepoints]
+                     [--ucd-version VERSION] [--with-language-coverage]
+                     [--cldr-version VERSION]
+                     [--font-index N] [--output PATH] [--format FORMAT]
+----
+
+Where,
+
+`PATH`:: Path to a font file (single-face audit), collection
+  (`TTC`/`OTC`/`dfont` — one report per face), or directory
+  (library mode with `--recursive`/`--summary`).
+`--compare`:: Diff two inputs (each is a font file or a saved
+  `.yaml`/`.yml`/`.json` audit report). Requires exactly two paths.
+`--recursive`:: Library mode: walk subdirectories.
+`--summary`:: Library mode: produce a `LibrarySummary`.
+`--brief`:: Fast inventory: skip metrics, hinting, color, variation,
+  OpenType layout, and UCD/CLDR aggregation. Note: distinct from
+  `info --brief` — `audit --brief` still loads the full font.
+`--all-codepoints`:: Include the full per-codepoint list (default is a
+  compact range view).
+`--ucd-version VERSION`:: Aggregate against this UCD version
+  (`latest` probes upstream).
+`--with-language-coverage`:: Compute CLDR per-language coverage %
+  (auto-downloads CLDR on first use).
+`--cldr-version VERSION`:: CLDR version (`latest` probes upstream).
+`--font-index N`:: Audit only face N of a collection.
+`--output PATH`:: Write to a directory (collection/library), file
+  (single/compare), or stdout.
+`--format FORMAT`:: `text` (default), `yaml`, or `json`.
+
+=== Command-line usage
+
+Single face:
+
+[source,shell]
+----
+$ fontisan audit NotoSans-Regular.ttf
+$ fontisan audit NotoSans-Regular.ttf --format yaml
+$ fontisan audit NotoSans-Regular.ttf --brief
+$ fontisan audit NotoSans-Regular.ttf --with-language-coverage
+----
+
+Collection (one report per face):
+
+[source,shell]
+----
+$ fontisan audit Family.ttc
+$ fontisan audit Family.ttc --font-index 2
+$ fontisan audit Family.ttc --output reports/
+----
+
+Compare two fonts or saved reports:
+
+[source,shell]
+----
+$ fontisan audit --compare a.ttf b.ttf
+$ fontisan audit --compare baseline.yaml new.ttf
+$ fontisan audit --compare v1.yaml v2.yaml --output diff.yaml
+----
+
+Library summary:
+
+[source,shell]
+----
+$ fontisan audit lib/ --summary
+$ fontisan audit lib/ --recursive --summary
+$ fontisan audit lib/ --recursive --summary --format yaml --output library.yaml
+----
+
+The library summary includes:
+
+* `root_path`, `total_files`, `total_faces`, `scanned_extensions`
+* `aggregate_metrics` — summed codepoints/glyphs/bytes
+* `script_coverage` — per-script face counts and face lists
+* `duplicate_groups` — files grouped by `source_sha256` (size > 1)
+* `license_distribution` — face counts per `license_url`
+* `per_face_reports` — the full per-face reports
+
+Files that fail to load (corrupt, unsupported) are reported on stderr
+as `skipped <path>` and excluded from the summary.
+
+UCD/CLDR cache management:
+
+[source,shell]
+----
+$ fontisan ucd status
+$ fontisan ucd list
+$ fontisan ucd download 17.0.0
+$ fontisan cldr status
+$ fontisan cldr list
+$ fontisan cldr download 45
+----
+
+=== Ruby API usage
+
+Single face:
+
+[source,ruby]
+----
+require "fontisan"
+
+# Returns an AuditReport for a single font, or an Array<AuditReport>
+# for a collection (one per face, in source order).
+report = Fontisan::Commands::AuditCommand.new(
+  "NotoSans-Regular.ttf", ucd_version: "17.0.0"
+).run
+
+report.family_name                # => "Noto Sans"
+report.licensing.license_url      # => "https://scripts.sil.org/OFL"
+report.blocks.first.fill_ratio    # => 0.742
+report.opentype_layout.features   # => ["c2sc", "calt", "case", ...]
+----
+
+Compare:
+
+[source,ruby]
+----
+diff = Fontisan::Commands::AuditCompareCommand.new(
+  "baseline.yaml", "new.ttf", ucd_version: "17.0.0"
+).run
+
+diff.field_changes.each { |c| puts "#{c.field}: #{c.left} -> #{c.right}" }
+puts "added codepoints: #{diff.codepoints.added_count}"
+----
+
+Library summary:
+
+[source,ruby]
+----
+cmd = Fontisan::Commands::AuditLibraryCommand.new(
+  "lib/", recursive: true, options: { ucd_version: "17.0.0" }
+)
+summary = cmd.run
+cmd.skipped.each { |path| warn "skipped #{path}" }
+
+summary.script_coverage.each do |row|
+  puts "#{row.script}: #{row.face_count} faces"
+end
+
+summary.duplicate_groups.each do |group|
+  puts "duplicate #{group.source_sha256[0, 8]}: #{group.files.join(', ')}"
+end
+----
+
+Brief mode (note the `audit_brief:` key — `brief:` would trigger
+metadata-only font loading via `BaseCommand`):
+
+[source,ruby]
+----
+report = Fontisan::Commands::AuditCommand.new(
+  "NotoSans-Regular.ttf", audit_brief: true, ucd_version: "17.0.0"
+).run
+----
+
+=== Architecture
+
+Each audit concern is implemented as a small extractor class
+registered in `Fontisan::Audit::Registry`. `AuditCommand` builds an
+`Audit::Context` and iterates the registry, merging each extractor's
+output into a single `Models::Audit::AuditReport`. Adding a new field
+group means adding one extractor class and one line in the registry —
+`AuditCommand` itself never changes (open/closed).
+
+Two extractor sets are defined:
+
+* `ORDERED_EXTRACTORS` — the full set (default).
+* `BRIEF_EXTRACTORS` — a cheap subset for `--brief` (provenance,
+  identity, style, licensing, coverage).
+
+Sub-models (`Licensing`, `Metrics`, `Hinting`, `ColorCapabilities`,
+`VariationDetail`, `OpenTypeLayout`, `CodepointRange`, `AuditBlock`,
+`NamedInstance`, `AuditAxis`, `ScriptFeatures`) group related fields
+on `AuditReport` (MECE). Compare mode produces an `AuditDiff`; library
+mode produces a `LibrarySummary`.
 
 
 == Font information

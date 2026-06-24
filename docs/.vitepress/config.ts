@@ -264,6 +264,13 @@ export default defineConfig({
           ],
         },
         {
+          text: "Font Audit",
+          collapsed: true,
+          items: [
+            { text: "audit", link: "/cli/audit" },
+          ],
+        },
+        {
           text: "Font Information",
           collapsed: true,
           items: [
