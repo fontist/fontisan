@@ -55,6 +55,12 @@ module Fontisan
   #   woff.to_ttf("output.ttf")  # if TrueType flavored
   #   woff.to_otf("output.otf")  # if CFF flavored
   class WoffFont < BinData::Record
+    # High-level pipeline format identifier. Owned by the font class so the
+    # conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :woff
+    def format = :woff
+
     endian :big
 
     woff_header :header
@@ -140,6 +146,31 @@ module Fontisan
         tag_key = entry.tag.dup.force_encoding("UTF-8")
         @compressed_table_data[tag_key] = io.read(entry.comp_length)
       end
+    end
+
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = false
+
+    # Variation profile. WOFF wraps a single SFNT font; variation tables, if
+    # present on the wrapped font, are reported here.
+    #
+    # @return [Symbol] :static, :gvar, or :cff2
+    def variation_type
+      return :static unless has_table?("fvar")
+      return :gvar if has_table?("gvar")
+      return :cff2 if has_table?("CFF2")
+
+      :static
+    end
+
+    # Outline representation, derived from the wrapped SFNT flavor.
+    #
+    # @return [Symbol] :truetype or :cff
+    def outline_type
+      truetype? ? :truetype : :cff
     end
 
     # Check if font is TrueType flavored

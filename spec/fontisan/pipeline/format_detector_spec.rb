@@ -50,6 +50,46 @@ RSpec.describe Fontisan::Pipeline::FormatDetector do
       end
     end
 
+    context "with WOFF font" do
+      let(:file_path) { fixture_path("fonttools/TestWOFF.woff") }
+      let(:detector) { described_class.new(file_path) }
+
+      it "detects WOFF format" do
+        detector.detect
+        expect(detector.detect_format).to eq(:woff)
+      end
+    end
+
+    context "with WOFF2 font" do
+      let(:file_path) { fixture_path("fonttools/TestWOFF2.woff2") }
+      let(:detector) { described_class.new(file_path) }
+
+      it "detects WOFF2 format" do
+        detector.detect
+        expect(detector.detect_format).to eq(:woff2)
+      end
+    end
+
+    context "with Type 1 PFB font" do
+      let(:file_path) { fixture_path("fonts/type1/quicksand.pfb") }
+      let(:detector) { described_class.new(file_path) }
+
+      it "detects type1 format" do
+        detector.detect
+        expect(detector.detect_format).to eq(:type1)
+      end
+    end
+
+    context "with dfont collection" do
+      let(:file_path) { fixture_path("fonttools/TestDFONT.dfont") }
+      let(:detector) { described_class.new(file_path) }
+
+      it "detects dfont format" do
+        detector.detect
+        expect(detector.detect_format).to eq(:dfont)
+      end
+    end
+
     context "with SVG font" do
       let(:file_path) { "font.svg" }
       let(:detector) { described_class.new(file_path) }

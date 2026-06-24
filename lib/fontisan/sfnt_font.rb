@@ -377,6 +377,35 @@ module Fontisan
       !find_table_entry(tag).nil?
     end
 
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = false
+
+    # Variation profile of the font, derived from its table set. Used by the
+    # conversion pipeline to choose between preserving variation tables and
+    # generating a static instance.
+    #
+    # @return [Symbol] :static, :gvar (TrueType variable), or :cff2 (CFF2 variable)
+    def variation_type
+      return :static unless has_table?("fvar")
+      return :gvar if has_table?("gvar")
+      return :cff2 if has_table?("CFF2")
+
+      :static
+    end
+
+    # Outline representation used by the font. Derived from the table set.
+    #
+    # @return [Symbol] :truetype (glyf/gvar) or :cff (CFF/CFF2)
+    def outline_type
+      return :truetype if has_table?("glyf") || has_table?("gvar")
+      return :cff if has_table?("CFF ") || has_table?("CFF2")
+
+      :unknown
+    end
+
     # Check if a table is available in the current loading mode
     #
     # @param tag [String] The table tag to check

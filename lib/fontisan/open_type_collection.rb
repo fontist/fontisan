@@ -15,6 +15,12 @@ module Fontisan
   #     fonts = otc.extract_fonts(io)  # => [OpenTypeFont, OpenTypeFont, ...]
   #   end
   class OpenTypeCollection < BaseCollection
+    # High-level pipeline format identifier. Owned by the collection class
+    # so the conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :otc
+    def format = :otc
+
     # Get the font class for OpenType collections
     #
     # @return [Class] OpenTypeFont class

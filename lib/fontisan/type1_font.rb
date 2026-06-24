@@ -34,8 +34,38 @@ module Fontisan
     # @return [String, nil] File path if loaded from file
     attr_reader :file_path
 
-    # @return [Symbol] Format type (:pfb or :pfa)
-    attr_reader :format
+    # @return [Symbol] Container variant (:pfb or :pfa) — the on-disk
+    #   encoding of a Type 1 font (binary vs ASCII). Distinct from
+    #   {#format}, which is the high-level pipeline format.
+    attr_reader :container_format
+
+    # High-level pipeline format identifier. Owned by the font class so
+    # the conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :type1
+    def format = :type1
+
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = false
+
+    # Type 1 fonts are not OpenType variable fonts.
+    #
+    # @return [Symbol] :static
+    def variation_type = :static
+
+    # Outline representation. Type 1 fonts use cubic PostScript CharStrings.
+    #
+    # @return [Symbol] :postscript
+    def outline_type = :postscript
+
+    # Type 1 fonts have no SFNT table directory; the table-oriented pipeline
+    # introspection does not apply.
+    #
+    # @return [Array<String>] empty
+    def table_names = []
 
     # @return [Symbol] Loading mode (:metadata or :full)
     attr_reader :loading_mode
@@ -64,12 +94,13 @@ module Fontisan
     # Initialize a new Type1Font instance
     #
     # @param data [String] Font file data (binary or text)
-    # @param format [Symbol] Format type (:pfb or :pfa, auto-detected if nil)
+    # @param container_format [Symbol] Container variant (:pfb or :pfa,
+    #   auto-detected if nil)
     # @param file_path [String, nil] Optional file path for reference
     # @param mode [Symbol] Loading mode (:metadata or :full, default: :full)
-    def initialize(data, format: nil, file_path: nil, mode: :full)
+    def initialize(data, container_format: nil, file_path: nil, mode: :full)
       @file_path = file_path
-      @format = format || detect_format(data)
+      @container_format = container_format || detect_format(data)
       @data = data
       @loading_mode = mode
 
@@ -139,7 +170,7 @@ module Fontisan
       if @encrypted_portion.nil? || @encrypted_portion.empty?
         @decrypted_data = @clear_text
       else
-        encrypted_binary = if @format == :pfa
+        encrypted_binary = if @container_format == :pfa
                              # Convert hex string to binary
                              [@encrypted_portion.gsub(/\s/, "")].pack("H*")
                            else
@@ -226,15 +257,15 @@ module Fontisan
 
     private
 
-    # Parse font data based on format
+    # Parse font data based on container format
     def parse_font_data
-      case @format
+      case @container_format
       when :pfb
         parse_pfb
       when :pfa
         parse_pfa
       else
-        raise Fontisan::Error, "Unknown format: #{@format}"
+        raise Fontisan::Error, "Unknown container format: #{@container_format}"
       end
     end
 

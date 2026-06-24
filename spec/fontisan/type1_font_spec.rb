@@ -36,21 +36,21 @@ RSpec.describe Fontisan::Type1Font do
       data = "\x80\x01\x04\x00\x00\x00test\x80\x03"
       font = described_class.new(data)
 
-      expect(font.format).to eq(:pfb)
+      expect(font.container_format).to eq(:pfb)
     end
 
     it "auto-detects PFA format" do
       data = "%!PS-AdobeFont-1.0: TestFont"
       font = described_class.new(data)
 
-      expect(font.format).to eq(:pfa)
+      expect(font.container_format).to eq(:pfa)
     end
 
     it "accepts explicit format" do
       data = "%!PS-AdobeFont-1.0: TestFont"
-      font = described_class.new(data, format: :pfa)
+      font = described_class.new(data, container_format: :pfa)
 
-      expect(font.format).to eq(:pfa)
+      expect(font.container_format).to eq(:pfa)
     end
 
     it "raises Error for unrecognizable format" do
