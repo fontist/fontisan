@@ -10,6 +10,7 @@ module Fontisan
       autoload :AuditBlock,  "fontisan/models/audit/audit_block"
       autoload :AuditAxis,   "fontisan/models/audit/audit_axis"
       autoload :AuditReport, "fontisan/models/audit/audit_report"
+      autoload :ColorCapabilities, "fontisan/models/audit/color_capabilities"
       autoload :EmbeddingType, "fontisan/models/audit/embedding_type"
       autoload :FsSelectionFlags, "fontisan/models/audit/fs_selection_flags"
       autoload :GaspRange, "fontisan/models/audit/gasp_range"

@@ -16,6 +16,7 @@ module Fontisan
       autoload :Licensing, "fontisan/audit/extractors/licensing"
       autoload :Metrics, "fontisan/audit/extractors/metrics"
       autoload :Hinting, "fontisan/audit/extractors/hinting"
+      autoload :ColorCapabilities, "fontisan/audit/extractors/color_capabilities"
       autoload :Coverage, "fontisan/audit/extractors/coverage"
       autoload :Aggregations, "fontisan/audit/extractors/aggregations"
     end

@@ -18,6 +18,7 @@ module Fontisan
         Extractors::Licensing,
         Extractors::Metrics,
         Extractors::Hinting,
+        Extractors::ColorCapabilities,
         Extractors::Coverage,
         Extractors::Aggregations,
       ].freeze
