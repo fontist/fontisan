@@ -174,6 +174,25 @@ conversions:
       WOFF decompression with zlib. Preserves all font data and metadata.
       Automatically detects font flavor from WOFF header.
 
+  - from: woff
+    to: woff2
+    strategy: woff_reader
+    description: "Transcode WOFF to WOFF2 (re-wrap with Brotli)"
+    status: implemented
+    notes: >
+      Web-format transcoding. The pipeline decodes WOFF (zlib) into its
+      underlying SFNT tables, then re-wraps them as WOFF2 with Brotli.
+      Useful for migrating legacy web fonts to the smaller WOFF2 format.
+
+  - from: woff
+    to: svg
+    strategy: svg_generator
+    description: "Generate SVG font from WOFF"
+    status: implemented
+    notes: >
+      Decodes WOFF (zlib) to SFNT tables, then renders glyph outlines as
+      SVG paths. Note: SVG fonts are deprecated in favor of WOFF2.
+
   # Phase 2 conversions (Milestone 2.2) - SVG
   - from: ttf
     to: svg
@@ -253,6 +272,25 @@ conversions:
     notes: >
       Same-format copy operation. Decompresses and re-compresses WOFF2 data
       with Brotli, useful for normalizing compression or updating metadata.
+
+  - from: woff2
+    to: woff
+    strategy: woff2_decoder
+    description: "Transcode WOFF2 to WOFF (re-wrap with zlib)"
+    status: implemented
+    notes: >
+      Web-format transcoding. The pipeline decodes WOFF2 (Brotli) into its
+      underlying SFNT tables, then re-wraps them as WOFF with zlib. Useful
+      for legacy browser compatibility where WOFF2 is unavailable.
+
+  - from: woff2
+    to: svg
+    strategy: svg_generator
+    description: "Generate SVG font from WOFF2"
+    status: implemented
+    notes: >
+      Decodes WOFF2 (Brotli) to SFNT tables, then renders glyph outlines as
+      SVG paths. Note: SVG fonts are deprecated in favor of WOFF2.
 
   # Collection format conversions (TTC/OTC/dfont)
   # Same-format collection operations

@@ -82,6 +82,12 @@ module Fontisan
   #   puts font.header.flavor
   #   puts font.table_names
   class Woff2Font
+    # High-level pipeline format identifier. Owned by the font class so the
+    # conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :woff2
+    def format = :woff2
+
     # Simple struct for storing file path
     IOSource = Struct.new(:path)
 
@@ -143,6 +149,31 @@ module Fontisan
     # Check if table exists
     def has_table?(tag)
       @table_entries.any? { |entry| entry.tag == tag }
+    end
+
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = false
+
+    # Variation profile. WOFF2 wraps a single SFNT font; variation tables, if
+    # present on the wrapped font, are reported here.
+    #
+    # @return [Symbol] :static, :gvar, or :cff2
+    def variation_type
+      return :static unless has_table?("fvar")
+      return :gvar if has_table?("gvar")
+      return :cff2 if has_table?("CFF2")
+
+      :static
+    end
+
+    # Outline representation, derived from the wrapped SFNT flavor.
+    #
+    # @return [Symbol] :truetype or :cff
+    def outline_type
+      truetype? ? :truetype : :cff
     end
 
     # Find table entry by tag

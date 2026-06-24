@@ -15,6 +15,12 @@ module Fontisan
   #     fonts = ttc.extract_fonts(io)  # => [TrueTypeFont, TrueTypeFont, ...]
   #   end
   class TrueTypeCollection < BaseCollection
+    # High-level pipeline format identifier. Owned by the collection class
+    # so the conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :ttc
+    def format = :ttc
+
     # Get the font class for TrueType collections
     #
     # @return [Class] TrueTypeFont class

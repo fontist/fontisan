@@ -25,6 +25,12 @@ module Fontisan
   # @example Reading from TTC collection
   #   ttf = TrueTypeFont.from_collection(io, offset)
   class TrueTypeFont < SfntFont
+    # High-level pipeline format identifier. Owned by the font class so the
+    # conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :ttf
+    def format = :ttf
+
     # Check if font is TrueType flavored
     #
     # @return [Boolean] true for TrueType fonts

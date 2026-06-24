@@ -26,6 +26,35 @@ module Fontisan
   class DfontCollection
     include Collection::SharedLogic
 
+    # High-level pipeline format identifier. Owned by the collection class
+    # so the conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :dfont
+    def format = :dfont
+
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = true
+
+    # Variation profile. dfonts are containers; per-font variation is not
+    # exposed at the collection level.
+    #
+    # @return [Symbol] :static
+    def variation_type = :static
+
+    # Outline representation. dfonts may contain mixed-flavor fonts;
+    # per-font outline type requires loading an individual font.
+    #
+    # @return [Symbol] :unknown
+    def outline_type = :unknown
+
+    # Collections have no single SFNT table directory.
+    #
+    # @return [Array<String>] empty
+    def table_names = []
+
     # Path to dfont file
     # @return [String]
     attr_reader :path

@@ -118,6 +118,29 @@ module Fontisan
       num_fonts
     end
 
+    # Whether this object represents a font collection rather than a single
+    # font. Each font class is the authority on this question.
+    #
+    # @return [Boolean]
+    def collection? = true
+
+    # Variation profile. Collections are containers; per-font variation is
+    # not exposed at the collection level.
+    #
+    # @return [Symbol] :static
+    def variation_type = :static
+
+    # Outline representation. Collections may contain mixed-flavor fonts;
+    # per-font outline type requires loading an individual font.
+    #
+    # @return [Symbol] :unknown
+    def outline_type = :unknown
+
+    # Collections have no single SFNT table directory.
+    #
+    # @return [Array<String>] empty
+    def table_names = []
+
     # Validate format correctness
     #
     # @return [Boolean] true if the format is valid, false otherwise

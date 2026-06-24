@@ -50,107 +50,62 @@ module Fontisan
 
       # Detect font format
       #
-      # @return [Symbol] One of :ttf, :otf, :ttc, :otc, :woff, :woff2, :svg
+      # Delegates to the loaded font object's own `#format` method.
+      # Each font class (TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font,
+      # Type1Font, *Collection) is the single source of truth for its
+      # format identifier. This keeps FormatDetector closed for modification
+      # when new font classes are added (OCP): no case statement to edit.
+      #
+      # @return [Symbol] One of :ttf, :otf, :ttc, :otc, :woff, :woff2,
+      #   :type1, :dfont, or :unknown
       def detect_format
-        # Check for SVG first (from file extension even if font failed to load)
+        # SVG fonts are an export-only target; no font object exists yet.
         return :svg if @file_path.end_with?(".svg")
 
         return :unknown unless @font
 
-        # Use is_a? for proper class checking
-        case @font
-        when Fontisan::TrueTypeCollection
-          :ttc
-        when Fontisan::OpenTypeCollection
-          :otc
-        when Fontisan::TrueTypeFont
-          if @file_path.end_with?(".woff")
-            :woff
-          elsif @file_path.end_with?(".woff2")
-            :woff2
-          else
-            :ttf
-          end
-        when Fontisan::OpenTypeFont
-          if @file_path.end_with?(".woff")
-            :woff
-          elsif @file_path.end_with?(".woff2")
-            :woff2
-          else
-            :otf
-          end
-        else
-          :unknown
-        end
+        @font.format
       end
 
       # Detect variation type
       #
-      # @return [Symbol] One of :static, :gvar, :cff2
+      # Delegates to the loaded font object's own `#variation_type` method.
+      # Each font class is the single source of truth for its variation
+      # profile, so this method needs no class-specific branching.
+      #
+      # @return [Symbol] :static, :gvar (TrueType variable), or :cff2
       def detect_variation
         return :static unless @font
 
-        # Collections don't have has_table? method
-        # Return :static for collections (variation detection would need to load first font)
-        return :static if collection?
-
-        # Check for variable font tables
-        if @font.has_table?("fvar")
-          # Variable font detected - check variation type
-          if @font.has_table?("gvar")
-            :gvar # TrueType variable font
-          elsif @font.has_table?("CFF2")
-            :cff2 # OpenType variable font (CFF2)
-          else
-            :static # Has fvar but no variation data (shouldn't happen)
-          end
-        else
-          :static
-        end
+        @font.variation_type
       end
 
       # Detect font capabilities
+      #
+      # Aggregates four pieces of self-knowledge owned by the font class:
+      # outline representation, variation support, collection status, and
+      # the table directory. Each is exposed as a method on the font object
+      # so this method stays free of class-specific branching.
       #
       # @return [Hash] Capabilities hash
       def detect_capabilities
         return default_capabilities unless @font
 
-        # Check if this is a collection
-        is_collection = collection?
-
-        font_to_check = if is_collection
-                          # Collections don't have fonts method, need to load first font
-                          nil # Will handle in API usage
-                        else
-                          @font
-                        end
-
-        # For collections, return basic capabilities
-        if is_collection
-          return {
-            outline: :unknown, # Would need to load first font to know
-            variation: false,  # Would need to load first font to know
-            collection: true,
-            tables: [],
-          }
-        end
-
-        return default_capabilities unless font_to_check
-
         {
-          outline: detect_outline_type(font_to_check),
-          variation: detect_variation != :static,
-          collection: false,
-          tables: available_tables(font_to_check),
+          outline: @font.outline_type,
+          variation: @font.variation_type != :static,
+          collection: @font.collection?,
+          tables: @font.table_names,
         }
       end
 
       # Check if font is a collection
       #
-      # @return [Boolean] True if collection (TTC/OTC)
+      # @return [Boolean] True if the loaded object is a font collection
       def collection?
-        @font.is_a?(Fontisan::TrueTypeCollection) ||
-          @font.is_a?(Fontisan::OpenTypeCollection)
+        return false unless @font
+
+        @font.collection?
       end
 
       # Check if font is variable
@@ -205,32 +160,6 @@ module Fontisan
       rescue StandardError => e
         warn "Failed to load font: #{e.message}"
         @font = nil
-      end
-
-      # Detect outline type
-      #
-      # @param font [Font] Font object
-      # @return [Symbol] :truetype or :cff
-      def detect_outline_type(font)
-        if font.has_table?("glyf") || font.has_table?("gvar")
-          :truetype
-        elsif font.has_table?("CFF ") || font.has_table?("CFF2")
-          :cff
-        else
-          :unknown
-        end
-      end
-
-      # Get available tables
-      #
-      # @param font [Font] Font object
-      # @return [Array<String>] List of table tags
-      def available_tables(font)
-        return [] unless font.respond_to?(:table_names)
-
-        font.table_names
-      rescue StandardError
-        []
       end
 
       # Default capabilities when font cannot be loaded

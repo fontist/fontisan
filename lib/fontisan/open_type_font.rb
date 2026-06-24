@@ -26,6 +26,12 @@ module Fontisan
   # @example Reading from TTC collection
   #   otf = OpenTypeFont.from_collection(io, offset)
   class OpenTypeFont < SfntFont
+    # High-level pipeline format identifier. Owned by the font class so the
+    # conversion pipeline can dispatch without case statements (OCP).
+    #
+    # @return [Symbol] :otf
+    def format = :otf
+
     # Page cache for lazy loading (maps page_start_offset => page_data)
     attr_accessor :page_cache
 
