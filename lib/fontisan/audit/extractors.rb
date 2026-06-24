@@ -14,6 +14,7 @@ module Fontisan
       autoload :Identity, "fontisan/audit/extractors/identity"
       autoload :Style, "fontisan/audit/extractors/style"
       autoload :Coverage, "fontisan/audit/extractors/coverage"
+      autoload :Licensing, "fontisan/audit/extractors/licensing"
       autoload :Aggregations, "fontisan/audit/extractors/aggregations"
     end
   end
