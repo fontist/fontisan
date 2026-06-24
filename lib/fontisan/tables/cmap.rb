@@ -347,6 +347,30 @@ module Fontisan
         false
       end
 
+      # Distinct subtable formats present in this cmap, sorted ascending.
+      #
+      # Each encoding record's subtable begins with a uint16 format tag.
+      # Returns the unique set of those formats across all records. Useful
+      # for audit reports that need to record which cmap subtables
+      # contributed to the Unicode mappings.
+      #
+      # @return [Array<Integer>] sorted unique format numbers
+      def subtable_formats
+        data = to_binary_s
+        records = read_encoding_records(data)
+
+        formats = records.filter_map do |record|
+          subtable_data = extract_subtable_data(record, data)
+          next nil unless subtable_data && subtable_data.length >= 2
+
+          subtable_data[0, 2].unpack1("n")
+        end
+
+        formats.uniq.sort
+      rescue StandardError
+        []
+      end
+
       # Validation helper: Check if glyph indices are within bounds
       #
       # @param max_glyph_id [Integer] Maximum valid glyph ID from maxp table

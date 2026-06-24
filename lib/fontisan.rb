@@ -128,6 +128,10 @@ require_relative "fontisan/models/color_layer"
 require_relative "fontisan/models/color_palette"
 require_relative "fontisan/models/svg_glyph"
 
+# Audit + UCD models (Lutaml::Model)
+require_relative "fontisan/models/audit"
+require_relative "fontisan/models/ucd"
+
 # Validators infrastructure (NEW - DSL-based framework from Week 2+)
 require_relative "fontisan/validators/validator"
 require_relative "fontisan/validators/basic_validator"
@@ -195,6 +199,12 @@ require_relative "fontisan/pipeline/variation_resolver"
 require_relative "fontisan/pipeline/output_writer"
 require_relative "fontisan/pipeline/transformation_pipeline"
 
+# UCD infrastructure (Unicode Character Database)
+require_relative "fontisan/ucd"
+
+# Audit infrastructure
+require_relative "fontisan/audit"
+
 # Optimization infrastructure
 require_relative "fontisan/optimizers/pattern_analyzer"
 require_relative "fontisan/optimizers/subroutine_builder"
@@ -230,6 +240,7 @@ require_relative "fontisan/commands/convert_command"
 require_relative "fontisan/commands/pack_command"
 require_relative "fontisan/commands/unpack_command"
 require_relative "fontisan/commands/validate_command"
+require_relative "fontisan/commands/audit_command"
 
 # Formatters
 require_relative "fontisan/formatters/text_formatter"
