@@ -11,6 +11,8 @@ module Fontisan
     autoload :Context, "fontisan/audit/context"
     autoload :CodepointRangeCoalescer, "fontisan/audit/codepoint_range_coalescer"
     autoload :Differ, "fontisan/audit/differ"
+    autoload :LibraryAggregator, "fontisan/audit/library_aggregator"
+    autoload :LibraryAuditor, "fontisan/audit/library_auditor"
     autoload :Registry, "fontisan/audit/registry"
     autoload :Extractors, "fontisan/audit/extractors"
     autoload :StyleExtractor, "fontisan/audit/style_extractor"

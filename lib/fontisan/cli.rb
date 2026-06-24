@@ -52,12 +52,18 @@ module Fontisan
     option :compare, type: :boolean, default: false,
                      desc: "Diff two fonts or two saved reports " \
                            "(requires exactly two PATHs)"
+    option :recursive, type: :boolean, default: false,
+                       desc: "Audit every font under a directory tree " \
+                             "(library mode)"
+    option :summary, type: :boolean, default: false,
+                     desc: "Produce a LibrarySummary over a directory of fonts"
     option :output, type: :string,
                     desc: "Output directory (collections) or file (single font)",
                     aliases: "-o"
-    # Produce a complete font audit report, or diff two fonts/reports.
+    # Produce a complete font audit report, or diff two fonts/reports,
+    # or summarize a whole library.
     #
-    # @param paths [Array<String>] one path (audit) or two paths (--compare)
+    # @param paths [Array<String>] one path (audit/library), or two paths (--compare)
     def audit(*paths)
       if options[:compare]
         unless paths.length == 2
@@ -70,7 +76,10 @@ module Fontisan
 
       raise Thor::Error, "audit requires exactly one PATH" unless paths.length == 1
 
-      run_single_audit(paths[0])
+      path = paths[0]
+      return run_library_audit(path) if library_mode?(path)
+
+      run_single_audit(path)
     rescue Errno::ENOENT, Error => e
       handle_error(e)
     end
@@ -798,6 +807,39 @@ module Fontisan
       end
 
       output_result(diff)
+    end
+
+    def run_library_audit(path)
+      cmd = Commands::AuditLibraryCommand.new(
+        path,
+        recursive: options[:recursive],
+        options: options.dup,
+      )
+      summary = cmd.run
+      announce_skipped(cmd.skipped)
+      return if options[:quiet]
+
+      if options[:output]
+        File.write(options[:output],
+                   serialize_report(summary, options[:format].to_sym))
+        puts "Wrote #{options[:output]}"
+        return
+      end
+
+      output_result(summary)
+    end
+
+    # Library mode triggers when the path is a directory and either
+    # --recursive or --summary is requested. A single-file audit ignores
+    # both flags (a TTC is audited face-by-face via run_single_audit).
+    def library_mode?(path)
+      Dir.exist?(path) && (options[:recursive] || options[:summary])
+    end
+
+    def announce_skipped(skipped)
+      return if skipped.empty?
+
+      skipped.each { |p| warn "skipped #{p}" }
     end
 
     def serialize_report(report, format)
