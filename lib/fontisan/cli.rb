@@ -33,8 +33,9 @@ module Fontisan
          "Unicode blocks/scripts, OpenType features)"
     option :font_index, type: :numeric,
                         desc: "Audit only this face in a collection (default: all)"
-    option :no_codepoints, type: :boolean, default: false,
-                           desc: "Omit the per-codepoint list from the report"
+    option :all_codepoints, type: :boolean, default: false,
+                            desc: "Include the full per-codepoint list " \
+                                  "(defaults to compact range view)"
     option :ucd_version, type: :string,
                          desc: "UCD version to aggregate against " \
                                "(default: configured default; 'latest' to probe)"

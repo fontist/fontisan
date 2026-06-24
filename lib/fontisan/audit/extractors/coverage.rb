@@ -4,18 +4,22 @@ module Fontisan
   module Audit
     module Extractors
       # Coverage fields: how many codepoints and glyphs the font ships,
-      # plus the raw codepoint list (unless suppressed).
+      # the compact codepoint-range view (default), and the optional flat
+      # per-codepoint list (only when `--all-codepoints` is on).
       #
       # Returned fields:
-      #   total_codepoints, total_glyphs, cmap_subtables, codepoints
+      #   total_codepoints, total_glyphs, cmap_subtables,
+      #   codepoint_ranges, codepoints
       class Coverage < Base
         def extract(context)
           font = context.font
+          codepoints = context.codepoints
           {
-            total_codepoints: context.codepoints.length,
+            total_codepoints: codepoints.length,
             total_glyphs: total_glyphs(font),
             cmap_subtables: cmap_subtable_formats(font),
-            codepoints: codepoints_for_report(context),
+            codepoint_ranges: CodepointRangeCoalescer.call(codepoints),
+            codepoints: codepoints_for_report(context, codepoints),
           }
         end
 
@@ -33,10 +37,10 @@ module Fontisan
           font.table(Constants::CMAP_TAG).subtable_formats
         end
 
-        def codepoints_for_report(context)
-          return [] if context.no_codepoints?
+        def codepoints_for_report(context, codepoints)
+          return [] unless context.all_codepoints?
 
-          context.codepoints.map { |cp| format("U+%<cp>04X", cp: cp) }
+          codepoints.map { |cp| format("U+%<cp>04X", cp: cp) }
         end
       end
     end

@@ -33,8 +33,8 @@ module Fontisan
         @source_format ||= FontLoader.detect_format(@font_path)&.to_s
       end
 
-      def no_codepoints?
-        @options[:no_codepoints] == true
+      def all_codepoints?
+        @options[:all_codepoints] == true
       end
 
       private

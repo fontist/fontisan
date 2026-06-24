@@ -116,17 +116,20 @@ RSpec.describe Fontisan::Commands::AuditCommand do
       expect(report.unicode_scripts).to include("Latin")
     end
 
-    it "honors :no_codepoints to skip the per-codepoint list" do
-      cmd = described_class.new(ttf_path, no_codepoints: true,
-                                          ucd_version: "17.0.0")
+    it "populates codepoint_ranges by default with empty codepoints list" do
+      cmd = described_class.new(ttf_path, ucd_version: "17.0.0")
       report = cmd.run
 
+      expect(report.codepoint_ranges).to be_an(Array)
+      expect(report.codepoint_ranges).not_to be_empty
+      expect(report.codepoint_ranges.first).to be_a(Fontisan::Models::Audit::CodepointRange)
       expect(report.codepoints).to eq([])
       expect(report.total_codepoints).to be > 0
     end
 
-    it "populates codepoints as U+XXXX strings by default" do
-      cmd = described_class.new(ttf_path, ucd_version: "17.0.0")
+    it "honors :all_codepoints to populate the per-codepoint list" do
+      cmd = described_class.new(ttf_path, all_codepoints: true,
+                                          ucd_version: "17.0.0")
       report = cmd.run
 
       expect(report.codepoints.first).to match(/\AU\+[0-9A-F]{4,6}\z/)

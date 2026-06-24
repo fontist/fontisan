@@ -28,6 +28,7 @@ RSpec.describe Fontisan::Models::Audit::AuditReport do
       total_codepoints: 128,
       total_glyphs: 256,
       cmap_subtables: [4, 12],
+      codepoint_ranges: [],
       codepoints: ["U+0041"],
       ucd_version: "17.0.0",
       blocks: [],
