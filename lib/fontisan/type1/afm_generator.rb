@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "upm_scaler"
-require_relative "encodings"
-require_relative "agl"
-
 module Fontisan
   module Type1
     # AFM (Adobe Font Metrics) file generator

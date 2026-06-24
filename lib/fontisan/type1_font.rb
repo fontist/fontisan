@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "type1"
-
 module Fontisan
   # Adobe Type 1 Font handler
   #

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../models/hint"
-
 module Fontisan
   module Tables
     class Cff

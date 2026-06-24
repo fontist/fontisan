@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "lutaml/model"
-require_relative "collection_font_summary"
 
 module Fontisan
   module Models

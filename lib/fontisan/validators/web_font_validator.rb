@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "basic_validator"
-
 module Fontisan
   module Validators
     # WebFontValidator provides web font optimization and embedding compatibility checks

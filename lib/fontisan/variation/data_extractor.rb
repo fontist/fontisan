@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "variation_context"
-
 module Fontisan
   module Variation
     # Extracts variation data from OpenType variable fonts

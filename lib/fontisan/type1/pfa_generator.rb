@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "pfb_generator"
-require_relative "decryptor"
-
 module Fontisan
   module Type1
     # PFA (Printer Font ASCII) Generator

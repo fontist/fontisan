@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../cff/table_builder"
-require_relative "table_reader"
-require_relative "private_dict_blend_handler"
-require_relative "../cff/charstring_parser"
-require_relative "../cff/charstring_builder"
-require_relative "../cff/hint_operation_injector"
-require_relative "../cff/dict_builder"
 require "stringio"
 
 module Fontisan
@@ -493,8 +486,6 @@ vstore:)
         # @param dict [Hash] Top DICT hash with integer operator keys
         # @return [String] Binary DICT data
         def serialize_top_dict(dict)
-          require_relative "../cff/dict_builder"
-
           # Convert integer operator keys to symbol keys for DictBuilder
           symbol_dict = convert_operators_to_symbols(dict)
           Cff::DictBuilder.build(symbol_dict)
@@ -505,8 +496,6 @@ vstore:)
         # @param dict [Hash] Private DICT hash
         # @return [String] Binary DICT data
         def serialize_private_dict(dict)
-          require_relative "../cff/dict_builder"
-
           # Convert integer operator keys to symbol keys for DictBuilder
           symbol_dict = convert_operators_to_symbols(dict)
           Cff::DictBuilder.build(symbol_dict)

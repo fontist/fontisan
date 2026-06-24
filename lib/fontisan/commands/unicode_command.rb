@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../models/unicode_mappings"
-
 module Fontisan
   module Commands
     # Command to list Unicode to glyph index mappings from a font file

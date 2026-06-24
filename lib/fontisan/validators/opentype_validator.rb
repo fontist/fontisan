@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "font_book_validator"
-
 module Fontisan
   module Validators
     # OpenTypeValidator provides comprehensive OpenType specification compliance checks

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../error"
-
 module Fontisan
   module Validation
     # CollectionValidator validates font compatibility for collection formats

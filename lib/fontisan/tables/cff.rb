@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "stringio"
-require_relative "../binary/base_record"
 
 module Fontisan
   module Tables
@@ -42,6 +41,28 @@ module Fontisan
     #   puts cff.font_count  # => 1
     #   puts cff.header.version  # => "1.0"
     class Cff < Binary::BaseRecord
+      # Inner namespace autoloads — declared here so Cff::* constants
+      # resolve on first reference without require_relative.
+      autoload :CFFGlyph, "fontisan/tables/cff/cff_glyph"
+      autoload :Charset, "fontisan/tables/cff/charset"
+      autoload :CharString, "fontisan/tables/cff/charstring"
+      autoload :CharStringBuilder, "fontisan/tables/cff/charstring_builder"
+      autoload :CharStringParser, "fontisan/tables/cff/charstring_parser"
+      autoload :CharStringRebuilder, "fontisan/tables/cff/charstring_rebuilder"
+      autoload :CharstringsIndex, "fontisan/tables/cff/charstrings_index"
+      autoload :Dict, "fontisan/tables/cff/dict"
+      autoload :DictBuilder, "fontisan/tables/cff/dict_builder"
+      autoload :Encoding, "fontisan/tables/cff/encoding"
+      autoload :Header, "fontisan/tables/cff/header"
+      autoload :HintOperationInjector, "fontisan/tables/cff/hint_operation_injector"
+      autoload :Index, "fontisan/tables/cff/index"
+      autoload :IndexBuilder, "fontisan/tables/cff/index_builder"
+      autoload :OffsetRecalculator, "fontisan/tables/cff/offset_recalculator"
+      autoload :PrivateDict, "fontisan/tables/cff/private_dict"
+      autoload :PrivateDictWriter, "fontisan/tables/cff/private_dict_writer"
+      autoload :TableBuilder, "fontisan/tables/cff/table_builder"
+      autoload :TopDict, "fontisan/tables/cff/top_dict"
+
       # OpenType table tag for CFF
       TAG = "CFF "
 
@@ -468,19 +489,5 @@ module Fontisan
         raise CorruptedTableError, "Failed to parse Encoding: #{e.message}"
       end
     end
-
-    # Load nested class definitions after the main class is defined
-    require_relative "cff/header"
-    require_relative "cff/index"
-    require_relative "cff/dict"
-    require_relative "cff/top_dict"
-    require_relative "cff/private_dict"
-    require_relative "cff/charstring"
-    require_relative "cff/charstring_parser"
-    require_relative "cff/charstring_rebuilder"
-    require_relative "cff/charstrings_index"
-    require_relative "cff/charset"
-    require_relative "cff/encoding"
-    require_relative "cff/cff_glyph"
   end
 end

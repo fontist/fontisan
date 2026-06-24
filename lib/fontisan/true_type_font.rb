@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "sfnt_font"
-
 module Fontisan
   # TrueType Font domain object
   #

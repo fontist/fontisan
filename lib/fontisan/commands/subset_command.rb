@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../subset/builder"
-require_relative "../subset/options"
 require "fileutils"
 
 module Fontisan

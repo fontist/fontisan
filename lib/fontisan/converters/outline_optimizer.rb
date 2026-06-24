@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../optimizers/pattern_analyzer"
-require_relative "../optimizers/subroutine_optimizer"
-require_relative "../optimizers/subroutine_builder"
-require_relative "../optimizers/charstring_rewriter"
-
 module Fontisan
   module Converters
     # Optimizes CFF CharStrings using subroutine extraction

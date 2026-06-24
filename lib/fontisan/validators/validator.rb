@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../models/validation_report"
-
 module Fontisan
   module Validators
     # Base class for all validators using block-based DSL

@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "validator"
-require_relative "optimizer"
-require_relative "table_accessor"
-
 module Fontisan
   module Variation
     # Subset variable fonts while preserving variation

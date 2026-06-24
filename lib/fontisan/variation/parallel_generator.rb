@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "instance_generator"
-require_relative "cache"
-require_relative "../utils/thread_pool"
 require "etc"
 
 module Fontisan

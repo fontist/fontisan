@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "cache_key_builder"
-
 module Fontisan
   module Variation
     # Caches variation calculations for performance

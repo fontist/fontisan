@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_loader"
-require_relative "../error"
-
 module Fontisan
   module Commands
     # Command to dump raw table data from fonts

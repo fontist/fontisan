@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_strategy"
-require_relative "../../variation/instance_generator"
-require_relative "../../variation/variation_context"
-
 module Fontisan
   module Pipeline
     module Strategies

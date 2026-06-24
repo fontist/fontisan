@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_writer"
-require_relative "../converters/outline_converter"
-require_relative "../converters/woff_writer"
-require_relative "../error"
-
 module Fontisan
   module Variation
     # Writes generated static font instances to files in various formats

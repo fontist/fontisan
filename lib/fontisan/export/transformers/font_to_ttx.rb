@@ -1,14 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../models/ttx/ttfont"
-require_relative "../../models/ttx/glyph_order"
-require_relative "head_transformer"
-require_relative "name_transformer"
-require_relative "os2_transformer"
-require_relative "post_transformer"
-require_relative "hhea_transformer"
-require_relative "maxp_transformer"
-
 module Fontisan
   module Export
     module Transformers

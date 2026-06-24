@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_collection"
-
 module Fontisan
   # TrueType Collection domain object
   #
@@ -25,7 +23,6 @@ module Fontisan
     #
     # @return [Class] TrueTypeFont class
     def self.font_class
-      require_relative "true_type_font"
       TrueTypeFont
     end
 
@@ -47,7 +44,6 @@ module Fontisan
     def font(index, io, mode: LoadingModes::FULL)
       return nil if index >= num_fonts
 
-      require_relative "true_type_font"
       TrueTypeFont.from_collection(io, font_offsets[index], mode: mode)
     end
 
@@ -59,8 +55,6 @@ module Fontisan
     # @param io [IO] Open file handle to read fonts from
     # @return [Array<TrueTypeFont>] Array of font objects
     def extract_fonts(io)
-      require_relative "true_type_font"
-
       font_offsets.map do |offset|
         TrueTypeFont.from_collection(io, offset)
       end
@@ -73,11 +67,6 @@ module Fontisan
     # @param io [IO] Open file handle to read fonts from
     # @return [CollectionListInfo] List of fonts with metadata
     def list_fonts(io)
-      require_relative "models/collection_list_info"
-      require_relative "models/collection_font_summary"
-      require_relative "true_type_font"
-      require_relative "tables/name"
-
       fonts = font_offsets.map.with_index do |offset, index|
         font = TrueTypeFont.from_collection(io, offset)
 
@@ -130,9 +119,6 @@ module Fontisan
     # @param io [IO] Open file handle
     # @return [TableSharingInfo] Sharing statistics
     def calculate_table_sharing(io)
-      require_relative "models/table_sharing_info"
-      require_relative "true_type_font"
-
       # Extract all fonts
       fonts = font_offsets.map do |offset|
         TrueTypeFont.from_collection(io, offset)

@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "index"
-require_relative "charstring"
-
 module Fontisan
   module Tables
     class Cff

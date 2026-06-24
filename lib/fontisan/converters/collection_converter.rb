@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../conversion_options"
-require_relative "format_converter"
-require_relative "../collection/builder"
-require_relative "../collection/dfont_builder"
-require_relative "../parsers/dfont_parser"
-require_relative "../font_loader"
-
 module Fontisan
   module Converters
     # CollectionConverter handles conversion between collection formats
@@ -343,7 +336,6 @@ conv_options = nil)
       # @return [Font] Font object
       def build_font_from_tables(tables, format)
         # Create temporary font from tables
-        require_relative "../font_writer"
         require "stringio"
 
         sfnt_version = format == :otf ? 0x4F54544F : 0x00010000

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "encodings"
-
 module Fontisan
   module Type1
     # Conversion options for Type 1 font generation

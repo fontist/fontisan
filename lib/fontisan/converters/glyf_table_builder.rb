@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../tables/glyf/glyph_builder"
-
 module Fontisan
   module Converters
     # Builds glyf and loca tables from glyph outlines

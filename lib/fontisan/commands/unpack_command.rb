@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../font_loader"
-require_relative "../font_writer"
 require "fileutils"
 
 module Fontisan
@@ -144,10 +141,8 @@ module Fontisan
           # Load as TTC or OTC based on extension hint
           # Both use same structure, main difference is expected font types
           if ext == ".otc"
-            require_relative "../open_type_collection"
             OpenTypeCollection.read(io)
           else
-            require_relative "../true_type_collection"
             TrueTypeCollection.read(io)
           end
         end
@@ -252,8 +247,6 @@ module Fontisan
       # @param output_path [String] Output file path
       # @return [void]
       def convert_and_write(font, output_path)
-        require_relative "../converters/format_converter"
-
         converter = Converters::FormatConverter.new
         converter.convert(font, @format, output_path: output_path)
       rescue StandardError => e

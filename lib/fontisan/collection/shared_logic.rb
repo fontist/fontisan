@@ -15,8 +15,6 @@ module Fontisan
       # @param fonts [Array<TrueTypeFont, OpenTypeFont>] Array of fonts
       # @return [Models::TableSharingInfo] Sharing statistics
       def calculate_table_sharing_for_fonts(fonts)
-        require_relative "../models/table_sharing_info"
-
         # Build table hash map (checksum -> size)
         table_map = {}
         total_table_size = 0

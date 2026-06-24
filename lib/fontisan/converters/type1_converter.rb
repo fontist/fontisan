@@ -1,14 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../conversion_options"
-require_relative "../type1/charstring_converter"
-require_relative "../type1/cff_to_type1_converter"
-require_relative "../type1/font_dictionary"
-require_relative "../type1/charstrings"
-require_relative "../type1/seac_expander"
-require_relative "../type1_font"
-require_relative "cff_table_builder"
-
 module Fontisan
   module Converters
     # Converter for Adobe Type 1 fonts to/from SFNT formats.
@@ -1054,8 +1045,6 @@ module Fontisan
       # @param font [Type1Font] Source Type 1 font
       # @return [String] cmap table binary data
       def build_cmap_table(font)
-        require_relative "../type1/agl"
-
         data = (+"").b
 
         # Get encoding from Type1Font

@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 require "thor"
-require_relative "base_command"
-require_relative "../variation/instance_generator"
-require_relative "../variation/instance_writer"
-require_relative "../variation/validator"
-require_relative "../error"
 
 module Fontisan
   module Commands

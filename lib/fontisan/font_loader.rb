@@ -1,18 +1,6 @@
 # frozen_string_literal: true
 
 require "stringio"
-require_relative "constants"
-require_relative "loading_modes"
-require_relative "true_type_font"
-require_relative "open_type_font"
-require_relative "true_type_collection"
-require_relative "open_type_collection"
-require_relative "dfont_collection"
-require_relative "woff_font"
-require_relative "woff2_font"
-require_relative "type1_font"
-require_relative "parsers/dfont_parser"
-require_relative "error"
 
 module Fontisan
   # FontLoader provides unified font loading with content-based format detection.

@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "conversion_strategy"
-require_relative "table_copier"
-require_relative "outline_converter"
-require_relative "woff_writer"
-require_relative "woff2_encoder"
-require_relative "svg_generator"
-require_relative "type1_converter"
 require "yaml"
 
 module Fontisan
@@ -253,8 +246,6 @@ module Fontisan
       # @option options [Integer] :instance_index Named instance index
       # @return [Hash] Hash with :svg_xml key
       def convert_variable_to_svg(font, options = {})
-        require_relative "../variation/variable_svg_generator"
-
         coordinates = options[:instance_coordinates] || {}
         generator = Variation::VariableSvgGenerator.new(font, coordinates)
 
@@ -289,7 +280,6 @@ module Fontisan
 options)
         # Case 1: Compatible formats (same outline format) - just copy tables
         if compatible_variation_formats?(source_format, target_format)
-          require_relative "../variation/variation_preserver"
           Variation::VariationPreserver.preserve(font, tables, options)
 
         # Case 2: Different outline formats - convert variation data
@@ -353,9 +343,6 @@ options)
       # @return [Hash<String, String>] Tables with converted variation
       def convert_variation_data(font, tables, source_format, target_format,
 _options)
-        require_relative "../variation/variation_preserver"
-        require_relative "../variation/converter"
-
         # For now, just preserve common tables and warn about conversion
         warn "WARNING: Full variation conversion (#{source_format} → " \
              "#{target_format}) not yet implemented. " \

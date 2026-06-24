@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "interpolator"
-
 module Fontisan
   module Variation
     # Applies CFF2 blend operators during CharString execution

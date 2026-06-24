@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../export/exporter"
-require_relative "../font_loader"
-
 module Fontisan
   module Commands
     # ExportCommand provides CLI interface for font export to YAML/JSON

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../models/ttx/tables/post_table"
-
 module Fontisan
   module Export
     module Transformers

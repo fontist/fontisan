@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "private_dict_writer"
-require_relative "offset_recalculator"
-require_relative "index_builder"
-require_relative "dict_builder"
-require_relative "charstring_rebuilder"
-require_relative "hint_operation_injector"
 require "stringio"
 
 module Fontisan

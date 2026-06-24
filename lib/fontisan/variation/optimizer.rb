@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../optimizers/pattern_analyzer"
-require_relative "../optimizers/subroutine_optimizer"
-
 module Fontisan
   module Variation
     # Optimizes CFF subroutines for variable fonts

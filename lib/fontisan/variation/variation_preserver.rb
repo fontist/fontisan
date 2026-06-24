@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "variation_context"
-require_relative "../error"
-
 module Fontisan
   module Variation
     # Preserves variation data when converting between compatible font formats

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../binary/base_record"
-
 module Fontisan
   module Variation
     # Tuple variation header structure

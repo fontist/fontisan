@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 require "yaml"
-require_relative "axis_normalizer"
-require_relative "region_matcher"
-require_relative "glyph_delta_processor"
-require_relative "metric_delta_processor"
 
 module Fontisan
   module Variable

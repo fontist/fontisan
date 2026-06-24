@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "upm_scaler"
-require_relative "ttf_to_type1_converter"
-require_relative "decryptor"
-require_relative "../tables/name"
-
 module Fontisan
   module Type1
     # PFB (Printer Font Binary) Generator

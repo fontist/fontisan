@@ -2,7 +2,6 @@
 
 require "json"
 require "yaml"
-require_relative "variation_context"
 
 module Fontisan
   module Variation

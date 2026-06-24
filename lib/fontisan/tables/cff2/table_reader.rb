@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "stringio"
-require_relative "../../binary/base_record"
 
 module Fontisan
   module Tables
@@ -233,7 +232,6 @@ module Fontisan
         # @return [Cff::Index] CharStrings INDEX
         def read_charstrings(offset)
           @io.seek(offset)
-          require_relative "../cff/index"
           Cff::Index.new(@io, start_offset: offset)
         end
 

@@ -1,14 +1,6 @@
 # frozen_string_literal: true
 
 require "lutaml/model"
-require_relative "glyph_order"
-require_relative "tables/head_table"
-require_relative "tables/name_table"
-require_relative "tables/maxp_table"
-require_relative "tables/hhea_table"
-require_relative "tables/os2_table"
-require_relative "tables/post_table"
-require_relative "tables/binary_table"
 
 module Fontisan
   module Models

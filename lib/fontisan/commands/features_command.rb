@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 require "yaml"
-require_relative "base_command"
-require_relative "../models/features_info"
-require_relative "../models/all_scripts_features_info"
 
 module Fontisan
   module Commands
