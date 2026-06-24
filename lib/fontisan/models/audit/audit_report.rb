@@ -63,6 +63,9 @@ module Fontisan
         # Layout-critical metrics from head/hhea/OS/2/post (nil for Type 1)
         attribute :metrics, Metrics
 
+        # Hinting summary from fpgm/prep/cvt/gasp/CFF charstrings (nil for Type 1)
+        attribute :hinting, Hinting
+
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
 
@@ -113,6 +116,9 @@ module Fontisan
 
           # Metrics
           map "metrics", to: :metrics
+
+          # Hinting
+          map "hinting", to: :hinting
 
           # Warning
           map "warning", to: :warning

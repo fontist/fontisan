@@ -129,6 +129,9 @@ module Fontisan
     # Control Value Table (metrics used by TrueType hinting)
     CVT_TAG = "cvt "
 
+    # Grid-fitting And Scan-conversion Procedure table (per-ppem hinting policy)
+    GASP_TAG = "gasp"
+
     # Magic number used for font file checksum adjustment calculation.
     # This constant is used in conjunction with the file checksum to compute
     # the checksumAdjustment value stored in the 'head' table.

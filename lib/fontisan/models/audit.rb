@@ -12,6 +12,8 @@ module Fontisan
       autoload :AuditReport, "fontisan/models/audit/audit_report"
       autoload :EmbeddingType, "fontisan/models/audit/embedding_type"
       autoload :FsSelectionFlags, "fontisan/models/audit/fs_selection_flags"
+      autoload :GaspRange, "fontisan/models/audit/gasp_range"
+      autoload :Hinting, "fontisan/models/audit/hinting"
       autoload :Licensing, "fontisan/models/audit/licensing"
       autoload :Metrics, "fontisan/models/audit/metrics"
     end
