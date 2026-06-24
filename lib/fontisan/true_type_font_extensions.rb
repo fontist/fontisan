@@ -1,24 +1,25 @@
 # frozen_string_literal: true
 
 module Fontisan
-  # Extensions to TrueTypeFont for table-based construction
-  class TrueTypeFont
+  # Extension module for {TrueTypeFont} providing table-based construction.
+  #
+  # Extended into TrueTypeFont from +true_type_font.rb+ so that
+  # +TrueTypeFont.from_tables(...)+ is available whenever the class
+  # itself is loaded.
+  module TrueTypeFontExtensions
     # Create font from hash of tables
     #
     # This is used during font conversion when we have tables but not a file.
     #
     # @param tables [Hash<String, String>] Map of table tag to binary data
     # @return [TrueTypeFont] New font instance
-    def self.from_tables(tables)
-      # Create minimal header structure
+    def from_tables(tables)
       font = new
       font.initialize_storage
       font.loading_mode = LoadingModes::FULL
 
-      # Store table data
       font.table_data = tables
 
-      # Build header from tables
       num_tables = tables.size
       max_power = 0
       n = num_tables
@@ -37,13 +38,12 @@ module Fontisan
       font.header.entry_selector = entry_selector
       font.header.range_shift = range_shift
 
-      # Build table directory
       font.tables.clear
       tables.each_key do |tag|
         entry = TableDirectory.new
         entry.tag = tag
-        entry.checksum = 0 # Will be calculated on write
-        entry.offset = 0 # Will be calculated on write
+        entry.checksum = 0
+        entry.offset = 0
         entry.table_length = tables[tag].bytesize
         font.tables << entry
       end
