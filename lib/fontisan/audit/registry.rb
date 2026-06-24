@@ -23,6 +23,7 @@ module Fontisan
         Extractors::OpenTypeLayout,
         Extractors::Coverage,
         Extractors::Aggregations,
+        Extractors::LanguageCoverage,
       ].freeze
 
       def self.each(&)
