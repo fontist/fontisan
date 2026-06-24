@@ -18,6 +18,8 @@ hero:
       link: /guide/migrations/fonttools
 
 features:
+  - title: "🔍 Font Audit"
+    details: Comprehensive per-face audit (replaces otfinfo) — identity, style, metrics, coverage, licensing, hinting, color, variation, OpenType layout, UCD/CLDR aggregation, compare, and library-summary modes.
   - title: "🔄 Font Conversion"
     details: Convert between TTF, OTF, WOFF, WOFF2, Type 1 (PFB/PFA), and SVG formats with curve conversion and optimization.
   - title: "✅ Font Validation"
