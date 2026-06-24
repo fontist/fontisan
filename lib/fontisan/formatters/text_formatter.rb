@@ -44,6 +44,12 @@ module Fontisan
           format_collection_info(model)
         when Models::CollectionBriefInfo
           format_collection_brief_info(model)
+        when Models::Audit::AuditReport
+          Formatters::AuditTextRenderer.new(model).render
+        when Models::Audit::AuditDiff
+          Formatters::AuditDiffTextRenderer.new(model).render
+        when Models::Audit::LibrarySummary
+          Formatters::LibrarySummaryTextRenderer.new(model).render
         else
           model.to_s
         end
