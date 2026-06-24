@@ -3,15 +3,6 @@
 require "bindata"
 require "brotli"
 require "stringio"
-require_relative "constants"
-require_relative "loading_modes"
-require_relative "utilities/checksum_calculator"
-require_relative "woff2/header"
-require_relative "woff2/glyf_transformer"
-require_relative "woff2/hmtx_transformer"
-require_relative "true_type_font"
-require_relative "open_type_font"
-require_relative "error"
 
 module Fontisan
   # WOFF2 Table Directory Entry structure

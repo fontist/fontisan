@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_loader"
-
 module Fontisan
   module Pipeline
     # Detects font format and capabilities

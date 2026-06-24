@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../collection/builder"
-require_relative "../collection/dfont_builder"
-require_relative "../font_loader"
-
 module Fontisan
   module Commands
     # Command for packing multiple fonts into a TTC/OTC collection

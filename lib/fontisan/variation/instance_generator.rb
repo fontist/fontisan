@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "interpolator"
-require_relative "region_matcher"
-require_relative "metrics_adjuster"
-require_relative "variation_context"
-require_relative "table_accessor"
-
 module Fontisan
   module Variation
     # Generates static font instances from variable fonts

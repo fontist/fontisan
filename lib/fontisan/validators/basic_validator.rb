@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "validator"
-
 module Fontisan
   module Validators
     # BasicValidator provides minimal validation for fast font indexing

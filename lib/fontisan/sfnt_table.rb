@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "constants"
-require_relative "loading_modes"
-
 module Fontisan
   # Base class for SFNT font tables
   #
@@ -198,7 +195,6 @@ module Fontisan
     def calculate_checksum
       load_data! unless data_loaded?
 
-      require_relative "utilities/checksum_calculator"
       Utilities::ChecksumCalculator.calculate_table_checksum(@data)
     end
 

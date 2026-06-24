@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "agl"
-
 module Fontisan
   module Type1
     # Font encoding schemes for Type 1 fonts

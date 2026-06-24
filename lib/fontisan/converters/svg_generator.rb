@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "conversion_strategy"
-require_relative "../outline_extractor"
-require_relative "../svg/font_generator"
-
 module Fontisan
   module Converters
     # SVG font generator conversion strategy

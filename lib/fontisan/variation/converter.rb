@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "interpolator"
-require_relative "table_accessor"
-
 module Fontisan
   module Variation
     # Converts variation data between TrueType (gvar) and CFF2 (blend) formats

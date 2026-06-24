@@ -2,8 +2,6 @@
 
 require "bindata"
 require "zlib"
-require_relative "constants"
-require_relative "utilities/checksum_calculator"
 
 module Fontisan
   # WOFF Header structure

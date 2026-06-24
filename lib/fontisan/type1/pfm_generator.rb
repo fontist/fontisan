@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../constants"
-require_relative "upm_scaler"
-require_relative "afm_generator"
-
 module Fontisan
   module Type1
     # PFM (Printer Font Metrics) file generator

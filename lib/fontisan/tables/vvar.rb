@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../binary/base_record"
-require_relative "variation_common"
-
 module Fontisan
   module Tables
     # Parser for the 'VVAR' (Vertical Metrics Variations) table

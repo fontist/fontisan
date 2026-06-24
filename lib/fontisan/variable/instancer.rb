@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "delta_applicator"
-require_relative "static_font_builder"
-
 module Fontisan
   module Variable
     # Main entry point for variable font instancing

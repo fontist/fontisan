@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "strategies/base_strategy"
-require_relative "strategies/preserve_strategy"
-require_relative "strategies/instance_strategy"
-require_relative "strategies/named_strategy"
-
 module Fontisan
   module Pipeline
     # Resolves variation data using strategy pattern
@@ -136,7 +131,6 @@ module Fontisan
       def validate_instance_coordinates(coordinates)
         return if coordinates.empty?
 
-        require_relative "../variation/variation_context"
         context = Variation::VariationContext.new(@font)
         context.validate_coordinates(coordinates)
       end
@@ -146,7 +140,6 @@ module Fontisan
       # @param instance_index [Integer] Instance index to validate
       # @raise [ArgumentError] If index invalid
       def validate_named_instance_index(instance_index)
-        require_relative "../variation/variation_context"
         context = Variation::VariationContext.new(@font)
 
         unless context.fvar

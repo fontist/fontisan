@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "table_analyzer"
-require_relative "table_deduplicator"
-require_relative "offset_calculator"
-require_relative "writer"
 require "yaml"
 
 module Fontisan

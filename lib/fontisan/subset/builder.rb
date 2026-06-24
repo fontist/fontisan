@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "options"
-require_relative "profile"
-require_relative "glyph_mapping"
-require_relative "table_subsetter"
-require_relative "../font_writer"
-
 module Fontisan
   module Subset
     # Main font subsetting engine

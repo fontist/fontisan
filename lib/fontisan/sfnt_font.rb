@@ -1,20 +1,6 @@
 # frozen_string_literal: true
 
 require "bindata"
-require_relative "constants"
-require_relative "loading_modes"
-require_relative "utilities/checksum_calculator"
-require_relative "sfnt_table"
-require_relative "tables/head_table"
-require_relative "tables/name_table"
-require_relative "tables/os2_table"
-require_relative "tables/cmap_table"
-require_relative "tables/glyf_table"
-require_relative "tables/hhea_table"
-require_relative "tables/maxp_table"
-require_relative "tables/post_table"
-require_relative "tables/hmtx_table"
-require_relative "tables/loca_table"
 
 module Fontisan
   # SFNT Offset Table structure

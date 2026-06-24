@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "bindata"
-require_relative "../error"
 
 module Fontisan
   module Parsers

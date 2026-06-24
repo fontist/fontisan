@@ -1,24 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../conversion_options"
-require_relative "conversion_strategy"
-require_relative "../outline_extractor"
-require_relative "../models/outline"
-require_relative "../tables/cff/charstring_builder"
-require_relative "outline_extraction"
-require_relative "cff_table_builder"
-require_relative "glyf_table_builder"
-require_relative "outline_optimizer"
-require_relative "../hints/truetype_hint_extractor"
-require_relative "../hints/postscript_hint_extractor"
-require_relative "../hints/hint_converter"
-require_relative "../hints/truetype_hint_applier"
-require_relative "../hints/postscript_hint_applier"
-require_relative "../tables/cff2"
-require_relative "../variation/data_extractor"
-require_relative "../variation/instance_generator"
-require_relative "../variation/converter"
-
 module Fontisan
   module Converters
     # Strategy for converting between TTF and OTF outline formats

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "basic_validator"
-
 module Fontisan
   module Validators
     # FontBookValidator provides macOS Font Book installation compatibility checks

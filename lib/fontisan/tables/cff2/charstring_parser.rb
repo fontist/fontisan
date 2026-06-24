@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "stringio"
-require_relative "../../binary/base_record"
-require_relative "../cff/charstring"
 
 module Fontisan
   module Tables

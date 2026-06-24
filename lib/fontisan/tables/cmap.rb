@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../binary/base_record"
-
 module Fontisan
   module Tables
     # Parser for the 'cmap' (Character to Glyph Index Mapping) table

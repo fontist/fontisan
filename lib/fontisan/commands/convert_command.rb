@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../pipeline/transformation_pipeline"
-require_relative "../converters/collection_converter"
-require_relative "../conversion_options"
-require_relative "../font_loader"
-
 module Fontisan
   module Commands
     # Command for converting fonts between formats

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "font_report"
-require_relative "validation_report"
 require "lutaml/model"
 
 module Fontisan

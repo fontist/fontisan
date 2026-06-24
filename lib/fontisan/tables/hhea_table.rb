@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../sfnt_table"
-require_relative "hhea"
-
 module Fontisan
   module Tables
     # OOP representation of the 'hhea' (Horizontal Header) table

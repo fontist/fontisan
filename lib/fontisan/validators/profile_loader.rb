@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "basic_validator"
-require_relative "font_book_validator"
-require_relative "opentype_validator"
-require_relative "web_font_validator"
-
 module Fontisan
   module Validators
     # ProfileLoader manages validation profiles and loads appropriate validators

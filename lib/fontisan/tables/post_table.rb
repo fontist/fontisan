@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../sfnt_table"
-require_relative "post"
-
 module Fontisan
   module Tables
     # OOP representation of the 'post' (PostScript) table

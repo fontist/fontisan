@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "dict_builder"
-
 module Fontisan
   module Tables
     class Cff

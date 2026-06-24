@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../sfnt_table"
-require_relative "cmap"
-
 module Fontisan
   module Tables
     # OOP representation of the 'cmap' (Character to Glyph Index Mapping) table

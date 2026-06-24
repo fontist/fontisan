@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "conversion_strategy"
-
 module Fontisan
   module Converters
     # Strategy for same-format font operations (copy/optimize)

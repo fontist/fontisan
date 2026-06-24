@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_writer"
-require_relative "../error"
-require_relative "../validation/collection_validator"
-
 module Fontisan
   module Collection
     # DfontBuilder creates Apple dfont (Data Fork Font) resource fork structures

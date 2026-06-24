@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../outline_extractor"
-require_relative "../tables/cff/charstring_builder"
-require_relative "../tables/glyf/glyph_builder"
-require_relative "../tables/glyf/compound_glyph_resolver"
-
 module Fontisan
   module Converters
     # Extracts all glyph outlines from a font for conversion purposes

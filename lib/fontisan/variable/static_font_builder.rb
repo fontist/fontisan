@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "table_updater"
-require_relative "../font_writer"
-
 module Fontisan
   module Variable
     # Builds static font instances from variable font data

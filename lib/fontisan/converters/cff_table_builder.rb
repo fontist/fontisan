@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../tables/cff/index_builder"
-require_relative "../tables/cff/dict_builder"
-
 module Fontisan
   module Converters
     # Builds CFF table data from glyph outlines

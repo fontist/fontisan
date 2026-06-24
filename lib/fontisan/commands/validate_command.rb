@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_command"
-require_relative "../validators/profile_loader"
-require_relative "../font_loader"
-require_relative "../tables/name"
-
 module Fontisan
   module Commands
     # ValidateCommand provides CLI interface for font validation
@@ -138,9 +133,6 @@ module Fontisan
       # @param mode [Symbol] Loading mode
       # @return [Integer] Exit code
       def validate_collection(mode)
-        require_relative "../models/collection_validation_report"
-        require_relative "../models/font_report"
-
         # Load collection metadata
         collection = FontLoader.load_collection(@input)
 

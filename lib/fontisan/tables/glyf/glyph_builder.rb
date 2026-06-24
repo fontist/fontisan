@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../models/outline"
-require_relative "curve_converter"
-
 module Fontisan
   module Tables
     # Builds binary TrueType glyph data from universal outline representation

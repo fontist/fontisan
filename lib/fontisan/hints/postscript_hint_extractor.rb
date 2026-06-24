@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../models/hint"
-
 module Fontisan
   module Hints
     # Extracts rendering hints from PostScript/CFF CharString data

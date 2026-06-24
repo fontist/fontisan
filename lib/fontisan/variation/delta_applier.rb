@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "delta_parser"
-require_relative "interpolator"
-require_relative "region_matcher"
-require_relative "table_accessor"
-
 module Fontisan
   module Variation
     # Applies variation deltas to glyph outlines

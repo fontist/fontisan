@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../models/font_export"
-require_relative "table_serializer"
-require_relative "ttx_generator"
-require_relative "transformers/font_to_ttx"
-require_relative "../utilities/checksum_calculator"
-
 module Fontisan
   module Export
     # Exporter orchestrates font export to YAML/JSON/TTX

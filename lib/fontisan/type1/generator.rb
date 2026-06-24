@@ -1,14 +1,6 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require_relative "upm_scaler"
-require_relative "encodings"
-require_relative "conversion_options"
-require_relative "afm_generator"
-require_relative "pfm_generator"
-require_relative "pfa_generator"
-require_relative "pfb_generator"
-require_relative "inf_generator"
 
 module Fontisan
   module Type1

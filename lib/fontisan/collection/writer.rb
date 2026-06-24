@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../constants"
-require_relative "../utilities/checksum_calculator"
-
 module Fontisan
   module Collection
     # CollectionWriter writes binary TTC/OTC files

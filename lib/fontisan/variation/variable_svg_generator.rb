@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "instance_generator"
-require_relative "../converters/svg_generator"
-
 module Fontisan
   module Variation
     # Generates SVG fonts from variable fonts at specific coordinates

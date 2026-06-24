@@ -2,7 +2,6 @@
 
 require "stringio"
 require "zlib"
-require_relative "../binary/base_record"
 
 module Fontisan
   module Tables

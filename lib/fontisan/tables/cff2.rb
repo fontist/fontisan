@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "stringio"
-require_relative "../binary/base_record"
 
 module Fontisan
   module Tables
@@ -21,6 +20,19 @@ module Fontisan
     #   cff2 = Fontisan::Tables::Cff2.read(data)
     #   num_glyphs = cff2.glyph_count
     class Cff2 < Binary::BaseRecord
+      # Inner namespace autoloads — declared here so Cff2::* constants
+      # resolve on first reference without require_relative.
+      autoload :BlendOperator, "fontisan/tables/cff2/blend_operator"
+      autoload :CharstringParser, "fontisan/tables/cff2/charstring_parser"
+      autoload :OperandStack, "fontisan/tables/cff2/operand_stack"
+      autoload :PrivateDictBlendHandler,
+               "fontisan/tables/cff2/private_dict_blend_handler"
+      autoload :RegionMatcher, "fontisan/tables/cff2/region_matcher"
+      autoload :TableBuilder, "fontisan/tables/cff2/table_builder"
+      autoload :TableReader, "fontisan/tables/cff2/table_reader"
+      autoload :VariationDataExtractor,
+               "fontisan/tables/cff2/variation_data_extractor"
+
       # CFF2 header structure
       class Cff2Header < Binary::BaseRecord
         uint8 :major_version
@@ -105,7 +117,6 @@ module Fontisan
         return nil if charstring_data.nil?
 
         # Parse with CFF2 CharString parser
-        require_relative "cff2/charstring_parser"
         CharstringParser.new(
           charstring_data,
           @num_axes,
@@ -159,7 +170,6 @@ module Fontisan
         io = StringIO.new(data)
         io.seek(offset)
 
-        require_relative "cff/index"
         Cff::Index.new(io, start_offset: offset)
       rescue StandardError => e
         warn "Failed to parse Global Subr INDEX: #{e.message}"
@@ -212,7 +222,6 @@ module Fontisan
         io = StringIO.new(data)
         io.seek(offset)
 
-        require_relative "cff/index"
         Cff::Index.new(io, start_offset: offset)
       rescue StandardError => e
         warn "Failed to parse CharStrings INDEX: #{e.message}"
@@ -334,13 +343,3 @@ module Fontisan
     end
   end
 end
-
-# Load CFF2 subcomponents
-require_relative "cff2/charstring_parser"
-require_relative "cff2/blend_operator"
-require_relative "cff2/operand_stack"
-require_relative "cff2/table_reader"
-require_relative "cff2/variation_data_extractor"
-require_relative "cff2/region_matcher"
-require_relative "cff2/private_dict_blend_handler"
-require_relative "cff2/table_builder"

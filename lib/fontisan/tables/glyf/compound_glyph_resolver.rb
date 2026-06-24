@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../models/outline"
-
 module Fontisan
   module Tables
     # Resolves compound glyphs into simple outlines

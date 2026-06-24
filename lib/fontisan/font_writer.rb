@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require_relative "constants"
 
 module Fontisan
   # FontWriter handles writing font binaries from table data

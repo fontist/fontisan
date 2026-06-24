@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "conversion_strategy"
-require_relative "../woff2/header"
-require_relative "../woff2/directory"
-require_relative "../woff2/table_transformer"
-require_relative "../utilities/brotli_wrapper"
-require_relative "../utilities/checksum_calculator"
 # Validation temporarily disabled - will be reimplemented with new DSL framework in Week 3+
 # require_relative "../validation/woff2_validator"
 require "yaml"

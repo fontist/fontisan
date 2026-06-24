@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "interpolator"
-require_relative "region_matcher"
-
 module Fontisan
   module Variation
     # Provides shared context for variation operations

@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "parsers/dfont_parser"
-require_relative "error"
-require_relative "collection/shared_logic"
-
 module Fontisan
   # DfontCollection represents an Apple dfont suitcase containing multiple fonts
   #
@@ -167,9 +163,6 @@ module Fontisan
     # @param io [IO] Open file handle
     # @return [Models::CollectionListInfo] Collection list info
     def list_fonts(io)
-      require_relative "models/collection_list_info"
-      require_relative "models/collection_font_summary"
-
       fonts = extract_fonts(io)
 
       summaries = fonts.map.with_index do |font, index|
@@ -256,9 +249,6 @@ module Fontisan
     #     puts "Format: #{info.collection_format}"
     #   end
     def collection_info(io, path)
-      require_relative "models/collection_info"
-      require_relative "models/table_sharing_info"
-
       # Calculate table sharing statistics
       table_sharing = calculate_table_sharing(io)
 

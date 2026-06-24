@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "format_detector"
-require_relative "variation_resolver"
-require_relative "../converters/format_converter"
-require_relative "../font_loader"
-require_relative "../font_writer"
-require_relative "output_writer"
-
 module Fontisan
   module Pipeline
     # Orchestrates universal font transformation pipeline

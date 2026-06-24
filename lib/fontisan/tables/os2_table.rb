@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../sfnt_table"
-require_relative "os2"
-
 module Fontisan
   module Tables
     # OOP representation of the 'OS/2' (OS/2 and Windows Metrics) table

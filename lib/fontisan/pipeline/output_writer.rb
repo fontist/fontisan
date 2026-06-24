@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_writer"
-require_relative "../converters/format_converter"
-
 module Fontisan
   module Pipeline
     # Handles writing font tables to various output formats
@@ -101,8 +98,6 @@ module Fontisan
       # @param tables [Hash<String, String>] Font tables
       # @return [Integer] Number of bytes written
       def write_woff(tables)
-        require_relative "../converters/woff_writer"
-
         writer = Converters::WoffWriter.new
         font = build_font_from_tables(tables)
         woff_data = writer.convert(font, @options)
@@ -115,8 +110,6 @@ module Fontisan
       # @param tables [Hash<String, String>] Font tables
       # @return [Integer] Number of bytes written
       def write_woff2(tables)
-        require_relative "../converters/woff2_encoder"
-
         encoder = Converters::Woff2Encoder.new
         font = build_font_from_tables(tables)
         result = encoder.convert(font, @options)

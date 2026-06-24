@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "layout_common"
-
 module Fontisan
   module Tables
     # GSUB (Glyph Substitution) table parser

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../models/hint"
 require "json"
 
 module Fontisan
@@ -80,9 +79,6 @@ module Fontisan
         cff2_data = tables["CFF2"] || tables["CFF2 "]
 
         begin
-          require_relative "../tables/cff2/table_reader"
-          require_relative "../tables/cff2/table_builder"
-
           reader = Tables::Cff2::TableReader.new(cff2_data)
 
           # Validate CFF2 version
@@ -131,11 +127,6 @@ module Fontisan
 
         # Apply hints (both font-level and per-glyph)
         begin
-          require_relative "../tables/cff/table_builder"
-          require_relative "../tables/cff/charstring_rebuilder"
-          require_relative "../tables/cff/hint_operation_injector"
-          require_relative "../tables/cff"
-
           # Parse CFF binary data into Cff object if needed
           cff_data = tables["CFF "]
           cff_table = if cff_data.is_a?(Tables::Cff)

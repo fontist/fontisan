@@ -1,11 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../font_loader"
-require_relative "../models/collection_list_info"
-require_relative "../models/font_summary"
-require_relative "../tables/name"
-require_relative "../error"
-
 module Fontisan
   module Commands
     # Command to list contents of font files (collections or individual fonts).

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "thor"
-require_relative "cli/ucd_cli"
 
 module Fontisan
   # Command-line interface for Fontisan.
@@ -804,7 +803,6 @@ module Fontisan
     #
     # @return [void]
     def list_available_tests
-      require_relative "validators/profile_loader"
       profiles = Validators::ProfileLoader.all_profiles
       puts "Available validation profiles:"
       profiles.each do |profile_name, config|

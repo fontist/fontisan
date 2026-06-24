@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "font_face_generator"
-require_relative "glyph_generator"
-require_relative "view_box_calculator"
-
 module Fontisan
   module Svg
     # Generates complete SVG font XML structure

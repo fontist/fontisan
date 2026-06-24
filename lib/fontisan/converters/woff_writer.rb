@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "zlib"
-require_relative "conversion_strategy"
-require_relative "../utilities/checksum_calculator"
 
 module Fontisan
   module Converters

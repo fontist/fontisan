@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "view_box_calculator"
-
 module Fontisan
   module Svg
     # Generates SVG glyph elements from glyph outlines

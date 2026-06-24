@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_record"
-
 module Fontisan
   module Binary
     # OpenType Offset Table (Font Header)

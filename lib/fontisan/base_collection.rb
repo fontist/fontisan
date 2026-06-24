@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "bindata"
-require_relative "constants"
-require_relative "collection/shared_logic"
 
 module Fontisan
   # Abstract base class for font collections (TTC/OTC)
@@ -179,10 +177,6 @@ module Fontisan
     #     list.fonts.each { |f| puts "#{f.index}: #{f.family_name}" }
     #   end
     def list_fonts(io)
-      require_relative "models/collection_list_info"
-      require_relative "models/collection_font_summary"
-      require_relative "tables/name"
-
       font_class = self.class.font_class
 
       fonts = font_offsets.map.with_index do |offset, index|
@@ -245,9 +239,6 @@ module Fontisan
     #     puts "Version: #{info.version_string}"
     #   end
     def collection_info(io, path)
-      require_relative "models/collection_info"
-      require_relative "models/table_sharing_info"
-
       # Calculate table sharing statistics
       table_sharing = calculate_table_sharing(io)
 

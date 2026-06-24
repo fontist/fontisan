@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "constants"
-
 module Fontisan
   # High-level utility class for accessing font metrics
   #

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "base_collection"
-
 module Fontisan
   # OpenType Collection domain object
   #
@@ -25,7 +23,6 @@ module Fontisan
     #
     # @return [Class] OpenTypeFont class
     def self.font_class
-      require_relative "open_type_font"
       OpenTypeFont
     end
 
@@ -44,8 +41,6 @@ module Fontisan
     # @param io [IO] Open file handle to read fonts from
     # @return [Array<OpenTypeFont>] Array of font objects
     def extract_fonts(io)
-      require_relative "open_type_font"
-
       font_offsets.map do |offset|
         OpenTypeFont.from_collection(io, offset)
       end
