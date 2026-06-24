@@ -1,0 +1,46 @@
+# frozen_string_literal: true
+
+# Autoload hub for the Fontisan::Models namespace.
+
+module Fontisan
+  module Models
+    autoload :AllScriptsFeaturesInfo, "fontisan/models/all_scripts_features_info"
+    autoload :Audit, "fontisan/models/audit"
+    autoload :AxisInfo, "fontisan/models/variable_font_info"
+    autoload :BitmapGlyph, "fontisan/models/bitmap_glyph"
+    autoload :BitmapStrike, "fontisan/models/bitmap_strike"
+    autoload :CollectionBriefInfo, "fontisan/models/collection_brief_info"
+    autoload :CollectionFontSummary, "fontisan/models/collection_font_summary"
+    autoload :CollectionInfo, "fontisan/models/collection_info"
+    autoload :CollectionListInfo, "fontisan/models/collection_list_info"
+    autoload :CollectionValidationReport, "fontisan/models/collection_validation_report"
+    autoload :ColorGlyph, "fontisan/models/color_glyph"
+    autoload :ColorLayer, "fontisan/models/color_layer"
+    autoload :ColorPalette, "fontisan/models/color_palette"
+    autoload :FeatureRecord, "fontisan/models/features_info"
+    autoload :FeaturesInfo, "fontisan/models/features_info"
+    autoload :FontExport, "fontisan/models/font_export"
+    autoload :FontInfo, "fontisan/models/font_info"
+    autoload :FontReport, "fontisan/models/font_report"
+    autoload :FontSummary, "fontisan/models/font_summary"
+    autoload :GlyphInfo, "fontisan/models/glyph_info"
+    autoload :GlyphOutline, "fontisan/models/glyph_outline"
+    autoload :Hint, "fontisan/models/hint"
+    autoload :HintSet, "fontisan/models/hint"
+    autoload :InstanceInfo, "fontisan/models/variable_font_info"
+    autoload :OpticalSizeInfo, "fontisan/models/optical_size_info"
+    autoload :Outline, "fontisan/models/outline"
+    autoload :ScriptRecord, "fontisan/models/scripts_info"
+    autoload :ScriptsInfo, "fontisan/models/scripts_info"
+    autoload :SvgGlyph, "fontisan/models/svg_glyph"
+    autoload :TableEntry, "fontisan/models/table_info"
+    autoload :TableInfo, "fontisan/models/table_info"
+    autoload :TableSharingInfo, "fontisan/models/table_sharing_info"
+    autoload :Ttx, "fontisan/models/ttx/ttfont"
+    autoload :Ucd, "fontisan/models/ucd"
+    autoload :UnicodeMapping, "fontisan/models/unicode_mappings"
+    autoload :UnicodeMappings, "fontisan/models/unicode_mappings"
+    autoload :ValidationReport, "fontisan/models/validation_report"
+    autoload :VariableFontInfo, "fontisan/models/variable_font_info"
+  end
+end
