@@ -42,6 +42,12 @@ module Fontisan
     option :ucd_version, type: :string,
                          desc: "UCD version to aggregate against " \
                                "(default: configured default; 'latest' to probe)"
+    option :with_language_coverage, type: :boolean, default: false,
+                                    desc: "Compute coverage % per CLDR language " \
+                                          "(requires CLDR cache; auto-downloads)"
+    option :cldr_version, type: :string,
+                          desc: "CLDR version (default: configured default; " \
+                                "'latest' to probe)"
     option :output, type: :string,
                     desc: "Output directory (collections) or file (single font)",
                     aliases: "-o"

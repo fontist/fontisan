@@ -21,6 +21,7 @@ module Fontisan
       autoload :OpenTypeLayout, "fontisan/audit/extractors/opentype_layout"
       autoload :Coverage, "fontisan/audit/extractors/coverage"
       autoload :Aggregations, "fontisan/audit/extractors/aggregations"
+      autoload :LanguageCoverage, "fontisan/audit/extractors/language_coverage"
     end
   end
 end

@@ -97,9 +97,17 @@ module Fontisan
           fields.merge!(extractor_class.new.extract(context))
         end
 
-        fields[:warning] = context.ucd[:warning]
+        fields[:warning] = combine_warnings(
+          context.ucd[:warning],
+          context.cldr&.dig(:warning),
+        )
 
         Models::Audit::AuditReport.new(**fields)
+      end
+
+      def combine_warnings(*warnings)
+        compacted = warnings.flatten.compact
+        compacted.empty? ? nil : compacted.join("; ")
       end
     end
   end

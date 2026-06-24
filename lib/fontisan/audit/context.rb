@@ -29,6 +29,12 @@ module Fontisan
         @ucd ||= resolve_ucd
       end
 
+      def cldr
+        return nil unless @options[:with_language_coverage]
+
+        @cldr ||= resolve_cldr
+      end
+
       def source_format
         @source_format ||= FontLoader.detect_format(@font_path)&.to_s
       end
@@ -78,6 +84,38 @@ module Fontisan
         end
         yield Ucd::CacheManager.blocks_index_path(version),
           Ucd::CacheManager.scripts_index_path(version)
+      end
+
+      def resolve_cldr
+        version = Cldr::VersionResolver.resolve(@options[:cldr_version])
+
+        with_local_languages_index(version) do |index_path|
+          {
+            version: version,
+            index: Cldr::Index.load(index_path),
+            warning: nil,
+          }
+        end
+      rescue Cldr::UnknownVersionError => e
+        { version: nil, index: nil,
+          warning: "CLDR version rejected: #{e.message}" }
+      rescue StandardError => e
+        version_ref = @cldr&.fetch(:version, nil)
+        {
+          version: version_ref,
+          index: nil,
+          warning: "CLDR unavailable for version #{version_ref}: #{e.message}",
+        }
+      end
+
+      def with_local_languages_index(version)
+        unless Cldr::CacheManager.cached?(version)
+          Cldr::Downloader.download(version)
+        end
+        unless Cldr::CacheManager.languages_index_path(version).exist?
+          Cldr::IndexBuilder.build(version)
+        end
+        yield Cldr::CacheManager.languages_index_path(version)
       end
     end
   end

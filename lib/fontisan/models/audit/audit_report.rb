@@ -54,6 +54,11 @@ module Fontisan
         attribute :blocks, AuditBlock, collection: true
         attribute :unicode_scripts, :string, collection: true
 
+        # Per-language coverage (requires CLDR; opt-in via
+        # `--with-language-coverage`)
+        attribute :cldr_version, :string
+        attribute :language_coverage, Models::Cldr::LanguageCoverage, collection: true
+
         # Licensing + embedding permissions (nil for Type 1)
         attribute :licensing, Licensing
 
@@ -116,6 +121,10 @@ module Fontisan
           map "ucd_version",       to: :ucd_version
           map "blocks",            to: :blocks
           map "unicode_scripts",   to: :unicode_scripts
+
+          # CLDR per-language coverage
+          map "cldr_version",      to: :cldr_version
+          map "language_coverage", to: :language_coverage
 
           # Licensing
           map "licensing", to: :licensing
