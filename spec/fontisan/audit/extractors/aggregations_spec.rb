@@ -43,8 +43,7 @@ RSpec.describe Fontisan::Audit::Extractors::Aggregations do
   it "returns aggregation fields keyed by AuditReport attribute names" do
     fields = described_class.new.extract(context)
     expect(fields.keys).to contain_exactly(
-      :ucd_version, :blocks, :unicode_scripts,
-      :opentype_scripts, :features
+      :ucd_version, :blocks, :unicode_scripts
     )
   end
 
@@ -62,16 +61,6 @@ RSpec.describe Fontisan::Audit::Extractors::Aggregations do
   it "aggregates covered Unicode scripts" do
     fields = described_class.new.extract(context)
     expect(fields[:unicode_scripts]).to include("Latin")
-  end
-
-  it "exposes OpenType scripts as an array" do
-    fields = described_class.new.extract(context)
-    expect(fields[:opentype_scripts]).to be_an(Array)
-  end
-
-  it "exposes OpenType features as an array" do
-    fields = described_class.new.extract(context)
-    expect(fields[:features]).to be_an(Array)
   end
 
   context "when UCD version is unknown" do

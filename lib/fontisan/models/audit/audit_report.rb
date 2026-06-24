@@ -52,8 +52,6 @@ module Fontisan
         attribute :ucd_version, :string
         attribute :blocks, AuditBlock, collection: true
         attribute :unicode_scripts, :string, collection: true
-        attribute :opentype_scripts, :string, collection: true
-        attribute :features, :string, collection: true
 
         # Licensing + embedding permissions (nil for Type 1)
         attribute :licensing, Licensing
@@ -71,6 +69,10 @@ module Fontisan
         # Variable-font detail from fvar + variation side-tables
         # (nil for non-variable faces and Type 1)
         attribute :variation, VariationDetail
+
+        # OpenType layout summary from GSUB + GPOS
+        # (nil for Type 1)
+        attribute :opentype_layout, OpenTypeLayout
 
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
@@ -112,8 +114,6 @@ module Fontisan
           map "ucd_version",       to: :ucd_version
           map "blocks",            to: :blocks
           map "unicode_scripts",   to: :unicode_scripts
-          map "opentype_scripts",  to: :opentype_scripts
-          map "features",          to: :features
 
           # Licensing
           map "licensing", to: :licensing
@@ -129,6 +129,9 @@ module Fontisan
 
           # Variation detail
           map "variation", to: :variation
+
+          # OpenType layout
+          map "opentype_layout", to: :opentype_layout
 
           # Warning
           map "warning", to: :warning

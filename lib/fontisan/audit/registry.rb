@@ -20,6 +20,7 @@ module Fontisan
         Extractors::Hinting,
         Extractors::ColorCapabilities,
         Extractors::VariationDetail,
+        Extractors::OpenTypeLayout,
         Extractors::Coverage,
         Extractors::Aggregations,
       ].freeze

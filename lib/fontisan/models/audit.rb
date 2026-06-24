@@ -18,6 +18,8 @@ module Fontisan
       autoload :Licensing, "fontisan/models/audit/licensing"
       autoload :Metrics, "fontisan/models/audit/metrics"
       autoload :NamedInstance, "fontisan/models/audit/named_instance"
+      autoload :OpenTypeLayout, "fontisan/models/audit/opentype_layout"
+      autoload :ScriptFeatures, "fontisan/models/audit/script_features"
       autoload :VariationDetail, "fontisan/models/audit/variation_detail"
     end
   end
