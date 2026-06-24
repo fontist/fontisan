@@ -70,6 +70,21 @@ RSpec.describe Fontisan::Commands::AuditCompareCommand do
     end
   end
 
+  describe "#run with .yml extension" do
+    it "loads a .yml file the same as .yaml" do
+      Dir.mktmpdir do |dir|
+        left_path = File.join(dir, "left.yml")
+        right_path = File.join(dir, "right.yml")
+        File.write(left_path, left_report.to_yaml)
+        File.write(right_path, right_report.to_yaml)
+
+        diff = described_class.new(left_path, right_path).run
+        expect(diff.left_source).to eq("/path/a.ttf")
+        expect(diff.right_source).to eq("/path/b.ttf")
+      end
+    end
+  end
+
   describe "#run with mixed inputs" do
     let(:ttf_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
 
@@ -113,6 +128,21 @@ RSpec.describe Fontisan::Commands::AuditCompareCommand do
                                    ucd_version: "0.0.0-never").run
         # diff itself still built; right side's ucd_version resolves to nil
         expect(diff).to be_a(Fontisan::Models::Audit::AuditDiff)
+      end
+    end
+
+    it "audits both font files when neither is a saved report" do
+      Dir.mktmpdir do |dir|
+        # Use the same fixture twice — diff should still be produced.
+        local_copy = File.join(dir, "copy.ttf")
+        FileUtils.cp(ttf_path, local_copy)
+
+        diff = described_class.new(ttf_path, local_copy,
+                                   ucd_version: "17.0.0").run
+        expect(diff).to be_a(Fontisan::Models::Audit::AuditDiff)
+        expect(diff.left_source).to eq(File.expand_path(ttf_path))
+        expect(diff.right_source).to eq(File.expand_path(local_copy))
+        expect(diff.field_changes).to eq([])
       end
     end
   end

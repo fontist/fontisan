@@ -38,6 +38,20 @@ RSpec.describe Fontisan::Commands::AuditLibraryCommand do
       end
     end
 
+    it "walks subdirectories when recursive: true" do
+      Dir.mktmpdir do |dir|
+        FileUtils.cp(ttf_path, File.join(dir, "a.ttf"))
+        sub = File.join(dir, "deep")
+        FileUtils.mkdir_p(sub)
+        FileUtils.cp(ttf_path, File.join(sub, "b.ttf"))
+
+        cmd = described_class.new(dir, recursive: true,
+                                       options: { ucd_version: "17.0.0" })
+        summary = cmd.run
+        expect(summary.total_files).to eq(2)
+      end
+    end
+
     it "exposes the skipped list from the underlying auditor" do
       Dir.mktmpdir do |dir|
         FileUtils.cp(ttf_path, File.join(dir, "good.ttf"))

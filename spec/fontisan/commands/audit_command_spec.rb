@@ -237,4 +237,31 @@ RSpec.describe Fontisan::Commands::AuditCommand do
       expect(filename).to eq("font.yaml")
     end
   end
+
+  describe "#run with :audit_brief" do
+    it "skips metrics, hinting, color, variation, layout, and aggregations" do
+      cmd = described_class.new(ttf_path, audit_brief: true,
+                                          ucd_version: "17.0.0")
+      report = cmd.run
+
+      expect(report.family_name).not_to be_nil
+      expect(report.total_codepoints).to be > 0
+      expect(report.metrics).to be_nil
+      expect(report.hinting).to be_nil
+      expect(report.color_capabilities).to be_nil
+      expect(report.opentype_layout).to be_nil
+      expect(report.blocks).to be_nil
+      expect(report.ucd_version).to be_nil
+    end
+
+    it "still loads the full font (Coverage extractor reads cmap)" do
+      cmd = described_class.new(ttf_path, audit_brief: true,
+                                          ucd_version: "17.0.0")
+      report = cmd.run
+      # Brief mode operates on the extractor set, not the loading mode —
+      # the full font must be loaded so Coverage can populate codepoints.
+      expect(report.total_codepoints).to be > 0
+      expect(report.cmap_subtables).not_to be_empty
+    end
+  end
 end
