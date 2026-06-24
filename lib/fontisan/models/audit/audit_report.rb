@@ -57,6 +57,9 @@ module Fontisan
         attribute :opentype_scripts, :string, collection: true
         attribute :features, :string, collection: true
 
+        # Licensing + embedding permissions (nil for Type 1)
+        attribute :licensing, Licensing
+
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
 
@@ -101,6 +104,9 @@ module Fontisan
           map "unicode_scripts",   to: :unicode_scripts
           map "opentype_scripts",  to: :opentype_scripts
           map "features",          to: :features
+
+          # Licensing
+          map "licensing", to: :licensing
 
           # Warning
           map "warning", to: :warning
