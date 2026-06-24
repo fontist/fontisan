@@ -6,6 +6,7 @@ module Fontisan
   module Commands
     autoload :AuditCompareCommand, "fontisan/commands/audit_compare_command"
     autoload :AuditCommand, "fontisan/commands/audit_command"
+    autoload :AuditLibraryCommand, "fontisan/commands/audit_library_command"
     autoload :BaseCommand, "fontisan/commands/base_command"
     autoload :ConvertCommand, "fontisan/commands/convert_command"
     autoload :DumpTableCommand, "fontisan/commands/dump_table_command"
