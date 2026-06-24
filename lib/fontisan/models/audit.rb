@@ -13,6 +13,7 @@ module Fontisan
       autoload :EmbeddingType, "fontisan/models/audit/embedding_type"
       autoload :FsSelectionFlags, "fontisan/models/audit/fs_selection_flags"
       autoload :Licensing, "fontisan/models/audit/licensing"
+      autoload :Metrics, "fontisan/models/audit/metrics"
     end
   end
 end

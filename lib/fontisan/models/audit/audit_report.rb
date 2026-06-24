@@ -60,6 +60,9 @@ module Fontisan
         # Licensing + embedding permissions (nil for Type 1)
         attribute :licensing, Licensing
 
+        # Layout-critical metrics from head/hhea/OS/2/post (nil for Type 1)
+        attribute :metrics, Metrics
+
         # Set when UCD download failed or any non-fatal issue was encountered.
         attribute :warning, :string
 
@@ -107,6 +110,9 @@ module Fontisan
 
           # Licensing
           map "licensing", to: :licensing
+
+          # Metrics
+          map "metrics", to: :metrics
 
           # Warning
           map "warning", to: :warning
