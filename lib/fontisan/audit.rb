@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
-# Namespace hub for Audit::* support classes.
+# Autoload hub for the Fontisan::Audit namespace.
 #
-# AuditCommand itself lives under Commands::AuditCommand.
+# AuditCommand (under Commands::AuditCommand) builds a Context and
+# runs every extractor in Audit::Registry, merging their outputs
+# into a single AuditReport.
 
 module Fontisan
   module Audit
+    autoload :Context, "fontisan/audit/context"
+    autoload :Registry, "fontisan/audit/registry"
+    autoload :Extractors, "fontisan/audit/extractors"
     autoload :StyleExtractor, "fontisan/audit/style_extractor"
   end
 end

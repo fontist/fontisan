@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "digest"
-require "time"
+require "fileutils"
 
 module Fontisan
   module Commands
@@ -11,16 +10,12 @@ module Fontisan
     # #run returns a single AuditReport. For collections (TTC/OTC/dfont),
     # #run returns an Array<AuditReport> — one per face, in source order.
     #
-    # The report combines:
-    # - Provenance (sha256, source format, fontisan version, generated_at)
-    # - Identity (name table)
-    # - Style (OS/2 + head + fvar via Audit::StyleExtractor)
-    # - Coverage (cmap mappings, glyph count, cmap subtable formats)
-    # - Aggregations (Unicode blocks/scripts via local UCD cache;
-    #   OpenType scripts/features via GSUB/GPOS)
-    #
-    # UCD is auto-downloaded on first use; failures degrade gracefully with
-    # a recorded warning rather than aborting the audit.
+    # The report is assembled by running every extractor in
+    # {Audit::Registry} against an {Audit::Context}. Each extractor
+    # owns one concern (provenance, identity, style, coverage,
+    # aggregations, …). Adding a new concern means adding one
+    # extractor class and one line in the registry — AuditCommand
+    # itself never changes.
     class AuditCommand < BaseCommand
       # @return [Models::Audit::AuditReport, Array<Models::Audit::AuditReport>]
       def run
@@ -39,7 +34,6 @@ module Fontisan
       # @param format [Symbol] :yaml or :json
       # @return [Array<String>] written file paths
       def self.write_reports(reports, to:, format: :yaml)
-        require "fileutils"
         FileUtils.mkdir_p(to)
 
         reports.map do |report|
@@ -90,188 +84,22 @@ module Fontisan
       end
 
       def audit_face(font, font_index, num_fonts_in_source)
-        style = Audit::StyleExtractor.new(font)
-        codepoints = extract_codepoints(font)
-        ucd = ensure_ucd(@options[:ucd_version])
-
-        Models::Audit::AuditReport.new(
-          generated_at: Time.now.utc.iso8601,
-          fontisan_version: Fontisan::VERSION,
-          source_file: File.expand_path(@font_path),
-          source_sha256: Digest::SHA256.file(@font_path).hexdigest,
-          source_format: source_format,
+        context = Audit::Context.new(
+          font: font,
+          font_path: @font_path,
           font_index: font_index,
           num_fonts_in_source: num_fonts_in_source,
-          **identity_fields(font),
-          weight_class: style.weight_class,
-          width_class: style.width_class,
-          italic: style.italic,
-          bold: style.bold,
-          panose: style.panose,
-          is_variable: style.variable?,
-          axes: style.axes,
-          total_codepoints: codepoints.length,
-          total_glyphs: total_glyphs(font),
-          cmap_subtables: cmap_subtable_formats(font),
-          codepoints: codepoints_for_report(codepoints),
-          **aggregation_fields(codepoints, ucd),
-          opentype_scripts: opentype_scripts(font),
-          features: all_features(font),
-          warning: ucd[:warning],
+          options: @options,
         )
-      end
 
-      def source_format
-        FontLoader.detect_format(@font_path)&.to_s
-      end
-
-      def identity_fields(font)
-        return type1_identity_fields(font) if font.is_a?(Type1Font)
-
-        sfnt_identity_fields(font)
-      end
-
-      def sfnt_identity_fields(font)
-        name_table = font.table(Constants::NAME_TAG) if font.has_table?(Constants::NAME_TAG)
-        head_table = font.table(Constants::HEAD_TAG) if font.has_table?(Constants::HEAD_TAG)
-
-        {
-          family_name: name_table&.english_name(Tables::Name::FAMILY),
-          subfamily_name: name_table&.english_name(Tables::Name::SUBFAMILY),
-          full_name: name_table&.english_name(Tables::Name::FULL_NAME),
-          postscript_name: name_table&.english_name(Tables::Name::POSTSCRIPT_NAME),
-          version: name_table&.english_name(Tables::Name::VERSION),
-          font_revision: head_table&.font_revision,
-        }
-      end
-
-      def type1_identity_fields(font)
-        font_info = font.font_dictionary&.font_info
-        {
-          family_name: font_info&.family_name,
-          subfamily_name: nil,
-          full_name: font_info&.full_name,
-          postscript_name: font.font_name,
-          version: font_info&.version,
-          font_revision: nil,
-        }
-      end
-
-      def extract_codepoints(font)
-        return [] unless font.has_table?(Constants::CMAP_TAG)
-
-        font.table(Constants::CMAP_TAG).unicode_mappings.keys
-      end
-
-      def total_glyphs(font)
-        return nil unless font.has_table?(Constants::MAXP_TAG)
-
-        font.table(Constants::MAXP_TAG).num_glyphs
-      end
-
-      def cmap_subtable_formats(font)
-        return [] unless font.has_table?(Constants::CMAP_TAG)
-
-        font.table(Constants::CMAP_TAG).subtable_formats
-      end
-
-      def codepoints_for_report(codepoints)
-        return [] if @options[:no_codepoints]
-
-        codepoints.map { |cp| format("U+%<cp>04X", cp: cp) }
-      end
-
-      def aggregation_fields(codepoints, ucd)
-        return empty_aggregation(ucd) if ucd[:blocks_index].nil?
-
-        blocks_hashes = Ucd::Aggregator.aggregate_blocks(codepoints,
-                                                         ucd[:blocks_index])
-        {
-          ucd_version: ucd[:version],
-          blocks: blocks_hashes.map { |block_hash| build_audit_block(block_hash) },
-          unicode_scripts: Ucd::Aggregator.aggregate_scripts(codepoints,
-                                                             ucd[:scripts_index]),
-        }
-      end
-
-      def empty_aggregation(ucd)
-        { ucd_version: ucd[:version], blocks: [], unicode_scripts: [] }
-      end
-
-      def build_audit_block(block_hash)
-        Models::Audit::AuditBlock.new(
-          name: block_hash[:name],
-          first_cp: block_hash[:first_cp],
-          last_cp: block_hash[:last_cp],
-          range: format("U+%<first>04X-U+%<last>04X",
-                        first: block_hash[:first_cp], last: block_hash[:last_cp]),
-          total: block_hash[:total],
-          covered: block_hash[:covered],
-          fill_ratio: block_hash[:fill_ratio],
-          complete: block_hash[:complete],
-        )
-      end
-
-      def opentype_scripts(font)
-        scripts = Set.new
-        scripts.merge(font.table(Constants::GSUB_TAG).scripts) if font.has_table?(Constants::GSUB_TAG)
-        scripts.merge(font.table(Constants::GPOS_TAG).scripts) if font.has_table?(Constants::GPOS_TAG)
-        scripts.sort
-      end
-
-      def all_features(font)
-        features = Set.new
-        scripts = opentype_scripts(font)
-
-        if font.has_table?(Constants::GSUB_TAG)
-          gsub = font.table(Constants::GSUB_TAG)
-          scripts.each { |tag| features.merge(gsub.features(script_tag: tag)) }
+        fields = {}
+        Audit::Registry.each do |extractor_class|
+          fields.merge!(extractor_class.new.extract(context))
         end
 
-        if font.has_table?(Constants::GPOS_TAG)
-          gpos = font.table(Constants::GPOS_TAG)
-          scripts.each { |tag| features.merge(gpos.features(script_tag: tag)) }
-        end
+        fields[:warning] = context.ucd[:warning]
 
-        features.sort
-      end
-
-      # Resolve + locally ensure the UCD indices for the requested version.
-      # Returns a hash with :version, :blocks_index, :scripts_index, and
-      # optional :warning. Indices are nil when UCD could not be obtained.
-      def ensure_ucd(version_intent)
-        version = Ucd::VersionResolver.resolve(version_intent)
-
-        with_local_indices(version) do |blocks_path, scripts_path|
-          {
-            version: version,
-            blocks_index: Ucd::Index.load(blocks_path),
-            scripts_index: Ucd::Index.load(scripts_path),
-          }
-        end
-      rescue Ucd::UnknownVersionError => e
-        { version: nil, blocks_index: nil, scripts_index: nil,
-          warning: "UCD version rejected: #{e.message}" }
-      rescue StandardError => e
-        {
-          version: version,
-          blocks_index: nil,
-          scripts_index: nil,
-          warning: "UCD unavailable for version #{version}: #{e.message}",
-        }
-      end
-
-      # Ensure the cache + index files exist for `version`, then yield their
-      # paths. Re-raises non-fatal download/index errors as warnings.
-      def with_local_indices(version)
-        unless Ucd::CacheManager.cached?(version)
-          Ucd::Downloader.download(version)
-        end
-        unless Ucd::CacheManager.blocks_index_path(version).exist?
-          Ucd::IndexBuilder.build(version)
-        end
-        yield Ucd::CacheManager.blocks_index_path(version),
-          Ucd::CacheManager.scripts_index_path(version)
+        Models::Audit::AuditReport.new(**fields)
       end
     end
   end
