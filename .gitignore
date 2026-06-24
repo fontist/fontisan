@@ -22,8 +22,9 @@ Gemfile.lock
 *.tmp
 *.log
 
-# Transient task / TODO scratch files (per-feature working notes)
+# Transient task / TODO / proposal scratch files (per-feature working notes)
 TODO.*
+PROPOSAL.*
 
 # Downloaded test fixtures (use rake fixtures:download)
 /spec/fixtures/fonts/DinaRemasterII/
