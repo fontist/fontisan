@@ -28,6 +28,9 @@ module Fontisan
     desc "ucd", "Manage local UCD cache (subcommands)", hide: true
     subcommand "ucd", UcdCli
 
+    desc "cldr", "Manage local CLDR cache (subcommands)", hide: true
+    subcommand "cldr", CldrCli
+
     desc "audit PATH",
          "Produce a per-face font audit report (identity, style, coverage, " \
          "Unicode blocks/scripts, OpenType features)"

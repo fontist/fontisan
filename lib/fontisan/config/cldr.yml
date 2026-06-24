@@ -1,0 +1,22 @@
+# UCD alternative: CLDR (Common Locale Data Repository) configuration.
+#
+# This file is the single source of truth for which CLDR version Fontisan
+# uses by default, what versions are recognized, and where to fetch them.
+#
+# Update `default_version` and `known_versions` when a new CLDR release
+# ships (typically 2× per year, alongside Unicode releases).
+# Users override at runtime via `fontisan cldr download --version X.Y.Z`
+# or `fontisan audit --cldr-version X.Y.Z`.
+
+default_version: "46.0.0"
+
+known_versions:
+  - "45.0.0"
+  - "46.0.0"
+
+# CLDR JSON releases are published on GitHub.
+# Full URL: <base_url>/<version>/cldr-<version>-json-full.zip
+base_url: "https://github.com/unicode-org/cldr-json/releases/download"
+
+# Releases listing URL for `--latest` probing. JSON API.
+listing_url: "https://api.github.com/repos/unicode-org/cldr-json/releases"
