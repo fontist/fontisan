@@ -14,6 +14,7 @@ module Fontisan
     autoload :CollectionInfo, "fontisan/models/collection_info"
     autoload :CollectionListInfo, "fontisan/models/collection_list_info"
     autoload :CollectionValidationReport, "fontisan/models/collection_validation_report"
+    autoload :Cldr, "fontisan/models/cldr"
     autoload :ColorGlyph, "fontisan/models/color_glyph"
     autoload :ColorLayer, "fontisan/models/color_layer"
     autoload :ColorPalette, "fontisan/models/color_palette"
