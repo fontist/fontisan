@@ -121,6 +121,12 @@ module Fontisan
   autoload :Woff2Font, "fontisan/woff2_font"
   autoload :WoffFont, "fontisan/woff_font"
 
+  # FontBuilder — high-level font-assembler API. Builds new fonts
+  # from typed inputs (cmap, per-glyph outlines, name records) and
+  # delegates byte serialization to Tables::*. Pairs with the existing
+  # low-level FontWriter class (which writes bytes from a tables hash).
+  autoload :FontBuilder, "fontisan/font_builder"
+
   # SFNT offset table and table directory (defined in sfnt_font.rb)
   autoload :OffsetTable, "fontisan/sfnt_font"
   autoload :TableDirectory, "fontisan/sfnt_font"
