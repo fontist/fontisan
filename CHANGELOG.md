@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-XX-XX
+
+### Removed — Audit subsystem moved to ucode
+
+The audit pipeline has been **removed** from fontisan. ucode now owns font
+auditing. Deleted:
+
+- `lib/fontisan/audit.rb` + entire `lib/fontisan/audit/` namespace
+- `lib/fontisan/models/audit.rb` + `lib/fontisan/models/audit/`
+- `lib/fontisan/formatters/audit_text_renderer.rb`
+- `lib/fontisan/formatters/audit_diff_text_renderer.rb`
+- `lib/fontisan/commands/audit_command.rb`
+- `lib/fontisan/commands/audit_compare_command.rb`
+- `lib/fontisan/commands/audit_library_command.rb`
+- `fontisan audit` CLI subcommand + all related option declarations
+- All audit-related specs and fixtures
+
+### Removed — UCD/UCDXML subsystem moved to ucode
+
+The UCD/UCDXML parsing subsystem has been **removed**. ucode now owns
+UCD parsing (using UAX#44 text files, not the removed `ucd.all.flat.xml`).
+Deleted:
+
+- `lib/fontisan/ucd.rb` + entire `lib/fontisan/ucd/` namespace
+- `lib/fontisan/models/ucd.rb` + `lib/fontisan/models/ucd/`
+- `config/ucd.yml` (was auto-download config)
+- `fontisan ucd` hidden CLI subcommand
+
+### Migration
+
+Consumers calling the removed APIs should switch to ucode:
+
+    # Before (fontisan 0.2.x):
+    Fontisan::Commands::AuditCommand.new(path).run
+    Fontisan::UCD::IndexBuilder.new(version: "17.0.0").build
+
+    # After (ucode 0.1.1+):
+    bundle exec ucode audit font <path>
+    Ucode::Commands::Audit::FontCommand.new.call(path: path)
+    Ucode::Coordinator.new.indices_for(ucd_dir:, unihan_dir:)
+
+The audit YAML output shape is unchanged; existing parsers continue
+to work. For the CI pipeline that runs audits per formula, see
+`fontist-archive-private/bin/build` (updated in TODO.full/08 to call
+`ucode audit font`).
+
+### Why this is a breaking change
+
+- Removed public APIs (`Fontisan::Commands::AuditCommand`,
+  `Fontisan::UCD::IndexBuilder`, `fontisan audit`, `fontisan ucd`)
+- SemVer bump 0.2.x → 0.3.0
+
 ### Added
 - Comprehensive documentation for WOFF/WOFF2 format support
 - Color fonts documentation (COLR/CPAL, sbix, SVG tables)

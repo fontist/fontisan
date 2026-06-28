@@ -5,7 +5,6 @@
 module Fontisan
   module Models
     autoload :AllScriptsFeaturesInfo, "fontisan/models/all_scripts_features_info"
-    autoload :Audit, "fontisan/models/audit"
     autoload :AxisInfo, "fontisan/models/variable_font_info"
     autoload :BitmapGlyph, "fontisan/models/bitmap_glyph"
     autoload :BitmapStrike, "fontisan/models/bitmap_strike"
@@ -38,7 +37,6 @@ module Fontisan
     autoload :TableInfo, "fontisan/models/table_info"
     autoload :TableSharingInfo, "fontisan/models/table_sharing_info"
     autoload :Ttx, "fontisan/models/ttx/ttfont"
-    autoload :Ucd, "fontisan/models/ucd"
     autoload :UnicodeMapping, "fontisan/models/unicode_mappings"
     autoload :UnicodeMappings, "fontisan/models/unicode_mappings"
     autoload :ValidationReport, "fontisan/models/validation_report"
