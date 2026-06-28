@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Audit subsystem (moved to ucode; never had external consumers —
+  fontist-archive-private's `bin/build` already uses a UCD-stub hack
+  that bypasses fontisan's audit UCD integration).
+- UCD/UCDXML subsystem (moved to ucode; never released in a published
+  gem version).
+
 ### Added
 - Comprehensive documentation for WOFF/WOFF2 format support
 - Color fonts documentation (COLR/CPAL, sbix, SVG tables)
