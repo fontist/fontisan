@@ -100,7 +100,7 @@ module Fontisan
               raise "unsupported contents.plist format: #{order.class}"
             end
 
-          entries.each do |_name, glif_filename|
+          entries.each_value do |glif_filename|
             glif_path = if Dir.exist?(subdir)
                           join(subdir, glif_filename)
                         else
