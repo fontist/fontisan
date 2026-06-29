@@ -114,3 +114,9 @@ Layout/LineEndStringConcatenationIndentation:
 # Bitwise AND checks with != 0 are clearer for font bitmasks
 Style/BitwisePredicate:
   Enabled: false
+
+# Allow short math-conventional parameter names in font geometry code.
+# Point#x / Point#y are domain-standard coordinate names; renaming to
+# x_coord/y_coord adds noise without aiding readers.
+Naming/MethodParameterName:
+  AllowedNames: ["x", "y", "cp", "gid", "n"]

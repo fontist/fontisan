@@ -72,7 +72,6 @@ module Fontisan
   autoload :VariationDataCorruptedError, "fontisan/error"
 
   # Namespace hubs (each hub declares its own child autoloads)
-  autoload :Audit, "fontisan/audit"
   autoload :Binary, "fontisan/binary"
   autoload :Cldr, "fontisan/cldr"
   autoload :Collection, "fontisan/collection"
@@ -89,7 +88,6 @@ module Fontisan
   autoload :Svg, "fontisan/svg"
   autoload :Tables, "fontisan/tables"
   autoload :Type1, "fontisan/type1"
-  autoload :Ucd, "fontisan/ucd"
   autoload :Utilities, "fontisan/utilities"
   autoload :Utils, "fontisan/utils"
   autoload :Validation, "fontisan/validation"
@@ -116,16 +114,9 @@ module Fontisan
   autoload :TrueTypeFont, "fontisan/true_type_font"
   autoload :TrueTypeFontExtensions, "fontisan/true_type_font_extensions"
   autoload :Type1Font, "fontisan/type1_font"
-  autoload :UcdCli, "fontisan/cli/ucd_cli"
   autoload :CldrCli, "fontisan/cli/cldr_cli"
   autoload :Woff2Font, "fontisan/woff2_font"
   autoload :WoffFont, "fontisan/woff_font"
-
-  # FontBuilder — high-level font-assembler API. Builds new fonts
-  # from typed inputs (cmap, per-glyph outlines, name records) and
-  # delegates byte serialization to Tables::*. Pairs with the existing
-  # low-level FontWriter class (which writes bytes from a tables hash).
-  autoload :FontBuilder, "fontisan/font_builder"
 
   # SFNT offset table and table directory (defined in sfnt_font.rb)
   autoload :OffsetTable, "fontisan/sfnt_font"

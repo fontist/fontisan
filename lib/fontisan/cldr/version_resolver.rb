@@ -9,7 +9,7 @@ module Fontisan
   module Cldr
     # Resolves a user-supplied version intent to a concrete CLDR version.
     #
-    # Mirrors {Ucd::VersionResolver}. Three input modes:
+    # Three input modes:
     #
     #   resolve(nil)           # default_version from config
     #   resolve(:default)      # default_version from config
