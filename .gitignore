@@ -25,6 +25,10 @@ Gemfile.lock
 # Transient task / TODO / proposal scratch files (per-feature working notes)
 TODO.*
 PROPOSAL.*
+REQ-*.md
+
+# Claude Code agent state (local working files, not for version control)
+.claude/
 
 # Downloaded test fixtures (use rake fixtures:download)
 /spec/fixtures/fonts/DinaRemasterII/

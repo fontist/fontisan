@@ -54,7 +54,8 @@ module Fontisan
       autoload :DictBuilder, "fontisan/tables/cff/dict_builder"
       autoload :Encoding, "fontisan/tables/cff/encoding"
       autoload :Header, "fontisan/tables/cff/header"
-      autoload :HintOperationInjector, "fontisan/tables/cff/hint_operation_injector"
+      autoload :HintOperationInjector,
+               "fontisan/tables/cff/hint_operation_injector"
       autoload :Index, "fontisan/tables/cff/index"
       autoload :IndexBuilder, "fontisan/tables/cff/index_builder"
       autoload :OffsetRecalculator, "fontisan/tables/cff/offset_recalculator"

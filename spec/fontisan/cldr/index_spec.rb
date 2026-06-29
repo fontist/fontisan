@@ -49,7 +49,9 @@ RSpec.describe Fontisan::Cldr::Index do
     end
 
     it "is enumerable" do
-      expect(index.map { |lang, _set| lang }).to contain_exactly("en", "fr", "ja")
+      expect(index.map do |lang, _set|
+        lang
+      end).to contain_exactly("en", "fr", "ja")
     end
   end
 
