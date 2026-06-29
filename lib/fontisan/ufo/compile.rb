@@ -32,6 +32,7 @@ module Fontisan
       autoload :BaseCompiler, "fontisan/ufo/compile/base_compiler"
       autoload :TtfCompiler,  "fontisan/ufo/compile/ttf_compiler"
       autoload :OtfCompiler,  "fontisan/ufo/compile/otf_compiler"
+      autoload :Filters,      "fontisan/ufo/compile/filters"
       autoload :Head,         "fontisan/ufo/compile/head"
       autoload :Hhea,         "fontisan/ufo/compile/hhea"
       autoload :Maxp,         "fontisan/ufo/compile/maxp"

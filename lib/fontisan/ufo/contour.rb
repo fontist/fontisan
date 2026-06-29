@@ -5,7 +5,8 @@ module Fontisan
     # An ordered list of points forming one closed (or open) contour
     # in a glyph's outline.
     class Contour
-      attr_reader :points
+      attr_accessor :points
+      attr_reader :closed
 
       def initialize(points = [], closed: true)
         @points = points
