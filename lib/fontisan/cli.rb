@@ -31,6 +31,9 @@ module Fontisan
     desc "ufo", "UFO source operations (build, convert, validate)"
     subcommand "ufo", Fontisan::Ufo::Cli
 
+    desc "stitch", "Stitch glyphs from multiple source fonts into one output"
+    subcommand "stitch", StitcherCli
+
     desc "info PATH", "Display font information"
     option :brief, type: :boolean, default: false,
                    desc: "Brief mode - only essential info (5x faster, uses metadata loading)",
