@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "nokogiri"
-
 module Fontisan
   module Ufo
     # Reads a UFO source directory into a typed Fontisan::Ufo::Font.
@@ -102,7 +100,7 @@ module Fontisan
               raise "unsupported contents.plist format: #{order.class}"
             end
 
-          entries.each do |_glyph_name, glif_filename|
+          entries.each do |_name, glif_filename|
             glif_path = if Dir.exist?(subdir)
                           join(subdir, glif_filename)
                         else
@@ -110,30 +108,9 @@ module Fontisan
                         end
             next unless File.exist?(glif_path)
 
-            layer.add(read_glif(File.read(glif_path)))
+            layer.add(Glyph.from_glif(File.read(glif_path)))
           end
         end
-      end
-
-      # Minimal .glif reader: name, unicodes, advance width/height.
-      # Contours/components/etc. land with the compiler layer.
-      def read_glif(xml)
-        doc = Nokogiri::XML(xml)
-        root = doc.root
-        glyph = Glyph.new(name: root["name"])
-
-        advance = root.at_xpath("advance")
-        if advance
-          glyph.width = advance["width"].to_f if advance["width"]
-          glyph.height = advance["height"].to_f if advance["height"]
-        end
-
-        root.xpath("unicode").each do |u|
-          hex = u["hex"] || u.text
-          glyph.add_unicode(hex.to_i(16)) if hex
-        end
-
-        glyph
       end
 
       def read_kerning

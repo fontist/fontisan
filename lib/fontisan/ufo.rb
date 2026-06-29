@@ -37,5 +37,6 @@ module Fontisan
     autoload :Plist,       "fontisan/ufo/plist"
     autoload :Reader,      "fontisan/ufo/reader"
     autoload :Writer,      "fontisan/ufo/writer"
+    autoload :Compile,     "fontisan/ufo/compile"
   end
 end
