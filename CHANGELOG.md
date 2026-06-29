@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Audit subsystem (moved to ucode; never had external consumers —
-  fontist-archive-private's `bin/build` already uses a UCD-stub hack
-  that bypasses fontisan's audit UCD integration).
-- UCD/UCDXML subsystem (moved to ucode; never released in a published
-  gem version).
+- Audit subsystem (`Fontisan::Audit`, `Fontisan::Commands::Audit*`,
+  `Formatters::AuditTextRenderer` / `AuditDiffTextRenderer` /
+  `LibrarySummaryTextRenderer`, `Models::Audit::*`) — moved to ucode.
+  Never had external consumers.
+- UCD/UCDXML subsystem (`Fontisan::Ucd`, `config/ucd.yml`) — moved to
+  ucode. Never released in a published gem version.
+- `fontisan audit` and `fontisan ucd` CLI subcommands.
 
-### Added
+### Added (documentation)
 - Comprehensive documentation for WOFF/WOFF2 format support
 - Color fonts documentation (COLR/CPAL, sbix, SVG tables)
 - Font validation framework documentation
@@ -24,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated font hinting documentation
 - Enhanced README with all v0.2.1-v0.2.7 features
 
-### Changed
+### Changed (documentation)
 - Improved documentation organization with dedicated feature guides
 - Added more examples for command-line and Ruby API usage
 
