@@ -86,21 +86,21 @@ module Fontisan
           # UFO 2 contents.plist is Hash<glyph_name, glif_filename>.
           # UFO 3 contents.plist can be Array<glif_filename> or
           # Array<Hash<glif_filename, glyph_name>>. Normalize to
-          # Array<[glyph_name, glif_filename]>.
+          # Hash<glyph_name, glif_filename>.
           entries =
             case order
-            when Hash then order.to_a
+            when Hash then order
             when Array
               if order.first.is_a?(Hash)
-                order.flat_map(&:to_a)
+                order.reduce({}) { |h, pair| h.merge(pair) }
               else
-                order.map { |filename| [File.basename(filename, ".glif"), filename] }
+                order.to_h { |filename| [File.basename(filename, ".glif"), filename] }
               end
             else
               raise "unsupported contents.plist format: #{order.class}"
             end
 
-          entries.each do |_name, glif_filename|
+          entries.each_value do |glif_filename|
             glif_path = if Dir.exist?(subdir)
                           join(subdir, glif_filename)
                         else
