@@ -118,6 +118,76 @@ module Fontisan
         read_note(root)
       end
 
+      # Convert this glyph to a fontisan Models::Outline for use by
+      # the CFF charstring builder.
+      #
+      # UFO contours use cubic Bezier curves ("curve" type with two
+      # off-curve controls). Single off-curves are interpreted as
+      # quadratic and degree-elevated to cubic.
+      #
+      # @return [Fontisan::Models::Outline]
+      def to_outline
+        commands = []
+        bbox_hash = { x_min: 0, y_min: 0, x_max: 0, y_max: 0 }
+
+        @contours.each do |contour|
+          next if contour.points.empty?
+
+          points = contour.points
+          commands << { type: :move_to, x: points.first.x, y: points.first.y }
+
+          i = 1
+          while i < points.size
+            pt = points[i]
+            if pt.on_curve?
+              commands << { type: :line_to, x: pt.x, y: pt.y }
+              i += 1
+            elsif i + 2 < points.size &&
+                !points[i + 1].on_curve? && points[i + 2].on_curve?
+              commands << {
+                type: :curve_to,
+                cx1: points[i].x, cy1: points[i].y,
+                cx2: points[i + 1].x, cy2: points[i + 1].y,
+                x: points[i + 2].x, y: points[i + 2].y
+              }
+              i += 3
+            elsif i + 1 < points.size && points[i + 1].on_curve?
+              prev = points[i - 1]
+              nxt = points[i + 1]
+              cx1 = prev.x + (2.0 / 3.0) * (pt.x - prev.x)
+              cy1 = prev.y + (2.0 / 3.0) * (pt.y - prev.y)
+              cx2 = nxt.x + (2.0 / 3.0) * (pt.x - nxt.x)
+              cy2 = nxt.y + (2.0 / 3.0) * (pt.y - nxt.y)
+              commands << {
+                type: :curve_to,
+                cx1: cx1, cy1: cy1, cx2: cx2, cy2: cy2,
+                x: nxt.x, y: nxt.y
+              }
+              i += 2
+            else
+              i += 1
+            end
+          end
+
+          commands << { type: :close_path }
+        end
+
+        bb = bbox
+        if bb
+          bbox_hash = {
+            x_min: bb.x_min.to_i, y_min: bb.y_min.to_i,
+            x_max: bb.x_max.to_i, y_max: bb.y_max.to_i
+          }
+        end
+
+        Fontisan::Models::Outline.new(
+          glyph_id: 0,
+          commands: commands,
+          bbox: bbox_hash,
+          width: @width.to_i,
+        )
+      end
+
       private
 
       def read_advance(root)
