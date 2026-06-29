@@ -81,6 +81,11 @@ module Fontisan
         end
 
         # Encode all points across contours into (flags, x_bytes, y_bytes).
+        # Per OpenType spec:
+        #   - SHORT bit set + POSITIVE bit set  → 1-byte positive value
+        #   - SHORT bit set + POSITIVE bit clear → 1-byte negative value
+        #   - SHORT bit clear + POSITIVE bit set → delta is 0 (no bytes)
+        #   - SHORT bit clear + POSITIVE bit clear → 2-byte signed value
         def self.encode_points(contours)
           flags = +""
           x_bytes = +""
@@ -96,18 +101,19 @@ module Fontisan
 
             # X coordinate
             if dx.zero?
-              # No X flag — coordinate omitted
+              flag |= FLAG_X_IS_POSITIVE # "same as previous" — no bytes
             elsif dx.between?(-255, 255)
               flag |= FLAG_X_SHORT
               flag |= FLAG_X_IS_POSITIVE if dx.positive?
               x_bytes << [dx.abs].pack("C")
             else
+              # SHORT not set, POSITIVE not set → 2-byte signed
               x_bytes << [dx & 0xFFFF].pack("n")
             end
 
             # Y coordinate
             if dy.zero?
-              # No Y flag
+              flag |= FLAG_Y_IS_POSITIVE # "same as previous" — no bytes
             elsif dy.between?(-255, 255)
               flag |= FLAG_Y_SHORT
               flag |= FLAG_Y_IS_POSITIVE if dy.positive?
