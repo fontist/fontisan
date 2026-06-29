@@ -28,7 +28,10 @@ module Fontisan
       # @param set_string [String] bracketed ICU UnicodeSet, e.g. "[a-zà]"
       # @return [Array<Integer>] sorted, deduplicated codepoints
       def call(set_string)
-        raise ParseError, "input must be bracketed" unless set_string.start_with?("[") && set_string.end_with?("]")
+        unless set_string.start_with?("[") && set_string.end_with?("]")
+          raise ParseError,
+                "input must be bracketed"
+        end
 
         body = set_string[1..-2]
         negate = body.start_with?("^")
@@ -125,8 +128,13 @@ module Fontisan
         return nil unless chars[start + 2] == "{"
 
         # \u{XXX...} variable hex
-        end_idx = (start + 3..).find { |j| j >= chars.length || chars[j] == "}" }
-        raise ParseError, "unclosed \\u{ escape" if end_idx.nil? || chars[end_idx] != "}"
+        end_idx = (start + 3..).find do |j|
+          j >= chars.length || chars[j] == "}"
+        end
+        if end_idx.nil? || chars[end_idx] != "}"
+          raise ParseError,
+                "unclosed \\u{ escape"
+        end
 
         hex = chars[(start + 3)...end_idx].join
         cp = hex.to_i(16)
@@ -139,10 +147,16 @@ module Fontisan
       def four_hex(chars, start, marker)
         # \uXXXX — exactly 4 hex digits
         hex = chars[(start + 2), 4]&.join
-        raise ParseError, "truncated \\#{marker} escape" if hex.nil? || hex.length < 4
+        if hex.nil? || hex.length < 4
+          raise ParseError,
+                "truncated \\#{marker} escape"
+        end
 
         cp = hex.to_i(16)
-        raise ParseError, "\\#{marker} escape with non-hex digits" if cp.zero? && !hex.match?(/\A0+\z/)
+        if cp.zero? && !hex.match?(/\A0+\z/)
+          raise ParseError,
+                "\\#{marker} escape with non-hex digits"
+        end
 
         [cp, 6]
       end
@@ -154,7 +168,10 @@ module Fontisan
         raise ParseError, "truncated \\U escape" if hex.nil? || hex.length < 8
 
         cp = hex.to_i(16)
-        raise ParseError, "\\U escape with non-hex digits" if cp.zero? && !hex.match?(/\A0+\z/)
+        if cp.zero? && !hex.match?(/\A0+\z/)
+          raise ParseError,
+                "\\U escape with non-hex digits"
+        end
 
         [cp, 10]
       end

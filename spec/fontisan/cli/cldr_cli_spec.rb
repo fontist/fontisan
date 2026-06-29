@@ -44,7 +44,8 @@ RSpec.describe Fontisan::CldrCli do
   describe "status" do
     it "prints the default version and cache root" do
       out = capture_stdout { described_class.start(%w[status]) }
-      expect(out).to include("Default version:", "Cache root:", "Cached versions:")
+      expect(out).to include("Default version:", "Cache root:",
+                             "Cached versions:")
     end
 
     it "lists cached versions after a download" do

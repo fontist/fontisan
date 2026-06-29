@@ -25,10 +25,8 @@ module Fontisan
                          desc: "Suppress non-error output",
                          aliases: "-q"
 
-
     desc "cldr", "Manage local CLDR cache (subcommands)", hide: true
     subcommand "cldr", CldrCli
-
 
     desc "info PATH", "Display font information"
     option :brief, type: :boolean, default: false,

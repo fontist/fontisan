@@ -4,7 +4,8 @@
 
 module Fontisan
   module Models
-    autoload :AllScriptsFeaturesInfo, "fontisan/models/all_scripts_features_info"
+    autoload :AllScriptsFeaturesInfo,
+             "fontisan/models/all_scripts_features_info"
     autoload :AxisInfo, "fontisan/models/variable_font_info"
     autoload :BitmapGlyph, "fontisan/models/bitmap_glyph"
     autoload :BitmapStrike, "fontisan/models/bitmap_strike"
@@ -12,7 +13,8 @@ module Fontisan
     autoload :CollectionFontSummary, "fontisan/models/collection_font_summary"
     autoload :CollectionInfo, "fontisan/models/collection_info"
     autoload :CollectionListInfo, "fontisan/models/collection_list_info"
-    autoload :CollectionValidationReport, "fontisan/models/collection_validation_report"
+    autoload :CollectionValidationReport,
+             "fontisan/models/collection_validation_report"
     autoload :Cldr, "fontisan/models/cldr"
     autoload :ColorGlyph, "fontisan/models/color_glyph"
     autoload :ColorLayer, "fontisan/models/color_layer"

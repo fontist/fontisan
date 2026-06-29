@@ -81,7 +81,8 @@ RSpec.describe Fontisan::Cldr::UnicodeSetParser do
   describe ".call error handling" do
     it "raises ParseError when input is not bracketed" do
       expect { described_class.call("abc") }
-        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError, /bracketed/)
+        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError,
+                        /bracketed/)
     end
 
     it "raises ParseError on nested set syntax" do
@@ -91,17 +92,20 @@ RSpec.describe Fontisan::Cldr::UnicodeSetParser do
 
     it "raises ParseError on property syntax" do
       expect { described_class.call("[:Latin:]") }
-        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError, /property/)
+        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError,
+                        /property/)
     end
 
     it "raises ParseError on named sequence syntax" do
       expect { described_class.call("[{abc}]") }
-        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError, /named sequence/)
+        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError,
+                        /named sequence/)
     end
 
     it "raises ParseError on a dangling range operator" do
       expect { described_class.call("[-a]") }
-        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError, /dangling/)
+        .to raise_error(Fontisan::Cldr::UnicodeSetParser::ParseError,
+                        /dangling/)
     end
   end
 end

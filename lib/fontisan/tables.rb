@@ -12,7 +12,8 @@ module Fontisan
     autoload :CmapTable, "fontisan/tables/cmap_table"
     autoload :Colr, "fontisan/tables/colr"
     autoload :CompoundGlyph, "fontisan/tables/glyf/compound_glyph"
-    autoload :CompoundGlyphResolver, "fontisan/tables/glyf/compound_glyph_resolver"
+    autoload :CompoundGlyphResolver,
+             "fontisan/tables/glyf/compound_glyph_resolver"
     autoload :Cpal, "fontisan/tables/cpal"
     autoload :CurveConverter, "fontisan/tables/glyf/curve_converter"
     autoload :Cvar, "fontisan/tables/cvar"

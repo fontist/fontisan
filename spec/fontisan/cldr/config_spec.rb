@@ -42,7 +42,8 @@ RSpec.describe Fontisan::Cldr::Config do
   describe ".listing_url" do
     it "is the GitHub releases API URL" do
       expect(described_class.listing_url).to start_with("https://")
-      expect(described_class.listing_url).to include("api.github.com", "cldr-json")
+      expect(described_class.listing_url).to include("api.github.com",
+                                                     "cldr-json")
     end
   end
 
