@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable RSpec/MultipleDescribes
+
 require "spec_helper"
 require "fontisan/ufo/compile"
 
@@ -143,3 +145,4 @@ RSpec.describe Fontisan::Ufo::Compile::Post do
     end
   end
 end
+# rubocop:enable RSpec/MultipleDescribes
