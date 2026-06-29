@@ -28,6 +28,9 @@ module Fontisan
     desc "cldr", "Manage local CLDR cache (subcommands)", hide: true
     subcommand "cldr", CldrCli
 
+    desc "ufo", "UFO source operations (build, convert, validate)"
+    subcommand "ufo", Fontisan::Ufo::Cli
+
     desc "info PATH", "Display font information"
     option :brief, type: :boolean, default: false,
                    desc: "Brief mode - only essential info (5x faster, uses metadata loading)",
