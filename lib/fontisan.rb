@@ -88,6 +88,7 @@ module Fontisan
   autoload :Svg, "fontisan/svg"
   autoload :Tables, "fontisan/tables"
   autoload :Type1, "fontisan/type1"
+  autoload :Ufo, "fontisan/ufo"
   autoload :Utilities, "fontisan/utilities"
   autoload :Utils, "fontisan/utils"
   autoload :Validation, "fontisan/validation"
