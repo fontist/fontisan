@@ -6,14 +6,16 @@ module Fontisan
     # extraction API used by the selectors.
     #
     # For UFO sources, glyphs are accessed by name directly. For TTF
-    # sources, per-glyph extraction requires reading the BinData glyf
-    # table — TODO.full/14 will add full TTF→UFO glyph conversion.
-    # Until then, TTF sources raise on glyph extraction.
+    # or OTF sources, the source is lazily converted to a UFO::Font
+    # via Ufo::Convert::FromBinData on first glyph access, then cached.
+    # This is O(n) in donor glyph count but amortized across all
+    # codepoint extractions from that donor.
     class Source
       attr_reader :font
 
       def initialize(font)
         @font = font
+        @ufo_cache = nil
       end
 
       # @return [Symbol] :ufo, :ttf, :otf
@@ -42,28 +44,19 @@ module Fontisan
       def glyph_for_gid(gid)
         case @font
         when Fontisan::Ufo::Font then ufo_glyph_at(gid)
-        else raise NotImplementedError,
-                   "TTF/OTF per-glyph extraction lands in TODO.full/14; " \
-                   "convert the source to UFO first via Fontisan::Ufo::Cli#convert"
+        else converted_ufo_glyph_at(gid)
         end
       end
 
       private
 
-      # UFO lookup: walk glyphs, find the one whose unicodes includes
-      # this codepoint. (UFO doesn't have a built-in cmap.)
+      # ---------- UFO source ----------
+
       def ufo_gid_for(codepoint)
-        @font.glyphs.each_with_index do |(_name, glyph), _index|
-          return gid_of_glyph(glyph) if glyph.unicodes.include?(codepoint)
+        @font.glyphs.each_with_index do |(_name, glyph), index|
+          return index if glyph.unicodes.include?(codepoint)
         end
         nil
-      end
-
-      # UFO gid is the index in the layer's glyph order. The first
-      # glyph in @font.glyphs is gid 0.
-      def gid_of_glyph(glyph)
-        names = @font.glyphs.keys
-        names.index(glyph.name)
       end
 
       def ufo_glyph_at(gid)
@@ -74,11 +67,30 @@ module Fontisan
         @font.glyph(name)
       end
 
+      # ---------- TTF/OTF source ----------
+
       def bin_data_gid_for(codepoint)
         cmap = @font.table("cmap")
         return nil unless cmap
 
         cmap.unicode_mappings[codepoint]
+      end
+
+      # Lazily convert the loaded TTF/OTF to a UFO::Font, then
+      # extract glyphs from the cached UFO model.
+      def converted_ufo
+        return @ufo_cache if @ufo_cache
+
+        @ufo_cache = Fontisan::Ufo::Convert::FromBinData.convert(@font)
+      end
+
+      def converted_ufo_glyph_at(gid)
+        ufo = converted_ufo
+        names = ufo.glyphs.keys
+        name = names[gid]
+        return nil unless name
+
+        ufo.glyph(name)
       end
     end
   end
