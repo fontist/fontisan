@@ -50,8 +50,10 @@ module Fontisan
             end
           compiler.new(font).compile(output_path: output)
         else
-          warn "binary → UFO conversion not yet implemented (TODO.full/14)"
-          exit 1
+          # Binary → UFO
+          loaded = Fontisan::FontLoader.load(input)
+          ufo = Convert::FromBinData.convert(loaded)
+          Writer.new(ufo).write(output)
         end
         puts "wrote #{output}"
       end

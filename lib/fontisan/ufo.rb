@@ -38,6 +38,7 @@ module Fontisan
     autoload :Reader,      "fontisan/ufo/reader"
     autoload :Writer,      "fontisan/ufo/writer"
     autoload :Compile,     "fontisan/ufo/compile"
+    autoload :Convert,     "fontisan/ufo/convert"
     autoload :Cli,         "fontisan/ufo/cli"
   end
 end
