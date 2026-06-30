@@ -14,7 +14,7 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
   # Skip if required donor files aren't present
   before do
     skip "donor files not available" unless File.exist?(
-      "/Users/mulgogi/src/essenfont/essenfont/references/input-fonts/Lentariso-Regular.ttf"
+      "/Users/mulgogi/src/essenfont/essenfont/references/input-fonts/Lentariso-Regular.ttf",
     )
   end
 
@@ -39,7 +39,7 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
       out_plane1 = out_cmap.keys.select { |cp| cp >= 0x10000 && cp <= 0x1FFFF }
 
       expect(out_plane1.size).to eq(plane1.size),
-        "expected #{plane1.size} Plane 1 codepoints, got #{out_plane1.size}"
+                                 "expected #{plane1.size} Plane 1 codepoints, got #{out_plane1.size}"
     end
   end
 
@@ -65,8 +65,8 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
       out_beria = out_cmap.keys.select { |cp| cp >= 0x16EA0 && cp <= 0x16EDF }
 
       expect(out_beria.size).to eq(beria_erfe.size),
-        "expected #{beria_erfe.size} Beria Erfe cps, got #{out_beria.size}; " \
-        "dropped: #{(beria_erfe - out_beria).map { |cp| format('U+%04X', cp) }.join(', ')}"
+                                "expected #{beria_erfe.size} Beria Erfe cps, got #{out_beria.size}; " \
+                                "dropped: #{(beria_erfe - out_beria).map { |cp| format('U+%04X', cp) }.join(', ')}"
     end
   end
 end
