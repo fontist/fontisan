@@ -53,7 +53,8 @@ module Fontisan
         end
 
         def self.empty_charstring(width)
-          Fontisan::Tables::Cff::CharStringBuilder.build_empty(width: width.zero? ? nil : width)
+          builder = Fontisan::Tables::Cff::CharStringBuilder.new
+          builder.build_empty(width: width.zero? ? nil : width)
         end
 
         # ---------- layout ----------
