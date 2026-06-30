@@ -2475,6 +2475,36 @@ fontisan stitch \
   --output stitched.ttf
 ----
 
+=== Color emoji (CBDT/CBLC passthrough)
+
+Sources with CBDT/CBLC tables (e.g. NotoColorEmoji) can be used as
+Stitcher sources. The bitmap data is propagated byte-for-byte from the
+source into the output. The Stitcher automatically detects the source's
+storage mode via `bitmap_mode`:
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:text, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:emoji, Fontisan::FontLoader.load("NotoColorEmoji.ttf"))
+
+# All emoji glyphs from the CBDT source are added; the CBLC table
+# is copied byte-for-byte and references the right GIDs.
+stitcher.include_range(0x41..0x5A, from: :text)
+stitcher.include_range(0x1F600..0x1F64F, from: :emoji)
+
+stitcher.write_to("out.ttf", format: :ttf)
+# → out.ttf has glyf + CBDT + CBLC, emoji renders correctly
+----
+
+**Constraints:**
+- Only ONE CBDT source per Stitcher (multiple raise
+  `Fontisan::MultipleCbdtSourcesError`)
+- The CBDT source is processed first (GIDs 0..N-1) so the CBLC's GID
+  references remain valid in the output
+- Multi-source CBDT merge is tracked as TODO (REVIEW
+  `TODO.full/ufo/23-cbdt-passthrough.md`)
+
 
 == Testing
 
