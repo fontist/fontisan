@@ -199,6 +199,13 @@ module Fontisan
     end
   end
 
+  # Multiple CBDT sources detected in Stitcher
+  #
+  # Raised when more than one CBDT/CBLC source is registered with the
+  # Stitcher. Only single-source CBDT passthrough is supported; merging
+  # CBDT/CBLC across multiple sources requires a dedicated rebuild.
+  class MultipleCbdtSourcesError < Error; end
+
   # Variation data corrupted (for use in data_extractor)
   #
   # Raised when extracted variation data appears corrupted.
