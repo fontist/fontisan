@@ -12,7 +12,8 @@ module Fontisan
       class TtfCompiler < BaseCompiler
         SFNT_VERSION = SFNT_VERSION_TRUE_TYPE
 
-        def compile(output_path:)
+        # @return [Hash<String, #to_binary_s>] all TTF tables, not yet written
+        def build_tables
           glyphs = font.glyphs.values
 
           # Deep-clone glyphs so filters don't mutate the source UFO.
@@ -22,7 +23,7 @@ module Fontisan
           glyf_loca = GlyfLoca.build(font, glyphs: filtered)
           loca_format = glyf_loca.delete(:loca_format)
 
-          tables = {
+          {
             "head" => Head.build(font, glyphs: filtered,
                                        loca_format: loca_format || Head::LOCA_FORMAT_LONG),
             "hhea" => Hhea.build(font, glyphs: filtered),
@@ -36,8 +37,10 @@ module Fontisan
             "glyf" => glyf_loca["glyf"],
             "loca" => glyf_loca["loca"],
           }
+        end
 
-          write(tables, output_path)
+        def compile(output_path:)
+          write(build_tables, output_path)
           output_path
         end
 
