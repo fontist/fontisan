@@ -33,6 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   TTF table hash without writing, so `VariableTtf` can reuse the
   standard table pipeline.
 
+### Fixed
+
+- `Stitcher` silently dropped compound (composite) TrueType glyphs
+  from TTF donors. The O(1) extraction path only handled `simple?`
+  glyphs and returned `nil` for compounds. Compound glyphs are now
+  recursively flattened (with affine transforms applied) into simple
+  contours, making them self-contained. Affected donors include
+  NotoSansCuneiform (U+12399), NotoSansTaiTham (594 glyphs),
+  NotoSerifDivesAkuru (414), NotoSerifTaiYo (1007), and others.
+
 ### Removed
 
 - Audit subsystem (`Fontisan::Audit`, `Fontisan::Commands::Audit*`,

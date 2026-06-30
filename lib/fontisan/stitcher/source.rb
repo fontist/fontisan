@@ -16,6 +16,8 @@ module Fontisan
     # the raw CBDT/CBLC tables into the output instead of extracting
     # outlines. The glyph data lives in the bitmap tables, not in glyf.
     class Source
+      MAX_COMPOUND_DEPTH = 32
+
       attr_reader :font
 
       def initialize(font)
@@ -219,14 +221,19 @@ module Fontisan
       end
 
       def extract_truetype_glyph(gid, cache)
-        simple = cache[:glyf].glyph_for(gid, cache[:loca], cache[:head])
-        return nil unless simple
-        return nil unless simple.respond_to?(:simple?) && simple.simple?
+        raw = cache[:glyf].glyph_for(gid, cache[:loca], cache[:head])
+        return nil unless raw
 
         name = gid.zero? ? ".notdef" : "gid#{gid}"
         glyph = Fontisan::Ufo::Glyph.new(name: name)
         glyph.width = glyph_width(gid)
-        copy_simple_contours(simple, glyph)
+
+        if raw.respond_to?(:simple?) && raw.simple?
+          copy_simple_contours(raw, glyph)
+        elsif raw.respond_to?(:compound?) && raw.compound?
+          flatten_compound_into(raw, glyph, cache, Set.new)
+        end
+
         add_cmap_unicodes(gid, glyph)
         glyph
       rescue StandardError
@@ -248,6 +255,62 @@ module Fontisan
             on_curve = pt[:on_curve].nil? || pt[:on_curve]
             type = on_curve ? "line" : "offcurve"
             Fontisan::Ufo::Point.new(x: x.to_f, y: y.to_f, type: type)
+          end
+          ufo_glyph.add_contour(Fontisan::Ufo::Contour.new(ufo_points))
+        end
+      end
+
+      # Recursively flatten a CompoundGlyph's components into the UFO
+      # glyph as contours (with transforms applied). This makes the
+      # extracted glyph self-contained — it doesn't depend on the
+      # component glyphs being present in the target font.
+      #
+      # Only components with ARGS_ARE_XY_VALUES are flattened by offset.
+      # Point-index alignment (rare) is skipped — those components
+      # contribute nothing, but the rest of the compound is preserved.
+      def flatten_compound_into(compound, ufo_glyph, cache, visited, depth = 0)
+        return if depth > MAX_COMPOUND_DEPTH
+        return if visited.include?(compound.glyph_id)
+
+        visited = visited.dup.add(compound.glyph_id)
+
+        compound.components.each do |component|
+          next unless component.args_are_xy?
+
+          raw = cache[:glyf].glyph_for(component.glyph_index, cache[:loca], cache[:head])
+          next unless raw
+
+          matrix = component.transformation_matrix
+
+          if raw.respond_to?(:simple?) && raw.simple?
+            flatten_simple_component(raw, ufo_glyph, matrix)
+          elsif raw.respond_to?(:compound?) && raw.compound?
+            flatten_compound_into(raw, ufo_glyph, cache, visited, depth + 1)
+          end
+        end
+      end
+
+      # Apply a 2×3 affine matrix [a, b, c, d, e, f] to each point of
+      # a simple component, appending the transformed contours.
+      #   x' = a*x + c*y + e
+      #   y' = b*x + d*y + f
+      def flatten_simple_component(simple, ufo_glyph, matrix)
+        a, b, c, d, e, f = matrix
+        num_contours = simple.end_pts_of_contours&.size || 0
+        return if num_contours.zero?
+
+        num_contours.times do |ci|
+          points = simple.points_for_contour(ci)
+          next unless points && !points.empty?
+
+          ufo_points = points.map do |pt|
+            x = (pt[:x] || pt["x"]).to_f
+            y = (pt[:y] || pt["y"]).to_f
+            tx = a * x + c * y + e
+            ty = b * x + d * y + f
+            on_curve = pt[:on_curve].nil? || pt[:on_curve]
+            type = on_curve ? "line" : "offcurve"
+            Fontisan::Ufo::Point.new(x: tx, y: ty, type: type)
           end
           ufo_glyph.add_contour(Fontisan::Ufo::Contour.new(ufo_points))
         end
