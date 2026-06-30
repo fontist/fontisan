@@ -69,4 +69,32 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
                                 "dropped: #{(beria_erfe - out_beria).map { |cp| format('U+%04X', cp) }.join(', ')}"
     end
   end
+
+  # Regression for 0.4.1 regression: O(1) extraction returned nil for
+  # CFF sources, dropping ALL glyphs from OTF donors.
+  it "preserves Tangut codepoints from an OTF/CFF source" do
+    tangut_path = "/Users/mulgogi/src/essenfont/essenfont/references/input-fonts/NotoSerifTangut-Regular.otf"
+    skip "NotoSerifTangut not present" unless File.exist?(tangut_path)
+
+    src = Fontisan::FontLoader.load(tangut_path)
+    src_cmap = src.table("cmap").unicode_mappings
+    tangut = src_cmap.keys.select { |cp| cp >= 0x17000 && cp <= 0x187FF }.first(100)
+
+    stitcher = Fontisan::Stitcher.new
+    stitcher.add_source(:tangut, src)
+    stitcher.include_notdef(from: :tangut)
+    stitcher.include_codepoints(tangut, from: :tangut)
+
+    Dir.mktmpdir do |dir|
+      out_path = File.join(dir, "out.ttf")
+      stitcher.write_to(out_path, format: :ttf)
+
+      out = Fontisan::FontLoader.load(out_path)
+      out_cmap = out.table("cmap").unicode_mappings
+      out_tangut = out_cmap.keys.select { |cp| cp >= 0x17000 && cp <= 0x187FF }
+
+      expect(out_tangut.size).to eq(tangut.size),
+                                 "expected #{tangut.size} Tangut cps from OTF source, got #{out_tangut.size}"
+    end
+  end
 end
