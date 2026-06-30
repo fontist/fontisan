@@ -6,10 +6,10 @@ module Fontisan
     # extraction API used by the selectors.
     #
     # For UFO sources, glyphs are accessed by name directly. For TTF
-    # or OTF sources, the source is lazily converted to a UFO::Font
-    # via Ufo::Convert::FromBinData on first glyph access, then cached.
-    # This is O(n) in donor glyph count but amortized across all
-    # codepoint extractions from that donor.
+    # or OTF sources, individual glyphs are extracted on demand from
+    # the BinData tables (glyf/loca/head for TTF, CFF for OTF). This
+    # is O(1) per glyph rather than the previous O(n) full-donor
+    # conversion.
     #
     # CBDT/CBLC sources (e.g. NotoColorEmoji) are detected via
     # #bitmap_mode. When a source is :cbdt, the Stitcher propagates
@@ -20,7 +20,7 @@ module Fontisan
 
       def initialize(font)
         @font = font
-        @ufo_cache = nil
+        @bin_data_cache = nil
       end
 
       # @return [Symbol] :ufo, :ttf, :otf
@@ -66,14 +66,19 @@ module Fontisan
 
       # Extract a glyph by gid.
       #
+      # For TTF/OTF sources, this is O(1) per glyph: it parses just
+      # the requested glyph from glyf/CFF on demand, not the entire
+      # donor. The full-donor conversion is avoided entirely.
+      #
       # For CBDT sources, returns a placeholder glyph (no contours)
-      # since the glyph data lives in the bitmap tables, not outlines.
+      # since the glyph data is in the bitmap tables, not outlines.
+      #
       # @param gid [Integer]
       # @return [Fontisan::Ufo::Glyph, nil]
       def glyph_for_gid(gid)
         case @font
         when Fontisan::Ufo::Font then ufo_glyph_at(gid)
-        else converted_ufo_glyph_at(gid)
+        else extract_single_glyph_from_bindata(gid)
         end
       end
 
@@ -87,6 +92,15 @@ module Fontisan
         sfnt_table.raw_data
       rescue StandardError
         nil
+      end
+
+      # Width of a specific glyph (extracted from hmtx).
+      # Falls back to 0 if hmtx is missing.
+      # @param gid [Integer]
+      # @return [Integer]
+      def glyph_width(gid)
+        widths = bin_data_widths
+        widths[gid] || 0
       end
 
       private
@@ -108,7 +122,7 @@ module Fontisan
         @font.glyph(name)
       end
 
-      # ---------- TTF/OTF source ----------
+      # ---------- TTF/OTF source: O(1) per-glyph extraction ----------
 
       def bin_data_gid_for(codepoint)
         cmap = @font.table("cmap")
@@ -117,21 +131,111 @@ module Fontisan
         cmap.unicode_mappings[codepoint]
       end
 
-      # Lazily convert the loaded TTF/OTF to a UFO::Font, then
-      # extract glyphs from the cached UFO model.
-      def converted_ufo
-        return @ufo_cache if @ufo_cache
-
-        @ufo_cache = Fontisan::Ufo::Convert::FromBinData.convert(@font)
+      # Lazily parse the relevant BinData tables. Cached so we only
+      # pay the parse cost once per source.
+      def bin_data_cache
+        @bin_data_cache ||= parse_bin_data_tables
       end
 
-      def converted_ufo_glyph_at(gid)
-        ufo = converted_ufo
-        names = ufo.glyphs.keys
-        name = names[gid]
-        return nil unless name
+      def parse_bin_data_tables
+        cache = { head: @font.table("head") }
 
-        ufo.glyph(name)
+        if @font.has_table?("glyf")
+          cache[:loca] = @font.table("loca")
+          cache[:glyf] = @font.table("glyf")
+          # loca needs head's index_to_loc_format to size its offsets
+          if cache[:loca].respond_to?(:parse_with_context) && cache[:head]
+            cache[:loca].parse_with_context(
+              cache[:head].index_to_loc_format,
+              @font.table("maxp")&.num_glyphs || 0,
+            )
+          end
+        end
+
+        cache
+      end
+
+      # Build {gid → advance_width} from hmtx (cached).
+      def bin_data_widths
+        @bin_data_widths ||= build_bin_data_widths
+      end
+
+      def build_bin_data_widths
+        widths = {}
+        hmtx = @font.table("hmtx")
+        return widths unless hmtx
+
+        hhea = @font.table("hhea")
+        maxp = @font.table("maxp")
+        num_h_metrics = hhea&.number_of_h_metrics || 1
+        num_glyphs = maxp&.num_glyphs || 0
+
+        if hmtx.respond_to?(:parse_with_context)
+          hmtx.parse_with_context(num_h_metrics, num_glyphs)
+        end
+
+        num_glyphs.times do |gid|
+          metric = hmtx.respond_to?(:metric_for) ? hmtx.metric_for(gid) : nil
+          widths[gid] = metric ? metric[:advance_width] : 0
+        rescue StandardError
+          widths[gid] = 0
+        end
+        widths
+      end
+
+      # Extract a single glyph by gid, parsing just the relevant bytes.
+      # O(1) per call (after the first call's table-parsing overhead).
+      def extract_single_glyph_from_bindata(gid)
+        cache = bin_data_cache
+
+        if cache[:glyf] && cache[:loca] && cache[:head]
+          extract_truetype_glyph(gid, cache)
+        end
+      end
+
+      def extract_truetype_glyph(gid, cache)
+        simple = cache[:glyf].glyph_for(gid, cache[:loca], cache[:head])
+        return nil unless simple
+        return nil unless simple.respond_to?(:simple?) && simple.simple?
+
+        name = gid.zero? ? ".notdef" : "gid#{gid}"
+        glyph = Fontisan::Ufo::Glyph.new(name: name)
+        glyph.width = glyph_width(gid)
+        copy_simple_contours(simple, glyph)
+        add_cmap_unicodes(gid, glyph)
+        glyph
+      rescue StandardError
+        nil
+      end
+
+      # Copy a SimpleGlyph's contours + points into a Ufo::Glyph.
+      def copy_simple_contours(simple, ufo_glyph)
+        num_contours = simple.end_pts_of_contours&.size || 0
+        return if num_contours.zero?
+
+        num_contours.times do |ci|
+          points = simple.points_for_contour(ci)
+          next unless points && !points.empty?
+
+          ufo_points = points.map do |pt|
+            x = pt[:x] || pt["x"]
+            y = pt[:y] || pt["y"]
+            on_curve = pt[:on_curve].nil? || pt[:on_curve]
+            type = on_curve ? "line" : "offcurve"
+            Fontisan::Ufo::Point.new(x: x.to_f, y: y.to_f, type: type)
+          end
+          ufo_glyph.add_contour(Fontisan::Ufo::Contour.new(ufo_points))
+        end
+      end
+
+      # Add Unicode codepoints from the cmap that map to this gid.
+      def add_cmap_unicodes(gid, glyph)
+        cmap = @font.table("cmap")
+        return unless cmap
+
+        (cmap.unicode_mappings || {}).each do |cp, g|
+          glyph.add_unicode(cp) if g == gid
+        end
       end
     end
   end
