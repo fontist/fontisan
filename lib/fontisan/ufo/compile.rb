@@ -46,6 +46,13 @@ module Fontisan
       autoload :Cmap,         "fontisan/ufo/compile/cmap"
       autoload :GlyfLoca,     "fontisan/ufo/compile/glyf_loca"
       autoload :Cff,          "fontisan/ufo/compile/cff"
+      autoload :Avar,         "fontisan/ufo/compile/avar"
+      autoload :Hvar,         "fontisan/ufo/compile/hvar"
+      autoload :Mvar,         "fontisan/ufo/compile/mvar"
+      autoload :Stat,         "fontisan/ufo/compile/stat"
+      autoload :VariableTtf,  "fontisan/ufo/compile/variable_ttf"
+      autoload :ItemVariationStore,
+               "fontisan/ufo/compile/item_variation_store"
     end
   end
 end

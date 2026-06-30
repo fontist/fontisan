@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Fontisan::Ufo::Compile::Avar` — builds the OpenType `avar` (Axis
+  Variation) table with per-axis non-linear maps (defaults to identity
+  -1/0/1 mapping).
+- `Fontisan::Ufo::Compile::Hvar` — builds the OpenType `HVAR`
+  (Horizontal Metrics Variation) table with advance-width deltas per
+  glyph.
+- `Fontisan::Ufo::Compile::Mvar` — builds the OpenType `MVAR`
+  (Metrics Variation) table for font-wide metric deltas (ascender,
+  descender, etc.).
+- `Fontisan::Ufo::Compile::Stat` — builds the OpenType `STAT` (Style
+  Attributes) table with design axes, axis value tables, and elided
+  fallback name ID.
+- `Fontisan::Ufo::Compile::ItemVariationStore` — shared builder for
+  the ItemVariationStore structure used by HVAR and MVAR
+  (VariationRegionList + ItemVariationData with int8/int16 delta
+  packing).
+- `Fontisan::Ufo::Compile::VariableTtf` — orchestrator that compiles
+  a default UFO master plus variation masters into a single variable
+  TTF (emits fvar, gvar, HVAR, MVAR, avar, STAT alongside the standard
+  TTF tables).
+- `TtfCompiler#build_tables` — extracted public method returning the
+  TTF table hash without writing, so `VariableTtf` can reuse the
+  standard table pipeline.
+
 ### Removed
 
 - Audit subsystem (`Fontisan::Audit`, `Fontisan::Commands::Audit*`,
