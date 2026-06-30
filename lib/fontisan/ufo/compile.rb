@@ -33,6 +33,7 @@ module Fontisan
       autoload :TtfCompiler,  "fontisan/ufo/compile/ttf_compiler"
       autoload :OtfCompiler,  "fontisan/ufo/compile/otf_compiler"
       autoload :Filters,      "fontisan/ufo/compile/filters"
+      autoload :Fvar,         "fontisan/ufo/compile/fvar"
       autoload :Gpos,         "fontisan/ufo/compile/gpos"
       autoload :Head,         "fontisan/ufo/compile/head"
       autoload :Hhea,         "fontisan/ufo/compile/hhea"
