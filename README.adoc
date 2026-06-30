@@ -2376,6 +2376,106 @@ Fontisan can:
 * Importing and generation PNG block ruler layers
 
 
+== UFO source operations
+
+fontisan reads, writes, and compiles UFO (Unified Font Object) v2/v3
+font sources into binary font formats (TTF, OTF). No AFDKO or Python
+fonttools needed.
+
+=== Build a UFO to binary
+
+[source,bash]
+----
+# TTF (TrueType outlines)
+fontisan ufo build font.ufo --output out.ttf --to ttf
+
+# OTF (CFF outlines)
+fontisan ufo build font.ufo --output out.otf --to otf
+----
+
+The TTF compiler automatically applies:
+- `cubic_to_quadratic` filter (UFO cubic Beziers -> TTF quadratic)
+- `reverse_contour_direction` filter (TTF winding convention)
+
+=== Convert between UFO and binary
+
+[source,bash]
+----
+# UFO -> binary
+fontisan ufo convert font.ufo out.ttf --to ttf
+
+# Binary -> UFO (reverse direction)
+fontisan ufo convert font.ttf font.ufo/
+----
+
+=== Validate a UFO source
+
+[source,bash]
+----
+fontisan ufo validate font.ufo
+----
+
+Checks: glyphs present, family name set, unitsPerEm set, .notdef exists.
+
+=== Ruby API
+
+[source,ruby]
+----
+require "fontisan"
+
+# Read a UFO
+font = Fontisan::Ufo::Font.open("font.ufo")
+puts font.family_name
+puts font.glyphs.size
+
+# Compile to TTF
+Fontisan::Ufo::Compile::TtfCompiler.new(font).compile(output_path: "out.ttf")
+
+# Compile to OTF
+Fontisan::Ufo::Compile::OtfCompiler.new(font).compile(output_path: "out.otf")
+
+# Write back to UFO (round-trip)
+Fontisan::Ufo::Writer.new(font).write("out.ufo")
+
+# Convert a binary font to UFO
+ttf = Fontisan::FontLoader.load("font.ttf")
+ufo = Fontisan::Ufo::Convert::FromBinData.convert(ttf)
+----
+
+== Font stitching
+
+The Stitcher combines glyphs from multiple source fonts into one new
+font. Sources can be UFO directories or loaded TTF/OTF files.
+
+=== Ruby API
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:latin, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:cjk, Fontisan::FontLoader.load("FSung-m.ttf"))
+
+stitcher.include_range(0x41..0x5A, from: :latin)    # A-Z
+stitcher.include_range(0x4E00..0x9FFF, from: :cjk)  # CJK Unified
+stitcher.include_notdef(from: :latin)
+
+stitcher.write_to("stitched.ttf", format: :ttf)
+----
+
+=== CLI
+
+[source,bash]
+----
+fontisan stitch \
+  --source latin=NotoSans.ttf \
+  --source cjk=FSung-m.ttf \
+  --include-range latin=0x41-0x5A \
+  --include-range cjk=0x4E00-0x9FFF \
+  --notdef-from latin \
+  --output stitched.ttf
+----
+
+
 == Testing
 
 === General
