@@ -185,12 +185,37 @@ module Fontisan
 
       # Extract a single glyph by gid, parsing just the relevant bytes.
       # O(1) per call (after the first call's table-parsing overhead).
+      #
+      # For TTF (glyf) sources: reads one glyph from glyf/loca.
+      # For OTF (CFF) sources: falls back to the full-donor conversion
+      # BUT uses a proper gid→name map (not array index) to avoid the
+      # gid-misalignment bug that dropped Plane 1 codepoints.
       def extract_single_glyph_from_bindata(gid)
         cache = bin_data_cache
 
         if cache[:glyf] && cache[:loca] && cache[:head]
           extract_truetype_glyph(gid, cache)
+        elsif @font.has_table?("CFF ")
+          extract_cff_glyph_safe(gid)
         end
+      end
+
+      # CFF glyph extraction: uses the full UFO conversion. After the
+      # fix in FromBinData (no more `next unless simple`), every gid
+      # gets a glyph, so array index = gid.
+      def extract_cff_glyph_safe(gid)
+        ufo = converted_ufo
+        names = ufo.glyphs.keys
+        return nil if gid >= names.size
+
+        name = names[gid]
+        ufo.glyph(name)
+      end
+
+      # Lazily convert the loaded TTF/OTF to a UFO::Font (for CFF
+      # sources and as a fallback).
+      def converted_ufo
+        @converted_ufo ||= Fontisan::Ufo::Convert::FromBinData.convert(@font)
       end
 
       def extract_truetype_glyph(gid, cache)

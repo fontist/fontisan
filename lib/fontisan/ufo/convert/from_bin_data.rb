@@ -179,12 +179,15 @@ module Fontisan
             rescue StandardError
               nil
             end
-            next unless simple
 
             if simple.is_a?(Fontisan::Tables::SimpleGlyph)
               extract_simple_contours(simple, ufo_glyph)
             end
 
+            # Always add the glyph, even if it has no contours. This
+            # ensures gid → array index alignment (no gaps from skipped
+            # glyphs). Without this, high-gid Plane 1 codepoints are
+            # silently dropped because the array is shorter than maxp.
             ufo.layers.default_layer.add(ufo_glyph)
           end
         end
