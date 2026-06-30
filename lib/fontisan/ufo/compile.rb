@@ -35,6 +35,7 @@ module Fontisan
       autoload :Filters,      "fontisan/ufo/compile/filters"
       autoload :Fvar,         "fontisan/ufo/compile/fvar"
       autoload :Gpos,         "fontisan/ufo/compile/gpos"
+      autoload :Gvar,         "fontisan/ufo/compile/gvar"
       autoload :Head,         "fontisan/ufo/compile/head"
       autoload :Hhea,         "fontisan/ufo/compile/hhea"
       autoload :Maxp,         "fontisan/ufo/compile/maxp"
