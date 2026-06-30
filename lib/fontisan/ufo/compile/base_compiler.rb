@@ -40,10 +40,11 @@ module Fontisan
 
         private
 
-        # All tables every OTF/TTF must have.
+        # All tables every OTF/TTF must have, plus optional feature
+        # tables (GPOS for kerning) when the UFO source has kerning data.
         def build_tables
           glyphs = font.glyphs.values
-          {
+          tables = {
             "head" => Head.build(font, glyphs: glyphs),
             "hhea" => Hhea.build(font, glyphs: glyphs),
             "maxp" => Maxp.build(font, glyphs: glyphs),
@@ -52,7 +53,13 @@ module Fontisan
             "post" => Post.build(font, glyphs: glyphs),
             "hmtx" => Hmtx.build(font, glyphs: glyphs),
             "cmap" => Cmap.build(font, glyphs: glyphs),
-          }.merge(build_outline_tables)
+          }
+
+          # GPOS kern table (only when the UFO source has kerning pairs)
+          gpos = Gpos.build(font, glyphs: glyphs)
+          tables["GPOS"] = gpos if gpos
+
+          tables.merge(build_outline_tables)
         end
 
         def write(tables_hash, output_path)
