@@ -70,12 +70,23 @@ module Fontisan
     end
 
     # Write the stitched font to disk.
+    #
+    # For CBDT/CBLC sources (e.g. NotoColorEmoji), the raw CBDT and
+    # CBLC tables are copied byte-for-byte into the output. This works
+    # because CBDT-mode glyphs are processed first (GIDs 0..N-1),
+    # matching the source's GID layout. Only one CBDT source is
+    # supported; multiple CBDT sources raise MultipleCbdtSourcesError.
+    #
     # @param path [String] output file path
     # @param format [Symbol] :ttf or :otf
     def write_to(path, format: :ttf)
       build_target_font
       compiler = compiler_for(format)
-      compiler.new(@target).compile(output_path: path)
+      compiler_instance = compiler.new(@target)
+      compiler_instance.compile(output_path: path)
+
+      propagate_cbdt_tables(path) if cbdt_source
+
       path
     end
 
@@ -96,6 +107,53 @@ module Fontisan
       end
     end
 
+    # Find the single CBDT source among registered sources, if any.
+    # Raises if more than one CBDT source is present (merge not supported).
+    # @return [Source, nil]
+    def cbdt_source
+      cbdts = @sources.values.select { |s| s.bitmap_mode == :cbdt }
+      if cbdts.size > 1
+        raise MultipleCbdtSourcesError,
+              "multiple CBDT sources not supported (found #{cbdts.size})"
+      end
+
+      cbdts.first
+    end
+
+    # Copy raw CBDT + CBLC table bytes from the CBDT source into the
+    # compiled output file. The GIDs must match (CBDT glyphs are at
+    # the same GIDs in both source and output because they were added
+    # first during build_target_font).
+    def propagate_cbdt_tables(path)
+      source = cbdt_source
+      return unless source
+
+      compiled = Fontisan::FontLoader.load(path)
+
+      tables = {}
+      compiled.table_names.each do |tag|
+        raw = extract_raw_table(compiled, tag)
+        tables[tag] = raw if raw
+      end
+
+      cbdt_bytes = source.raw_table_bytes("CBDT")
+      cblc_bytes = source.raw_table_bytes("CBLC")
+      tables["CBDT"] = cbdt_bytes if cbdt_bytes
+      tables["CBLC"] = cblc_bytes if cblc_bytes
+
+      sfnt = tables.key?("CFF ") ? 0x4F54544F : 0x00010000
+      Fontisan::FontWriter.write_to_file(tables, path, sfnt_version: sfnt)
+    end
+
+    def extract_raw_table(font, tag)
+      sfnt_table = font.table(tag)
+      return nil unless sfnt_table
+
+      sfnt_table.raw_data
+    rescue StandardError
+      nil
+    end
+
     def compiler_for(format)
       case format.to_sym
       when :ttf then Ufo::Compile::TtfCompiler
@@ -107,26 +165,28 @@ module Fontisan
 
     # Walk bindings in codepoint order, assign sequential new gids,
     # copy each glyph into the target font's default layer.
+    #
+    # When a CBDT source is present, its glyphs are added FIRST (in
+    # source GID order) so that the CBLC's GID references remain valid.
+    # Glyf-source bindings are processed AFTER, appending new glyphs.
     def assign_gids_and_copy_glyphs
-      # Always put .notdef at gid 0 first.
-      notdef_binding = @bindings.find { |b| b[:donor_gid].zero? }
-      if notdef_binding
-        copy_glyph_into(@target, name: ".notdef",
-                                 source: notdef_binding[:source],
-                                 donor_gid: 0)
+      cbdt = cbdt_source
+
+      if cbdt
+        add_all_cbdt_glyphs(cbdt)
       else
-        # Synthesize an empty .notdef
-        @target.layers.default_layer.add(Ufo::Glyph.new(name: ".notdef"))
+        add_notdef_from_bindings
       end
 
       sorted_bindings.each do |binding|
-        next if binding[:donor_gid].zero? # already handled
+        next if binding[:donor_gid].zero?
+
+        # Skip bindings from the CBDT source — its glyphs are already added.
+        next if cbdt && binding[:source].equal?(cbdt)
 
         glyph = binding[:source].glyph_for_gid(binding[:donor_gid])
         next unless glyph
 
-        # If multiple codepoints map to the same glyph, only the first
-        # binding creates the glyph; subsequent ones add unicode entries.
         if @target.glyphs.key?(glyph.name)
           add_extra_unicode(glyph.name, binding[:codepoint])
         else
@@ -157,6 +217,51 @@ module Fontisan
 
       glyph = @target.glyph(glyph_name)
       glyph.add_unicode(codepoint) unless glyph.unicodes.include?(codepoint)
+    end
+
+    # Add .notdef at GID 0 from the first binding that references gid 0.
+    # Falls back to a synthesized empty .notdef if none found.
+    def add_notdef_from_bindings
+      notdef_binding = @bindings.find { |b| b[:donor_gid].zero? }
+      if notdef_binding
+        copy_glyph_into(@target, name: ".notdef",
+                                 source: notdef_binding[:source],
+                                 donor_gid: 0)
+      else
+        @target.layers.default_layer.add(Ufo::Glyph.new(name: ".notdef"))
+      end
+    end
+
+    # Add ALL glyphs from a CBDT source in source GID order. This
+    # ensures the CBLC's GID references remain valid in the output
+    # without rewriting the table. Each glyph gets a placeholder
+    # (no contours) since the bitmap data is in CBDT, not glyf.
+    def add_all_cbdt_glyphs(source)
+      ufo = source.font.is_a?(Ufo::Font) ? source.font : nil
+      if ufo
+        ufo.glyphs.each_value { |g| @target.layers.default_layer.add(clone_glyph(g, name: g.name)) }
+        return
+      end
+
+      # For loaded TTF/OTF sources, iterate via cmap to get glyph names.
+      # CBDT fonts (like NotoColorEmoji) may have thousands of glyphs;
+      # we add them all as placeholders.
+      maxp = source.font.table("maxp")
+      num_glyphs = maxp&.num_glyphs || 0
+      cmap = source.font.table("cmap")
+      mappings = cmap&.unicode_mappings || {}
+
+      # Build gid → [codepoints] from cmap
+      gid_cps = Hash.new { |h, k| h[k] = [] }
+      mappings.each { |cp, gid| gid_cps[gid] << cp }
+
+      num_glyphs.times do |gid|
+        name = gid.zero? ? ".notdef" : "gid#{gid}"
+        glyph = Ufo::Glyph.new(name: name)
+        glyph.width = 0
+        gid_cps[gid].each { |cp| glyph.add_unicode(cp) }
+        @target.layers.default_layer.add(glyph)
+      end
     end
 
     # Deep-copy a glyph with a new name. Used so multiple target

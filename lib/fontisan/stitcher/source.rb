@@ -10,6 +10,11 @@ module Fontisan
     # via Ufo::Convert::FromBinData on first glyph access, then cached.
     # This is O(n) in donor glyph count but amortized across all
     # codepoint extractions from that donor.
+    #
+    # CBDT/CBLC sources (e.g. NotoColorEmoji) are detected via
+    # #bitmap_mode. When a source is :cbdt, the Stitcher propagates
+    # the raw CBDT/CBLC tables into the output instead of extracting
+    # outlines. The glyph data lives in the bitmap tables, not in glyf.
     class Source
       attr_reader :font
 
@@ -28,6 +33,27 @@ module Fontisan
         end
       end
 
+      # Detect how this source stores glyph data.
+      #
+      # - :glyf — TrueType outlines (glyf table present)
+      # - :cbdt — Color bitmaps (CBDT + CBLC tables, no glyf)
+      # - :mixed — Both glyf and CBDT
+      # - :none  — UFO source or neither table present
+      #
+      # @return [Symbol]
+      def bitmap_mode
+        return :none if @font.is_a?(Fontisan::Ufo::Font)
+        return :none unless @font.respond_to?(:has_table?)
+
+        has_cbdt = @font.has_table?("CBDT") && @font.has_table?("CBLC")
+        has_glyf = @font.has_table?("glyf") || @font.has_table?("CFF ")
+        return :mixed if has_cbdt && has_glyf
+        return :cbdt if has_cbdt
+        return :glyf if has_glyf
+
+        :none
+      end
+
       # Find the gid for a Unicode codepoint in this source.
       # @param codepoint [Integer]
       # @return [Integer, nil]
@@ -39,6 +65,9 @@ module Fontisan
       end
 
       # Extract a glyph by gid.
+      #
+      # For CBDT sources, returns a placeholder glyph (no contours)
+      # since the glyph data lives in the bitmap tables, not outlines.
       # @param gid [Integer]
       # @return [Fontisan::Ufo::Glyph, nil]
       def glyph_for_gid(gid)
@@ -46,6 +75,18 @@ module Fontisan
         when Fontisan::Ufo::Font then ufo_glyph_at(gid)
         else converted_ufo_glyph_at(gid)
         end
+      end
+
+      # Raw table bytes from the loaded font (for passthrough).
+      # @param tag [String] 4-byte table tag (e.g. "CBDT", "CBLC")
+      # @return [String, nil] raw bytes or nil if table not present
+      def raw_table_bytes(tag)
+        sfnt_table = @font.table(tag)
+        return nil unless sfnt_table
+
+        sfnt_table.raw_data
+      rescue StandardError
+        nil
       end
 
       private
