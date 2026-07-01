@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Fontisan::Tables::Cff2::Header` — CFF2 5-byte header builder
+  (majorVersion=2, minorVersion=0, headerSize=5, topDictSize).
+- `Fontisan::Tables::Cff2::IndexBuilder` — CFF2 INDEX builder with
+  uint32 count (vs card16 in CFF1). Supports > 65,535 entries in the
+  INDEX structure itself.
+- `Fontisan::Tables::Cff2::DictEncoder` — encodes CFF DICT operands
+  (integers + BCD reals) and operators (1-byte and 2-byte escape).
+- `Fontisan::Ufo::Compile::Cff2` — from-scratch CFF2 table builder
+  for UFO glyphs. Produces: Header + Top DICT (CharStrings + FontDICT
+  offsets) + Global Subr INDEX + CharStrings INDEX + FontDICT INDEX
+  (wrapping one FontDICT with empty PrivateDICT reference).
+- `Fontisan::Ufo::Compile::Otf2Compiler` — compiles UFO → OTF with
+  CFF2 outlines (table tag `CFF2` instead of `CFF `). Same OTTO sfnt
+  signature as CFF1.
+- `Stitcher#write_to` now accepts `format: :otf2` for CFF2 output.
+- `GlyphLimit` recognizes `:otf2` format.
+
+### Note on glyph cap
+
+CFF2 does **not** bypass the 65,535 glyph cap. Per the OpenType spec,
+the CFF2 CharStrings INDEX count must match `maxp.numGlyphs`, which is
+uint16 in all font versions. For > 65,535 glyphs, TTC (TrueType
+Collection) splitting is required. CFF2's value lies in variable font
+support (`blend`/`vsindex` operators + VariationStore), CID-keyed
+fonts (FDSelect), and improved subroutinization — not glyph count.
+
+### Added
+
 - `Fontisan::Stitcher::GlyphSignature` — deterministic SHA-256 signature
   of a glyph's outline identity (advance width + contours + components).
   Used to detect visually identical glyphs from different donors.

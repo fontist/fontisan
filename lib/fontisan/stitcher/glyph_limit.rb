@@ -26,6 +26,7 @@ module Fontisan
         case format.to_sym
         when :ttf then TTF_GLYPH_CAP
         when :otf then OTF_GLYPH_CAP
+        when :otf2 then OTF_GLYPH_CAP # CFF2 CharStrings count must match maxp.numGlyphs
         else
           raise ArgumentError, "unknown format: #{format.inspect}"
         end

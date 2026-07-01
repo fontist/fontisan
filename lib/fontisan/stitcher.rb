@@ -169,6 +169,7 @@ module Fontisan
       case format.to_sym
       when :ttf then Ufo::Compile::TtfCompiler
       when :otf then Ufo::Compile::OtfCompiler
+      when :otf2 then Ufo::Compile::Otf2Compiler
       else
         raise ArgumentError, "unknown format: #{format.inspect}"
       end
