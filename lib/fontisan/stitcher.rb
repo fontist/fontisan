@@ -17,15 +17,25 @@ module Fontisan
   #   stitcher.include_range(0x3040..0x309F, from: :jp)
   #   stitcher.write_to("stitched.ttf", format: :ttf)
   class Stitcher
-    autoload :Source,   "fontisan/stitcher/source"
-    autoload :Selector, "fontisan/stitcher/selector"
+    autoload :Source,          "fontisan/stitcher/source"
+    autoload :Selector,        "fontisan/stitcher/selector"
+    autoload :GlyphSignature,  "fontisan/stitcher/glyph_signature"
+    autoload :Deduplicator,    "fontisan/stitcher/deduplicator"
+    autoload :GlyphLimit,      "fontisan/stitcher/glyph_limit"
+
+    DEFAULT_DEDUPLICATE = true
 
     attr_reader :sources, :bindings
 
-    def initialize
+    # @param deduplicate [Boolean] when true (default), glyphs with
+    #   identical outlines from different donors share a single gid.
+    #   Disable for debugging or when distinct gids are required.
+    def initialize(deduplicate: DEFAULT_DEDUPLICATE)
       @sources = {}
       @bindings = []
       @target = Ufo::Font.new
+      @deduplicate = deduplicate
+      @deduplicator = deduplicate ? Deduplicator.new : nil
     end
 
     # Register a named source font.
@@ -81,6 +91,7 @@ module Fontisan
     # @param format [Symbol] :ttf or :otf
     def write_to(path, format: :ttf)
       build_target_font
+      GlyphLimit.check!(@target.glyphs.size, format: format)
       compiler = compiler_for(format)
       compiler_instance = compiler.new(@target)
       compiler_instance.compile(output_path: path)
@@ -169,6 +180,11 @@ module Fontisan
     # When a CBDT source is present, its glyphs are added FIRST (in
     # source GID order) so that the CBLC's GID references remain valid.
     # Glyf-source bindings are processed AFTER, appending new glyphs.
+    #
+    # Signature-based deduplication: when a glyph's outline matches an
+    # already-added glyph, the new codepoint is redirected to the
+    # canonical glyph instead of adding a duplicate gid. CBDT-source
+    # glyphs bypass dedup (each needs its own gid for CBDT indexing).
     def assign_gids_and_copy_glyphs
       cbdt = cbdt_source
 
@@ -187,13 +203,16 @@ module Fontisan
         glyph = binding[:source].glyph_for_gid(binding[:donor_gid])
         next unless glyph
 
-        if @target.glyphs.key?(glyph.name)
-          add_extra_unicode(glyph.name, binding[:codepoint])
+        canonical = @deduplicator&.find(glyph)
+        if canonical && @target.glyphs.key?(canonical)
+          add_extra_unicode(canonical, binding[:codepoint])
         else
-          copy_glyph_into(@target, name: glyph.name,
+          name = unique_target_name(glyph.name)
+          copy_glyph_into(@target, name: name,
                                    source: binding[:source],
                                    donor_gid: binding[:donor_gid],
                                    codepoint: binding[:codepoint])
+          @deduplicator&.register(glyph, name)
         end
       end
     end
@@ -217,6 +236,22 @@ module Fontisan
 
       glyph = @target.glyph(glyph_name)
       glyph.add_unicode(codepoint) unless glyph.unicodes.include?(codepoint)
+    end
+
+    # Return a name not yet used in the target font. When two glyphs
+    # from different donors share a name but differ in outline, the
+    # second gets a suffix to avoid clobbering the first in the
+    # target's Hash-keyed layer.
+    def unique_target_name(base_name)
+      return base_name unless @target.glyphs.key?(base_name)
+
+      suffix = 1
+      loop do
+        candidate = "#{base_name}.#{suffix}"
+        return candidate unless @target.glyphs.key?(candidate)
+
+        suffix += 1
+      end
     end
 
     # Add .notdef at GID 0 from the first binding that references gid 0.

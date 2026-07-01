@@ -206,6 +206,37 @@ module Fontisan
   # CBDT/CBLC across multiple sources requires a dedicated rebuild.
   class MultipleCbdtSourcesError < Error; end
 
+  # Stitcher produced more glyphs than the output format supports.
+  #
+  # Raised by Stitcher::GlyphLimit.check! before writing, so the user
+  # gets an actionable message instead of a silently truncated font.
+  class GlyphLimitExceededError < Error
+    attr_reader :actual, :limit, :format
+
+    def initialize(actual:, limit:, format:)
+      @actual = actual
+      @limit = limit
+      @format = format
+      super(build_message)
+    end
+
+    private
+
+    def build_message
+      "Stitcher produced #{actual} unique glyphs, exceeding the " \
+        "#{format.to_s.upcase} limit of #{format_limit}. Both TTF and OTF " \
+        "(CFF1) cap at 65,535 glyphs — the maxp.num_glyphs field is uint16 " \
+        "and the CFF CharStrings INDEX count is card16. Options: " \
+        "(1) split the output into a TTC (TrueType Collection) by Unicode plane, " \
+        "(2) reduce the number of donors, " \
+        "(3) wait for CFF2 support in fontisan (card24 INDEX counts, no glyph cap)."
+    end
+
+    def format_limit
+      limit == Float::INFINITY ? "infinity" : limit.to_s
+    end
+  end
+
   # Variation data corrupted (for use in data_extractor)
   #
   # Raised when extracted variation data appears corrupted.
