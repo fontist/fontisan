@@ -46,6 +46,8 @@ module Fontisan
       autoload :Cmap,         "fontisan/ufo/compile/cmap"
       autoload :GlyfLoca,     "fontisan/ufo/compile/glyf_loca"
       autoload :Cff,          "fontisan/ufo/compile/cff"
+      autoload :Cff2,         "fontisan/ufo/compile/cff2"
+      autoload :Otf2Compiler, "fontisan/ufo/compile/otf2_compiler"
       autoload :Avar,         "fontisan/ufo/compile/avar"
       autoload :Hvar,         "fontisan/ufo/compile/hvar"
       autoload :Mvar,         "fontisan/ufo/compile/mvar"
