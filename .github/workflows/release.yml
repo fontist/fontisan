@@ -28,5 +28,11 @@ jobs:
       next_version: ${{ github.event.inputs.next_version }}
     secrets:
       rubygems-api-key: ${{ secrets.FONTIST_CI_RUBYGEMS_API_KEY }}
-      pat_token: ${{ secrets.GITHUB_TOKEN }}
+      # NOTE: GITHUB_TOKEN is intentionally NOT passed as pat_token. The
+      # metanorma/ci release workflow checks `secrets.pat_token == ''` to
+      # decide between the gated chain (bump→tag→test→do-release→publish)
+      # and immediate publish. GITHUB_TOKEN cannot trigger downstream
+      # workflow runs (GitHub design), so the gated chain silently
+      # completes with SHOULD_PUBLISH=false and the gem never publishes.
+      # Leaving pat_token empty takes the immediate-publish path instead.
 
