@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Fontisan::Stitcher::GlyphSignature` — deterministic SHA-256 signature
+  of a glyph's outline identity (advance width + contours + components).
+  Used to detect visually identical glyphs from different donors.
+- `Fontisan::Stitcher::Deduplicator` — registry mapping signatures to
+  canonical glyph names, enabling signature-based deduplication during
+  Stitcher assembly. Merges identical outlines from different donors
+  into a single gid, reducing the glyph count.
+- `Fontisan::Stitcher::GlyphLimit` — format-specific glyph-count caps
+  (TTF: 65,535; OTF: unlimited) and enforcement via `check!`.
+- `Fontisan::GlyphLimitExceededError` — raised when the Stitcher's
+  output exceeds the format's glyph cap, with actionable guidance
+  (switch to OTF, reduce donors, split into TTC).
+- `Stitcher.new(deduplicate: true)` — signature-based dedup is now the
+  default; pass `deduplicate: false` to disable.
+
+### Fixed
+
+- Stitcher no longer silently produces an invalid TTF (or OTF) when
+  the glyph count exceeds 65,535. Both TTF and OTF (CFF1) cap at
+  65,535 glyphs because `maxp.num_glyphs` is uint16 and the CFF1
+  CharStrings INDEX count is card16. The cap is now enforced BEFORE
+  writing, and signature-based deduplication merges identical outlines
+  to reduce the count. When dedup alone isn't enough,
+  `GlyphLimitExceededError` is raised with actionable options
+  (split into TTC, reduce donors, wait for CFF2) instead of the
+  previous behavior (silent truncation + dropped cmap entries at
+  the repair pass).
+
+### Added (previous)
+
 - `Fontisan::SvgToGlyf` — converts SVG path data (from ucode code-chart
   extraction) into `Ufo::Glyph` objects that feed directly into the
   existing Stitcher + TtfCompiler pipeline. The converter handles SVG

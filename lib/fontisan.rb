@@ -70,6 +70,8 @@ module Fontisan
   autoload :CorruptedVariationDataError, "fontisan/error"
   autoload :InvalidVariationDataError, "fontisan/error"
   autoload :VariationDataCorruptedError, "fontisan/error"
+  autoload :MultipleCbdtSourcesError, "fontisan/error"
+  autoload :GlyphLimitExceededError, "fontisan/error"
 
   # Namespace hubs (each hub declares its own child autoloads)
   autoload :Binary, "fontisan/binary"
