@@ -86,6 +86,7 @@ module Fontisan
   autoload :Pipeline, "fontisan/pipeline"
   autoload :Subset, "fontisan/subset"
   autoload :Svg, "fontisan/svg"
+  autoload :SvgToGlyf, "fontisan/svg_to_glyf"
   autoload :Tables, "fontisan/tables"
   autoload :Type1, "fontisan/type1"
   autoload :Ufo, "fontisan/ufo"
