@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Fontisan::SvgToGlyf` — converts SVG path data (from ucode code-chart
+  extraction) into `Ufo::Glyph` objects that feed directly into the
+  existing Stitcher + TtfCompiler pipeline. The converter handles SVG
+  path commands (M/L/H/V/C/S/Q/T/Z), relative and absolute coordinates,
+  smooth-curve reflection, SVG `<g transform>` accumulation, viewBox
+  coordinate normalization, and Y-axis flipping. Cubic-to-quadratic
+  conversion and contour winding correction are handled automatically
+  by the existing `Ufo::Compile::Filters` when compiling to TTF.
+- `Fontisan::SvgToGlyf::Geometry::AffineTransform` — 2×3 matrix with
+  compose/apply, used uniformly for all coordinate operations.
+- `Fontisan::SvgToGlyf::Geometry::TransformParser` — parses SVG
+  `transform="..."` attribute (translate, scale, rotate, matrix, skew).
+- `Fontisan::SvgToGlyf::Geometry::Normalizer` — composes the viewBox →
+  font UPM normalization (Y-flip + scale) with group transforms.
+- `Fontisan::SvgToGlyf::Path::Parser` — tokenizes and parses SVG path
+  `d` strings into typed Command objects with implicit-repetition support.
+- `Fontisan::SvgToGlyf::Path::ContourBuilder` — converts commands to
+  `Ufo::Contour` objects, tracking current-point, subpath-start, and
+  control-point state for smooth-curve reflection.
+- `Fontisan::SvgToGlyf::Document` — walks SVG XML (via Nokogiri),
+  accumulating ancestor `<g>` transforms per `<path>`.
 - `Fontisan::Ufo::Compile::Avar` — builds the OpenType `avar` (Axis
   Variation) table with per-axis non-linear maps (defaults to identity
   -1/0/1 mapping).
