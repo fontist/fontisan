@@ -42,6 +42,15 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
       bytes = described_class.build(font, glyphs: font.glyphs.values)
       expect(bytes.bytesize).to be > 20
     end
+
+    it "embeds a VariationStore when provided" do
+      vs_bytes = "\x00\x01".b + "\x00" * 20
+      bytes = described_class.build(font, glyphs: font.glyphs.values,
+                                          variation_store: vs_bytes)
+      expect(bytes).to include(vs_bytes)
+      plain = described_class.build(font, glyphs: font.glyphs.values)
+      expect(bytes.bytesize).to be > plain.bytesize
+    end
   end
 
   describe "Otf2Compiler end-to-end" do
