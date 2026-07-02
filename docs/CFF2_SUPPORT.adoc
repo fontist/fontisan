@@ -1,0 +1,184 @@
+= CFF2 Support Guide
+
+== General
+
+CFF2 (Compact Font Format version 2) is the modern PostScript outline
+format defined in OpenType 1.9+. It is required for variable OTF fonts
+that use PostScript outlines, and it replaces the legacy CFF (CFF1)
+format's Name INDEX, String INDEX, Encoding, and Charset with a
+simpler, variation-aware structure.
+
+Fontisan implements CFF2 entirely in pure Ruby. The pieces:
+
+* `Tables::Cff2::Header` — 5-byte header (major, minor, headerSize, topDictLength)
+* `Tables::Cff2::IndexBuilder` — uint32-count INDEX (CFF1 uses uint16)
+* `Tables::Cff2::DictEncoder` — DICT operand/operator encoding
+* `Tables::Cff2::FdSelect` — format 0 and format 3 FDSelect for CID-keyed fonts
+* `Tables::Cff::Cff2CharStringBuilder` — charstring builder with
+  vsindex (operator 22, replacing CFF1's hmoveto) and blend (operator 23)
+* `Ufo::Compile::Cff2` — assembles the CFF2 table from UFO glyphs
+* `Ufo::Compile::Cff2Subrs` — bias calculation + GlobalSubr/LocalSubr INDEXes
+
+== Building a CFF2 table directly
+
+[source,ruby]
+----
+glyphs = font.glyphs.values
+cff2_bytes = Fontisan::Ufo::Compile::Cff2.build(font, glyphs: glyphs)
+----
+
+For variable CFF2, pass an `ItemVariationStore`:
+
+[source,ruby]
+----
+vs_bytes = Fontisan::Ufo::Compile::ItemVariationStore.build(...)
+cff2_bytes = Fontisan::Ufo::Compile::Cff2.build(
+  font, glyphs: glyphs, variation_store: vs_bytes
+)
+----
+
+When `variation_store:` is present, it is placed between the GlobalSubr
+INDEX and CharStrings INDEX, and the Top DICT records its offset via
+operator 24.
+
+== CFF2 table layout
+
+[cols="1,3", options="header"]
+|===
+| Section | Notes
+
+| Header (5 bytes) | major=2, minor=0, headerSize=5, topDictLength=N
+
+| Top DICT | Offsets to CharStrings (op 17), Font DICT INDEX (op [12,36]),
+            VariationStore (op 24, variable fonts only), Private
+            (op 18)
+
+| GlobalSubr INDEX | uint32 count — empty by default
+
+| VariationStore | Present only for variable CFF2 fonts
+
+| CharStrings INDEX | uint32 count, one entry per glyph
+
+| Font DICT INDEX | uint32 count, wraps one or more Font DICTs
+
+| Font DICT | DICT with Private operator `[size, offset]`
+|===
+
+The Top DICT's size determines where GlobalSubr INDEX starts, which
+cascades to all subsequent offsets — a circular dependency that
+`Ufo::Compile::Cff2` resolves with fixed-point iteration (typically
+converges in 2-3 passes).
+
+== Variable charstrings: blend and vsindex
+
+CFF2 introduces two new charstring operators:
+
+[cols="1,1,3", options="header"]
+|===
+| Operator | Code | Purpose
+
+| `vsindex` | 22 | Selects the variation region scalars (replaces CFF1 `hmoveto`)
+
+| `blend` | 23 | Pops n+1 numbers per operand, blends using region scalars
+|===
+
+The blend protocol:
+
+  stack before: [base_value, delta_r0, delta_r1, ..., delta_r(n-1), n, blend]
+  stack after:  [blended_value]
+
+The blended value is `base_value + Σ(delta_i × scalar_i)` for the
+currently selected regions.
+
+`Tables::Cff::Cff2CharStringBuilder.build_variable` encodes variable
+outlines directly:
+
+[source,ruby]
+----
+charstring = Fontisan::Tables::Cff::Cff2CharStringBuilder.build_variable(
+  default_outline,
+  master_outlines: [bold_outline, light_outline],
+  num_regions: 2,
+  width: 600,
+)
+# → charstring bytes with base values + per-region deltas + blend
+----
+
+The builder tracks per-master position via
+`MasterState = Struct.new(:current_x, :current_y)` to compute relative
+deltas as the command sequence is walked. All masters must share the
+same command structure as the default outline.
+
+When all deltas for a coordinate are zero, the blend operator is
+omitted for that coordinate — visually identical output, smaller file.
+
+== FDSelect
+
+CID-keyed CFF2 fonts use FDSelect to map each GID to a Font DICT.
+`Tables::Cff2::FdSelect` supports both formats:
+
+* **Format 0** — one byte per glyph (small fonts)
+* **Format 3** — run-length encoded (large fonts with contiguous FD
+  assignments)
+
+[source,ruby]
+----
+fdselect_bytes = Fontisan::Tables::Cff2::FdSelect.build(
+  format: 3,
+  fd_indices: [0, 0, 1, 1, 1, 2]
+)
+----
+
+== Subroutines
+
+`Ufo::Compile::Cff2Subrs` provides:
+
+* `bias(count)` — subroutine bias per spec:
+  ** 107 when count ≤ 1240
+  ** 1131 when count ≤ 33800
+  ** 32768 above
+* `build_index(subrs)` — uint32 INDEX builder for both GlobalSubr and
+  LocalSubr (same structure — DRY)
+
+By default the GlobalSubr INDEX is empty (count=0). Per-FontDICT
+LocalSubr INDEXes are also empty in the static-font case.
+
+== Compiling to a CFF2 OTF
+
+The high-level path is `Ufo::Compile::Otf2Compiler`:
+
+[source,ruby]
+----
+Fontisan::Ufo::Compile::Otf2Compiler.new(font)
+  .compile(output_path: "Modern.otf")
+----
+
+For variable CFF2:
+
+[source,ruby]
+----
+orchestrator = Fontisan::Ufo::Compile::VariableOtf.new(
+  default_font,
+  master_fonts: [bold_font, light_font],
+  axes: [{ tag: "wght", min: 100, default: 400, max: 900 }],
+)
+orchestrator.compile(output_path: "Variable.otf")
+----
+
+NOTE: The current `VariableOtf` orchestrator emits a static CFF2 table
+with `fvar`, `STAT`, and `avar` for axes — the blend/vsindex operators
+exist in `Cff2CharStringBuilder` but are not yet wired through the
+default compile path. Until that integration lands, instances
+generated from the variable OTF will all render the default master.
+
+== Spec reference
+
+* https://learn.microsoft.com/en-us/typography/opentype/spec/cff2[OpenType CFF2 spec]
+* https://learn.microsoft.com/en-us/typography/opentype/spec/cff2charstr[CFF2 CharString spec]
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide] — high-level
+  compiler overview
+* link:VARIABLE_FONT_OPERATIONS.adoc[Variable Font Operations] —
+  reading and modifying existing variable fonts

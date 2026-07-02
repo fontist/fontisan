@@ -1,0 +1,151 @@
+= Stitcher Guide
+
+== General
+
+The Stitcher combines glyphs from multiple source fonts into one or
+more new fonts. Sources can be UFO directories, loaded TTF/OTF files,
+or any object responding to the `Ufo::Font` interface.
+
+The design rule: **the user controls the collection structure
+explicitly**. Every `include_*` method requires an `into:` keyword
+naming the target subfont, and `write_to` requires a `subfont:` name.
+There are no defaults and no after-the-fact splitting.
+
+== API
+
+[cols="2,3", options="header"]
+|===
+| Method | Purpose
+
+| `Stitcher.new(deduplicate: true)` | Create a stitcher; dedup is on by default
+
+| `add_source(label, font)` | Register a source font under a Symbol label
+
+| `include_range(range, from:, into:)` | Add codepoint range from `from` into `into`
+
+| `include_codepoints(cps, from:, into:)` | Add an explicit Array of codepoints
+
+| `include_gid(donor_gid, from:, into:)` | Add a specific GID from the source
+
+| `include_notdef(from:, into:)` | Convenience for `include_gid(0, ...)`
+
+| `set_info(hash)` | Override font info (family name, etc.)
+
+| `write_to(path, format:, subfont:)` | Compile one subfont to a single file
+
+| `write_collection(path, format:)` | Compile all declared subfonts into a TTC/OTC
+|===
+
+`format:` is one of `:ttf`, `:otf`, `:otf2`. For collections, `:ttf`
+produces a `.ttc` and `:otf`/`:otf2` produce an `.otc`.
+
+== Single-font example
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:latin, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:cjk,  Fontisan::FontLoader.load("FSung-m.ttf"))
+
+stitcher.include_notdef(from: :latin, into: :main)
+stitcher.include_range(0x41..0x5A,   from: :latin, into: :main)  # A-Z
+stitcher.include_range(0x4E00..0x9FFF, from: :cjk,  into: :main) # CJK
+
+stitcher.write_to("stitched.ttf", format: :ttf, subfont: :main)
+----
+
+== Collection example (TTC/OTC)
+
+When the total glyph count would exceed 65,535 (the OpenType
+`maxp.numGlyphs` cap), split the work across named subfonts and write
+a collection:
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:noto_sans, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:noto_cjk,  Fontisan::FontLoader.load("NotoSansCJK.ttf"))
+
+stitcher.include_range(0x41..0x5A,     from: :noto_sans, into: :latin)
+stitcher.include_range(0x4E00..0x9FFF, from: :noto_cjk,  into: :cjk)
+
+stitcher.write_collection("out.otc", format: :otf2)
+----
+
+Each subfont is compiled independently, then packed by
+`Collection::Builder` with table deduplication enabled — shared tables
+(head, name, OS/2, ...) are stored once and referenced from each
+subfont's offset table.
+
+== Glyph deduplication
+
+By default the Stitcher deduplicates glyphs across all sources using
+SHA-256 outline signatures (`Stitcher::GlyphSignature`). Two donor
+glyphs with identical width + contours + components are merged into a
+single target glyph; subsequent references are aliased by adding the
+extra codepoint to the merged glyph's unicode set.
+
+To disable deduplication (e.g., for forensic comparison):
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new(deduplicate: false)
+----
+
+== 65,535 glyph cap
+
+OpenType `maxp.numGlyphs` is uint16 — no format (TTF, CFF1, or CFF2)
+can hold more than 65,535 glyphs in a single font. The Stitcher
+enforces this:
+
+* `Stitcher::GlyphLimit.check!(count, format:)` raises
+  `GlyphLimitExceededError` when a single subfont would exceed the cap.
+* The only path to >65,535 glyphs is a TTC/OTC collection — each
+  subfont is its own 65,535-space.
+
+== CBDT/CBLC passthrough (color emoji)
+
+Sources that contain CBDT/CBLC tables (e.g. NotoColorEmoji) can be
+used as Stitcher sources. The bitmap data is propagated byte-for-byte
+into the output:
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:text,  Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:emoji, Fontisan::FontLoader.load("NotoColorEmoji.ttf"))
+
+stitcher.include_notdef(from: :text,  into: :main)
+stitcher.include_range(0x41..0x5A,    from: :text,  into: :main)
+stitcher.include_range(0x1F600..0x1F64F, from: :emoji, into: :main)
+
+stitcher.write_to("out.ttf", format: :ttf, subfont: :main)
+# → out.ttf has glyf + CBDT + CBLC, emoji renders correctly
+----
+
+Constraints:
+
+* Only ONE CBDT source per Stitcher. Multiple CBDT sources raise
+  `Fontisan::MultipleCbdtSourcesError`.
+* The CBDT source is processed first (GIDs 0..N-1) so the CBLC's GID
+  references remain valid in the output.
+
+== CLI
+
+[source,bash]
+----
+fontisan stitch \
+  --source latin=NotoSans.ttf \
+  --source cjk=FSung-m.ttf \
+  --include-range latin=0x41-0x5A \
+  --include-range cjk=0x4E00-0x9FFF \
+  --notdef-from latin \
+  --output stitched.ttf
+----
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide] — TTF/OTF/CFF2 compilers
+- link:COLLECTION_VALIDATION.adoc[Collection Validation Guide]
+- link:SVG_TO_GLYF.adoc[SVG to Glyph Guide] — turn chart SVGs into
+  Stitcher sources

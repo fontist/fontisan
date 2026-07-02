@@ -1,0 +1,118 @@
+= SVG to Glyph Guide
+
+== General
+
+`Fontisan::SvgToGlyf` converts SVG path data — as produced by ucode's
+code-chart extraction — into `Ufo::Glyph` objects that feed directly
+into the UFO → TTF/OTF compile pipeline.
+
+SvgToGlyf emits cubic Bezier contours (matching UFO/PostScript
+conventions). The cubic-to-quadratic conversion and winding-order
+correction happen later, in `Ufo::Compile::Filters::CubicToQuadratic`
+and `ReverseContourDirection`, when the glyph is compiled to TTF.
+
+== API
+
+[cols="2,3", options="header"]
+|===
+| Method | Purpose
+
+| `SvgToGlyf.convert(path_data, upm:, codepoint:, name:, viewbox:, transform:)`
+| Convert a single SVG path `d` string into a `Ufo::Glyph`
+
+| `SvgToGlyf.from_svg_file(file_path, upm:, codepoint:)`
+| Convert one `.svg` file into a `Ufo::Glyph`
+
+| `SvgToGlyf.from_directory(dir, upm:)`
+| Convert a directory of `.svg` files into a `Ufo::Font` (one glyph
+  per file)
+|===
+
+The default `upm` is 1000.
+
+== Single path
+
+[source,ruby]
+----
+glyph = Fontisan::SvgToGlyf.convert(
+  "M 0 0 L 500 0 L 500 700 L 0 700 Z",
+  upm: 1000,
+  codepoint: 0x10940,
+)
+# → #<Fontisan::Ufo::Glyph name="uni10940" ...>
+----
+
+== Single file
+
+[source,ruby]
+----
+glyph = Fontisan::SvgToGlyf.from_svg_file("U+10940.svg", upm: 1000)
+----
+
+If the codepoint is not supplied, it is derived from the filename when
+it matches `U+XXXX.svg` or `hexcode.svg`.
+
+== Directory → Font
+
+For batch conversion of a code-chart directory (one SVG per
+codepoint):
+
+[source,ruby]
+----
+font = Fontisan::SvgToGlyf.from_directory(
+  "/tmp/chart-svg/Khitan",
+  upm: 1000,
+)
+Fontisan::Ufo::Compile::TtfCompiler.new(font)
+  .compile(output_path: "Khitan.ttf")
+----
+
+Or feed it directly to the Stitcher:
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:khitan, font)
+stitcher.include_range(0x18B00..0x18CFF, from: :khitan, into: :main)
+stitcher.write_to("Khitan.ttf", format: :ttf, subfont: :main)
+----
+
+== SVG subset supported
+
+SvgToGlyf handles the subset of SVG that real chart extractions use:
+
+* Path commands: `M`, `L`, `H`, `V`, `C`, `S`, `Q`, `T`, `A`, `Z`
+  (absolute and lowercase relative variants)
+* `<svg>` `viewBox` and `width`/`height` for coordinate scaling
+* `<g transform="...">` group transforms (matrix, translate, scale,
+  rotate)
+* `<path d="...">` elements
+
+Unsupported SVG features (filters, masks, embedded raster images) are
+ignored. SvgToGlyf is a vector-only converter — for raster emoji, use
+the CBDT/CBLC passthrough path (see link:STITCHER_GUIDE.adoc[Stitcher Guide]).
+
+== Coordinate system
+
+SVG uses a y-down coordinate system; UFO uses y-up. SvgToGlyf flips
+the y-axis using the SVG `viewBox` height so glyphs render right-way-up
+in font rendering contexts. When no `viewBox` is present, the
+`<svg>` `width`/`height` attributes are used as a fallback.
+
+== Namespace layout
+
+[source]
+----
+Fontisan::SvgToGlyf
+├── Path       # SVG path parser → contour builder
+├── Geometry   # AffineTransform, vector math
+├── Document   # <svg> document parsing, viewBox handling
+└── Assembler  # top-level glue: builds Ufo::Glyph / Ufo::Font
+----
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide] — compile converted
+  glyphs to binary fonts
+* link:STITCHER_GUIDE.adoc[Stitcher Guide] — combine converted fonts
+  with other donors
