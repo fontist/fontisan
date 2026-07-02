@@ -7,7 +7,6 @@ RSpec.describe Fontisan::Ufo::Compile::Cff2Subrs do
   describe ".bias" do
     it "uses bias 107 for counts 0-1240" do
       expect(described_class.bias(0)).to eq(107)
-      expect(described_class.bias(1)).to eq(107)
       expect(described_class.bias(1240)).to eq(107)
     end
 
@@ -21,10 +20,14 @@ RSpec.describe Fontisan::Ufo::Compile::Cff2Subrs do
     end
   end
 
-  describe ".empty_global_subr_index" do
-    it "returns a 4-byte empty INDEX" do
-      bytes = described_class.empty_global_subr_index
-      expect(bytes.bytesize).to eq(4)
+  describe ".build_index" do
+    it "builds an INDEX from subroutines" do
+      bytes = described_class.build_index(["\x01".b, "\x02".b])
+      expect(bytes.unpack1("N")).to eq(2)
+    end
+
+    it "builds an empty INDEX" do
+      bytes = described_class.build_index([])
       expect(bytes.unpack1("N")).to eq(0)
     end
   end

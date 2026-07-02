@@ -95,15 +95,7 @@ module Fontisan
       #
       # @return [String] TTC header binary
       def write_ttc_header
-        if @format == :otc
-          # OTC uses CFF2 subfonts by default; still TTC format
-        end
-        [TTC_TAG, VERSION_1_0_MAJOR, VERSION_1_0_MINOR, @fonts.size].pack("a4nN")
-      end
-
-      # @return [Integer] header size (12 for v1, 28 for v2 with DSIG space)
-      def ttc_header_size
-        @dsig ? 28 : 12
+        [TTC_TAG, VERSION_1_0_MAJOR, VERSION_1_0_MINOR, @fonts.size].pack("a4nnN")
       end
 
       # Write offset table

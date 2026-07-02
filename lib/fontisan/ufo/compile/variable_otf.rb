@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tmpdir"
+
 module Fontisan
   module Ufo
     module Compile
@@ -7,12 +9,15 @@ module Fontisan
       #
       # The orchestrator assembles a default-master UFO plus variation
       # masters into a variable OpenType font with:
-      #   - CFF2 outlines (with blend/vsindex operators for variation)
+      #   - CFF2 outlines (static — blend/vsindex operators are TODO 07/18)
       #   - fvar (axes + instances)
       #   - STAT (style attributes)
-      #   - avar (axis remapping)
-      #   - HVAR (horizontal metrics variation)
-      #   - MVAR (font-wide metrics variation)
+      #   - avar (axis remapping, when maps are provided)
+      #
+      # NOTE: the CFF2 table currently contains static outlines (no
+      # VariationStore, no blend operators). Full variable CFF2 requires
+      # TODO 07 (blend/vsindex) and TODO 18 (blend integration) to be
+      # wired into the charstring builder.
       #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/cff2
       class VariableOtf
@@ -27,49 +32,42 @@ module Fontisan
           @instances = instances
         end
 
-        # Compile the variable OTF.
+        # Compile the variable OTF directly to the output path.
         # @param output_path [String] output file path
         # @return [String] the output path
         def compile(output_path:)
           tables = build_tables
-          Dir.mktmpdir do |dir|
-            Fontisan::FontWriter.write_to_file(tables, "#{dir}/temp.otf",
-                                               sfnt_version: 0x4F54544F)
-            File.binwrite(output_path, File.binread("#{dir}/temp.otf"))
-          end
+          Fontisan::FontWriter.write_to_file(
+            tables.transform_values { |t| t.is_a?(String) ? t : t.to_binary_s },
+            output_path,
+            sfnt_version: 0x4F54544F,
+          )
           output_path
         end
 
         # Build all tables for the variable OTF.
         # @return [Hash<String,String>] table tag → bytes
         def build_tables
-          tables = base_tables
-          tables["fvar"] = Fvar.build(@default, axes: @axes, instances: @instances)
-          tables["STAT"] = Stat.build(axes: @axes)
-          tables["avar"] = avar_table
-          tables["CFF2"] = Cff2.build(@default, glyphs: @default.glyphs.values)
-          tables
-        end
+          glyphs = @default.glyphs.values
 
-        private
-
-        def base_tables
-          {
-            "head" => Head.build(@default, glyphs: @default.glyphs.values, loca_format: Head::LOCA_FORMAT_LONG),
-            "hhea" => Hhea.build(@default, glyphs: @default.glyphs.values),
-            "maxp" => Maxp.build(@default, glyphs: @default.glyphs.values, version: Maxp::VERSION_OPEN_TYPE),
-            "OS/2" => Os2.build(@default, glyphs: @default.glyphs.values),
+          tables = {
+            "head" => Head.build(@default, glyphs: glyphs, loca_format: Head::LOCA_FORMAT_LONG),
+            "hhea" => Hhea.build(@default, glyphs: glyphs),
+            "maxp" => Maxp.build(@default, glyphs: glyphs, version: Maxp::VERSION_OPEN_TYPE),
+            "OS/2" => Os2.build(@default, glyphs: glyphs),
             "name" => Name.build(@default),
             "post" => Post.build(@default),
-            "hmtx" => Hmtx.build(@default, glyphs: @default.glyphs.values),
-            "cmap" => Cmap.build(@default, glyphs: @default.glyphs.values),
+            "hmtx" => Hmtx.build(@default, glyphs: glyphs),
+            "cmap" => Cmap.build(@default, glyphs: glyphs),
+            "CFF2" => Cff2.build(@default, glyphs: glyphs),
+            "fvar" => Fvar.build(@default, axes: @axes, instances: @instances),
+            "STAT" => Stat.build(axes: @axes),
           }
-        end
 
-        def avar_table
-          return nil unless @axes.any? { |a| a[:maps] }
+          avar_bytes = Avar.build(axes: @axes)
+          tables["avar"] = avar_bytes if avar_bytes
 
-          Avar.build(axes: @axes)
+          tables
         end
       end
     end
