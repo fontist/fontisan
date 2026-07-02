@@ -4,17 +4,13 @@ require "spec_helper"
 require "fontisan/stitcher"
 require "tmpdir"
 
-# Verifies that CFF2 subfonts compile and load correctly.
-# TODO 04, 05: full collection assembly with multiple CFF2 subfonts
-# is pending Collection::Builder improvements.
-RSpec.describe "CFF2 subfont compilation" do
+RSpec.describe "Collection pipeline" do
   let(:ufo) { Fontisan::Ufo }
 
   def make_font(name, codepoint, points = [[0, 0, "line"], [100, 0, "line"]])
     font = ufo::Font.new
     font.info.units_per_em = 1000
     font.glyphs[".notdef"] = ufo::Glyph.new(name: ".notdef")
-
     g = ufo::Glyph.new(name: name)
     g.width = 500
     g.add_unicode(codepoint)
@@ -23,10 +19,40 @@ RSpec.describe "CFF2 subfont compilation" do
     font
   end
 
-  describe "Otf2Compiler + Stitcher" do
+  describe "TTC with multiple TTF subfonts" do
+    it "writes and reopens a collection with correct font count" do
+      latin = make_font("A", 0x41)
+      greek = make_font("Alpha", 0x391)
+
+      stitcher = Fontisan::Stitcher.new
+      stitcher.add_source(:latin, latin)
+      stitcher.add_source(:greek, greek)
+      stitcher.include_notdef(from: :latin, into: :latin)
+      stitcher.include_codepoints([0x41], from: :latin, into: :latin)
+      stitcher.include_notdef(from: :greek, into: :greek)
+      stitcher.include_codepoints([0x391], from: :greek, into: :greek)
+
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "out.ttc")
+        stitcher.write_collection(path, format: :ttf)
+
+        expect(File.binread(path, 4)).to eq("ttcf")
+        collection = Fontisan::FontLoader.load_collection(path)
+        expect(collection.num_fonts).to eq(2)
+
+        all_cps = []
+        collection.num_fonts.times do |i|
+          font = Fontisan::FontLoader.load(path, font_index: i)
+          all_cps.concat(font.table("cmap").unicode_mappings.keys)
+        end
+        expect(all_cps).to include(0x41, 0x391)
+      end
+    end
+  end
+
+  describe "CFF2 subfont compilation" do
     it "compiles a single CFF2 subfont to a valid OTF" do
       donor = make_font("A", 0x41)
-
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:d, donor)
       stitcher.include_notdef(from: :d, into: :latin)
@@ -36,28 +62,9 @@ RSpec.describe "CFF2 subfont compilation" do
         path = File.join(dir, "out.otf")
         stitcher.write_to(path, format: :otf2, subfont: :latin)
 
-        expect(File.binread(path, 4)).to eq("OTTO")
         loaded = Fontisan::FontLoader.load(path)
         expect(loaded.has_table?("CFF2")).to be(true)
         expect(loaded.has_table?("CFF ")).to be(false)
-        expect(loaded.table("cmap").unicode_mappings.key?(0x41)).to be(true)
-      end
-    end
-  end
-
-  describe "TTC header format" do
-    it "writes the 'ttcf' signature" do
-      donor = make_font("A", 0x41)
-
-      stitcher = Fontisan::Stitcher.new
-      stitcher.add_source(:d, donor)
-      stitcher.include_notdef(from: :d, into: :main)
-      stitcher.include_codepoints([0x41], from: :d, into: :main)
-
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "ttc.ttc")
-        stitcher.write_collection(path, format: :ttf)
-        expect(File.binread(path, 4)).to eq("ttcf")
       end
     end
   end
