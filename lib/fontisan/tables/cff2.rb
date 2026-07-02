@@ -24,6 +24,7 @@ module Fontisan
       # resolve on first reference without require_relative.
       autoload :BlendOperator, "fontisan/tables/cff2/blend_operator"
       autoload :CharstringParser, "fontisan/tables/cff2/charstring_parser"
+      autoload :FdSelect, "fontisan/tables/cff2/fd_select"
       autoload :Header, "fontisan/tables/cff2/header"
       autoload :IndexBuilder, "fontisan/tables/cff2/index_builder"
       autoload :DictEncoder, "fontisan/tables/cff2/dict_encoder"
