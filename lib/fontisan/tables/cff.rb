@@ -47,6 +47,7 @@ module Fontisan
       autoload :Charset, "fontisan/tables/cff/charset"
       autoload :CharString, "fontisan/tables/cff/charstring"
       autoload :CharStringBuilder, "fontisan/tables/cff/charstring_builder"
+      autoload :Cff2CharStringBuilder, "fontisan/tables/cff/cff2_charstring_builder"
       autoload :CharStringParser, "fontisan/tables/cff/charstring_parser"
       autoload :CharStringRebuilder, "fontisan/tables/cff/charstring_rebuilder"
       autoload :CharstringsIndex, "fontisan/tables/cff/charstrings_index"
