@@ -36,11 +36,11 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:a, donor_a)
       stitcher.add_source(:b, donor_b)
-      stitcher.include_notdef(from: :a)
-      stitcher.include_codepoints([0x20], from: :a)
-      stitcher.include_codepoints([0xA0], from: :b)
+      stitcher.include_notdef(from: :a, into: :main)
+      stitcher.include_codepoints([0x20], from: :a, into: :main)
+      stitcher.include_codepoints([0xA0], from: :b, into: :main)
 
-      target = stitcher.build_target_font
+      target = stitcher.build_target_font(subfont: :main)
       # .notdef + one merged glyph = 2 glyphs total
       expect(target.glyphs.size).to eq(2)
       # Both codepoints map to the same glyph
@@ -61,10 +61,10 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
 
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:d, donor)
-      stitcher.include_notdef(from: :d)
-      stitcher.include_codepoints([0x41, 0x42], from: :d)
+      stitcher.include_notdef(from: :d, into: :main)
+      stitcher.include_codepoints([0x41, 0x42], from: :d, into: :main)
 
-      target = stitcher.build_target_font
+      target = stitcher.build_target_font(subfont: :main)
       # .notdef + A + B = 3 glyphs
       expect(target.glyphs.size).to eq(3)
     end
@@ -76,11 +76,11 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stitcher = Fontisan::Stitcher.new(deduplicate: false)
       stitcher.add_source(:a, donor_a)
       stitcher.add_source(:b, donor_b)
-      stitcher.include_notdef(from: :a)
-      stitcher.include_codepoints([0x20], from: :a)
-      stitcher.include_codepoints([0xA0], from: :b)
+      stitcher.include_notdef(from: :a, into: :main)
+      stitcher.include_codepoints([0x20], from: :a, into: :main)
+      stitcher.include_codepoints([0xA0], from: :b, into: :main)
 
-      target = stitcher.build_target_font
+      target = stitcher.build_target_font(subfont: :main)
       # .notdef + space + SP = 3 glyphs (no dedup)
       expect(target.glyphs.size).to eq(3)
     end
@@ -93,11 +93,11 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:a, donor_a)
       stitcher.add_source(:b, donor_b)
-      stitcher.include_notdef(from: :a)
-      stitcher.include_codepoints([0x20], from: :a)
-      stitcher.include_codepoints([0xA0], from: :b)
+      stitcher.include_notdef(from: :a, into: :main)
+      stitcher.include_codepoints([0x20], from: :a, into: :main)
+      stitcher.include_codepoints([0xA0], from: :b, into: :main)
 
-      target = stitcher.build_target_font
+      target = stitcher.build_target_font(subfont: :main)
       expect(target.glyphs.size).to eq(2) # .notdef + space
       space = target.glyphs["space"]
       expect(space.unicodes).to include(0x20, 0xA0)
@@ -119,14 +119,14 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       # Disable dedup so all 4 glyphs (.notdef + A + B + C) are counted
       stitcher = Fontisan::Stitcher.new(deduplicate: false)
       stitcher.add_source(:d, donor)
-      stitcher.include_notdef(from: :d)
-      stitcher.include_codepoints([0x41, 0x42, 0x43], from: :d)
+      stitcher.include_notdef(from: :d, into: :main)
+      stitcher.include_codepoints([0x41, 0x42, 0x43], from: :d, into: :main)
 
       # Stub the cap to 3 glyphs (we have .notdef + 3 = 4 glyphs)
       stub_const("Fontisan::Stitcher::GlyphLimit::TTF_GLYPH_CAP", 3)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.ttf"), format: :ttf) }
+        expect { stitcher.write_to(File.join(dir, "out.ttf"), format: :ttf, subfont: :main) }
           .to raise_error(Fontisan::GlyphLimitExceededError, /exceeding the TTF limit/)
       end
     end
@@ -145,15 +145,15 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       # Disable dedup so all 4 glyphs (.notdef + A + B + C) are counted
       stitcher = Fontisan::Stitcher.new(deduplicate: false)
       stitcher.add_source(:d, donor)
-      stitcher.include_notdef(from: :d)
-      stitcher.include_codepoints([0x41, 0x42, 0x43], from: :d)
+      stitcher.include_notdef(from: :d, into: :main)
+      stitcher.include_codepoints([0x41, 0x42, 0x43], from: :d, into: :main)
 
       # Both TTF and OTF cap at 65,535 in fontisan (CFF1's INDEX count
       # is card16). Stub the cap to 3 to trigger the error.
       stub_const("Fontisan::Stitcher::GlyphLimit::OTF_GLYPH_CAP", 3)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf) }
+        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf, subfont: :main) }
           .to raise_error(Fontisan::GlyphLimitExceededError, /exceeding the OTF limit/)
       end
     end
@@ -162,11 +162,11 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       donor = make_font_with_glyph("A", 0x41)
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:d, donor)
-      stitcher.include_notdef(from: :d)
-      stitcher.include_codepoints([0x41], from: :d)
+      stitcher.include_notdef(from: :d, into: :main)
+      stitcher.include_codepoints([0x41], from: :d, into: :main)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf) }
+        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf, subfont: :main) }
           .not_to raise_error
       end
     end

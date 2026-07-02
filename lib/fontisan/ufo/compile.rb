@@ -48,6 +48,8 @@ module Fontisan
       autoload :Cff,          "fontisan/ufo/compile/cff"
       autoload :Cff2,         "fontisan/ufo/compile/cff2"
       autoload :Otf2Compiler, "fontisan/ufo/compile/otf2_compiler"
+      autoload :Cpal,         "fontisan/ufo/compile/cpal"
+      autoload :Meta,         "fontisan/ufo/compile/meta"
       autoload :Avar,         "fontisan/ufo/compile/avar"
       autoload :Hvar,         "fontisan/ufo/compile/hvar"
       autoload :Mvar,         "fontisan/ufo/compile/mvar"
