@@ -19,6 +19,10 @@ module Fontisan
       VERSION_1_0_MAJOR = 1
       VERSION_1_0_MINOR = 0
 
+      # TTC version 2.0 (major=2, minor=0) — supports DSIG reference
+      VERSION_2_0_MAJOR = 2
+      VERSION_2_0_MINOR = 0
+
       # Initialize writer
       #
       # @param fonts [Array<TrueTypeFont, OpenTypeFont>] Source fonts
@@ -91,12 +95,15 @@ module Fontisan
       #
       # @return [String] TTC header binary
       def write_ttc_header
-        [
-          TTC_TAG,                  # char[4] - tag
-          VERSION_1_0_MAJOR,        # uint16 - major version
-          VERSION_1_0_MINOR,        # uint16 - minor version
-          @fonts.size, # uint32 - number of fonts
-        ].pack("a4 n n N")
+        if @format == :otc
+          # OTC uses CFF2 subfonts by default; still TTC format
+        end
+        [TTC_TAG, VERSION_1_0_MAJOR, VERSION_1_0_MINOR, @fonts.size].pack("a4nN")
+      end
+
+      # @return [Integer] header size (12 for v1, 28 for v2 with DSIG space)
+      def ttc_header_size
+        @dsig ? 28 : 12
       end
 
       # Write offset table

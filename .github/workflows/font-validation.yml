@@ -1,0 +1,47 @@
+name: font-validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Install dependencies
+        run: bundle install
+      - name: Compile test CFF2 OTF
+        run: |
+          bundle exec ruby -e '
+            require "fontisan"
+            require "fontisan/svg_to_glyf"
+            require "fontisan/ufo/compile"
+            require "tmpdir"
+            Dir.mktmpdir do |dir|
+              font = Fontisan::Ufo::Font.new
+              font.info.family_name = "Test"
+              font.info.units_per_em = 1000
+              font.glyphs[".notdef"] = Fontisan::Ufo::Glyph.new(name: ".notdef")
+              g = Fontisan::Ufo::Glyph.new(name: "A")
+              g.width = 500
+              g.add_unicode(0x41)
+              g.add_contour(Fontisan::Ufo::Contour.new([
+                Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
+                Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
+                Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
+              ]))
+              font.glyphs["A"] = g
+              out = "#{dir}/test.otf"
+              Fontisan::Ufo::Compile::Otf2Compiler.new(font).compile(output_path: out)
+              loaded = Fontisan::FontLoader.load(out)
+              raise "CFF2 missing" unless loaded.has_table?("CFF2")
+              raise "CFF missing" if loaded.has_table?("CFF ")
+              raise "cmap wrong" unless loaded.table("cmap").unicode_mappings[0x41] == 1
+              puts "OK: CFF2 OTF compiled and reopened successfully"
+            end
+          '
