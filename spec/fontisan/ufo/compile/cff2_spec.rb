@@ -63,12 +63,12 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
     it "supports Stitcher write_to with format: :otf2" do
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:src, font)
-      stitcher.include_notdef(from: :src)
-      stitcher.include_codepoints([0x41], from: :src)
+      stitcher.include_notdef(from: :src, into: :main)
+      stitcher.include_codepoints([0x41], from: :src, into: :main)
 
       Dir.mktmpdir do |dir|
         path = File.join(dir, "stitched.otf")
-        stitcher.write_to(path, format: :otf2)
+        stitcher.write_to(path, format: :otf2, subfont: :main)
 
         reopened = Fontisan::FontLoader.load(path)
         expect(reopened.has_table?("CFF2")).to be(true)

@@ -16,16 +16,16 @@ RSpec.describe Fontisan::Stitcher do
       source = Fontisan::Ufo::Font.open(ufo_path)
       stitcher = described_class.new
       stitcher.add_source(:src, source)
-      stitcher.include_notdef(from: :src)
+      stitcher.include_notdef(from: :src, into: :main)
 
       # last-resort-font doesn't have ASCII glyphs per se (it has
       # block-representative glyphs). Stitch whatever the first
       # few glyphs are to prove the pipeline.
-      stitcher.include_gid(1, from: :src)
-      stitcher.include_gid(2, from: :src)
+      stitcher.include_gid(1, from: :src, into: :main)
+      stitcher.include_gid(2, from: :src, into: :main)
 
       out = File.join(tmpdir, "stitched.ttf")
-      stitcher.write_to(out, format: :ttf)
+      stitcher.write_to(out, format: :ttf, subfont: :main)
       expect(File.exist?(out)).to be(true)
       expect(File.size(out)).to be > 0
 
@@ -50,7 +50,7 @@ RSpec.describe Fontisan::Stitcher do
   describe "#add_source" do
     it "rejects lookups for unregistered sources" do
       stitcher = described_class.new
-      expect { stitcher.include_range(0x41..0x42, from: :ghost) }
+      expect { stitcher.include_range(0x41..0x42, from: :ghost, into: :main) }
         .to raise_error(ArgumentError, /unknown source/)
     end
   end

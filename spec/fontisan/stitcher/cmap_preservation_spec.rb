@@ -27,12 +27,12 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
     stitcher = Fontisan::Stitcher.new
     stitcher.add_source(:lentariso, src)
-    stitcher.include_notdef(from: :lentariso)
-    stitcher.include_codepoints(plane1, from: :lentariso)
+    stitcher.include_notdef(from: :lentariso, into: :main)
+    stitcher.include_codepoints(plane1, from: :lentariso, into: :main)
 
     Dir.mktmpdir do |dir|
       out_path = File.join(dir, "out.ttf")
-      stitcher.write_to(out_path, format: :ttf)
+      stitcher.write_to(out_path, format: :ttf, subfont: :main)
 
       out = Fontisan::FontLoader.load(out_path)
       out_cmap = out.table("cmap").unicode_mappings
@@ -53,12 +53,12 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
     stitcher = Fontisan::Stitcher.new
     stitcher.add_source(:kedebideri, src)
-    stitcher.include_notdef(from: :kedebideri)
-    stitcher.include_codepoints(beria_erfe, from: :kedebideri)
+    stitcher.include_notdef(from: :kedebideri, into: :main)
+    stitcher.include_codepoints(beria_erfe, from: :kedebideri, into: :main)
 
     Dir.mktmpdir do |dir|
       out_path = File.join(dir, "out.ttf")
-      stitcher.write_to(out_path, format: :ttf)
+      stitcher.write_to(out_path, format: :ttf, subfont: :main)
 
       out = Fontisan::FontLoader.load(out_path)
       out_cmap = out.table("cmap").unicode_mappings
@@ -82,12 +82,12 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
     stitcher = Fontisan::Stitcher.new
     stitcher.add_source(:tangut, src)
-    stitcher.include_notdef(from: :tangut)
-    stitcher.include_codepoints(tangut, from: :tangut)
+    stitcher.include_notdef(from: :tangut, into: :main)
+    stitcher.include_codepoints(tangut, from: :tangut, into: :main)
 
     Dir.mktmpdir do |dir|
       out_path = File.join(dir, "out.ttf")
-      stitcher.write_to(out_path, format: :ttf)
+      stitcher.write_to(out_path, format: :ttf, subfont: :main)
 
       out = Fontisan::FontLoader.load(out_path)
       out_cmap = out.table("cmap").unicode_mappings
@@ -112,12 +112,12 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
     stitcher = Fontisan::Stitcher.new
     stitcher.add_source(:cuneiform, src)
-    stitcher.include_notdef(from: :cuneiform)
-    stitcher.include_codepoints([0x12399], from: :cuneiform)
+    stitcher.include_notdef(from: :cuneiform, into: :main)
+    stitcher.include_codepoints([0x12399], from: :cuneiform, into: :main)
 
     Dir.mktmpdir do |dir|
       out_path = File.join(dir, "out.ttf")
-      stitcher.write_to(out_path, format: :ttf)
+      stitcher.write_to(out_path, format: :ttf, subfont: :main)
 
       out = Fontisan::FontLoader.load(out_path)
       out_cmap = out.table("cmap").unicode_mappings
