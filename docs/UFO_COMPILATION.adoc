@@ -1,0 +1,119 @@
+= UFO Compilation Guide
+
+== General
+
+Fontisan compiles UFO (Unified Font Object) v2/v3 sources into binary
+OpenType fonts — TTF, OTF (CFF1), and OTF2 (CFF2) — entirely in pure
+Ruby. No AFDKO or Python fonttools required.
+
+All compilers live under `Fontisan::Ufo::Compile` and share a common
+`BaseCompiler` orchestrator that emits the required set of OpenType
+tables (head, hhea, maxp, OS/2, name, post, hmtx, cmap, plus an
+optional GPOS kern table when the source has kerning data). Subclasses
+add format-specific outline tables.
+
+== Compilers
+
+[cols="1,1,3", options="header"]
+|===
+| Class | Output | Outline format
+
+| `Ufo::Compile::TtfCompiler`
+| `.ttf`
+| Quadratic Bezier curves in the `glyf` table
+
+| `Ufo::Compile::OtfCompiler`
+| `.otf` (CFF1)
+| Cubic Bezier curves in the `CFF ` table using Type 2 charstrings
+
+| `Ufo::Compile::Otf2Compiler`
+| `.otf` (CFF2)
+| Cubic Bezier curves in the `CFF2` table — modern format, supports
+  variable fonts via blend/vsindex operators
+|===
+
+== Building a single font
+
+[source,ruby]
+----
+require "fontisan"
+
+font = Fontisan::Ufo::Font.open("MyFont.ufo")
+
+# TrueType
+Fontisan::Ufo::Compile::TtfCompiler.new(font)
+  .compile(output_path: "MyFont.ttf")
+
+# OpenType / CFF1
+Fontisan::Ufo::Compile::OtfCompiler.new(font)
+  .compile(output_path: "MyFont.otf")
+
+# OpenType / CFF2 (modern, supports variable fonts)
+Fontisan::Ufo::Compile::Otf2Compiler.new(font)
+  .compile(output_path: "MyFont-CFF2.otf")
+----
+
+== TTF filters
+
+The TTF compiler applies two UFO glyph filters automatically:
+
+1. `CubicToQuadratic` — converts cubic Bezier control points to
+   quadratic. TTF `glyf` only supports quadratic curves; UFO sources
+   typically use cubics (matching PostScript/CFF conventions).
+2. `ReverseContourDirection` — reverses winding order. CFF and TTF
+   use opposite fill conventions (CFF: non-zero wind; TTF: even-odd by
+   default), so contour direction must be flipped.
+
+These filters live under `Ufo::Compile::Filters` and are applied to
+each glyph before serialization to `glyf`.
+
+== Tables emitted
+
+Every compiler emits this shared set:
+
+[cols="1,3", options="header"]
+|===
+| Tag | Purpose
+
+| `head` | Font header (units per em, bounding box, timestamps)
+| `hhea` | Horizontal header (ascender, descender, line gap)
+| `maxp` | Maximum profile (glyph count, point/contour limits)
+| `OS/2` | OS/2 and Windows-specific metrics
+| `name` | Name records (family, subfamily, copyright, etc.)
+| `post` | PostScript name table (glyph names)
+| `hmtx` | Horizontal metrics (advance width, left side bearing)
+| `cmap` | Character to glyph mapping
+| `GPOS` | Optional — present only when the UFO has kerning data
+|===
+
+Format-specific outline tables:
+
+* TTF → `glyf` + `loca`
+* OTF (CFF1) → `CFF `
+* OTF2 (CFF2) → `CFF2`
+
+== GPOS kerning
+
+If the UFO source includes kerning data (`kerning.plist`), the compiler
+emits a `GPOS` table with a pair-positioning lookup (feature `kern`).
+When no kerning is present, no `GPOS` table is written — the file stays
+smaller.
+
+== Round-tripping binary ↔ UFO
+
+To go the other way — extract a UFO from an existing binary font:
+
+[source,ruby]
+----
+ttf = Fontisan::FontLoader.load("MyFont.ttf")
+ufo = Fontisan::Ufo::Convert::FromBinData.convert(ttf)
+Fontisan::Ufo::Writer.new(ufo).write("MyFont.ufo")
+----
+
+== See also
+
+* link:CFF2_SUPPORT.adoc[CFF2 Support Guide] — variable-font blend
+  operators, FDSelect, subroutines, VariationStore
+* link:VARIABLE_FONT_OPERATIONS.adoc[Variable Font Operations] —
+  reading and modifying existing variable fonts
+- link:STITCHER_GUIDE.adoc[Stitcher Guide] — multi-source assembly

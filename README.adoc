@@ -56,9 +56,19 @@ gem install fontisan
 
 == Features
 
+Font compilation and assembly::
+* UFO → TTF compilation with cubic-to-quadratic conversion and winding-order correction (see link:docs/UFO_COMPILATION.adoc[UFO Compilation Guide])
+* UFO → OTF (CFF1) compilation with Type 2 charstring encoding
+* UFO → OTF (CFF2) compilation with variable-font blend/vsindex operators (see link:docs/CFF2_SUPPORT.adoc[CFF2 Support Guide])
+* Multi-source font stitching with explicit subfont declaration and TTC/OTC collection output (see link:docs/STITCHER_GUIDE.adoc[Stitcher Guide])
+* SVG path → UFO glyph conversion for chart-extracted glyphs (see link:docs/SVG_TO_GLYF.adoc[SVG to Glyph Guide])
+* Variable font compilation: fvar, gvar, HVAR, MVAR, avar, STAT tables
+* Signature-based glyph deduplication with 65,535 glyph cap enforcement
+* Compound (composite) TrueType glyph flattening
+
 Color fonts and collections::
-* Color font support: COLR/CPAL layered glyphs, sbix bitmap glyphs, and SVG table (see link:docs/COLOR_FONTS.adoc[Color Fonts Guide])
-* Font collection validation with per-font reporting (see link:docs/COLLECTION_VALIDATION.adoc[Collection Validation Guide])
+* Color font table builders: COLR v0, CPAL, SVG table, sbix, CBDT/CBLC (see link:docs/COLOR_FONTS.adoc[Color Fonts Guide])
+* Font collection management: pack/unpack TTC/OTC with table deduplication (see link:docs/COLLECTION_VALIDATION.adoc[Collection Validation Guide])
 
 Font analysis and information::
 * Comprehensive per-face font metadata extraction (replaces `otfinfo`) covering identity, style, metrics, codepoint coverage, licensing, hinting, color capabilities, variable-font detail, and OpenType layout features
@@ -81,21 +91,26 @@ Font operations::
 * Collection management (pack/unpack TTC/OTC/dfont files with table deduplication)
 
 Font format support::
-* TTF, OTF, TTC, OTC font formats (production ready)
+* TTF, OTF (CFF1), OTF2 (CFF2), TTC, OTC font formats (production ready)
+* CFF2 with variable-font blend/vsindex operators, FDSelect, subroutines
 * Adobe Type 1 fonts (PFB/PFA) with bidirectional conversion (see link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide])
 * WOFF/WOFF2 format support with reading, writing, and conversion (see link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Guide])
 * Apple legacy font support: 'true' signature TrueType fonts and dfont format (see link:docs/APPLE_LEGACY_FONTS.adoc[Apple Legacy Fonts Guide])
-* SVG font generation (complete)
+* SVG font generation and SVG-to-glyph conversion (complete)
 
 Font engineering::
 * Universal outline model for format-agnostic glyph representation
-* CFF CharString encoding/decoding (complete)
-* CFF INDEX structure building (complete)
-* CFF DICT structure building (complete)
+* CFF/CFF2 CharString encoding/decoding with blend operator support
+* CFF/CFF2 INDEX structure building (uint16 for CFF1, uint32 for CFF2)
+* CFF/CFF2 DICT structure building
 * TrueType curve converter for bi-directional quadratic/cubic conversion (complete)
-* Compound glyph decomposition with transformation support (complete)
-* CFF subroutine optimization for space-efficient OTF generation (preview mode)
+* Compound glyph decomposition with affine transformation flattening (complete)
+* CFF2 subroutine bias calculation and INDEX management
+* FDSelect (format 0, 3) for CID-keyed CFF2 fonts
 * Bidirectional hint conversion (TrueType ↔ PostScript) with validation (complete)
+* MATH table builder for mathematical formula layout
+* Meta table builder for tagged metadata
+* Glyph signature-based deduplication across donor fonts
 * CFF2 variable font support for PostScript hint conversion (complete)
 
 Export and interfaces::
@@ -2379,8 +2394,8 @@ Fontisan can:
 == UFO source operations
 
 fontisan reads, writes, and compiles UFO (Unified Font Object) v2/v3
-font sources into binary font formats (TTF, OTF). No AFDKO or Python
-fonttools needed.
+font sources into binary font formats (TTF, OTF, OTF2/CFF2). No AFDKO
+or Python fonttools needed.
 
 === Build a UFO to binary
 
@@ -2397,42 +2412,22 @@ The TTF compiler automatically applies:
 - `cubic_to_quadratic` filter (UFO cubic Beziers -> TTF quadratic)
 - `reverse_contour_direction` filter (TTF winding convention)
 
-=== Convert between UFO and binary
-
-[source,bash]
-----
-# UFO -> binary
-fontisan ufo convert font.ufo out.ttf --to ttf
-
-# Binary -> UFO (reverse direction)
-fontisan ufo convert font.ttf font.ufo/
-----
-
-=== Validate a UFO source
-
-[source,bash]
-----
-fontisan ufo validate font.ufo
-----
-
-Checks: glyphs present, family name set, unitsPerEm set, .notdef exists.
-
-=== Ruby API
+=== Ruby API — compile to TTF, OTF, or CFF2
 
 [source,ruby]
 ----
 require "fontisan"
 
-# Read a UFO
 font = Fontisan::Ufo::Font.open("font.ufo")
-puts font.family_name
-puts font.glyphs.size
 
-# Compile to TTF
+# TrueType (.ttf) — quadratic outlines
 Fontisan::Ufo::Compile::TtfCompiler.new(font).compile(output_path: "out.ttf")
 
-# Compile to OTF
+# OpenType/CFF1 (.otf) — cubic outlines
 Fontisan::Ufo::Compile::OtfCompiler.new(font).compile(output_path: "out.otf")
+
+# OpenType/CFF2 (.otf) — modern format, supports variable fonts
+Fontisan::Ufo::Compile::Otf2Compiler.new(font).compile(output_path: "out.otf")
 
 # Write back to UFO (round-trip)
 Fontisan::Ufo::Writer.new(font).write("out.ufo")
@@ -2442,12 +2437,39 @@ ttf = Fontisan::FontLoader.load("font.ttf")
 ufo = Fontisan::Ufo::Convert::FromBinData.convert(ttf)
 ----
 
+=== Variable font compilation
+
+[source,ruby]
+----
+# Variable TTF (glyf outlines)
+orchestrator = Fontisan::Ufo::Compile::VariableTtf.new(
+  font: default_font,
+  axes: [{ tag: "wght", min: 100, default: 400, max: 900 }],
+  masters: [{ font: bold_font, axes: { "wght" => 1.0 } }],
+)
+orchestrator.compile(output_path: "variable.ttf")
+
+# Variable OTF (CFF2 outlines)
+orchestrator = Fontisan::Ufo::Compile::VariableOtf.new(
+  default_font,
+  axes: [{ tag: "wght", min: 100, default: 400, max: 900 }],
+)
+orchestrator.compile(output_path: "variable.otf")
+----
+
+See link:docs/CFF2_SUPPORT.adoc[CFF2 Support Guide] for CFF2-specific
+features (blend operators, FDSelect, subroutines, VariationStore).
+
 == Font stitching
 
-The Stitcher combines glyphs from multiple source fonts into one new
-font. Sources can be UFO directories or loaded TTF/OTF files.
+The Stitcher combines glyphs from multiple source fonts into one or
+more new fonts. Sources can be UFO directories or loaded TTF/OTF files.
 
-=== Ruby API
+Every `include_*` method requires an `into:` keyword naming the target
+subfont. `write_to` requires a `subfont:` name. No defaults — the user
+controls the collection structure explicitly.
+
+=== Single font
 
 [source,ruby]
 ----
@@ -2455,12 +2477,73 @@ stitcher = Fontisan::Stitcher.new
 stitcher.add_source(:latin, Fontisan::FontLoader.load("NotoSans.ttf"))
 stitcher.add_source(:cjk, Fontisan::FontLoader.load("FSung-m.ttf"))
 
-stitcher.include_range(0x41..0x5A, from: :latin)    # A-Z
-stitcher.include_range(0x4E00..0x9FFF, from: :cjk)  # CJK Unified
-stitcher.include_notdef(from: :latin)
+stitcher.include_notdef(from: :latin, into: :main)
+stitcher.include_range(0x41..0x5A, from: :latin, into: :main)    # A-Z
+stitcher.include_range(0x4E00..0x9FFF, from: :cjk, into: :main)  # CJK
 
-stitcher.write_to("stitched.ttf", format: :ttf)
+stitcher.write_to("stitched.ttf", format: :ttf, subfont: :main)
 ----
+
+=== Collection (TTC/OTC) with explicit subfonts
+
+When the glyph count exceeds 65,535 (the OpenType cap), split across
+named subfonts and write a collection:
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:noto_sans, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:noto_cjk, Fontisan::FontLoader.load("NotoSansCJK.ttf"))
+
+# Explicitly assign codepoints to named subfonts
+stitcher.include_range(0x41..0x5A, from: :noto_sans, into: :latin)
+stitcher.include_range(0x4E00..0x9FFF, from: :noto_cjk, into: :cjk)
+
+# Write as OTC with CFF2 subfonts and table deduplication
+stitcher.write_collection("out.otc", format: :otf2)
+----
+
+=== CBDT/CBLC passthrough (color emoji)
+
+Sources with CBDT/CBLC tables (e.g. NotoColorEmoji) can be used as
+Stitcher sources. The bitmap data is propagated byte-for-byte from the
+source into the output.
+
+[source,ruby]
+----
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:text, Fontisan::FontLoader.load("NotoSans.ttf"))
+stitcher.add_source(:emoji, Fontisan::FontLoader.load("NotoColorEmoji.ttf"))
+
+stitcher.include_notdef(from: :text, into: :main)
+stitcher.include_range(0x41..0x5A, from: :text, into: :main)
+stitcher.include_range(0x1F600..0x1F64F, from: :emoji, into: :main)
+
+stitcher.write_to("out.ttf", format: :ttf, subfont: :main)
+# → out.ttf has glyf + CBDT + CBLC, emoji renders correctly
+----
+
+=== SVG path → glyph conversion
+
+Convert SVG path data (from ucode code-chart extraction) into UFO glyphs:
+
+[source,ruby]
+----
+# Single path → glyph
+glyph = Fontisan::SvgToGlyf.convert(
+  "M 0 0 L 500 0 L 500 700 Z",
+  upm: 1000,
+  codepoint: 0x10940,
+)
+
+# SVG file → glyph
+glyph = Fontisan::SvgToGlyf.from_svg_file("U+10940.svg", upm: 1000)
+
+# Directory of SVGs → font (for Stitcher#add_source)
+font = Fontisan::SvgToGlyf.from_directory("/tmp/chart-svg/Khitan", upm: 1000)
+----
+
+See link:docs/SVG_TO_GLYF.adoc[SVG to Glyph Guide] for details.
 
 === CLI
 
@@ -2474,36 +2557,6 @@ fontisan stitch \
   --notdef-from latin \
   --output stitched.ttf
 ----
-
-=== Color emoji (CBDT/CBLC passthrough)
-
-Sources with CBDT/CBLC tables (e.g. NotoColorEmoji) can be used as
-Stitcher sources. The bitmap data is propagated byte-for-byte from the
-source into the output. The Stitcher automatically detects the source's
-storage mode via `bitmap_mode`:
-
-[source,ruby]
-----
-stitcher = Fontisan::Stitcher.new
-stitcher.add_source(:text, Fontisan::FontLoader.load("NotoSans.ttf"))
-stitcher.add_source(:emoji, Fontisan::FontLoader.load("NotoColorEmoji.ttf"))
-
-# All emoji glyphs from the CBDT source are added; the CBLC table
-# is copied byte-for-byte and references the right GIDs.
-stitcher.include_range(0x41..0x5A, from: :text)
-stitcher.include_range(0x1F600..0x1F64F, from: :emoji)
-
-stitcher.write_to("out.ttf", format: :ttf)
-# → out.ttf has glyf + CBDT + CBLC, emoji renders correctly
-----
-
-**Constraints:**
-- Only ONE CBDT source per Stitcher (multiple raise
-  `Fontisan::MultipleCbdtSourcesError`)
-- The CBDT source is processed first (GIDs 0..N-1) so the CBLC's GID
-  references remain valid in the output
-- Multi-source CBDT merge is tracked as TODO (REVIEW
-  `TODO.full/ufo/23-cbdt-passthrough.md`)
 
 
 == Testing
