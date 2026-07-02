@@ -9,42 +9,67 @@ module Fontisan
       # to another glyph painted in a specific color. This produces
       # multi-color glyphs (e.g., emoji) using simple flat layers.
       #
-      # For the more complex paint graph (gradients, affine transforms),
-      # use COLRv1 (TODO 10 — not yet implemented).
+      # Header (14 bytes):
+      #   uint16 version (= 0)
+      #   uint16 numBaseGlyphRecords
+      #   Offset32 baseGlyphRecordsOffset
+      #   Offset32 layerRecordsOffset
+      #   uint16 numLayerRecords
+      #
+      # BaseGlyphRecord (6 bytes):
+      #   uint16 glyphID
+      #   uint16 firstLayerIndex
+      #   uint16 numLayers
+      #
+      # LayerRecord (3 bytes):
+      #   uint16 layerGlyphID
+      #   uint8 paletteIndex
       #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/colr
       module Colr
         VERSION = 0
         HEADER_SIZE = 14
         BASE_GLYPH_RECORD_SIZE = 6
-        LAYER_RECORD_SIZE = 4
+        LAYER_RECORD_SIZE = 3
 
-        # @param layers [Array<Hash>] each with :gid (Integer),
-        #   :palette_index (Integer), :layer_gid (Integer)
-        # @return [String, nil] COLR table bytes, or nil if no layers
-        def self.build(layers:)
-          return nil if layers.nil? || layers.empty?
-
-          groups = layers.group_by { |l| l[:gid] }
+        # @param base_glyphs [Array<Hash>] each with :gid (Integer) and
+        #   :layers (Array<Hash> with :layer_gid and :palette_index)
+        # @return [String, nil] COLR table bytes, or nil if no base glyphs
+        def self.build(base_glyphs:)
+          return nil if base_glyphs.nil? || base_glyphs.empty?
 
           base_records = +""
           layer_records = +""
-          num_layers_total = 0
+          first_layer_index = 0
 
-          groups.keys.sort.each do |gid|
-            group_layers = groups[gid].sort_by { |l| l[:palette_index] || 0 }
-            num_layers_total += group_layers.size
-            base_records << [gid, num_layers_total, num_layers_total - group_layers.size].pack("nCC")
+          base_glyphs.each do |bg|
+            layers = bg[:layers] || []
+            num_layers = layers.size
 
-            groups[gid].sort_by { |l| l[:palette_index] || 0 }.each do |l|
-              layer_records << [l[:layer_gid] || 0, l[:palette_index] || 0].pack("nC")
+            base_records << [
+              bg[:gid] || 0,
+              first_layer_index,
+              num_layers,
+            ].pack("nnn")
+
+            layers.each do |layer|
+              layer_records << [
+                layer[:layer_gid] || 0,
+                layer[:palette_index] || 0,
+              ].pack("nC")
             end
+
+            first_layer_index += num_layers
           end
 
-          layer_offset = HEADER_SIZE + (groups.size * BASE_GLYPH_RECORD_SIZE)
+          num_base = base_glyphs.size
+          base_offset = HEADER_SIZE
+          layer_offset = base_offset + (num_base * BASE_GLYPH_RECORD_SIZE)
+          num_layer_records = layer_records.bytesize / LAYER_RECORD_SIZE
 
           io = +""
-          io << [VERSION, 0, groups.size, layer_offset, num_layers_total].pack("nnnnn")
+          io << [VERSION, num_base, base_offset, layer_offset,
+                 num_layer_records].pack("nnNNn")
           io << base_records
           io << layer_records
           io
