@@ -24,19 +24,26 @@ module Fontisan
           count = data.size
           data_offset = HEADER_SIZE + (count * DATA_MAP_SIZE)
 
-          header = [VERSION, 0, count, data_offset].pack("NNNN")
+          io = +""
+          io << [VERSION, 0, count, data_offset].pack("NNNN")
 
-          map_entries = +""
-          values = +""
+          # Two iterations over the same data: the meta table has two
+          # distinct output sections (data map entries then data values)
+          # that cannot be interleaved. The map-entry section records
+          # offsets that depend on the total size of the value section,
+          # so the value section must be produced last.
+          #
+          # rubocop:disable Style/CombinableLoops
           offset = data_offset
           data.each do |tag, value|
-            map_entries << tag.ljust(4, " ")[0, 4]
-            map_entries << [offset, value.bytesize].pack("NN")
+            io << tag.ljust(4, " ")[0, 4]
+            io << [offset, value.bytesize].pack("NN")
             offset += value.bytesize
-            values << value.b
           end
+          data.each_value { |value| io << value.b }
+          # rubocop:enable Style/CombinableLoops
 
-          header + map_entries + values
+          io
         end
       end
     end
