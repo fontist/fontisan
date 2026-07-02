@@ -42,6 +42,15 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
       bytes = described_class.build(font, glyphs: font.glyphs.values)
       expect(bytes.bytesize).to be > 20
     end
+
+    it "embeds a VariationStore when provided" do
+      vs_bytes = "\x00\x01".b + "\x00" * 20
+      bytes = described_class.build(font, glyphs: font.glyphs.values,
+                                          variation_store: vs_bytes)
+      expect(bytes).to include(vs_bytes)
+      plain = described_class.build(font, glyphs: font.glyphs.values)
+      expect(bytes.bytesize).to be > plain.bytesize
+    end
   end
 
   describe "Otf2Compiler end-to-end" do
@@ -63,12 +72,12 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
     it "supports Stitcher write_to with format: :otf2" do
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:src, font)
-      stitcher.include_notdef(from: :src)
-      stitcher.include_codepoints([0x41], from: :src)
+      stitcher.include_notdef(from: :src, into: :main)
+      stitcher.include_codepoints([0x41], from: :src, into: :main)
 
       Dir.mktmpdir do |dir|
         path = File.join(dir, "stitched.otf")
-        stitcher.write_to(path, format: :otf2)
+        stitcher.write_to(path, format: :otf2, subfont: :main)
 
         reopened = Fontisan::FontLoader.load(path)
         expect(reopened.has_table?("CFF2")).to be(true)

@@ -177,12 +177,12 @@ RSpec.describe "SvgToGlyf integration" do
 
       stitcher = Fontisan::Stitcher.new
       stitcher.add_source(:chart, chart_font)
-      stitcher.include_notdef(from: :chart)
-      stitcher.include_codepoints([0x42], from: :chart)
+      stitcher.include_notdef(from: :chart, into: :main)
+      stitcher.include_codepoints([0x42], from: :chart, into: :main)
 
       Dir.mktmpdir do |dir|
         output_path = File.join(dir, "stitched.ttf")
-        stitcher.write_to(output_path, format: :ttf)
+        stitcher.write_to(output_path, format: :ttf, subfont: :main)
 
         reopened = Fontisan::FontLoader.load(output_path)
         expect(reopened.table("cmap").unicode_mappings.key?(0x42)).to be(true)

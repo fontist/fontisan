@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Stitcher` explicit subfont declaration model: every `include_*`
+  method accepts an `into:` keyword that names the target subfont.
+  The user controls collection structure upfront rather than relying
+  on after-the-fact splitting. Backward-compatible: without `into:`,
+  bindings route to `:default` (single-font behavior unchanged).
+- `Stitcher#write_collection(path, format:)` — writes all declared
+  subfonts as a TTC/OTC with table sharing via the existing
+  `Collection::Builder`. Each subfont compiled to TTF/OTF/CFF2 per
+  the `format:` argument. Collection format auto-selected: `:ttf` →
+  TTC, `:otf`/`:otf2` → OTC.
+- `Stitcher#subfonts` — hash of name → bindings for inspection.
+- `Stitcher#subfont_names` — declared subfont names in order.
+- `Stitcher#write_to(path, format:, subfont:)` — writes a specific
+  named subfont as a single file (default: `:default`).
+
+### Architecture note
+
+The previous design planned an after-the-fact "Splitter" that would
+break bindings into plane-based groups at write time. This was
+replaced with **explicit subfont declaration**: the user decides
+which codepoints go into which subfont, and the Stitcher serializes
+that declared structure. This is model-driven (the subfont
+assignment IS the model) and editorially honest (collection
+structure is an editorial decision, not an algorithmic one).
+
+### Added
+
 - `Fontisan::Tables::Cff2::Header` — CFF2 5-byte header builder
   (majorVersion=2, minorVersion=0, headerSize=5, topDictSize).
 - `Fontisan::Tables::Cff2::IndexBuilder` — CFF2 INDEX builder with
