@@ -15,6 +15,17 @@ on:
           Next release version. Possible values: x.y.z, major, minor, patch or pre|rc|etc
         required: true
         default: "skip"
+      acknowledge_breaking_in_patch:
+        description: |
+          Acknowledge that this patch release contains breaking changes and
+          override the breaking-change heuristic guard. Use only when the
+          breaking change is intentional and accepted (e.g. 0.x API churn).
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
   push:
     tags:
       - v*
@@ -26,6 +37,7 @@ jobs:
     uses: metanorma/ci/.github/workflows/rubygems-release.yml@main
     with:
       next_version: ${{ github.event.inputs.next_version }}
+      acknowledge_breaking_in_patch: ${{ github.event.inputs.acknowledge_breaking_in_patch == 'true' }}
     secrets:
       rubygems-api-key: ${{ secrets.FONTIST_CI_RUBYGEMS_API_KEY }}
       # NOTE: GITHUB_TOKEN is intentionally NOT passed as pat_token. The
