@@ -72,6 +72,7 @@ module Fontisan
   autoload :VariationDataCorruptedError, "fontisan/error"
   autoload :MultipleCbdtSourcesError, "fontisan/error"
   autoload :GlyphLimitExceededError, "fontisan/error"
+  autoload :PartitionCapExceededError, "fontisan/error"
 
   # Namespace hubs (each hub declares its own child autoloads)
   autoload :Binary, "fontisan/binary"
@@ -91,6 +92,7 @@ module Fontisan
   autoload :Tables, "fontisan/tables"
   autoload :Type1, "fontisan/type1"
   autoload :Ufo, "fontisan/ufo"
+  autoload :Unicode, "fontisan/unicode"
   autoload :Utilities, "fontisan/utilities"
   autoload :Utils, "fontisan/utils"
   autoload :Validation, "fontisan/validation"

@@ -237,6 +237,31 @@ module Fontisan
     end
   end
 
+  # Partition strategy could not satisfy the requested cap.
+  #
+  # Raised by {Stitcher::PartitionStrategy} when a single Unicode block
+  # contains more codepoints than the configured cap, so the partitioner
+  # cannot sub-split it further. This is a partitioning-time detection
+  # distinct from {GlyphLimitExceededError}, which fires at compile time
+  # after the Stitcher has produced more glyphs than the output format
+  # supports. Both surface the same underlying constraint (65,535-glyph
+  # cap) but at different stages.
+  class PartitionCapExceededError < Error
+    attr_reader :block_label, :actual, :cap
+
+    # @param block_label [String] e.g. "CJK_Ext_B", or "plane_N" if the
+    #   overflow is not attributable to a known block
+    # @param actual [Integer] number of codepoints in the block
+    # @param cap [Integer] the cap that was exceeded
+    def initialize(block_label:, actual:, cap:)
+      @block_label = block_label
+      @actual = actual
+      @cap = cap
+      super("single Unicode block #{block_label} (#{actual} cps) exceeds " \
+            "cap #{cap}; cannot sub-split further")
+    end
+  end
+
   # Variation data corrupted (for use in data_extractor)
   #
   # Raised when extracted variation data appears corrupted.
