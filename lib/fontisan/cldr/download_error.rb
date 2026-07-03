@@ -3,7 +3,7 @@
 module Fontisan
   module Cldr
     # Raised by Cldr::Downloader when the upstream HTTP fetch or the zip
-    # extraction fails. Caught by AuditCommand to degrade-with-warning.
+    # extraction fails.
     class DownloadError < Cldr::Error; end
   end
 end

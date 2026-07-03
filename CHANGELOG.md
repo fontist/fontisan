@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Audit/UCD documentation residue from the v0.3.0 audit/UCD subsystem
+  removal: deleted `docs/cli/audit.md`, dropped the "🔍 Font Audit"
+  feature card and "Font Audit" sidebar group, removed audit entries
+  from `docs/cli/index.md`, and cleaned three stale `Audit*` references
+  in `lib/fontisan/cldr/*` comments. No behavior change.
+
 ### Added
 
 - `Stitcher` explicit subfont declaration model: every `include_*`
