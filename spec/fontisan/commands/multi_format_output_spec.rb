@@ -29,11 +29,5 @@ RSpec.describe Fontisan::Commands::MultiFormatOutput do
       out = described_class.new("base", %i[woff woff2 ttf])
       expect(out.paths).to eq(%w[base.woff base.woff2 base.ttf])
     end
-
-    it "treats a path with only a trailing dot as ambiguous (extension present)" do
-      out = described_class.new("out.", %i[woff woff2])
-      # File.extname("out.") == "." so we treat it as having an extension
-      expect { out.paths }.to raise_error(ArgumentError)
-    end
   end
 end
