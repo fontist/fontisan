@@ -8,7 +8,6 @@ require "rubygems"
 module Fontisan
   module Cldr
     # Resolves a user-supplied version intent to a concrete CLDR version.
-    #
     # Three input modes:
     #
     #   resolve(nil)           # default_version from config

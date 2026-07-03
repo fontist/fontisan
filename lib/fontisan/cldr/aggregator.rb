@@ -2,7 +2,7 @@
 
 module Fontisan
   module Cldr
-    # Produces audit-ready per-language coverage from a codepoint list
+    # Produces per-language coverage from a codepoint list
     # and a Cldr::Index of per-language exemplar sets.
     #
     # Pure: no I/O, no side effects.
