@@ -31,7 +31,7 @@ module Fontisan
           family = font.info.family_name || "Untitled"
           subfamily = font.info.style_name || "Regular"
           ps_name = font.info.postscript_font_name || "#{family}-#{subfamily}"
-          full_name = "#{family} #{subfamily}".strip
+          full_name = font.info.postscript_full_name || "#{family} #{subfamily}".strip
           major = font.info.version_major || 0
           minor = font.info.version_minor || 0
           version_str = "Version #{major}.#{minor}"
@@ -72,7 +72,7 @@ module Fontisan
 
           header + body + storage
         end
-        private_class_method :format0_bytes, :default_records
+        private_class_method :format0_bytes
       end
     end
   end
