@@ -53,7 +53,7 @@ RSpec.describe Fontisan::Commands::ValidateCollectionCommand do
     expect { suppress_stdout { cmd.run } }.to change { cmd.checks }.from(nil).to(anything)
     face_count_check = cmd.checks.find { |c| c.name == :face_count }
     expect(face_count_check.passed).to be(false)
-    expect(face_count_check.message).to match(/expected 5 faces, got 2/)
+    expect(face_count_check.message).to include("expected 5 faces, got 2")
   end
 
   it "exits 1 when --max-glyphs is below a face's glyph count" do
