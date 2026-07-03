@@ -41,6 +41,54 @@ module Fontisan
         end
       end
 
+      # Build a +Ufo::Info+ for one subfont of a collection. The family
+      # name embeds the subfont name (e.g. +"MyFont CJK"+), and the
+      # PostScript name uses the hyphenated form (e.g. +"MyFont-CJK"+).
+      #
+      # +version+ is parsed into +version_major+ / +version_minor+ per
+      # the UFO major.minor shape (patch is dropped).
+      #
+      # +trademark+ is stored under +extras["openTypeNameTrademark"]+
+      # because it is not in +STANDARD_FIELDS+ yet — see TODO 71
+      # out-of-scope follow-up.
+      #
+      # @param family [String] collection-wide family name
+      # @param subfont [String, Symbol] subfont identifier (appended to family)
+      # @param version [String, Integer] e.g. "0.1", "1", "1.2.3"
+      # @param subfamily [String] OpenType subfamily (default "Regular")
+      # @param copyright [String, nil]
+      # @param trademark [String, nil]
+      # @return [Info]
+      def self.for_subfont(family:, subfont:, version:,
+                           subfamily: "Regular",
+                           copyright: nil, trademark: nil)
+        major, minor = parse_version(version)
+        subfont_str = subfont.to_s
+        values = {
+          family_name: "#{family} #{subfont_str}",
+          style_name: subfamily,
+          version_major: major,
+          version_minor: minor,
+          postscript_font_name: "#{family}-#{subfont_str}",
+          postscript_full_name: "#{family} #{subfont_str}",
+        }
+        values[:copyright] = copyright if copyright
+        values["openTypeNameTrademark"] = trademark if trademark
+        new(values)
+      end
+
+      # @param version [String, Integer]
+      # @return [Array(Integer, Integer)] [major, minor]
+      def self.parse_version(version)
+        case version.to_s
+        when /\A(\d+)\.(\d+)\.\d+\z/ then [Regexp.last_match(1).to_i, Regexp.last_match(2).to_i]
+        when /\A(\d+)\.(\d+)\z/      then [Regexp.last_match(1).to_i, Regexp.last_match(2).to_i]
+        when /\A(\d+)\z/             then [Regexp.last_match(1).to_i, 0]
+        else [0, 0]
+        end
+      end
+      private_class_method :parse_version
+
       # @return [Hash] a Hash<String, Object> suitable for emit() to
       #   serialize back to plist. Keys are in camelCase per UFO 3.
       def to_plist
