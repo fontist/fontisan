@@ -25,9 +25,6 @@ module Fontisan
                          desc: "Suppress non-error output",
                          aliases: "-q"
 
-    desc "cldr", "Manage local CLDR cache (subcommands)", hide: true
-    subcommand "cldr", CldrCli
-
     desc "ufo", "UFO source operations (build, convert, validate)"
     subcommand "ufo", Fontisan::Ufo::Cli
 

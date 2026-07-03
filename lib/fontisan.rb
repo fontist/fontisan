@@ -75,7 +75,6 @@ module Fontisan
 
   # Namespace hubs (each hub declares its own child autoloads)
   autoload :Binary, "fontisan/binary"
-  autoload :Cldr, "fontisan/cldr"
   autoload :Collection, "fontisan/collection"
   autoload :Commands, "fontisan/commands"
   autoload :Converters, "fontisan/converters"
@@ -120,7 +119,6 @@ module Fontisan
   autoload :TrueTypeFont, "fontisan/true_type_font"
   autoload :TrueTypeFontExtensions, "fontisan/true_type_font_extensions"
   autoload :Type1Font, "fontisan/type1_font"
-  autoload :CldrCli, "fontisan/cli/cldr_cli"
   autoload :Woff2Font, "fontisan/woff2_font"
   autoload :WoffFont, "fontisan/woff_font"
 

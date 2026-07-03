@@ -12,8 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Audit/UCD documentation residue from the v0.3.0 audit/UCD subsystem
   removal: deleted `docs/cli/audit.md`, dropped the "🔍 Font Audit"
   feature card and "Font Audit" sidebar group, removed audit entries
-  from `docs/cli/index.md`, and cleaned three stale `Audit*` references
-  in `lib/fontisan/cldr/*` comments. No behavior change.
+  from `docs/cli/index.md`. No behavior change.
+- CLDR subsystem (`Fontisan::Cldr`, `Models::Cldr::LanguageCoverage`,
+  `lib/fontisan/config/cldr.yml`) and the `fontisan cldr` CLI
+  subcommand. CLDR was added in TODO 21 as infrastructure for
+  `fontisan audit`'s per-language coverage extractor; with the audit
+  subsystem moved to ucode (v0.3.0), CLDR had no remaining consumer
+  in fontisan. Not released in a published gem version.
 
 ### Added
 
