@@ -32,8 +32,8 @@ These are individual font formats that can be converted:
 
 | Option | Description |
 |--------|-------------|
-| `--to FORMAT` | Target format (ttf, otf, woff, woff2) |
-| `--output FILE` | Output file path |
+| `--to FORMAT[,FORMAT...]` | Target format(s): `ttf`, `otf`, `woff`, `woff2`, `type1`/`t1`, `ttc`, `otc`, `dfont`, `svg`. Pass once with comma-separated values (`--to woff,woff2`) or multiple times (`--to woff --to woff2`) for multi-format output. |
+| `--output FILE` | Output file path (see "Output path rules" below) |
 | `--optimize` | Enable outline optimization |
 | `--flatten` | Flatten composite glyphs |
 | `--zlib-level=N` | WOFF only: zlib compression level (0–9, default 6) |
@@ -45,6 +45,37 @@ These are individual font formats that can be converted:
 The format you pick (`--to woff` vs `--to woff2`) **is** the algorithm
 choice — WOFF mandates zlib, WOFF2 mandates Brotli. Passing a WOFF knob
 to a WOFF2 target (or vice versa) exits 1 with a clear error.
+
+## Multi-format output
+
+`--to` accepts multiple targets so a single invocation produces N
+output files from one input font. Both spellings work and produce
+identical results:
+
+```bash
+# Comma-separated (one --to flag)
+fontisan convert font.ttf --to woff,woff2 --output font
+
+# Repeated flag (Thor array form)
+fontisan convert font.ttf --to woff --to woff2 --output font
+```
+
+Duplicates are deduplicated, so `--to woff,woff2,woff` is equivalent to
+`--to woff,woff2`.
+
+### Output path rules
+
+| `--output` shape | `--to` shape | Behaviour |
+|------------------|--------------|-----------|
+| `out.ttf` (has extension) | one format | Use as given |
+| `out` (no extension) | one format | Append `.<format>` → `out.ttf` |
+| `out` (no extension) | many formats | Append `.<format>` per target → `out.woff`, `out.woff2` |
+| `out.ttf` (has extension) | many formats | **Error**: ambiguous which format gets the extension |
+
+Multi-format is single-font → single-font only. Combining multi-format
+with collection input (TTC/OTC/dfont) exits 1 — collections pack
+multiple faces and N formats × M faces explodes output count. Convert
+collections to one target format at a time.
 
 ## Common Workflows
 
@@ -83,6 +114,17 @@ fontisan convert font.otf --to ttf --output font.ttf
 ```bash
 # Type 1 to OpenType
 fontisan convert font.pfb --to otf --output font.otf
+```
+
+### Emit Multiple Web Formats in One Invocation
+
+```bash
+# Both WOFF (legacy IE9+) and WOFF2 (modern browsers) from one input
+fontisan convert font.ttf --to woff,woff2 --output font
+# → font.woff, font.woff2
+
+# Same result with the repeated-flag form
+fontisan convert font.ttf --to woff --to woff2 --output font
 ```
 
 ## Working with Collections

@@ -46,3 +46,11 @@ fontisan validate font.ttf --profile opentype --format json
 ## Detailed Documentation
 
 For comprehensive documentation including profile details and validation helpers, see the [validate command guide](/guide/cli/validate).
+
+## See also
+
+For collection-level structural checks (face count, per-face glyph cap,
+cmap-union size) on a TTC/OTC/dfont, see
+[validate-collection](/cli/validate-collection). The two commands are
+complementary: `validate` runs profile-based per-face checks;
+`validate-collection` runs collection-level structural checks.

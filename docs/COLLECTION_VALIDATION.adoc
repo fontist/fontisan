@@ -141,3 +141,64 @@ puts "Valid fonts: #{valid_count}"
 puts "Invalid fonts: #{invalid_count}"
 ----
 ====
+
+== Fast structural checks: `validate-collection`
+
+For collection-level structural checks (face count, per-face glyph
+cap, optional cmap-union size) without running the full per-face
+profile machinery, use the dedicated `validate-collection` command:
+
+[source,shell]
+----
+# Glyph-cap-only check (default)
+fontisan validate-collection family.ttc
+
+# Require exactly 5 faces
+fontisan validate-collection family.ttc --expected-faces 5
+
+# Tighter per-face glyph cap + minimum cmap coverage
+fontisan validate-collection family.ttc \
+  --max-glyphs 60000 \
+  --expected-cmap-union 100000
+----
+
+Exit code is `0` when every requested check passes, `1` when any
+check fails. With no options, only the per-face glyph cap is checked
+(default `65,535`).
+
+This command is intentionally separate from `fontisan validate PATH`
+(MECE): the two cover different validator categories — `validate`
+runs profile-based per-face checks, `validate-collection` runs
+collection-level structural checks. They don't share a subcommand tree.
+
+== Reading collection metadata: `Collection::Reader`
+
+`Fontisan::Collection::Reader` is the read-only counterpart to
+`Collection::Builder`. It opens an existing TTC/OTC/dfont and
+exposes per-face metadata plus the cmap union across all faces,
+without hand-rolling the TTC header bytes.
+
+[source,ruby]
+----
+reader = Fontisan::Collection::Reader.open("family.ttc")
+
+reader.face_count                  # => 3
+reader.path                        # => "family.ttc"
+
+reader.each_face do |face|
+  puts face.table("maxp").num_glyphs
+end
+
+# One Stats struct per face (index, glyph_count, codepoint_count, sfnt_version)
+reader.stats.map(&:glyph_count)    # => [3541, 21048, 991]
+
+# Union of every face's cmap keys
+reader.cmap_union.size             # => 24580
+reader.cmap_union.is_a?(Set)       # => true
+----
+
+`Reader` delegates header parsing to `FontLoader` (which already
+handles TTC, OTC, and dfont via `BinData`). Constructing a `Reader`
+on a non-collection file raises `ArgumentError`. This is the API the
+`validate-collection` command uses internally — reach for it directly
+when you want collection metadata without invoking the CLI.
