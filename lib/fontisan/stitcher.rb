@@ -25,11 +25,20 @@ module Fontisan
   #   stitcher.include_range(0x4E00..0x9FFF, from: :noto_cjk, into: :cjk)
   #   stitcher.write_collection("out.otc", format: :otf2)
   class Stitcher
-    autoload :Source,          "fontisan/stitcher/source"
-    autoload :Selector,        "fontisan/stitcher/selector"
-    autoload :GlyphSignature,  "fontisan/stitcher/glyph_signature"
-    autoload :Deduplicator,    "fontisan/stitcher/deduplicator"
-    autoload :GlyphLimit,      "fontisan/stitcher/glyph_limit"
+    autoload :Source,           "fontisan/stitcher/source"
+    autoload :Selector,         "fontisan/stitcher/selector"
+    autoload :GlyphSignature,   "fontisan/stitcher/glyph_signature"
+    autoload :Deduplicator,     "fontisan/stitcher/deduplicator"
+    autoload :GlyphLimit,       "fontisan/stitcher/glyph_limit"
+    autoload :CollectionResult, "fontisan/stitcher/collection_result"
+    autoload :SubfontStats,     "fontisan/stitcher/collection_result"
+    autoload :PartitionStrategy, "fontisan/stitcher/partition_strategy"
+
+    # Internal: pairs a compiled loaded font with its stats so
+    # +write_collection+ can build the collection and the result from a
+    # single compilation pass.
+    CompiledSubfont = Struct.new(:name, :font, :stats, keyword_init: true)
+    private_constant :CompiledSubfont
 
     DEFAULT_DEDUPLICATE = true
 
@@ -52,6 +61,13 @@ module Fontisan
 
     def include_codepoints(codepoints, from:, into:)
       Selector::Codepoints.new(codepoints).apply(source(from), @subfonts[into])
+    end
+
+    def include_codepoints_map(cp_map, into:)
+      cp_map.to_h
+        .group_by { |_cp, label| label }
+        .transform_values { |pairs| pairs.map(&:first).sort }
+        .each { |label, cps| include_codepoints(cps, from: label, into: into) }
     end
 
     def include_gid(donor_gid, from:, into:)
@@ -89,13 +105,19 @@ module Fontisan
       raise ArgumentError, "no subfonts declared" if @subfonts.empty?
 
       compiled = @subfonts.keys.map do |name|
-        compile_subfont_to_loaded_font(name, format: format)
+        compile_subfont_with_stats(name, format: format)
       end
+      fonts = compiled.map(&:font)
 
       collection_format = collection_format_for(format)
-      Collection::Builder.new(compiled, format: collection_format,
-                                        optimize: true).build_to_file(path)
-      path
+      Collection::Builder.new(fonts, format: collection_format,
+                                     optimize: true).build_to_file(path)
+
+      CollectionResult.new(
+        path: path,
+        bytes: File.size(path),
+        subfonts: compiled.map(&:stats),
+      )
     end
 
     private
@@ -140,6 +162,10 @@ module Fontisan
     end
 
     def compile_subfont_to_loaded_font(subfont_name, format:)
+      compile_subfont_with_stats(subfont_name, format: format).font
+    end
+
+    def compile_subfont_with_stats(subfont_name, format:)
       target = build_target_for(subfont_name)
       GlyphLimit.check!(target.glyphs.size, format: format)
 
@@ -148,7 +174,15 @@ module Fontisan
         sub_path = File.join(dir, "sub#{subfont_name}#{ext}")
         compiler = compiler_for(format)
         compiler.new(target).compile(output_path: sub_path)
-        return Fontisan::FontLoader.load(sub_path)
+        propagate_cbdt_tables(sub_path) if cbdt_source
+
+        loaded = Fontisan::FontLoader.load(sub_path)
+        stats = SubfontStats.new(
+          name: subfont_name,
+          glyph_count: loaded.table("maxp")&.num_glyphs || 0,
+          codepoint_count: (loaded.table("cmap")&.unicode_mappings || {}).size,
+        )
+        CompiledSubfont.new(name: subfont_name, font: loaded, stats: stats)
       end
     end
 
