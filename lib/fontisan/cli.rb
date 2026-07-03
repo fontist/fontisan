@@ -208,10 +208,12 @@ module Fontisan
     end
 
     desc "convert FONT_FILE", "Convert font to different format"
-    option :to, type: :string, required: true,
-                desc: "Target format: ttf, otf, type1, t1, ttc, otc, dfont, svg, " \
+    option :to, type: :array, required: true,
+                desc: "Target format(s): ttf, otf, type1, t1, ttc, otc, dfont, svg, " \
                       "woff (zlib — works on all browsers incl. legacy), " \
-                      "woff2 (Brotli — ~30% smaller, modern browsers only)",
+                      "woff2 (Brotli — ~30% smaller, modern browsers only). " \
+                      "Pass multiple times (--to woff --to woff2) or comma-separated " \
+                      "(--to woff,woff2) for multi-format output.",
                 aliases: "-t"
     option :output, type: :string,
                     desc: "Output file path (required unless --show-options)",
@@ -358,7 +360,7 @@ module Fontisan
 
       # Handle --show-options
       if options[:show_options]
-        show_recommended_options(source_format, options[:to])
+        show_recommended_options(source_format, options[:to].is_a?(Array) ? options[:to].first : options[:to])
         return
       end
 
@@ -368,7 +370,8 @@ module Fontisan
       end
 
       # Build ConversionOptions
-      conv_options = build_conversion_options(source_format, options[:to],
+      conv_options = build_conversion_options(source_format,
+                                              Array(options[:to]).first,
                                               options)
 
       # Build instance coordinates from axis options
@@ -568,6 +571,27 @@ module Fontisan
         binary_format: options[:binary_format].to_sym,
       )
       exit command.run
+    end
+
+    desc "validate-collection PATH",
+         "Validate a TTC/OTC/dfont (face count, glyph cap, cmap union)"
+    option :expected_faces, type: :numeric,
+                            desc: "Required face count"
+    option :max_glyphs, type: :numeric, default: Fontisan::Commands::ValidateCollectionCommand::DEFAULT_MAX_GLYPHS,
+                        desc: "Per-face glyph cap"
+    option :expected_cmap_union, type: :numeric,
+                                 desc: "Minimum cmap union size across all faces"
+    def validate_collection(path)
+      cmd = Commands::ValidateCollectionCommand.new(
+        input: path,
+        expected_faces: options[:expected_faces],
+        max_glyphs: options[:max_glyphs],
+        expected_cmap_union: options[:expected_cmap_union],
+      )
+      exit cmd.run
+    rescue ArgumentError => e
+      warn "ERROR: #{e.message}"
+      exit 1
     end
 
     desc "version", "Display version information"

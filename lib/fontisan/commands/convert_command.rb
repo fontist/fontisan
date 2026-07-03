@@ -42,11 +42,20 @@ module Fontisan
     #   )
     #   command.run
     class ConvertCommand < BaseCommand
+      # Public readers for the parsed target formats and per-format output
+      # paths. Exposed (rather than relying on @ivar access from specs) so
+      # multi-format behaviour can be tested through the public surface.
+      attr_reader :target_formats, :output_paths
+
       # Initialize convert command
       #
       # @param font_path [String] Path to input font file
       # @param options [Hash] Conversion options
-      # @option options [String] :to Target format (ttf, otf, woff, woff2)
+      # @option options [String, Array<String>] :to Target format(s):
+      #   ttf, otf, woff, woff2, type1, ttc, otc, dfont, svg. Pass a
+      #   comma-separated string ("woff,woff2") or an array (["woff",
+      #   "woff2"]) for multi-format output. Single-font → single-font
+      #   only; multi-format + collection input is rejected.
       # @option options [String] :output Output file path (required)
       # @option options [Integer] :font_index Index for TTC/OTC (default: 0)
       # @option options [String] :coordinates Coordinate string (e.g., "wght=700,wdth=100")
@@ -69,8 +78,13 @@ module Fontisan
 
         @output_path = @options[:output]
 
-        # Parse target format
-        @target_format = parse_target_format(@options[:to])
+        # Parse target format(s). Always an Array<Symbol>, deduped, order
+        # preserved. Single-format callsites get a one-element array.
+        @target_formats = parse_target_formats(@options[:to])
+
+        # Resolve per-format output paths up front so filename ambiguity
+        # surfaces before any pipeline work is done.
+        @output_paths = resolve_output_paths
 
         # Extract ConversionOptions if provided
         @conv_options = extract_conversion_options(@options)
@@ -92,17 +106,26 @@ module Fontisan
 
       # Execute the conversion
       #
-      # @return [Hash] Result information
+      # @return [Hash, Array<Hash>] Result information. Single-format
+      #   returns one result hash (back-compat). Multi-format returns
+      #   an array of result hashes, one per target format.
       # @raise [ArgumentError] If output path is not specified
       # @raise [Error] If conversion fails
       def run
         validate_options!
 
-        # Check if input is a collection
         if collection_file?
+          if multi_format?
+            raise ArgumentError,
+                  "Multi-format conversion is not supported for collection " \
+                  "input. Specify a single target format."
+          end
+
           convert_collection
+        elsif multi_format?
+          convert_multi_format
         else
-          convert_single_font
+          convert_single_font(@target_formats.first, @output_paths.first)
         end
       rescue ArgumentError
         # Let ArgumentError propagate for validation errors
@@ -112,6 +135,11 @@ module Fontisan
       end
 
       private
+
+      # @return [Boolean] true when more than one target format was given
+      def multi_format?
+        @target_formats.size > 1
+      end
 
       # Check if input file is a collection
       #
@@ -123,15 +151,36 @@ module Fontisan
         false
       end
 
-      # Convert a single font (original implementation)
+      # Convert to each target format and aggregate results.
       #
+      # @return [Array<Hash>]
+      def convert_multi_format
+        unless @options[:quiet]
+          puts "Converting #{File.basename(font_path)} to " \
+               "#{@target_formats.join(', ')}..."
+        end
+
+        @target_formats.zip(@output_paths).map do |fmt, out_path|
+          result = convert_single_font(fmt, out_path)
+          unless @options[:quiet]
+            puts "  #{fmt}: wrote #{File.basename(out_path)} " \
+                 "(#{format_size(File.size(out_path))})"
+          end
+          result
+        end
+      end
+
+      # Convert a single font to a single target format at +out_path+.
+      #
+      # @param target_format [Symbol]
+      # @param out_path [String]
       # @return [Hash] Result information
-      def convert_single_font
-        puts "Converting #{File.basename(font_path)} to #{@target_format}..." unless @options[:quiet]
+      def convert_single_font(target_format, out_path)
+        puts "Converting #{File.basename(font_path)} to #{target_format}..." unless @options[:quiet]
 
         # Build pipeline options
         pipeline_options = {
-          target_format: @target_format,
+          target_format: target_format,
           validate: @validate,
           verbose: @options[:verbose],
         }
@@ -160,7 +209,7 @@ module Fontisan
         # Use TransformationPipeline for universal conversion
         pipeline = Pipeline::TransformationPipeline.new(
           font_path,
-          @output_path,
+          out_path,
           pipeline_options,
         )
 
@@ -168,12 +217,12 @@ module Fontisan
 
         # Display results
         unless @options[:quiet]
-          output_size = File.size(@output_path)
+          output_size = File.size(out_path)
           input_size = File.size(font_path)
 
           puts "Conversion complete!"
           puts "  Input:  #{font_path} (#{format_size(input_size)})"
-          puts "  Output: #{@output_path} (#{format_size(output_size)})"
+          puts "  Output: #{out_path} (#{format_size(output_size)})"
           puts "  Format: #{result[:details][:source_format]} → #{result[:details][:target_format]}"
 
           if result[:details][:variation_preserved]
@@ -186,11 +235,11 @@ module Fontisan
         {
           success: true,
           input_path: font_path,
-          output_path: @output_path,
+          output_path: out_path,
           source_format: result[:details][:source_format],
           target_format: result[:details][:target_format],
           input_size: File.size(font_path),
-          output_size: File.size(@output_path),
+          output_size: File.size(out_path),
           variation_strategy: result[:details][:variation_strategy],
         }
       end
@@ -200,11 +249,11 @@ module Fontisan
       # @return [Hash] Result information
       def convert_collection
         # Determine target collection type from target format
-        target_type = collection_type_from_format(@target_format)
+        target_type = collection_type_from_format(@target_formats.first)
 
         unless target_type
           raise ArgumentError,
-                "Target format #{@target_format} is not a collection format. " \
+                "Target format #{@target_formats.first} is not a collection format. " \
                 "Use ttc, otc, or dfont for collection conversion."
         end
 
@@ -302,10 +351,39 @@ module Fontisan
                 "Output path is required. Use --output option."
         end
 
-        unless @target_format
+        if @target_formats.empty?
           raise ArgumentError,
                 "Target format is required. Use --to option."
         end
+      end
+
+      # Normalize the +--to+ value into a deduplicated Array<Symbol>.
+      #
+      # Accepts:
+      #   - "woff"               → [:woff]
+      #   - "woff,woff2"         → [:woff, :woff2]
+      #   - ["woff", "woff2"]    → [:woff, :woff2]
+      #   - ["woff,woff2", "ttf"] → [:woff, :woff2, :ttf]
+      #   - nil / ""             → []
+      #
+      # @return [Array<Symbol>]
+      def parse_target_formats(raw)
+        array = Array(raw).flat_map { |s| s.to_s.split(",") }
+          .map { |s| s.strip.downcase }
+          .reject(&:empty?)
+          .map { |s| parse_target_format(s) }
+        array.uniq
+      end
+
+      # Resolve the per-format output paths via {MultiFormatOutput}.
+      # Returns nil when no target formats have been parsed yet (the
+      # validate_options! path will surface the missing-format error).
+      #
+      # @return [Array<String>, nil]
+      def resolve_output_paths
+        return nil if @target_formats.empty? || @output_path.nil?
+
+        MultiFormatOutput.new(@output_path, @target_formats).paths
       end
 
       # Parse target format from string/symbol
