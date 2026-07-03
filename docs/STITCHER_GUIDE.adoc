@@ -25,15 +25,19 @@ There are no defaults and no after-the-fact splitting.
 
 | `include_codepoints(cps, from:, into:)` | Add an explicit Array of codepoints
 
+| `include_codepoints_map(cp_map, into:)` | Add `{codepoint => donor}` for many codepoints and donors in one call
+
 | `include_gid(donor_gid, from:, into:)` | Add a specific GID from the source
 
 | `include_notdef(from:, into:)` | Convenience for `include_gid(0, ...)`
 
 | `set_info(hash)` | Override font info (family name, etc.)
 
+| `subfont_names` | List declared subfont names (insertion order)
+
 | `write_to(path, format:, subfont:)` | Compile one subfont to a single file
 
-| `write_collection(path, format:)` | Compile all declared subfonts into a TTC/OTC
+| `write_collection(path, format:)` | Compile all declared subfonts into a TTC/OTC; returns a `CollectionResult`
 |===
 
 `format:` is one of `:ttf`, `:otf`, `:otf2`. For collections, `:ttf`
@@ -76,6 +80,139 @@ Each subfont is compiled independently, then packed by
 `Collection::Builder` with table deduplication enabled — shared tables
 (head, name, OS/2, ...) are stored once and referenced from each
 subfont's offset table.
+
+`write_collection` returns a `Stitcher::CollectionResult` Struct with
+the output `path`, total `bytes`, and one `Stitcher::SubfontStats`
+per declared subfont (`name`, `glyph_count`, `codepoint_count`). Stats
+are read from the compiled on-disk face so they reflect what was
+actually written — including glyphs the compiler adds (e.g. `.notdef`).
+
+[source,ruby]
+----
+result = stitcher.write_collection("out.otc", format: :otf2)
+result.path          # => "out.otc"
+result.bytes         # => File.size("out.otc")
+result.face_count    # => result.subfonts.size
+result.subfonts.first.glyph_count     # maxp.num_glyphs of face 0
+result.subfonts.first.codepoint_count # cmap size of face 0
+----
+
+== Donor maps (many codepoints, many donors, one call)
+
+`include_codepoints_map(cp_map, into:)` takes a `{codepoint => donor}`
+map and forwards each donor group to `include_codepoints` after sorting
+the codepoints (reproducible GID assignment). Useful when the cp →
+donor routing comes from an external plan (Unicode block table,
+partitioner output, coverage analysis).
+
+[source,ruby]
+----
+cp_map = {
+  0x41    => :latin,
+  0x42    => :latin,
+  0x4E00  => :cjk,
+  0x4E01  => :cjk,
+}
+stitcher.include_codepoints_map(cp_map, into: :main)
+# equivalent to:
+#   stitcher.include_codepoints([0x41, 0x42], from: :latin, into: :main)
+#   stitcher.include_codepoints([0x4E00, 0x4E01], from: :cjk,  into: :main)
+----
+
+== Codepoint partitioning (PartitionStrategy)
+
+When the codepoint set is too large for one subfont (or when you want
+to split by Unicode plane / block / script for organizational reasons),
+`Stitcher::PartitionStrategy` provides ready-to-use partitioner classes
+that produce a `Blueprint` (an ordered list of `Partition`s). Each
+partition names a target subfont and carries its codepoints and
+donor map.
+
+The framework is open for new partitioners — adding one is a new file
+under `lib/fontisan/stitcher/partition_strategy/` plus an autoload
+entry. No edits to existing partitioners required (OCP).
+
+=== ByPlane
+
+Groups codepoints by Unicode plane (`cp >> 16`). Each plane that fits
+under the cap becomes one partition named `:plane_<n>` (e.g.
+`:plane_0` for BMP, `:plane_2` for SIP). When a plane overflows the
+cap, ByPlane sub-splits along the large CJK-extension block
+boundaries (`CJK_Ext_B` through `CJK_Ext_F`), naming partitions
+`:plane_<n>_a`, `:plane_<n>_b`, etc.
+
+[source,ruby]
+----
+require "fontisan/stitcher/partition_strategy"
+
+cp_map = build_coverage_map  # { codepoint => donor_label, ... }
+blueprint = Fontisan::Stitcher::PartitionStrategy::ByPlane.new
+             .call(cp_map, cap: 65_484)
+
+blueprint.names       # => [:plane_0, :plane_2, ...]
+blueprint.partitions  # => [#<Partition name=:plane_0 cps=[...] ...>, ...]
+
+# Push every partition's bindings into the Stitcher in one go:
+declared = blueprint.apply_to(stitcher)
+# declared == blueprint.names
+----
+
+If a single CJK extension block alone exceeds `cap` (e.g. `CJK_Ext_B`
+has ~6,592 codepoints and the cap is set to 5,000), ByPlane raises
+`Fontisan::PartitionCapExceededError` — its codepoints are contiguous
+and ByPlane has no finer-grained boundary to sub-split on. The caller
+must either raise the cap, drop codepoints, or switch to a format
+with a higher glyph limit.
+
+The Unicode plane metadata used by ByPlane lives in
+`Fontisan::Unicode::Plane` (`Plane.of(cp)`, `Plane.label(n)`,
+`Plane::LARGE_CJK_BLOCKS`).
+
+=== Partition / Blueprint
+
+A `Partition` is a `Struct.new(:name, :cps, :donor_map, keyword_init: true)`.
+`Partition#apply_to(stitcher)` pushes its bindings via
+`include_codepoints_map`.
+
+A `Blueprint` is a `Struct.new(:partitions, keyword_init: true)`;
+`Blueprint#apply_to(stitcher)` calls `apply_to` on each partition in
+order and returns the list of declared subfont names.
+
+=== Future: ByBlock, ByScript
+
+ByBlock (Unicode Blocks.txt, ~350 entries) and ByScript (Scripts.txt)
+are tracked as a follow-up. The framework is already open for them:
+add `by_block.rb` / `by_script.rb` under
+`lib/fontisan/stitcher/partition_strategy/` and an autoload entry in
+`partition_strategy.rb`.
+
+== Per-subfont metadata (Ufo::Info.for_subfont)
+
+`Fontisan::Ufo::Info.for_subfont(family:, subfont:, version:, ...)`
+builds the standard name-table fields for one subfont of a collection.
+The family name embeds the subfont name (e.g. `"MyFont CJK"`), and
+the PostScript name uses the hyphenated form (e.g. `"MyFont-CJK"`).
+`version` is parsed into `version_major` / `version_minor` per the
+UFO major.minor shape (semver patch is dropped).
+
+[source,ruby]
+----
+info = Fontisan::Ufo::Info.for_subfont(
+  family:   "essenfont",
+  subfont:  :SIP,
+  version:  "0.1",
+)
+info.family_name           # => "essenfont SIP"
+info.postscript_font_name  # => "essenfont-SIP"
+info.postscript_full_name  # => "essenfont SIP"
+info.version_major         # => 0
+info.version_minor         # => 1
+----
+
+Optional kwargs: `subfamily:` (default `"Regular"`), `copyright:`,
+`trademark:`. `trademark` lands in `extras["openTypeNameTrademark"]`
+because it is not in `Ufo::Info::STANDARD_FIELDS` yet — round-trip
+still works through the extras channel.
 
 == Glyph deduplication
 

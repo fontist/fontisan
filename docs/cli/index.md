@@ -40,7 +40,8 @@ Always check your font's End User License Agreement (EULA) before processing. Ma
 |---------|-------------|---------|
 | `convert` | Convert between formats | `fontisan convert input.ttf --to otf` |
 | `subset` | Subset fonts | `fontisan subset font.ttf --chars "ABC"` |
-| `validate` | Validate fonts | `fontisan validate font.ttf` |
+| `validate` | Validate single-font or per-face quality | `fontisan validate font.ttf` |
+| `validate-collection` | Structural checks on a TTC/OTC/dfont | `fontisan validate-collection fonts.ttc --expected-faces 5` |
 | `instance` | Generate variable font instances | `fontisan instance var.ttf --wght 700` |
 | `dump-table` | Extract raw table data | `fontisan dump-table font.ttf head` |
 
@@ -120,6 +121,10 @@ fontisan unicode font.ttf
 ```bash
 # Convert single font to WOFF2
 fontisan convert font.ttf --to woff2 --output font.woff2
+
+# Emit both WOFF and WOFF2 in one invocation
+fontisan convert font.ttf --to woff,woff2 --output font
+# → font.woff, font.woff2
 ```
 
 ### Work with Variable Fonts
@@ -165,6 +170,16 @@ fontisan validate font.ttf --profile google_fonts
 fontisan validate font.ttf --profile production
 ```
 
+### Validate Collection Structure
+
+```bash
+# Glyph-cap-only check (default behaviour)
+fontisan validate-collection family.ttc
+
+# Require exactly 5 faces, max 60,000 glyphs per face
+fontisan validate-collection family.ttc --expected-faces 5 --max-glyphs 60000
+```
+
 ### Audit a Font (or Library)
 
 The `audit` and `ucd` commands have been removed from fontisan. The
@@ -202,9 +217,10 @@ Detailed documentation for each command:
 - [optical-size](/cli/optical-size) — Display optical size information
 
 ### Font Operations
-- [convert](/cli/convert) — Format conversion (TTF, OTF, WOFF, WOFF2)
+- [convert](/cli/convert) — Format conversion (TTF, OTF, WOFF, WOFF2); supports multi-format output
 - [subset](/cli/subset) — Create character subsets
-- [validate](/cli/validate) — Validate fonts against profiles
+- [validate](/cli/validate) — Per-face profile validation
+- [validate-collection](/cli/validate-collection) — Structural checks on TTC/OTC/dfont (face count, glyph cap, cmap union)
 - [instance](/cli/instance) — Generate static instances from variable fonts
 - [export](/cli/export) — Export to TTX, YAML, JSON
 - [dump-table](/cli/dump-table) — Extract raw binary table data

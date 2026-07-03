@@ -1260,6 +1260,42 @@ Status: INVALID
 ----
 ====
 
+=== Collection structural validation (`validate-collection`)
+
+For collection-level structural checks (face count, per-face glyph cap,
+optional cmap-union size) without running the full per-face profile
+machinery, use the dedicated `validate-collection` command:
+
+[source,shell]
+----
+# Glyph-cap-only check (default)
+fontisan validate-collection family.ttc
+
+# Require exactly 5 faces
+fontisan validate-collection family.ttc --expected-faces 5
+
+# Tighter per-face glyph cap + minimum cmap coverage
+fontisan validate-collection family.ttc \
+  --max-glyphs 60000 \
+  --expected-cmap-union 100000
+----
+
+Exit code is `0` when every requested check passes, `1` when any
+check fails. With no options, only the per-face glyph cap is checked
+(default `65,535`).
+
+This command is intentionally separate from `fontisan validate PATH`
+(MECE): `validate` runs profile-based per-face checks;
+`validate-collection` runs collection-level structural checks. They
+do not share a subcommand tree.
+
+For programmatic access to the same metadata, see
+`Fontisan::Collection::Reader` — the read-only counterpart to
+`Collection::Builder`. It opens a TTC/OTC/dfont and exposes
+`face_count`, per-face `stats` (glyph/codepoint counts), and the
+cmap union across all faces, without hand-rolling the TTC header
+bytes.
+
 === Ruby API usage
 
 ==== Architecture
@@ -2187,6 +2223,29 @@ fontisan convert font.ttf --to woff2 --output font.woff2 \
 fontisan convert font.ttf --to woff --output font.woff --zlib-level 9
 ----
 
+`--to` accepts multiple targets so a single invocation produces N
+output files from one input font. Pass a comma-separated list
+(`--to woff,woff2`) or repeat the flag (`--to woff --to woff2`).
+Duplicates are deduplicated.
+
+[source,shell]
+----
+# Emit both WOFF and WOFF2 in one invocation
+fontisan convert font.ttf --to woff,woff2 --output font
+# → font.woff, font.woff2
+----
+
+Output-path rules for multi-format:
+
+* `--output out` (no extension) + N formats → append `.<format>` per
+  target (`out.woff`, `out.woff2`).
+* `--output out.ttf` (extension present) + N formats → exits 1
+  (ambiguous which format gets the extension).
+* `--output out.ttf` + one format → use as given (existing behaviour).
+
+Multi-format is single-font → single-font only. Combining multi-format
+with collection input (TTC/OTC/dfont) exits 1.
+
 For detailed information on all available options and conversion scenarios,
 see the link:docs/CONVERSION_GUIDE.adoc[Conversion Guide].
 
@@ -2499,8 +2558,63 @@ stitcher.add_source(:noto_cjk, Fontisan::FontLoader.load("NotoSansCJK.ttf"))
 stitcher.include_range(0x41..0x5A, from: :noto_sans, into: :latin)
 stitcher.include_range(0x4E00..0x9FFF, from: :noto_cjk, into: :cjk)
 
-# Write as OTC with CFF2 subfonts and table deduplication
-stitcher.write_collection("out.otc", format: :otf2)
+# Write as OTC with CFF2 subfonts and table deduplication.
+# Returns a Stitcher::CollectionResult (path, bytes, per-subfont stats).
+result = stitcher.write_collection("out.otc", format: :otf2)
+result.face_count                 # => 2
+result.subfonts.map(&:name)       # => [:latin, :cjk]
+result.subfonts.first.glyph_count # maxp.num_glyphs of face 0
+----
+
+=== Donor maps and partitioning
+
+`include_codepoints_map(cp_map, into:)` takes a `{codepoint => donor}`
+map and groups internally — one call handles N codepoints from M
+donors:
+
+[source,ruby]
+----
+stitcher.include_codepoints_map(
+  { 0x41 => :noto_sans, 0x4E00 => :noto_cjk },
+  into: :main,
+)
+----
+
+For automatic plane-aware splitting, use
+`Stitcher::PartitionStrategy::ByPlane`. It groups codepoints by
+Unicode plane and sub-splits planes that overflow the cap along the
+large CJK-extension block boundaries:
+
+[source,ruby]
+----
+require "fontisan/stitcher/partition_strategy"
+
+blueprint = Fontisan::Stitcher::PartitionStrategy::ByPlane.new
+             .call(cp_map, cap: 65_484)
+blueprint.apply_to(stitcher) # declares one subfont per partition
+----
+
+If a single CJK extension block alone exceeds the cap, ByPlane raises
+`Fontisan::PartitionCapExceededError`. ByBlock/ByScript partitioners
+(via Unicode Blocks.txt / Scripts.txt) are tracked as a follow-up —
+the framework is open for them.
+
+=== Per-subfont metadata
+
+`Ufo::Info.for_subfont(family:, subfont:, version:, ...)` builds the
+standard name-table fields for one subfont of a collection. The
+family name embeds the subfont (`"essenfont SIP"`), the PostScript
+name uses the hyphenated form (`"essenfont-SIP"`), and the version is
+parsed into `version_major` / `version_minor` per the UFO
+major.minor shape.
+
+[source,ruby]
+----
+stitcher.set_info(
+  Fontisan::Ufo::Info.for_subfont(
+    family: "essenfont", subfont: :SIP, version: "0.1"
+  ).to_plist,
+)
 ----
 
 === CBDT/CBLC passthrough (color emoji)

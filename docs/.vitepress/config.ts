@@ -285,6 +285,7 @@ export default defineConfig({
             { text: "convert", link: "/cli/convert" },
             { text: "subset", link: "/cli/subset" },
             { text: "validate", link: "/cli/validate" },
+            { text: "validate-collection", link: "/cli/validate-collection" },
             { text: "instance", link: "/cli/instance" },
             { text: "export", link: "/cli/export" },
             { text: "dump-table", link: "/cli/dump-table" },
