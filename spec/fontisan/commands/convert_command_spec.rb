@@ -27,7 +27,7 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
       output_path = File.join(output_dir, "output.otf")
       command = described_class.new(ttf_path, to: "otf", output: output_path)
 
-      expect(command.instance_variable_get(:@target_format)).to eq(:otf)
+      expect(command.target_formats).to eq([:otf])
     end
 
     it "parses coordinates string correctly" do
