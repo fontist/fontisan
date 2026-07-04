@@ -6,9 +6,13 @@ module Fontisan
       # Abstract base. Concrete partitioners (ByPlane, ByBlock, …)
       # implement {#call} and return a {Blueprint}.
       class Base
-        # Default cap: 65,535 − .notdef − safety margin. Matches the
-        # Stitcher's own +GlyphLimit+ cap for TTF.
-        DEFAULT_CAP = 65_484
+        # Default cap: 65,535 − .notdef − composite-expansion margin.
+        # The Stitcher's +GlyphLimit+ hard-caps at 65,535 glyphs, but
+        # compile adds composites + variants on top of the codepoint
+        # count — empirically ~5% for CJK-heavy fonts. 60,000 leaves
+        # ~5,500 slots of headroom for composites before the post-
+        # compile glyph count trips GlyphLimit.
+        DEFAULT_CAP = 60_000
 
         # @param cp_map [Hash{Integer=>Object}] codepoint → donor label
         # @param cap [Integer] max codepoints per partition

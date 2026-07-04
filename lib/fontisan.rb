@@ -32,6 +32,7 @@ require "logger"
 require "bindata"
 require "zlib"
 require "stringio"
+require "tmpdir"
 require "lutaml/model"
 
 # Configure lutaml-model to use Nokogiri adapter for XML serialization
