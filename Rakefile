@@ -75,9 +75,17 @@ namespace :fixtures do
         zip_file&.close
       end
     ensure
-      # Clean up the temp zip explicitly so /tmp doesn't fill up on
-      # repeated runs.
-      File.delete(temp_path) if File.exist?(temp_path)
+      # Clean up the temp zip explicitly so the temp dir doesn't fill
+      # up on repeated runs. On Windows the just-closed zip file
+      # handle can briefly hold a lock that surfaces as
+      # Errno::EACCES; swallow that one error so the rake task can
+      # complete (OS will sweep the temp file later).
+      begin
+        File.delete(temp_path) if File.exist?(temp_path)
+      rescue Errno::EACCES
+        warn "[fixtures:download] could not delete temp zip #{temp_path}; " \
+             "OS will clean it up"
+      end
     end
 
     puts "[fixtures:download] #{name} downloaded successfully"
