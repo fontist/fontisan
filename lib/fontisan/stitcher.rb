@@ -32,6 +32,7 @@ module Fontisan
     autoload :GlyphLimit,       "fontisan/stitcher/glyph_limit"
     autoload :CollectionResult, "fontisan/stitcher/collection_result"
     autoload :SubfontStats,     "fontisan/stitcher/collection_result"
+    autoload :FormatMetadata,   "fontisan/stitcher/format_metadata"
     autoload :PartitionStrategy, "fontisan/stitcher/partition_strategy"
 
     # Internal: pairs a compiled loaded font with its stats so
@@ -94,8 +95,8 @@ module Fontisan
       target = build_target_for(subfont)
       GlyphLimit.check!(target.glyphs.size, format: format)
 
-      compiler = compiler_for(format)
-      compiler.new(target).compile(output_path: path)
+      metadata = FormatMetadata.resolve(format)
+      metadata.compiler_class.new(target).compile(output_path: path)
 
       propagate_cbdt_tables(path) if cbdt_source
       path
@@ -109,7 +110,7 @@ module Fontisan
       end
       fonts = compiled.map(&:font)
 
-      collection_format = collection_format_for(format)
+      collection_format = FormatMetadata.resolve(format).collection_format
       Collection::Builder.new(fonts, format: collection_format,
                                      optimize: true).build_to_file(path)
 
@@ -138,20 +139,6 @@ module Fontisan
       cbdts.first
     end
 
-    def compiler_for(format)
-      case format.to_sym
-      when :ttf then Ufo::Compile::TtfCompiler
-      when :otf then Ufo::Compile::OtfCompiler
-      when :otf2 then Ufo::Compile::Otf2Compiler
-      else
-        raise ArgumentError, "unknown format: #{format.inspect}"
-      end
-    end
-
-    def collection_format_for(subfont_format)
-      subfont_format == :ttf ? :ttc : :otc
-    end
-
     def build_target_for(subfont_name)
       bindings = @subfonts[subfont_name] || []
       target = Ufo::Font.new
@@ -161,19 +148,14 @@ module Fontisan
       target
     end
 
-    def compile_subfont_to_loaded_font(subfont_name, format:)
-      compile_subfont_with_stats(subfont_name, format: format).font
-    end
-
     def compile_subfont_with_stats(subfont_name, format:)
       target = build_target_for(subfont_name)
       GlyphLimit.check!(target.glyphs.size, format: format)
 
-      ext = format == :ttf ? ".ttf" : ".otf"
+      metadata = FormatMetadata.resolve(format)
       Dir.mktmpdir do |dir|
-        sub_path = File.join(dir, "sub#{subfont_name}#{ext}")
-        compiler = compiler_for(format)
-        compiler.new(target).compile(output_path: sub_path)
+        sub_path = File.join(dir, "sub#{subfont_name}#{metadata.extension}")
+        metadata.compiler_class.new(target).compile(output_path: sub_path)
         propagate_cbdt_tables(sub_path) if cbdt_source
 
         loaded = Fontisan::FontLoader.load(sub_path)
