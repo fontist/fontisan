@@ -118,6 +118,7 @@ module Fontisan
   autoload :SfntTable, "fontisan/sfnt_table"
   autoload :Stitcher, "fontisan/stitcher"
   autoload :StitcherCli, "fontisan/stitcher_cli"
+  autoload :Tasks, "fontisan/tasks"
   autoload :TrueTypeCollection, "fontisan/true_type_collection"
   autoload :TrueTypeFont, "fontisan/true_type_font"
   autoload :TrueTypeFontExtensions, "fontisan/true_type_font_extensions"

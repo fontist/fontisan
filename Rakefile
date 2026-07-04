@@ -12,24 +12,25 @@ RuboCop::RakeTask.new
 namespace :fixtures do
   # Load centralized fixture configuration
   require_relative "spec/support/fixture_fonts"
+  require "fontisan/tasks"
 
   # Helper method to download a single file
   def download_single_file(name, url, target_path)
-    require "open-uri"
-
     puts "[fixtures:download] Downloading #{name}..."
-    FileUtils.mkdir_p(File.dirname(target_path))
 
-    URI.open(url) do |remote|
-      File.binwrite(target_path, remote.read)
-    end
+    Fontisan::Tasks::FixtureDownloader.new(
+      url: url,
+      destination: target_path,
+    ).call
 
     puts "[fixtures:download] #{name} downloaded successfully"
+  rescue Fontisan::Tasks::FixtureDownloader::Error => e
+    warn "[fixtures:download] #{name} failed after retries: #{e.message}"
+    raise
   end
 
   # Helper method to download and extract a font archive
   def download_font(name, url, target_dir)
-    require "open-uri"
     require "zip"
 
     puts "[fixtures:download] Downloading #{name}..."
@@ -39,45 +40,50 @@ namespace :fixtures do
     temp_path = File.join(Dir.tmpdir,
                           "fontisan_#{name}_#{Process.pid}_#{rand(10000)}.zip")
 
-    # Download using IO.copy_stream for better Windows compatibility
-    URI.open(url, "rb") do |remote|
-      File.open(temp_path, "wb") do |file|
-        IO.copy_stream(remote, file)
-      end
-    end
-
-    puts "[fixtures:download] Extracting #{name}..."
-
-    # Open zip file and ensure it's fully closed before we're done
-    zip_file = Zip::File.open(temp_path)
     begin
-      zip_file.each do |entry|
-        # Skip macOS metadata files and directories
-        next if entry.name.start_with?("__MACOSX/") || entry.name.include?("/._")
-        next if entry.directory?
+      Fontisan::Tasks::FixtureDownloader.new(
+        url: url,
+        destination: temp_path,
+      ).call
 
-        # Ensure entry.name is relative by stripping leading slashes
-        relative_name = entry.name.sub(%r{^/+}, "")
+      puts "[fixtures:download] Extracting #{name}..."
 
-        dest_path = File.join(target_dir, relative_name)
-        FileUtils.mkdir_p(File.dirname(dest_path))
+      # Open zip file and ensure it's fully closed before we're done
+      zip_file = Zip::File.open(temp_path)
+      begin
+        zip_file.each do |entry|
+          # Skip macOS metadata files and directories
+          next if entry.name.start_with?("__MACOSX/") || entry.name.include?("/._")
+          next if entry.directory?
 
-        # Skip if file already exists
-        next if File.exist?(dest_path)
+          # Ensure entry.name is relative by stripping leading slashes
+          relative_name = entry.name.sub(%r{^/+}, "")
 
-        # Write the file content directly using binary mode
-        File.open(dest_path, "wb") do |file|
-          IO.copy_stream(entry.get_input_stream, file)
+          dest_path = File.join(target_dir, relative_name)
+          FileUtils.mkdir_p(File.dirname(dest_path))
+
+          # Skip if file already exists
+          next if File.exist?(dest_path)
+
+          # Write the file content directly using binary mode
+          File.open(dest_path, "wb") do |file|
+            IO.copy_stream(entry.get_input_stream, file)
+          end
         end
+      ensure
+        # Explicitly close the zip file to release file handle on Windows
+        zip_file&.close
       end
     ensure
-      # Explicitly close the zip file to release file handle on Windows
-      zip_file&.close
+      # Clean up the temp zip explicitly so /tmp doesn't fill up on
+      # repeated runs.
+      File.delete(temp_path) if File.exist?(temp_path)
     end
 
-    # Temp file left in Dir.tmpdir - OS will clean it up automatically
-
     puts "[fixtures:download] #{name} downloaded successfully"
+  rescue Fontisan::Tasks::FixtureDownloader::Error => e
+    warn "[fixtures:download] #{name} failed after retries: #{e.message}"
+    raise
   rescue LoadError => e
     warn "[fixtures:download] Error: Required gem not installed. Please run: gem install rubyzip"
     raise e

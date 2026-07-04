@@ -17,6 +17,8 @@ module Fontisan
       autoload :Blueprint, "fontisan/stitcher/partition_strategy/blueprint"
       autoload :Partition, "fontisan/stitcher/partition_strategy/partition"
       autoload :ByPlane, "fontisan/stitcher/partition_strategy/by_plane"
+      autoload :ByBlock, "fontisan/stitcher/partition_strategy/by_block"
+      autoload :ByScript, "fontisan/stitcher/partition_strategy/by_script"
     end
   end
 end
