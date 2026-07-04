@@ -462,7 +462,7 @@ module Fontisan
           running += st.bytesize
         end
 
-        record_bytes = String.new
+        record_bytes = +""
         records.each do |pid, eid, idx|
           record_bytes << [pid, eid, offsets[idx]].pack("nnN")
         end
@@ -492,7 +492,7 @@ module Fontisan
         id_deltas = segments.map { |s| (s[:start_gid] - s[:start_cp]) & 0xFFFF }
         id_range_offsets = [0] * seg_count
 
-        subtable = String.new
+        subtable = +""
         subtable << [4, 0, 0, seg_count_x2,
                      search_range, entry_selector, range_shift].pack("n*")
         subtable << end_codes.pack("n*")
@@ -513,7 +513,7 @@ module Fontisan
         groups = coalesce_segments(all_mappings)
         num_groups = groups.size
 
-        subtable = String.new
+        subtable = +""
         subtable << [12, 0, 0, 0, num_groups].pack("nnNNN")
         groups.each do |g|
           subtable << [g[:start_cp], g[:end_cp], g[:start_gid]].pack("NNN")
