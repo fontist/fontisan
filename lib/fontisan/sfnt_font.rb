@@ -59,8 +59,16 @@ module Fontisan
       header.num_tables
     }
 
-    # Table data is stored separately since it's at variable offsets
-    attr_accessor :table_data
+    # Table data is stored separately since it's at variable offsets.
+    # The setter normalizes all keys to UTF-8 so Hash lookups don't
+    # silently miss due to encoding mismatch — BinData-derived tag
+    # strings are ASCII-8BIT, literals callers pass are usually UTF-8,
+    # and String#eql? is encoding-sensitive.
+    attr_reader :table_data
+
+    def table_data=(hash)
+      @table_data = hash.transform_keys { |tag| normalize_tag(tag) }
+    end
 
     # Parsed table instances cache
     attr_accessor :parsed_tables
@@ -470,6 +478,8 @@ module Fontisan
     # @return [Tables::*, nil] Parsed table object or nil if not found
     # @raise [ArgumentError] if table is not available in current loading mode
     def table(tag)
+      tag = normalize_tag(tag)
+
       # Check mode restrictions
       unless table_available?(tag)
         if has_table?(tag)
