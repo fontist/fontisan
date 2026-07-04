@@ -45,7 +45,7 @@ RSpec.describe Fontisan::Svg::GlyphGenerator do
     it "generates glyph XML element" do
       xml = generator.generate_glyph_xml(
         outline,
-        unicode: "A",
+        codepoints: [0x41],
         advance_width: 600,
       )
 
@@ -59,7 +59,7 @@ RSpec.describe Fontisan::Svg::GlyphGenerator do
     it "includes glyph name when provided" do
       xml = generator.generate_glyph_xml(
         outline,
-        unicode: "A",
+        codepoints: [0x41],
         glyph_name: "A",
         advance_width: 600,
       )
@@ -86,14 +86,39 @@ RSpec.describe Fontisan::Svg::GlyphGenerator do
       expect(xml).not_to include("d=")
     end
 
-    it "escapes XML characters in unicode" do
+    it "escapes XML-special ASCII codepoints" do
       xml = generator.generate_glyph_xml(
         outline,
-        unicode: "<",
+        codepoints: [0x3C], # "<"
         advance_width: 600,
       )
 
       expect(xml).to include('unicode="&lt;"')
+    end
+
+    it "emits numeric entities for non-ASCII codepoints" do
+      xml = generator.generate_glyph_xml(
+        outline,
+        codepoints: [0x2026], # "…"
+        advance_width: 600,
+      )
+
+      expect(xml).to include('unicode="&#x2026;"')
+    end
+
+    it "concatenates multiple codepoints into one unicode attribute" do
+      xml = generator.generate_glyph_xml(
+        outline,
+        codepoints: [0x41, 0x42], # "AB"
+        advance_width: 600,
+      )
+
+      expect(xml).to include('unicode="AB"')
+    end
+
+    it "omits the unicode attribute when codepoints is empty" do
+      xml = generator.generate_glyph_xml(outline, advance_width: 600)
+      expect(xml).not_to include("unicode=")
     end
 
     it "uses custom indentation" do
