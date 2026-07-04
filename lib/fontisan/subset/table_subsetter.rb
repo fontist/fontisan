@@ -417,12 +417,130 @@ module Fontisan
       # Creates a minimal cmap table with format 4 subtable for BMP
       # and format 12 for supplementary planes if needed.
       #
-      # @param mappings [Hash<Integer, Integer>] Char code => glyph ID
+      # @param mappings [Hash<Integer, Integer>] Char code => new glyph ID
       # @return [String] Binary cmap data
-      def build_cmap_binary(_mappings)
-        # For now, pass through original cmap
-        # TODO: Implement proper cmap building
-        font.table_data["cmap"]
+      def build_cmap_binary(mappings)
+        # Edge case: empty mappings (e.g., block with no covered chars).
+        # Emit a minimal valid cmap with one format 4 subtable mapping
+        # only U+0000 → .notdef so the table isn't empty.
+        mappings = { 0 => 0 } if mappings.empty?
+
+        bmp = mappings.select { |cp, _| cp <= 0xFFFF }
+        supp = mappings.select { |cp, _| cp > 0xFFFF }
+
+        subtables = []
+        records = [] # [platform_id, encoding_id, subtable_index]
+
+        unless bmp.empty?
+          subtables << build_cmap_format_4(bmp)
+          idx = subtables.size - 1
+          records << [3, 1, idx] # Windows BMP
+          records << [0, 3, idx] # Unicode BMP
+        end
+
+        unless supp.empty?
+          # Format 12 covers both BMP and supplementary — include all
+          # mappings so a single subtable covers the full range.
+          subtables << build_cmap_format_12(mappings)
+          idx = subtables.size - 1
+          records << [3, 10, idx] # Windows UCS-4
+          records << [0, 4, idx]  # Unicode full
+        end
+
+        # Header: version (uint16) + numTables (uint16)
+        num_tables = records.size
+        header = [0, num_tables].pack("nn")
+
+        # Encoding records start immediately after the header.
+        # Each record is 8 bytes; subtables follow.
+        subtable_base = 4 + (8 * num_tables)
+
+        offsets = []
+        running = subtable_base
+        subtables.each do |st|
+          offsets << running
+          running += st.bytesize
+        end
+
+        record_bytes = String.new
+        records.each do |pid, eid, idx|
+          record_bytes << [pid, eid, offsets[idx]].pack("nnN")
+        end
+
+        header + record_bytes + subtables.join
+      end
+
+      # Format 4 subtable: segment-mapping with idDelta, suitable for
+      # BMP codepoints (U+0000..U+FFFF). Builds compact segments where
+      # consecutive codepoints map to consecutive glyph IDs.
+      def build_cmap_format_4(bmp_mappings)
+        segments = coalesce_segments(bmp_mappings)
+        # Mandatory final segment: U+FFFF → gid 0 (per OpenType spec).
+        segments << { start_cp: 0xFFFF, end_cp: 0xFFFF, start_gid: 0 }
+
+        seg_count = segments.size
+        seg_count_x2 = seg_count * 2
+        search_range = 2**Math.log2(seg_count).floor * 2
+        search_range = 2 if search_range < 2
+        entry_selector = Math.log2(search_range / 2).to_i
+        range_shift = seg_count_x2 - search_range
+
+        end_codes = segments.map { |s| s[:end_cp] }
+        start_codes = segments.map { |s| s[:start_cp] }
+        # idDelta is int16 stored as uint16 (two's complement). For a
+        # sequential segment, idDelta = (start_gid - start_cp) & 0xFFFF.
+        id_deltas = segments.map { |s| (s[:start_gid] - s[:start_cp]) & 0xFFFF }
+        id_range_offsets = [0] * seg_count
+
+        subtable = String.new
+        subtable << [4, 0, 0, seg_count_x2,
+                     search_range, entry_selector, range_shift].pack("n*")
+        subtable << end_codes.pack("n*")
+        subtable << [0].pack("n") # reservedPad
+        subtable << start_codes.pack("n*")
+        subtable << id_deltas.pack("n*")
+        subtable << id_range_offsets.pack("n*")
+
+        # Patch the length field (was placeholder 0).
+        subtable[2, 2] = [subtable.bytesize].pack("n")
+        subtable
+      end
+
+      # Format 12 subtable: segmented coverage for full Unicode range.
+      # Simpler than format 4 — just (start_char, end_char, start_gid)
+      # triples with no delta/offset indirection.
+      def build_cmap_format_12(all_mappings)
+        groups = coalesce_segments(all_mappings)
+        num_groups = groups.size
+
+        subtable = String.new
+        subtable << [12, 0, 0, 0, num_groups].pack("nnNNN")
+        groups.each do |g|
+          subtable << [g[:start_cp], g[:end_cp], g[:start_gid]].pack("NNN")
+        end
+
+        # Patch the length field (was placeholder 0). Total length is
+        # 16-byte header + 12 bytes per group.
+        subtable[4, 4] = [subtable.bytesize].pack("N")
+        subtable
+      end
+
+      # Group codepoints into consecutive runs where both codepoint AND
+      # glyph ID are sequential. Each run becomes one segment/group.
+      def coalesce_segments(mappings)
+        sorted = mappings.sort_by { |cp, _| cp }
+        segments = []
+        current = nil
+        sorted.each do |cp, gid|
+          if current && cp == current[:end_cp] + 1 && gid == current[:start_gid] + (cp - current[:start_cp])
+            current[:end_cp] = cp
+          else
+            segments << current if current
+            current = { start_cp: cp, end_cp: cp, start_gid: gid }
+          end
+        end
+        segments << current if current
+        segments
       end
 
       # Build post table version 3.0 (no glyph names)
