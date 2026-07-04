@@ -9,13 +9,13 @@ RSpec.describe Fontisan::Svg::FontGenerator do
     {
       0 => {
         outline: nil,
-        unicode: nil,
+        codepoints: [],
         name: ".notdef",
         advance: 500,
       },
       65 => {
         outline: create_test_outline(65),
-        unicode: "A",
+        codepoints: [0x41],
         name: "A",
         advance: 600,
       },

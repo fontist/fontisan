@@ -20,7 +20,7 @@ module Fontisan
     #
     # @example Generate SVG glyph element
     #   generator = GlyphGenerator.new(calculator)
-    #   xml = generator.generate_glyph_xml(outline, unicode: "A", advance_width: 600)
+    #   xml = generator.generate_glyph_xml(outline, codepoints: [0x41], advance_width: 600)
     class GlyphGenerator
       # @return [ViewBoxCalculator] Coordinate calculator
       attr_reader :calculator
@@ -38,23 +38,30 @@ module Fontisan
       # Generate SVG glyph element
       #
       # @param outline [Models::GlyphOutline] Glyph outline
-      # @param unicode [String, nil] Unicode character
-      # @param glyph_name [String, nil] Glyph name
+      # @param codepoints [Array<Integer>] Unicode codepoints that cmap
+      #   maps to this glyph. Empty for unmapped glyphs (.notdef, raw
+      #   ligatures, etc.). Each codepoint is rendered per SVG Fonts
+      #   spec: printable ASCII as the character (XML-escaped), others
+      #   as &#xHEX; entities. Multiple codepoints are concatenated —
+      #   rare but valid (e.g. a glyph mapped from both space and
+      #   non-breaking space).
+      # @param glyph_name [String, nil] Glyph name from the post table
       # @param advance_width [Integer] Horizontal advance width
       # @param indent [String] Indentation string
       # @return [String] XML glyph element
-      def generate_glyph_xml(outline, unicode: nil, glyph_name: nil,
+      def generate_glyph_xml(outline, codepoints: [], glyph_name: nil,
 advance_width: 0, indent: "      ")
-        # Build attribute parts
         attr_parts = []
 
-        attr_parts << "unicode=\"#{escape_xml(unicode)}\"" if unicode
-        attr_parts << "glyph-name=\"#{escape_xml(glyph_name)}\"" if glyph_name
-        attr_parts << "horiz-adv-x=\"#{advance_width}\"" if advance_width&.positive?
+        unless codepoints.empty?
+          attr_parts << %(unicode="#{format_codepoints(codepoints)}")
+        end
+        attr_parts << %(glyph-name="#{escape_xml(glyph_name)}") if glyph_name
+        attr_parts << %(horiz-adv-x="#{advance_width}") if advance_width&.positive?
 
         # Generate SVG path with Y-axis transformation
         path_data = generate_svg_path(outline)
-        attr_parts << "d=\"#{path_data}\"" if path_data && !path_data.empty?
+        attr_parts << %(d="#{path_data}") if path_data && !path_data.empty?
 
         "#{indent}<glyph #{attr_parts.join(' ')}/>"
       end
@@ -87,6 +94,34 @@ advance_width: 0, indent: "      ")
       end
 
       private
+
+      # Format an array of codepoints as the SVG `unicode=` attribute
+      # value. Returns the FINAL string — already escaped / entity-fied.
+      # The caller must not re-escape it (would double-escape the
+      # entities this method emits).
+      #
+      # Per SVG Fonts spec, each codepoint renders as either:
+      #   - printable ASCII (0x20..0x7E): the character itself, with
+      #     XML-special chars (&, <, >, ", ') escaped
+      #   - any other codepoint: a numeric entity &#xHEX;
+      #
+      # Multiple codepoints are concatenated in codepoint order. The
+      # SVG spec accepts this for ligature-style mappings.
+      def format_codepoints(codepoints)
+        codepoints.map { |cp| format_codepoint(cp) }.join
+      end
+
+      def format_codepoint(cp)
+        if printable_ascii?(cp)
+          escape_xml(cp.chr(Encoding::UTF_8))
+        else
+          "&#x#{cp.to_s(16).upcase};"
+        end
+      end
+
+      def printable_ascii?(cp)
+        (0x20..0x7E).cover?(cp)
+      end
 
       # Build SVG path for a contour with Y-axis transformation
       #
