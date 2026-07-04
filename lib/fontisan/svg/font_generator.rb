@@ -28,7 +28,7 @@ module Fontisan
       # @return [TrueTypeFont, OpenTypeFont] Font instance
       attr_reader :font
 
-      # @return [Hash] Glyph data map (glyph_id => {outline, unicode, name, advance})
+      # @return [Hash] Glyph data map (glyph_id => {outline, codepoints, name, advance})
       attr_reader :glyph_data
 
       # @return [Hash] Generation options
@@ -179,7 +179,7 @@ module Fontisan
 
           glyph_generator.generate_glyph_xml(
             data[:outline],
-            unicode: data[:unicode],
+            codepoints: data[:codepoints],
             glyph_name: data[:name],
             advance_width: data[:advance],
             indent: "      ",

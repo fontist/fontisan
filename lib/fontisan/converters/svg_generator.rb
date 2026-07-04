@@ -145,7 +145,7 @@ palette_index: 0)
       #
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param options [Hash] Extraction options
-      # @return [Hash] Glyph data map (glyph_id => {outline, unicode, name, advance})
+      # @return [Hash] Glyph data map (glyph_id => {outline, codepoints, name, advance})
       def extract_glyph_data(font, options = {})
         extractor = OutlineExtractor.new(font)
         cmap = font.table("cmap")
@@ -157,33 +157,20 @@ palette_index: 0)
         num_glyphs = maxp&.num_glyphs || 0
         max_glyphs = options[:max_glyphs] || num_glyphs
 
-        # Get unicode mappings
-        unicode_map = build_unicode_map(cmap)
+        gid_to_codepoints = build_glyph_to_codepoints(cmap)
+        glyph_names = post&.glyph_names || []
 
-        # Extract specified or all glyphs
         glyph_ids = options[:glyph_ids] || (0...num_glyphs).to_a
         glyph_ids = glyph_ids.take(max_glyphs) if max_glyphs
 
         glyph_ids.each do |glyph_id|
           next if glyph_id >= num_glyphs
 
-          # Extract outline
-          outline = extractor.extract(glyph_id)
-
-          # Get advance width
-          advance = extract_advance_width(hmtx, glyph_id)
-
-          # Get unicode character
-          unicode = unicode_map[glyph_id]
-
-          # Get glyph name
-          glyph_name = extract_glyph_name(post, glyph_id)
-
           glyph_data[glyph_id] = {
-            outline: outline,
-            unicode: unicode,
-            name: glyph_name,
-            advance: advance,
+            outline: extractor.extract(glyph_id),
+            codepoints: gid_to_codepoints[glyph_id] || [],
+            name: glyph_name_for(glyph_names, glyph_id),
+            advance: extract_advance_width(hmtx, glyph_id),
           }
         rescue StandardError => e
           warn "Failed to extract glyph #{glyph_id}: #{e.message}"
@@ -193,61 +180,38 @@ palette_index: 0)
         glyph_data
       end
 
-      # Build unicode to glyph ID map from cmap table
+      # Build reverse cmap: glyph_id => [codepoint, ...].
       #
-      # @param cmap [Tables::Cmap, nil] Cmap table
-      # @return [Hash<Integer, String>] Map of glyph_id to unicode character
-      def build_unicode_map(cmap)
+      # A glyph can be referenced by multiple codepoints (e.g. space
+      # and non-breaking space might share a glyph). Uses
+      # +cmap.unicode_mappings+ directly — that is the canonical
+      # {codepoint => gid} hash.
+      #
+      # @param cmap [Tables::Cmap, nil]
+      # @return [Hash<Integer, Array<Integer>>]
+      def build_glyph_to_codepoints(cmap)
         return {} unless cmap
 
-        unicode_map = {}
-
-        # Get best cmap subtable (prefer Unicode BMP or full)
-        subtable = find_best_cmap_subtable(cmap)
-        return {} unless subtable
-
-        # Build reverse map: glyph_id => unicode
-        subtable.each do |code_point, glyph_id|
-          # Store first unicode for each glyph
-          next if unicode_map[glyph_id]
-
-          unicode_map[glyph_id] = [code_point].pack("U")
-        rescue StandardError
-          # Skip invalid code points
-          next
+        cmap.unicode_mappings.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(cp, gid), h|
+          h[gid] << cp
         end
-
-        unicode_map
       rescue StandardError => e
-        warn "Failed to build unicode map: #{e.message}"
+        warn "Failed to build glyph to codepoints map: #{e.message}"
         {}
       end
 
-      # Find best cmap subtable for unicode mapping
+      # Look up glyph name from the post table's per-gid name array.
       #
-      # @param cmap [Tables::Cmap] Cmap table
-      # @return [Hash, nil] Subtable or nil
-      def find_best_cmap_subtable(cmap)
-        # Try Unicode BMP (platform 3, encoding 1) - Windows Unicode BMP
-        subtable = cmap.subtable(3, 1)
-        return subtable if subtable
-
-        # Try Unicode full (platform 3, encoding 10) - Windows Unicode full
-        subtable = cmap.subtable(3, 10)
-        return subtable if subtable
-
-        # Try Unicode (platform 0, encoding 3) - Unicode 2.0+ BMP
-        subtable = cmap.subtable(0, 3)
-        return subtable if subtable
-
-        # Try Unicode (platform 0, encoding 4) - Unicode 2.0+ full
-        subtable = cmap.subtable(0, 4)
-        return subtable if subtable
-
-        # Fallback to any available subtable
-        cmap.subtables.first
-      rescue StandardError
-        nil
+      # Falls back to +"gidN"+ when the post table has no name for the
+      # given gid (post version 3.0 fonts omit per-glyph names, and
+      # version 2.0 may have gaps). Always returns a non-nil string so
+      # the SVG <glyph> element carries a useful glyph-name attribute.
+      #
+      # @param glyph_names [Array<String>] post.glyph_names
+      # @param glyph_id [Integer]
+      # @return [String]
+      def glyph_name_for(glyph_names, glyph_id)
+        glyph_names[glyph_id] || "gid#{glyph_id}"
       end
 
       # Extract advance width for glyph
@@ -264,22 +228,6 @@ palette_index: 0)
         advance
       rescue StandardError
         0
-      end
-
-      # Extract glyph name from post table
-      #
-      # @param post [Tables::Post, nil] Post table
-      # @param glyph_id [Integer] Glyph ID
-      # @return [String, nil] Glyph name or nil
-      def extract_glyph_name(post, glyph_id)
-        return nil unless post
-
-        name = post.glyph_name_for(glyph_id)
-        return nil if name.nil? || name.empty?
-
-        name
-      rescue StandardError
-        nil
       end
     end
   end
