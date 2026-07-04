@@ -165,8 +165,18 @@ must either raise the cap, drop codepoints, or switch to a format
 with a higher glyph limit.
 
 The Unicode plane metadata used by ByPlane lives in
-`Fontisan::Unicode::Plane` (`Plane.of(cp)`, `Plane.label(n)`,
-`Plane::LARGE_CJK_BLOCKS`).
+`Fontisan::Unicode::Plane` (`Plane.of(cp)`, `Plane.label(n)`).
+
+The sub-plane block boundaries used for sub-splitting live on ByPlane
+itself:
+
+* `ByPlane::ATOMIC_BLOCKS` — five SIP CJK extension blocks that cannot
+  be sub-split; raise if one alone exceeds `cap`.
+* `ByPlane::CARVE_OUT_BLOCKS` — BMP-resident blocks (CJK Unified
+  Ideographs, Hangul Syllables) that get their own partition bucket
+  when BMP overflows `cap`; chunkable, never raised.
+* `ByPlane::RECOGNIZED_BLOCKS` — union of the two; the lookup table
+  the bucketing pass walks.
 
 === Partition / Blueprint
 

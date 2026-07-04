@@ -15,25 +15,6 @@ module Fontisan
       TIP = 3
       SSP = 14
 
-      # The handful of mega-blocks large enough to overflow a single
-      # plane's 65,535-glyph cap when partitioning by plane. Range +
-      # label only — full Unicode Blocks.txt data lives in +Block+
-      # (follow-up).
-      #
-      # Includes BMP-resident blocks (CJK Unified Ideographs + Hangul
-      # Syllables) because BMP itself overflows the cap once composites
-      # are added — the partitioner needs carve-out boundaries inside
-      # BMP too.
-      LARGE_CJK_BLOCKS = {
-        "CJK_BMP" => 0x4E00..0x9FFF,
-        "Hangul_Syllables" => 0xAC00..0xD7AF,
-        "CJK_Ext_B" => 0x2A700..0x2B73F,
-        "CJK_Ext_C" => 0x2B740..0x2B81F,
-        "CJK_Ext_D" => 0x2B820..0x2CEAF,
-        "CJK_Ext_E" => 0x2CEB0..0x2EBEF,
-        "CJK_Ext_F" => 0x2EBF0..0x2EE5F,
-      }.freeze
-
       # @param codepoint [Integer]
       # @return [Integer] plane number (0..16)
       def self.of(codepoint)

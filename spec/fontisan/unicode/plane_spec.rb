@@ -39,13 +39,4 @@ RSpec.describe Fontisan::Unicode::Plane do
       expect(described_class.label_of(0x20000)).to eq("SIP")
     end
   end
-
-  describe "LARGE_CJK_BLOCKS" do
-    it "includes the CJK Extension B..F ranges" do
-      expect(described_class::LARGE_CJK_BLOCKS).to include(
-        "CJK_Ext_B" => 0x2A700..0x2B73F,
-        "CJK_Ext_F" => 0x2EBF0..0x2EE5F,
-      )
-    end
-  end
 end

@@ -8,15 +8,47 @@ module Fontisan
       # For each plane with codepoints:
       #   - if the count fits under +cap+, emit one partition named
       #     +:plane_<n>+ (e.g. +:plane_0+, +:plane_2+);
-      #   - otherwise sub-split using the large CJK extension block
-      #     boundaries, naming partitions +:plane_<n>_a+, +:plane_<n>_b+,
-      #     and so on.
+      #   - otherwise sub-split along the recognized sub-plane block
+      #     boundaries (+RECOGNIZED_BLOCKS+), naming partitions
+      #     +:plane_<n>_a+, +:plane_<n>_b+, and so on.
       #
-      # If a single CJK extension block alone exceeds +cap+, raises
-      # {Fontisan::GlyphLimitExceededError} — the partitioner cannot
+      # If a single +ATOMIC_BLOCKS+ entry alone exceeds +cap+, raises
+      # {Fontisan::PartitionCapExceededError} — the partitioner cannot
       # satisfy the cap and the caller must use a smaller cap, split
       # manually, or switch to a format with a higher glyph limit.
+      # +CARVE_OUT_BLOCKS+ entries are chunkable and will be sliced
+      # like +:other+ if they exceed +cap+.
       class ByPlane < Base
+        # Atomic sub-plane blocks: cannot be sub-split further because
+        # no finer-grained Unicode boundary exists inside them. If one
+        # alone exceeds +cap+, raise PartitionCapExceededError.
+        #
+        # Labels follow the Unicode Blocks.txt block names with spaces
+        # replaced by underscores.
+        ATOMIC_BLOCKS = {
+          "CJK_Ext_B" => 0x2A700..0x2B73F,
+          "CJK_Ext_C" => 0x2B740..0x2B81F,
+          "CJK_Ext_D" => 0x2B820..0x2CEAF,
+          "CJK_Ext_E" => 0x2CEB0..0x2EBEF,
+          "CJK_Ext_F" => 0x2EBF0..0x2EE5F,
+        }.freeze
+
+        # Carve-out boundaries: sub-plane regions large enough to
+        # warrant their own partition bucket when a plane overflows
+        # +cap+. Unlike atomic blocks, these are chunkable — if one
+        # alone exceeds +cap+, it gets sliced into +cap+-sized chunks
+        # like +:other+ does, never raised.
+        CARVE_OUT_BLOCKS = {
+          "CJK_Unified_Ideographs" => 0x4E00..0x9FFF,
+          "Hangul_Syllables" => 0xAC00..0xD7AF,
+        }.freeze
+
+        # Every codepoint range recognized as a distinct sub-plane
+        # bucket. Atomic blocks first, then carve-out blocks. Used by
+        # the bucketing pass to decide what gets its own partition vs.
+        # falls into +:other+.
+        RECOGNIZED_BLOCKS = ATOMIC_BLOCKS.merge(CARVE_OUT_BLOCKS).freeze
+
         # @param cp_map [Hash{Integer=>Object}] codepoint → donor label
         # @param cap [Integer] max codepoints per partition
         # @return [Blueprint]
@@ -50,20 +82,21 @@ module Fontisan
           )
         end
 
-        # When a plane overflows +cap+, carve it along the large CJK
-        # extension block boundaries. The +:other+ bucket (everything
-        # outside the known mega-blocks) is split into chunks of +cap+,
-        # while each known large block becomes one partition atomically —
-        # if a single block alone exceeds +cap+, we cannot sub-split it
-        # (its codepoints are contiguous and we don't have finer-grained
-        # boundaries to use), so raise.
+        # When a plane overflows +cap+, carve it along the recognized
+        # sub-plane block boundaries. The +:other+ bucket (everything
+        # outside +RECOGNIZED_BLOCKS+) and any +CARVE_OUT_BLOCKS+ entries
+        # are split into chunks of +cap+. +ATOMIC_BLOCKS+ entries become
+        # one partition atomically — if a single atomic block alone
+        # exceeds +cap+, we cannot sub-split it (its codepoints are
+        # contiguous and we don't have finer-grained boundaries to use),
+        # so raise.
         def sub_split_by_block(plane_num, entries, cap)
-          buckets = bucket_by_large_block(entries)
+          buckets = bucket_by_recognized_block(entries)
           partitions = []
           suffix = "a"
 
           buckets.each do |label, bucket_entries|
-            if large_block?(label) && bucket_entries.size > cap
+            if atomic_block?(label) && bucket_entries.size > cap
               raise PartitionCapExceededError.new(
                 block_label: label,
                 actual: bucket_entries.size,
@@ -83,8 +116,8 @@ module Fontisan
           partitions
         end
 
-        def large_block?(label)
-          Fontisan::Unicode::Plane::LARGE_CJK_BLOCKS.key?(label)
+        def atomic_block?(label)
+          ATOMIC_BLOCKS.key?(label)
         end
 
         # Split +entries+ into sub-arrays of at most +cap+ each.
@@ -92,17 +125,16 @@ module Fontisan
           entries.each_slice(cap).to_a
         end
 
-        # Bucket entries by which large CJK block (or :other) they fall
-        # into. Entries outside any known large block go into :other,
-        # which is then packed into its own partition(s).
-        def bucket_by_large_block(entries)
+        # Bucket entries by which recognized sub-plane block (or :other)
+        # they fall into. Entries outside any known block go into :other,
+        # which is then packed into its own partition(s). Order: :other
+        # first if non-empty, then recognized blocks in declaration order.
+        def bucket_by_recognized_block(entries)
           buckets = { other: [] }
-          Fontisan::Unicode::Plane::LARGE_CJK_BLOCKS.each_key do |label|
-            buckets[label] = []
-          end
+          RECOGNIZED_BLOCKS.each_key { |label| buckets[label] = [] }
 
           entries.each do |cp, label|
-            block = find_large_block(cp)
+            block = find_recognized_block(cp)
             if block
               buckets[block] << [cp, label]
             else
@@ -110,18 +142,16 @@ module Fontisan
             end
           end
 
-          # Drop empty buckets; preserve order (other first if non-empty,
-          # then CJK blocks in declaration order).
           ordered = []
           ordered << [:other, buckets[:other]] unless buckets[:other].empty?
-          Fontisan::Unicode::Plane::LARGE_CJK_BLOCKS.each_key do |label|
+          RECOGNIZED_BLOCKS.each_key do |label|
             ordered << [label, buckets[label]] unless buckets[label].empty?
           end
           ordered
         end
 
-        def find_large_block(codepoint)
-          Fontisan::Unicode::Plane::LARGE_CJK_BLOCKS.find do |_label, range|
+        def find_recognized_block(codepoint)
+          RECOGNIZED_BLOCKS.find do |_label, range|
             range.include?(codepoint)
           end&.first
         end
