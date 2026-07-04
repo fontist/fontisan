@@ -15,14 +15,49 @@ module Fontisan
     # #bitmap_mode. When a source is :cbdt, the Stitcher propagates
     # the raw CBDT/CBLC tables into the output instead of extracting
     # outlines. The glyph data lives in the bitmap tables, not in glyf.
+    #
+    # = Codepoint remap
+    #
+    # Some donor fonts ship glyphs at non-canonical codepoints — a
+    # keyboard-mapped font whose "A" is at U+0041, or a PUA-allocated
+    # pre-Unicode font. Pass a +remap:+ hash at construction to expose
+    # those glyphs at their canonical codepoints without mutating the
+    # donor font's cmap:
+    #
+    #   Source.new(font, remap: { 0x41 => 0x11DB0 })
+    #
+    # With a remap set, the source answers +gid_for_codepoint+ for the
+    # *target* codepoints (0x11DB0 in the example) by translating them
+    # to the donor's *source* codepoints (0x41). Source codepoints not
+    # listed in the remap are hidden — only the remapped coverage is
+    # exposed. This matches the typical "use this donor for exactly
+    # these output characters" intent, and avoids leaking the donor's
+    # ASCII/PUA noise into the output.
     class Source
       MAX_COMPOUND_DEPTH = 32
 
-      attr_reader :font
+      attr_reader :font, :remap
 
-      def initialize(font)
+      # @param font [TrueTypeFont, OpenTypeFont, Ufo::Font] donor font
+      # @param remap [Hash{Integer=>Integer}, nil] optional
+      #   {source_codepoint => target_codepoint}. When present (even
+      #   empty), source codepoints not listed are hidden from
+      #   lookups. Pass +nil+ (the default) for the passthrough
+      #   behavior — every donor codepoint is exposed as-is.
+      def initialize(font, remap: nil)
         @font = font
         @bin_data_cache = nil
+
+        # Distinguish "no remap kwarg" (nil → passthrough) from
+        # "explicit empty remap" ({} → drop everything). The latter
+        # still flips the source into remapped mode, just with no
+        # entries — every donor codepoint gets filtered out.
+        return unless remap
+
+        @remap = remap.to_h.transform_keys(&:to_i).transform_values(&:to_i)
+        @inverse_remap = @remap.each_with_object({}) do |(src, target), h|
+          h[target] = src
+        end
       end
 
       # @return [Symbol] :ufo, :ttf, :otf
@@ -57,12 +92,21 @@ module Fontisan
       end
 
       # Find the gid for a Unicode codepoint in this source.
+      #
+      # When +remap+ was set at construction, +codepoint+ is treated as
+      # a *target* codepoint — the source codepoint that maps to it via
+      # +remap+ is what actually gets looked up. Returns +nil+ for
+      # codepoints the remap does not cover.
+      #
       # @param codepoint [Integer]
       # @return [Integer, nil]
       def gid_for_codepoint(codepoint)
+        src_cp = source_codepoint_for(codepoint)
+        return nil unless src_cp
+
         case @font
-        when Fontisan::Ufo::Font then ufo_gid_for(codepoint)
-        else bin_data_gid_for(codepoint)
+        when Fontisan::Ufo::Font then ufo_gid_for(src_cp)
+        else bin_data_gid_for(src_cp)
         end
       end
 
@@ -317,13 +361,50 @@ module Fontisan
       end
 
       # Add Unicode codepoints from the cmap that map to this gid.
+      #
+      # When +remap+ was set at construction, the source's raw codepoints
+      # are translated through the remap (source→target), and source
+      # codepoints not in the remap are dropped. Otherwise the raw cmap
+      # codepoints are attached as-is.
       def add_cmap_unicodes(gid, glyph)
-        cmap = @font.table("cmap")
-        return unless cmap
+        effective_codepoints_for_gid(gid).each { |cp| glyph.add_unicode(cp) }
+      end
 
-        (cmap.unicode_mappings || {}).each do |cp, g|
-          glyph.add_unicode(cp) if g == gid
+      # Translate a caller-facing codepoint to the donor's own codepoint.
+      # Without remap, the two are identical. With remap, the caller's
+      # codepoint is the *target*; look up the source codepoint that
+      # maps to it. Returns +nil+ if no remap entry covers the target.
+      def source_codepoint_for(codepoint)
+        return codepoint unless @remap
+
+        @inverse_remap[codepoint]
+      end
+
+      # Codepoints that should be attached to a glyph at the given gid,
+      # after applying the remap (if any).
+      def effective_codepoints_for_gid(gid)
+        raw_cmap = self.raw_cmap
+        raw_cmap.each_with_object([]) do |(src_cp, g), cps|
+          next unless g == gid
+
+          if @remap
+            target = @remap[src_cp]
+            cps << target if target
+          else
+            cps << src_cp
+          end
         end
+      end
+
+      # The raw cmap hash from the donor's table. Always {src_cp => gid};
+      # never remapped. UFO sources return {} (no cmap table).
+      def raw_cmap
+        cmap = @font.table("cmap")
+        return {} unless cmap
+
+        cmap.unicode_mappings || {}
+      rescue StandardError
+        {}
       end
     end
   end
