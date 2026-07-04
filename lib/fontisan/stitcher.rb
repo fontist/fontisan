@@ -52,8 +52,8 @@ module Fontisan
       @deduplicate = deduplicate
     end
 
-    def add_source(label, font)
-      @sources[label.to_sym] = Source.new(font)
+    def add_source(label, font, remap: nil)
+      @sources[label.to_sym] = Source.new(font, remap: remap)
     end
 
     def include_range(range, from:, into:)
