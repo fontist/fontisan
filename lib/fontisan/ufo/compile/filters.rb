@@ -26,6 +26,8 @@ module Fontisan
                  "fontisan/ufo/compile/filters/sort_contours"
         autoload :PropagateAnchors,
                  "fontisan/ufo/compile/filters/propagate_anchors"
+        autoload :RemoveOverlaps,
+                 "fontisan/ufo/compile/filters/remove_overlaps"
 
         # Filters that MUST run for TTF output (TrueType only
         # supports quadratic curves + clockwise outer winding).
@@ -47,6 +49,7 @@ module Fontisan
           transformations: Transformations,
           sort_contours: SortContours,
           propagate_anchors: PropagateAnchors,
+          remove_overlaps: RemoveOverlaps,
         }.freeze
 
         # @param names [Array<Symbol>] filter names from REGISTRY

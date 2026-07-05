@@ -1,0 +1,175 @@
+= AFDKO Migration Guide
+
+This guide maps commands and concepts from Adobe Font Development
+Kit for OpenType (AFDKO) — `makeotf`, `otf2ttf`, `ttx`, `mergeFonts`,
+`rotateFont` — to their pure-Ruby equivalents in fontisan.
+
+fontisan's UFO pipeline replaces every AFDKO command for the
+compile/convert/validate workflows. No external toolchain required.
+
+== Command map
+
+[cols="1,1,3", options="header"]
+|===
+| AFDKO | fontisan | Notes
+
+| `makeotf -f font.ufo -o font.otf`
+| `fontisan ufo build font.ufo --output font.otf --to otf`
+| CFF1 output by default; pass `--to otf2` for CFF2 (variable fonts).
+
+| `makeotf -f font.ufo -o font.ttf`
+| `fontisan ufo build font.ufo --output font.ttf --to ttf`
+| TrueType (glyf) output. `cubic_to_quadratic` and
+  `reverse_contour_direction` filters run automatically.
+
+| `ttx font.ttf`
+| `fontisan ufo convert font.ttf font.ufo`
+| `ttx` produces XML; fontisan produces a typed UFO source directory.
+
+| `otf2ttf font.otf`
+| `fontisan convert font.otf font.ttf`
+| Outline conversion (CFF → glyf) is handled by the
+  `OutlineConverter` strategy; no Python required.
+
+| `mergeFonts out.ufo a.ufo b.ufo`
+| Use `Fontisan::Stitcher` (see link:STITCHER_GUIDE.adoc[Stitcher Guide])
+| Stitcher is more flexible — supports per-source codepoint remaps,
+  glyph-cap partitioning, and deduplication.
+
+| `rotateFont` (font info updates)
+| Edit `Fontisan::Ufo::Info` directly
+| fontisan exposes the full UFO model in Ruby.
+
+| `checkOutlinesUFO font.ufo`
+| `fontisan ufo validate font.ufo`
+| Plus the link:COLLECTION_VALIDATION.adoc[collection validator] for TTC/OTC.
+
+| (no AFDKO equivalent)
+| `fontisan ufo extract font.ufo A A.svg`
+| Per-glyph standalone SVG export — new in fontisan.
+|===
+
+== Compile-time options
+
+AFDKO uses a `font.ufo/lib.plist` `com.github.fonttools` manifest
+plus a `FontMenuNameDB` / `GlyphOrderAndAliasDB` file pair. fontisan
+takes those inline:
+
+[source,ruby]
+----
+ufo = Fontisan::Ufo::Font.open("font.ufo")
+ufo.info.family_name = "MyFont"
+ufo.info.postscript_full_name = "MyFont-Regular"
+
+# Apply a uniform scale before compile (AFDKO's -sh / -sz options)
+Fontisan::Ufo::Compile::Filters.apply(
+  [:transformations],
+  ufo.layers.default_layer.glyphs.values,
+  matrix: [1.1, 0, 0, 1.1, 0, 0] # 110% scale
+)
+
+Fontisan::Ufo::Convert.convert(ufo, to: :otf, output_path: "font.otf")
+----
+
+== Variable fonts
+
+AFDKO's `makeotf -f default.ufo -i instances/...` master-instance
+model maps to fontisan's `Ufo::Compile::VariableTtf` /
+`VariableOtf` compilers, which read the UFO's `fvar` + `gvar` +
+designspace data directly.
+
+[source,ruby]
+----
+ufo = Fontisan::Ufo::Font.open("MyVariable.ufo")
+Fontisan::Ufo::Compile::VariableTtf.new(ufo).compile(output_path: "MyVariable.ttf")
+----
+
+For OTF (CFF2) variable fonts, use `Compile::VariableOtf` or pass
+`to: :otf2` through the dispatcher.
+
+== Filter pipelines
+
+AFDKO has no first-class filter pipeline — you'd shell out to
+Python fontTools `ufo2ft.filters.*`. fontisan ships the equivalent
+filters in pure Ruby:
+
+[source,ruby]
+----
+glyphs = ufo.layers.default_layer.glyphs.values
+
+Fontisan::Ufo::Compile::Filters.apply(
+  %i[
+    decompose_components
+    propagate_anchors
+    cubic_to_quadratic
+    reverse_contour_direction
+    sort_contours
+  ],
+  glyphs
+)
+----
+
+Run them in this order: decompose first (so subsequent filters see
+only simple glyphs), then propagate anchors (uses base glyphs'
+anchors), then the TrueType-required conversions, finally sort.
+
+== Output formats at a glance
+
+fontisan can produce every format AFDKO can, plus a few AFDKO
+cannot:
+
+[cols="1,1", options="header"]
+|===
+| Format | Command
+
+| TrueType (`.ttf`)
+| `fontisan ufo build f.ufo --output f.ttf`
+
+| OpenType CFF1 (`.otf`)
+| `fontisan ufo build f.ufo --output f.otf --to otf`
+
+| OpenType CFF2 (`.otf`, variable)
+| `fontisan ufo build f.ufo --output f.otf --to otf2`
+
+| WOFF (compressed TTF/OTF)
+| `fontisan ufo convert f.ufo f.woff`
+
+| WOFF2 (Brotli-compressed)
+| `fontisan ufo convert f.ufo f.woff2`
+
+| Mac dfont (resource fork)
+| `fontisan ufo convert f.ufo f.dfont`
+
+| TrueType Collection (`.ttc`)
+| `fontisan ufo convert f.ufo f.ttc`
+
+| OpenType Collection (`.otc`)
+| `fontisan ufo convert f.ufo f.otc`
+
+| PostScript Type 1 Binary (`.pfb`)
+| `fontisan ufo convert f.ufo f.pfb`
+
+| PostScript Type 1 ASCII (`.pfa`)
+| `fontisan ufo convert f.ufo f.pfa`
+|===
+
+== Why migrate
+
+* **No AFDKO install** — fontisan is a Ruby gem; no separate
+  toolchain to license, install, or version-pin.
+* **No Python dependency** — fontisan is pure Ruby. Eliminates the
+  Python fontTools + ufo2ft + ufoLib2 stack from your build.
+* **Single source of truth** — fontisan reads, writes, and round-trips
+  every format. No format-specific tools.
+* **Programmatic API** — every CLI command has a Ruby equivalent
+  under `Fontisan::Ufo::*`. Scriptable in ways AFDKO shells cannot
+  match.
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide] — full reference
+  for the compile / convert / filter / CLI surface.
+* link:STITCHER_GUIDE.adoc[Stitcher Guide] — replaces `mergeFonts`
+  with codepoint remaps, partition strategies, and dedup.
+* link:CFF2_SUPPORT.adoc[CFF2 Support] — variable-font blend
+  operators.
