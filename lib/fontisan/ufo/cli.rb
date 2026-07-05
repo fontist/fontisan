@@ -14,20 +14,15 @@ module Fontisan
       method_option :output, type: :string, required: true,
                              desc: "Output file path"
       method_option :to, type: :string, default: "ttf",
-                         desc: "Output format (ttf or otf)"
+                         desc: "Output format (ttf, otf, or otf2)"
       def build(ufo)
         font = Font.open(ufo)
-        format_sym = (options[:to] || "ttf").to_s.downcase.to_sym
-        compiler =
-          case format_sym
-          when :ttf then Compile::TtfCompiler
-          when :otf then Compile::OtfCompiler
-          else
-            warn "unknown format: #{options[:to].inspect}"
-            exit 1
-          end
-        compiler.new(font).compile(output_path: options[:output])
+        format = (options[:to] || "ttf").to_s.downcase.to_sym
+        Convert.convert(font, to: format, output_path: options[:output])
         puts "wrote #{options[:output]} (#{File.size(options[:output])} bytes)"
+      rescue ArgumentError => e
+        warn e.message
+        exit 1
       rescue Errno::ENOENT
         warn "UFO not found: #{ufo}"
         exit 1
@@ -35,20 +30,12 @@ module Fontisan
 
       desc "convert INPUT OUTPUT", "Convert between UFO and binary formats"
       method_option :to, type: :string,
-                         desc: "Override format detection (ttf, otf, ufo)"
+                         desc: "Override format detection (ttf, otf, otf2, ufo)"
       def convert(input, output)
         if ufo?(input)
           font = Font.open(input)
           format = options[:to] || File.extname(output).delete(".").downcase
-          compiler =
-            case format.to_sym
-            when :ttf then Compile::TtfCompiler
-            when :otf then Compile::OtfCompiler
-            else
-              warn "unsupported output format: #{format.inspect}"
-              exit 1
-            end
-          compiler.new(font).compile(output_path: output)
+          Convert.convert(font, to: format.to_sym, output_path: output)
         else
           # Binary → UFO
           loaded = Fontisan::FontLoader.load(input)
@@ -56,6 +43,9 @@ module Fontisan
           Writer.new(ufo).write(output)
         end
         puts "wrote #{output}"
+      rescue ArgumentError => e
+        warn e.message
+        exit 1
       end
 
       desc "validate UFO", "Check a UFO source for structural issues"
