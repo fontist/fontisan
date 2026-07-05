@@ -109,8 +109,13 @@ module Fontisan
         # URLs come from FixtureFonts config (version-controlled), not
         # user input — same trust model as the previous inline URI.open
         # call in the Rakefile.
+        #
+        # Parsing with URI.parse first satisfies CodeQL's "open with
+        # non-constant value" check: any string that isn't a valid URI
+        # raises URI::InvalidURIError before OpenURI can dispatch on
+        # it. The parsed URI's .open is OpenURI's standard entry.
         # rubocop:disable Security/Open
-        URI.open(url, open_uri_options) do |remote|
+        URI.parse(url).open(open_uri_options) do |remote|
           File.open(destination, "wb") do |file|
             IO.copy_stream(remote, file)
           end

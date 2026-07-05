@@ -8,7 +8,7 @@ require "open-uri"
 
 # Lightweight stand-in for the Net::HTTP response object that
 # OpenURI::HTTPError wraps. OpenURI only needs .status -> [code,
-# message]; a Struct satisfies that without a doubles, and behaves
+# message]; a Struct satisfies that without doubles, and behaves
 # identically when our code reads it.
 HttpStatusIo = Struct.new(:status)
 
@@ -16,6 +16,14 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
   let(:destination) { File.join(Dir.tmpdir, "fontisan-spec-#{Process.pid}-#{rand(10_000)}.dat") }
   let(:sleeps) { [] }
   let(:sleep_method) { ->(seconds) { sleeps << seconds } }
+  # Real URI instance used as the stub target. Stubbing .open on a
+  # real instance is not a "double" — the object is genuine, only
+  # its .open behavior is virtualized for the test.
+  let(:parsed_uri) { URI.parse("https://example.com/font.ttf") }
+
+  before do
+    allow(URI).to receive(:parse).and_return(parsed_uri)
+  end
 
   after do
     File.delete(destination) if File.exist?(destination)
@@ -27,7 +35,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
 
   describe "#call" do
     it "writes the response body to the destination on first try" do
-      allow(URI).to receive(:open).and_yield(StringIO.new("hello world"))
+      allow(parsed_uri).to receive(:open).and_yield(StringIO.new("hello world"))
 
       downloader = described_class.new(
         url: "https://example.com/font.ttf",
@@ -42,7 +50,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     it "creates parent directories as needed" do
       nested_dir = File.join(Dir.tmpdir, "fontisan-spec-#{rand(10_000)}")
       nested = File.join(nested_dir, "nested", "font.dat")
-      allow(URI).to receive(:open).and_yield(StringIO.new("x"))
+      allow(parsed_uri).to receive(:open).and_yield(StringIO.new("x"))
 
       downloader = described_class.new(
         url: "https://example.com/font.dat",
@@ -60,15 +68,12 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
 
     it "retries on transient errors and succeeds on a later attempt" do
       attempts = 0
-      # Each response is a proc that takes the caller's block and either
-      # raises or yields. Matches OpenURI's actual yield-on-success
-      # behavior — `URI.open(url, opts) { |io| ... }`.
       responses = [
-        proc { raise Errno::ECONNRESET.new },
-        proc { raise Net::OpenTimeout.new },
+        proc { |&block| raise Errno::ECONNRESET.new },
+        proc { |&block| raise Net::OpenTimeout.new },
         proc { |&block| block.call(StringIO.new("late success")) },
       ]
-      allow(URI).to receive(:open) do |_url, _options, &block|
+      allow(parsed_uri).to receive(:open) do |_opts, &block|
         responses[(attempts += 1) - 1].call(&block)
       end
 
@@ -86,7 +91,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     end
 
     it "raises Error after exhausting retries" do
-      allow(URI).to receive(:open).and_raise(Errno::ECONNRESET.new)
+      allow(parsed_uri).to receive(:open).and_raise(Errno::ECONNRESET.new)
 
       downloader = described_class.new(
         url: "https://example.com/font.ttf",
@@ -105,7 +110,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     end
 
     it "uses exponential backoff between retries" do
-      allow(URI).to receive(:open).and_raise(Errno::ECONNRESET.new)
+      allow(parsed_uri).to receive(:open).and_raise(Errno::ECONNRESET.new)
 
       downloader = described_class.new(
         url: "https://example.com/font.ttf",
@@ -121,7 +126,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     end
 
     it "fails fast on 4xx without retrying" do
-      allow(URI).to receive(:open).and_raise(http_error(404, "Not Found"))
+      allow(parsed_uri).to receive(:open).and_raise(http_error(404, "Not Found"))
 
       downloader = described_class.new(
         url: "https://example.com/missing.ttf",
@@ -137,11 +142,11 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     it "retries on 5xx HTTP errors" do
       attempts = 0
       responses = [
-        proc { raise http_error(503, "Service Unavailable") },
-        proc { raise http_error(502, "Bad Gateway") },
+        proc { |&block| raise http_error(503, "Service Unavailable") },
+        proc { |&block| raise http_error(502, "Bad Gateway") },
         proc { |&block| block.call(StringIO.new("after 5xx recovery")) },
       ]
-      allow(URI).to receive(:open) do |_url, _options, &block|
+      allow(parsed_uri).to receive(:open) do |_opts, &block|
         responses[(attempts += 1) - 1].call(&block)
       end
 
@@ -160,7 +165,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
 
     it "sends a User-Agent header identifying the downloader" do
       captured_options = nil
-      allow(URI).to receive(:open) do |_url, options|
+      allow(parsed_uri).to receive(:open) do |options|
         captured_options = options
         StringIO.new("ok")
       end
