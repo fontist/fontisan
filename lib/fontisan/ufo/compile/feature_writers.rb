@@ -16,6 +16,7 @@ module Fontisan
       # entry. No edits to the compiler.
       module FeatureWriters
         autoload :Base, "fontisan/ufo/compile/feature_writers/base"
+        autoload :MarkFamilyBase, "fontisan/ufo/compile/feature_writers/mark_family_base"
         autoload :Kern, "fontisan/ufo/compile/feature_writers/kern"
         autoload :Kern2, "fontisan/ufo/compile/feature_writers/kern2"
         autoload :Gdef, "fontisan/ufo/compile/feature_writers/gdef"

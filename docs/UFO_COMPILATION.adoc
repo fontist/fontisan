@@ -295,6 +295,72 @@ Prerequisite for Mark / Mkmk / Curs: run
 `Filters::PropagateAnchors` first so composite glyphs carry their
 inherited anchors.
 
+=== Usage examples
+
+==== Kern (pair kerning)
+
+Extract kerning pairs from a UFO's `kerning.plist`:
+
+[source,ruby]
+----
+font = Fontisan::Ufo::Font.open("MyFont.ufo")
+out = Fontisan::Ufo::Compile::FeatureWriters::Kern.new(font).write
+
+out.data[:pairs].each do |pair|
+  puts "#{pair[:left]} + #{pair[:right]} = #{pair[:value]}"
+end
+# A + V = -80.0
+# A + W = -60.0
+# ...
+----
+
+==== Gdef (glyph classification)
+
+Classify every glyph for GDEF:
+
+[source,ruby]
+----
+out = Fontisan::Ufo::Compile::FeatureWriters::Gdef.new(font).write
+out.data[:classes].each { |name, cls| puts "#{name}: #{cls}" }
+# A: 1 (base)
+# f_f_i.liga: 2 (ligature)
+# acutecomb: 3 (mark)
+# ...
+----
+
+==== Mark (mark-to-base attachment)
+
+Pair diacritical marks with base glyphs:
+
+[source,ruby]
+----
+out = Fontisan::Ufo::Compile::FeatureWriters::Mark.new(font).write
+out.data[:attachments]["top"][:marks]   # => {"acutecomb" => [100, 600], ...}
+out.data[:attachments]["top"][:bases]   # => {"A" => [100, 700], "B" => [90, 700], ...}
+----
+
+==== Mkmk (mark-to-mark attachment)
+
+Stack marks above each other:
+
+[source,ruby]
+----
+out = Fontisan::Ufo::Compile::FeatureWriters::Mkmk.new(font).write
+out.data[:attachments]["top"][:marks]       # => {"acutecomb" => [100, 650]}
+out.data[:attachments]["top"][:base_marks]  # => {"dieresiscomb" => [100, 700]}
+----
+
+==== Curs (cursive joining)
+
+Emit entry/exit anchors for Arabic-script glyphs:
+
+[source,ruby]
+----
+out = Fontisan::Ufo::Compile::FeatureWriters::Curs.new(font).write
+out.data[:attachments]["alef"]  # => {entry: [0, 100], exit: [100, 100]}
+out.data[:attachments"]["beh"]  # => {entry: [50, 50], exit: nil}
+----
+
 == CLI
 
 `fontisan ufo` exposes the four common operations:
