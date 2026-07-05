@@ -113,5 +113,10 @@ RSpec.configure do |config|
     def font_fixture_path(font_name, relative_path)
       FixtureFonts.path(font_name, relative_path)
     end
+
+    # Whether `python3` is on PATH and has fontTools installed.
+    def python_fonttools?
+      system("python3 -c 'import fontTools' >/dev/null 2>&1")
+    end
   end)
 end

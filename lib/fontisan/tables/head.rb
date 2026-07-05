@@ -18,6 +18,16 @@ module Fontisan
       # Magic number that must be present in the head table
       MAGIC_NUMBER = 0x5F0F3CF5
 
+      # Bit flags for the `flags` field (uint16), per OpenType spec.
+      # Only bits we currently reference are named here; see the OpenType
+      # `head` table specification for the full list.
+      #
+      # Bit 11 indicates the font data has been losslessly modified
+      # (e.g. by subsetting or WOFF2 encoding). Per WOFF2 spec section 5,
+      # encoders MUST set this bit. Chrome's OpenType Sanitizer (OTS)
+      # rejects WOFF2 files where it is not set.
+      FLAG_LOSSLESS_MODIFYING = 0x0800
+
       # Version as 16.16 fixed-point (stored as int32)
       int32 :version_raw
 

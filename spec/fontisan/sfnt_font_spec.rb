@@ -51,4 +51,28 @@ RSpec.describe Fontisan::SfntFont do
       end
     end
   end
+
+  describe "#table_names" do
+    # Regression: BinData::String tag values used to leak out through
+    # table_names and break downstream Hash lookups because
+    # BinData::String#eql? is encoding-sensitive and returns false for
+    # plain Ruby String literals.
+    it "returns plain UTF-8 Ruby Strings, not BinData::String" do
+      ttf_path = fixture_path("fonttools/TestTTF.ttf")
+      font = described_class.from_file(ttf_path)
+
+      tag = font.table_names.first
+      expect(tag).to be_a(String)
+      expect(tag.encoding).to eq(Encoding::UTF_8)
+      expect(tag).to eql(tag.to_s)
+    end
+
+    it "returns tags that match plain String literals via eql?" do
+      ttf_path = fixture_path("fonttools/TestTTF.ttf")
+      font = described_class.from_file(ttf_path)
+
+      expect(font.table_names).to include("head")
+      expect(font.table_names).to include("DSIG")
+    end
+  end
 end
