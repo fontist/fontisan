@@ -69,8 +69,8 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     it "retries on transient errors and succeeds on a later attempt" do
       attempts = 0
       responses = [
-        proc { |&block| raise Errno::ECONNRESET.new },
-        proc { |&block| raise Net::OpenTimeout.new },
+        proc { raise Errno::ECONNRESET.new },
+        proc { raise Net::OpenTimeout.new },
         proc { |&block| block.call(StringIO.new("late success")) },
       ]
       allow(parsed_uri).to receive(:open) do |_opts, &block|
@@ -142,8 +142,8 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
     it "retries on 5xx HTTP errors" do
       attempts = 0
       responses = [
-        proc { |&block| raise http_error(503, "Service Unavailable") },
-        proc { |&block| raise http_error(502, "Bad Gateway") },
+        proc { raise http_error(503, "Service Unavailable") },
+        proc { raise http_error(502, "Bad Gateway") },
         proc { |&block| block.call(StringIO.new("after 5xx recovery")) },
       ]
       allow(parsed_uri).to receive(:open) do |_opts, &block|
