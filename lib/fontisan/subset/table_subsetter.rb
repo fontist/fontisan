@@ -56,6 +56,8 @@ module Fontisan
         @options = options
         @glyf_data = nil
         @loca_offsets = nil
+        @subset_bbox = nil      # [xMin, yMin, xMax, yMax] over actual subset glyphs
+        @subset_max_advance = 0 # largest advanceWidth in subset hmtx
       end
 
       # Subset a table by tag
@@ -110,10 +112,12 @@ module Fontisan
         data
       end
 
-      # Subset hhea table (update numberOfHMetrics)
+      # Subset hhea table (update numberOfHMetrics + advanceWidthMax)
       #
-      # Updates the numberOfHMetrics field to reflect the number of
-      # horizontal metrics in the subset font.
+      # Updates numberOfHMetrics to reflect the subset's glyph count and
+      # recomputes advanceWidthMax from the subset's actual hmtx. The
+      # source TTC's advanceWidthMax covers every donor font and is far
+      # larger than any per-block subset needs.
       #
       # @param table [Hhea] Parsed hhea table
       # @param hmtx [Hmtx, nil] Optional parsed hmtx table (for calculating metrics)
@@ -128,8 +132,17 @@ module Fontisan
                               calculate_number_of_h_metrics
                             end
 
-        # Update numberOfHMetrics field (at offset 34, uint16)
+        # numberOfHMetrics at offset 34 (uint16)
         data[34, 2] = [new_num_h_metrics].pack("n")
+
+        # advanceWidthMax at offset 10 (uint16). Recompute from subset
+        # hmtx so a per-block subset doesn't keep the source TTC's
+        # max (which can be 4x larger than any glyph in the subset).
+        # Tables are processed alphabetically (hhea before hmtx), so
+        # we read hmtx directly here rather than relying on a cached
+        # value from subset_hmtx.
+        new_max = compute_subset_max_advance
+        data[10, 2] = [new_max].pack("n") if new_max.positive?
 
         data
       end
@@ -152,14 +165,18 @@ module Fontisan
         # Build new hmtx data
         data = String.new(encoding: Encoding::BINARY)
 
+        max_advance = 0
         mapping.old_ids.each do |old_id|
           metric = table.metric_for(old_id)
           next unless metric
 
-          data << [metric[:advance_width]].pack("n")
+          advance = metric[:advance_width]
+          max_advance = advance if advance && advance > max_advance
+          data << [advance].pack("n")
           data << [metric[:lsb]].pack("n")
         end
 
+        @subset_max_advance = max_advance
         data
       end
 
@@ -264,8 +281,32 @@ module Fontisan
       #
       # @param table [Head] Parsed head table
       # @return [String] Binary data of subset head table
+      # Subset head table (recompute bbox from actual subset glyphs)
+      #
+      # The source TTC's head.xMin/yMin/xMax/yMax covers every donor
+      # font in the collection — far larger than any per-block subset.
+      # Browsers and layout engines use head bbox (plus hhea + OS/2)
+      # to compute line height and clip text; a too-large bbox makes
+      # glyphs render at the wrong visual size.
+      #
+      # @param _table [Head] Parsed head table (unused; we re-serialize
+      #   directly from font.table_data so we don't lose other fields)
+      # @return [String] Binary data of subset head table
       def subset_head(_table)
-        font.table_data["head"]
+        # Trigger glyf build (which populates @subset_bbox) if not done.
+        glyf = font.table("glyf")
+        build_glyf_and_loca(glyf) unless @glyf_data
+
+        data = font.table_data["head"].dup
+
+        if @subset_bbox
+          x_min, y_min, x_max, y_max = @subset_bbox
+          # head layout: xMin at offset 36, yMin 38, xMax 40, yMax 42
+          # (each int16, big-endian, signed)
+          data[36, 8] = [x_min, y_min, x_max, y_max].pack("n4")
+        end
+
+        data
       end
 
       # Subset OS/2 table (optionally prune Unicode ranges)
@@ -295,6 +336,32 @@ module Fontisan
         mapping.size
       end
 
+      # Compute the largest advanceWidth across all subset glyphs by
+      # reading the source hmtx directly. Called from subset_hhea
+      # because hhea is processed before hmtx (alphabetical order).
+      #
+      # @return [Integer] max advanceWidth, or 0 if no metrics found
+      def compute_subset_max_advance
+        hmtx = font.table("hmtx")
+        return 0 unless hmtx
+
+        unless hmtx.parsed?
+          hhea = font.table("hhea")
+          maxp = font.table("maxp")
+          hmtx.parse_with_context(hhea.number_of_h_metrics, maxp.num_glyphs)
+        end
+
+        max_advance = 0
+        mapping.old_ids.each do |old_id|
+          metric = hmtx.metric_for(old_id)
+          next unless metric
+
+          advance = metric[:advance_width]
+          max_advance = advance if advance && advance > max_advance
+        end
+        max_advance
+      end
+
       # Build glyf and loca tables together
       #
       # This method extracts glyph data for all glyphs in the mapping,
@@ -318,6 +385,17 @@ module Fontisan
         @loca_offsets = []
         current_offset = 0
 
+        # Track union bbox across all subset glyphs. Glyph binary layout:
+        #   int16 numberOfContours (offset 0)
+        #   int16 xMin (offset 2)
+        #   int16 yMin (offset 4)
+        #   int16 xMax (offset 6)
+        #   int16 yMax (offset 8)
+        bbox_x_min = 1 << 30
+        bbox_y_min = 1 << 30
+        bbox_x_max = -(1 << 30)
+        bbox_y_max = -(1 << 30)
+
         # Process glyphs in mapping order
         mapping.old_ids.each do |old_id|
           @loca_offsets << current_offset
@@ -334,6 +412,21 @@ module Fontisan
           # Extract glyph data
           glyph_data = glyf_table.raw_data[offset, size]
 
+          # Update bbox union. Each glyph has at least 10 bytes of
+          # header (numberOfContours + 4 int16 bbox fields).
+          if glyph_data.bytesize >= 10
+            _n, gx_min, gy_min, gx_max, gy_max = glyph_data[0, 10].unpack("n5")
+            # Treat as signed int16
+            gx_min = (gx_min ^ 0x8000) - 0x8000
+            gy_min = (gy_min ^ 0x8000) - 0x8000
+            gx_max = (gx_max ^ 0x8000) - 0x8000
+            gy_max = (gy_max ^ 0x8000) - 0x8000
+            bbox_x_min = gx_min if gx_min < bbox_x_min
+            bbox_y_min = gy_min if gy_min < bbox_y_min
+            bbox_x_max = gx_max if gx_max > bbox_x_max
+            bbox_y_max = gy_max if gy_max > bbox_y_max
+          end
+
           # Check if compound glyph and remap components
           if compound_glyph?(glyph_data)
             glyph_data = remap_compound_glyph(glyph_data)
@@ -346,6 +439,11 @@ module Fontisan
 
         # Add final offset
         @loca_offsets << current_offset
+
+        # Stash union bbox if we saw at least one non-empty glyph.
+        return if bbox_x_min > bbox_x_max
+
+        @subset_bbox = [bbox_x_min, bbox_y_min, bbox_x_max, bbox_y_max]
       end
 
       # Check if glyph data represents a compound glyph
