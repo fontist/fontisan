@@ -1,0 +1,263 @@
+= Feature Parity — Tools fontisan Replaces
+
+fontisan is a pure-Ruby replacement for several established font
+toolchains. This page lists every external tool fontisan can
+substitute for, with notes on coverage and migration paths.
+
+== Adobe Font Development Kit for OpenType (AFDKO)
+
+The AFDKO ships a suite of command-line tools for font
+development. fontisan replaces every one in pure Ruby.
+
+[cols="1,1,3", options="header"]
+|===
+| AFDKO | fontisan | Notes
+
+| `makeotf -f font.ufo -o font.otf`
+| `fontisan ufo build font.ufo --output font.otf --to otf`
+| CFF1 by default; `--to otf2` for CFF2 (variable fonts).
+
+| `makeotf -f font.ufo -o font.ttf`
+| `fontisan ufo build font.ufo --output font.ttf --to ttf`
+| TrueType (glyf). `cubic_to_quadratic` +
+  `reverse_contour_direction` filters run automatically.
+
+| `ttx font.ttf` / `ttx font.ttx`
+| `fontisan export font.ttf --format ttx` / `fontisan info font.ttx`
+| See link:TTX.adoc[TTX Support]. Byte-compatible output for
+  typed tables.
+
+| `otf2ttf font.otf`
+| `fontisan convert font.otf font.ttf`
+| Outline conversion (CFF → glyf) via `OutlineConverter`.
+
+| `mergeFonts out.ufo a.ufo b.ufo`
+| `Fontisan::Stitcher` (see link:STITCHER_GUIDE.adoc[Stitcher Guide])
+| More flexible: per-source codepoint remaps, partition
+  strategies (Plane/Block/Script), glyph-cap enforcement,
+  deduplication.
+
+| `rotateFont` (font-info updates)
+| Edit `Fontisan::Ufo::Info` directly
+| fontisan exposes the full UFO model in Ruby.
+
+| `checkOutlinesUFO font.ufo`
+| `fontisan ufo validate font.ufo`
+| Plus the link:COLLECTION_VALIDATION.adoc[collection validator]
+  for TTC/OTC.
+
+| (no AFDKO equivalent)
+| `fontisan ufo extract font.ufo A A.svg`
+| Per-glyph standalone SVG export.
+|===
+
+link:AFDKO_MIGRATION.adoc[AFDKO Migration Guide] → full command
+reference and pipeline examples.
+
+== LCDF Typetools (`otfinfo`)
+
+`otfinfo` from http://www.lcdf.org/type/[LCDF Typetools] is the
+canonical font-metadata display tool. fontisan replaces it
+entirely.
+
+[cols="1,1", options="header"]
+|===
+| otfinfo | fontisan
+
+| `otfinfo -i font.otf`
+| `fontisan info font.otf`
+
+| `otfinfo --brief font.otf` (fast)
+| `fontisan info font.otf --brief` (~5× faster, metadata-only)
+
+| Per-flag queries (`--family`, `--postscript-name`, etc.)
+| `--fields` flag selects specific fields
+|===
+
+fontisan supports every field `otfinfo` produces, plus extras
+(color capabilities, variable-font detail, OpenType layout
+features). The `info` command auto-detects file format from
+magic bytes — never trusts extensions.
+
+== `extract_ttc`
+
+https://github.com/fontist/extract_ttc[extract_ttc] extracts
+fonts from a TrueType/OpenType Collection (`.ttc`/`.otc`).
+fontisan replaces it with Docker-style subcommands:
+
+[source,bash]
+----
+# extract_ttc
+extract_ttc font.ttc
+
+# fontisan
+fontisan collection ls font.ttc      # list faces
+fontisan collection info font.ttc    # per-face metadata
+fontisan collection extract font.ttc # write each face to disk
+----
+
+link:docs/EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide] →
+full command mapping.
+
+== Python fontTools + ufoLib2 + ufo2ft
+
+fontTools is the dominant Python font library. fontisan replaces
+its core surfaces in pure Ruby:
+
+[cols="1,1,3", options="header"]
+|===
+| fontTools / ufoLib2 / ufo2ft | fontisan | Coverage
+
+| `fontTools.ttx` (TTX I/O)
+| `Fontisan::Export::TtxParser` + `TtxGenerator` (see link:TTX.adoc[TTX])
+| Typed read/write of every standard table.
+
+| `ufoLib2` (UFO model layer)
+| `Fontisan::Ufo::*` (16 model classes)
+| Substantially complete. Allotments: Info, Font, Layer, LayerSet,
+  Glyph, Contour, Point, Component, Anchor, Guideline, Image,
+  Kerning, Features, Lib, DataSet, ImageSet.
+
+| `ufo2ft.compile*` (UFO compile)
+| `Fontisan::Ufo::Compile::TtfCompiler` / `OtfCompiler` /
+  `Otf2Compiler` / `VariableTtf` / `VariableOtf`
+| Full compile pipeline. TTF, OTF (CFF1), OTF2 (CFF2), variable.
+
+| `ufo2ft.filters.*` (glyph filters)
+| `Fontisan::Ufo::Compile::Filters::*`
+| 8/8: cubic_to_quadratic, decompose_components,
+  flatten_components, reverse_contour_direction, transformations,
+  sort_contours, propagate_anchors, remove_overlaps (bbox approx).
+
+| `ufo2ft.featureWriters.*` (GSUB/GPOS writers)
+| `Fontisan::Ufo::Compile::FeatureWriters::*`
+| 6/6 commonly-needed: Kern, Kern2, Gdef, Mark, Mkmk, Curs. Each
+  returns structured data for the table builders to encode.
+
+| `fontTools.subset` (pyftsubset)
+| `Fontisan::Subset::*` + `fontisan subset` CLI
+| Profiles: PDF, web, minimal. Codepoint subset + table
+  stripping.
+
+| `fontTools.merge` (pyftmerge)
+| `Fontisan::Stitcher` (see link:STITCHER_GUIDE.adoc[Stitcher Guide])
+| More flexible than pyftmerge: explicit per-face codepoint
+  binding, deduplication, partition by plane/block/script.
+
+| `fontTools.varLib` (variable font assembly)
+| `Fontisan::Ufo::Compile::VariableTtf` / `VariableOtf` /
+  `Avar` / `Hvar` / `Mvar` / `Stat` / `Gvar` / `Fvar`
+| Full variable-font compile from UFO masters.
+|===
+
+== Type 1 font tools
+
+fontisan parses and generates Type 1 fonts (`.pfb`, `.pfa`),
+replacing several specialty tools:
+
+[cols="1,1,3", options="header"]
+|===
+| Tool | fontisan | Notes
+
+| `t1disasm` / `t1asm` (Type 1 dis/assembler)
+| `Fontisan::Type1::PfbParser` / `PFBGenerator` /
+  `PFAGenerator`
+| Round-trips PFB ↔ Type 1 charstring tokens.
+
+| `t1embed` / `t1unembed` (font embedding)
+| `Fontisan::Type1::Decryptor` + charstring layer
+| Eexec decryption + charstring de-encryption.
+
+| PFM Tools (`pfm2afm`, etc.)
+| `Fontisan::Type1::PfmParser` + `AfmGenerator`
+| Round-trip PFM ↔ AFM.
+|===
+
+link:TYPE1_FONTS.adoc[Type 1 Fonts Guide] → full reference.
+
+== WOFF / WOFF2 compress / decompress
+
+[cols="1,1,3", options="header"]
+|===
+| Tool | fontisan | Notes
+
+| Google `woff2_compress`
+| `Fontisan::Converters::WoffWriter`
+| zlib compression for WOFF.
+
+| Google `woff2_decompress`
+| `Fontisan::FontLoader.load` (auto-detects WOFF2)
+| Decompresses to in-memory TTF/OTF.
+
+| Google `woff2_compress` (Brotli)
+| `Fontisan::Converters::Woff2Encoder`
+| Brotli compression for WOFF2 with optional table transforms.
+|===
+
+link:WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Formats Guide] → full
+reference.
+
+== Variable font tools
+
+[cols="1,1,3", options="header"]
+|===
+| Tool | fontisan | Notes
+
+| `fontTools.varLib.instancer`
+| `Fontisan::Variation::Optimizer` + `InstantiateCommand`
+| Generates static instances from a variable font.
+
+| `fontTools.varLib.merger`
+| `Fontisan::Ufo::Compile::VariableTtf` / `VariableOtf`
+| Merges UFO masters into a variable font.
+
+| `fontTools.ttLib` variable-font table read/write
+| `Tables::Fvar`, `Tables::Gvar`, `Tables::Avar`, `Tables::Hvar`,
+  `Tables::Vvar`, `Tables::Mvar`, `Tables::Stat`
+| Full read/write for every variation table.
+|===
+
+link:VARIABLE_FONT_OPERATIONS.adoc[Variable Font Operations] →
+full reference.
+
+== Validation
+
+[cols="1,1,3", options="header"]
+|===
+| Tool | fontisan | Notes
+
+| `fontTools.fontBuilder` (validation hooks)
+| `Fontisan::Validators::*` (DSL framework)
+| Profiles: indexability, usability, production, web,
+  spec_compliance, default. Each profile = set of checks.
+
+| `fontTools.ttx` round-trip checks
+| `fontisan validate font.ttf`
+| Runs every check in the chosen profile.
+|===
+
+link:VALIDATION.adoc[Validation Guide] → full reference.
+
+== What fontisan does NOT replace
+
+For honesty:
+
+* **Glyph editing GUI** — fontisan is a library, not a font
+  editor. Use FontForge, Glyphs, RoboFont, or FontLab for visual
+  editing; use fontisan for the build/inspect/validate pipeline.
+* **Glyph drawing from scratch** — fontisan reads/writes outline
+  data but has no canvas/drawing primitives. Generate outlines in
+  an editor or programmatically via the UFO model.
+* **Bitmap font rendering** — fontisan is for font files, not
+  rasterizing text. Use HarfBuzz + a renderer for that.
+* **Heavy polygon clipping** — fontisan's `remove_overlaps`
+  filter uses a bounding-box approximation. For production-grade
+  boolean ops, preprocess in FontLab or use the `clipper` gem.
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide]
+* link:TTX.adoc[TTX Support]
+* link:STITCHER_GUIDE.adoc[Stitcher Guide]
+* link:AFDKO_MIGRATION.adoc[AFDKO Migration Guide]
+* link:EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide]
