@@ -20,6 +20,8 @@ module Fontisan
                  "fontisan/ufo/compile/filters/decompose_components"
         autoload :FlattenComponents,
                  "fontisan/ufo/compile/filters/flatten_components"
+        autoload :Transformations,
+                 "fontisan/ufo/compile/filters/transformations"
 
         # Filters that MUST run for TTF output (TrueType only
         # supports quadratic curves + clockwise outer winding).
@@ -38,6 +40,7 @@ module Fontisan
           cubic_to_quadratic: CubicToQuadratic,
           decompose_components: DecomposeComponents,
           flatten_components: FlattenComponents,
+          transformations: Transformations,
         }.freeze
 
         # @param names [Array<Symbol>] filter names from REGISTRY
