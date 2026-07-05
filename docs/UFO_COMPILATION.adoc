@@ -221,6 +221,80 @@ Available filters:
 Adding a new filter = one file under `compile/filters/` + one entry
 in `REGISTRY`. No edits to other filters required (OCP).
 
+== Feature writers (Phase 2)
+
+Feature writers extract GSUB/GPOS feature data from a UFO source
+into structured form for the table builders to encode. Each writer
+extends `FeatureWriters::Base` with a `#write` method that returns
+either a `FeatureOutput` value object or `nil` (when the UFO has
+no data for the feature).
+
+[source,ruby]
+----
+require "fontisan/ufo/compile/feature_writers"
+
+font = Fontisan::Ufo::Font.open("MyFont.ufo")
+Fontisan::Ufo::Compile::FeatureWriters::DEFAULT_WRITERS.each do |writer_cls|
+  output = writer_cls.new(font).write
+  next unless output
+
+  puts "#{output.table_tag} / #{output.feature_tag} (lookup #{output.lookup_type})"
+end
+----
+
+Available writers:
+
+[cols="1,1,3", options="header"]
+|===
+| Writer | GPOS / GSUB | What it emits
+
+| `FeatureWriters::Kern`
+| GPOS lookup 2 (`kern`)
+| PairPos kerning pairs from `font.kerning` (parsed from
+  `kerning.plist`).
+
+| `FeatureWriters::Kern2`
+| GPOS lookup 2 (`kern`, format 2)
+| Same pair data as Kern, tagged for the extended PairPos format
+  (device tables, cross-stream values). Use when you need
+  sub-pixel kerning.
+
+| `FeatureWriters::Gdef`
+| GDEF
+| GlyphClassDef — classifies every glyph as base/ligature/mark/
+  spacing. Prefers `public.openTypeCategory` lib entry; falls
+  back to heuristic (mark anchors, `.liga` suffix).
+
+| `FeatureWriters::Mark`
+| GPOS lookup 4 (`mark`)
+| MarkToBase attachment. Pairs every glyph with a `_<name>`
+  anchor (mark) against every glyph with the matching `<name>`
+  anchor (base).
+
+| `FeatureWriters::Mkmk`
+| GPOS lookup 6 (`mkmk`)
+| MarkToMark attachment. Same convention as Mark but pairs marks
+  with other marks. Anchors are `_<name>mkmk` (attach-from) ↔
+  `<name>mkmk` (attach-to).
+
+| `FeatureWriters::Curs`
+| GPOS lookup 3 (`curs`)
+| Cursive attachment. Emits entry/exit anchor positions for
+  joining-script glyphs.
+|===
+
+`FeatureWriters::DEFAULT_WRITERS = [Gdef, Kern, Mark, Mkmk, Curs]`.
+The compiler runs all by default; each returns `nil` when the UFO
+has no data for its feature, so it's safe to always run them all.
+
+Adding a new writer = one file under `compile/feature_writers/` +
+one entry in `DEFAULT_WRITERS`. No edits to other writers required
+(OCP).
+
+Prerequisite for Mark / Mkmk / Curs: run
+`Filters::PropagateAnchors` first so composite glyphs carry their
+inherited anchors.
+
 == CLI
 
 `fontisan ufo` exposes the four common operations:
