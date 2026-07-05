@@ -60,11 +60,15 @@ Font compilation and assembly::
 * UFO → TTF compilation with cubic-to-quadratic conversion and winding-order correction (see link:docs/UFO_COMPILATION.adoc[UFO Compilation Guide])
 * UFO → OTF (CFF1) compilation with Type 2 charstring encoding
 * UFO → OTF (CFF2) compilation with variable-font blend/vsindex operators (see link:docs/CFF2_SUPPORT.adoc[CFF2 Support Guide])
+* UFO → all binary formats via the `Ufo::Convert` dispatcher: TTF, OTF, OTF2, WOFF, WOFF2, dfont, TTC, OTC, PFB, PFA
+* UFO feature writers: GDEF glyph classification, GPOS kern/mark/mkmk/curs (see link:docs/UFO_COMPILATION.adoc[UFO Compilation Guide — Filters + Feature Writers])
+* Glyph-processing filters: cubic_to_quadratic, decompose_components, flatten_components, reverse_contour_direction, transformations, sort_contours, propagate_anchors, remove_overlaps
 * Multi-source font stitching with explicit subfont declaration and TTC/OTC collection output (see link:docs/STITCHER_GUIDE.adoc[Stitcher Guide])
 * SVG path → UFO glyph conversion for chart-extracted glyphs (see link:docs/SVG_TO_GLYF.adoc[SVG to Glyph Guide])
 * Variable font compilation: fvar, gvar, HVAR, MVAR, avar, STAT tables
 * Signature-based glyph deduplication with 65,535 glyph cap enforcement
 * Compound (composite) TrueType glyph flattening
+* AFDKO migration: drop-in replacement for `makeotf`, `otf2ttf`, `ttx`, `mergeFonts`, `checkOutlinesUFO` (see link:docs/AFDKO_MIGRATION.adoc[AFDKO Migration Guide])
 
 Color fonts and collections::
 * Color font table builders: COLR v0, CPAL, SVG table, sbix, CBDT/CBLC (see link:docs/COLOR_FONTS.adoc[Color Fonts Guide])

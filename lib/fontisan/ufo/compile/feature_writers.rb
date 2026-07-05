@@ -17,14 +17,19 @@ module Fontisan
       module FeatureWriters
         autoload :Base, "fontisan/ufo/compile/feature_writers/base"
         autoload :Kern, "fontisan/ufo/compile/feature_writers/kern"
+        autoload :Kern2, "fontisan/ufo/compile/feature_writers/kern2"
         autoload :Gdef, "fontisan/ufo/compile/feature_writers/gdef"
         autoload :Mark, "fontisan/ufo/compile/feature_writers/mark"
+        autoload :Mkmk, "fontisan/ufo/compile/feature_writers/mkmk"
+        autoload :Curs, "fontisan/ufo/compile/feature_writers/curs"
 
         # Default writer set — what the compiler runs when the user
         # doesn't override. Per feature, +#write+ returns +nil+ when
         # the UFO has no data for that feature, so it's safe to
-        # always run them all.
-        DEFAULT_WRITERS = [Gdef, Kern, Mark].freeze
+        # always run them all. Order matters: Gdef first (so later
+        # writers can rely on glyph classification), then position
+        # features (kern, mark, mkmk, curs).
+        DEFAULT_WRITERS = [Gdef, Kern, Mark, Mkmk, Curs].freeze
       end
     end
   end
