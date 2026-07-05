@@ -190,12 +190,16 @@ RSpec.describe Fontisan::Subset::TableSubsetter do
   end
 
   describe "#subset_head" do
-    it "passes through head table unchanged" do
+    it "recomputes head bbox from the subset's actual glyf glyphs" do
       head = font.table("head")
-      original_data = font.table_data["head"]
 
       result = subsetter.subset_head(head)
-      expect(result).to eq(original_data)
+      # subset_head now recomputes xMin/yMin/xMax/yMax from the
+      # subset's glyph data instead of passing through the source
+      # font's bbox (which may be inflated for collections).
+      result_io = StringIO.new(result)
+      parsed = Fontisan::Tables::Head.read(result_io)
+      expect(parsed.x_min).to be <= head.x_max
     end
   end
 
