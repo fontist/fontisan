@@ -3,6 +3,14 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Tables::Head do
+  describe "constants" do
+    describe "FLAG_LOSSLESS_MODIFYING" do
+      it "is bit 11 (0x0800), per OpenType and WOFF2 spec" do
+        expect(described_class::FLAG_LOSSLESS_MODIFYING).to eq(0x0800)
+      end
+    end
+  end
+
   # Helper to build valid head table binary data
   def build_head_table(
     version: 1.0,

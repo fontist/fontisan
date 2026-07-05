@@ -431,9 +431,14 @@ module Fontisan
 
     # Get list of all table tags (cached for performance)
     #
-    # @return [Array<String>] Array of table tag strings
+    # Returns plain UTF-8 Ruby Strings, not BinData::String instances —
+    # callers can rely on `eql?`/`==`/Hash lookup working against literal
+    # strings. BinData::String is encoding-sensitive and breaks Hash key
+    # comparison silently.
+    #
+    # @return [Array<String>] Array of table tag strings (UTF-8)
     def table_names
-      @table_names ||= tables.map(&:tag)
+      @table_names ||= tables.map { |entry| normalize_tag(entry.tag) }
     end
 
     # Get OOP SfntTable instance for a table

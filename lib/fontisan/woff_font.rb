@@ -248,9 +248,12 @@ module Fontisan
 
     # Get list of all table tags
     #
-    # @return [Array<String>] Array of table tag strings
+    # Returns plain UTF-8 Ruby Strings so callers can compare with literals
+    # without BinData::String encoding-sensitive eql? failures.
+    #
+    # @return [Array<String>] Array of table tag strings (UTF-8)
     def table_names
-      table_entries.map(&:tag)
+      table_entries.map { |entry| entry.tag.to_s.force_encoding("UTF-8") }
     end
 
     # Get parsed table instance
