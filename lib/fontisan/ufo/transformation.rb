@@ -34,6 +34,17 @@ module Fontisan
       def to_a
         [a, b, c, d, e, f]
       end
+
+      # Apply this transformation to a single (x, y) coordinate.
+      #
+      # @param x [Numeric]
+      # @param y [Numeric]
+      # @return [Array(Float, Float)] the transformed [tx, ty]
+      def apply(x, y)
+        xf = x.to_f
+        yf = y.to_f
+        [a * xf + c * yf + e, b * xf + d * yf + f]
+      end
     end
   end
 end

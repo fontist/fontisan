@@ -336,10 +336,15 @@ module Fontisan
 
       # Apply a 2×3 affine matrix [a, b, c, d, e, f] to each point of
       # a simple component, appending the transformed contours.
-      #   x' = a*x + c*y + e
-      #   y' = b*x + d*y + f
+      # The math is delegated to +Transformation#apply+ so the
+      # affine-matrix logic lives in one place (DRY) — same code path
+      # the UFO Transformations filter uses.
       def flatten_simple_component(simple, ufo_glyph, matrix)
-        a, b, c, d, e, f = matrix
+        transform = Ufo::Transformation.new(
+          a: matrix[0], b: matrix[1],
+          c: matrix[2], d: matrix[3],
+          e: matrix[4], f: matrix[5]
+        )
         num_contours = simple.end_pts_of_contours&.size || 0
         return if num_contours.zero?
 
@@ -350,13 +355,12 @@ module Fontisan
           ufo_points = points.map do |pt|
             x = (pt[:x] || pt["x"]).to_f
             y = (pt[:y] || pt["y"]).to_f
-            tx = a * x + c * y + e
-            ty = b * x + d * y + f
+            tx, ty = transform.apply(x, y)
             on_curve = pt[:on_curve].nil? || pt[:on_curve]
             type = on_curve ? "line" : "offcurve"
-            Fontisan::Ufo::Point.new(x: tx, y: ty, type: type)
+            Ufo::Point.new(x: tx, y: ty, type: type)
           end
-          ufo_glyph.add_contour(Fontisan::Ufo::Contour.new(ufo_points))
+          ufo_glyph.add_contour(Ufo::Contour.new(ufo_points))
         end
       end
 
