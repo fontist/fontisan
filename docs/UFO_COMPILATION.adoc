@@ -110,10 +110,148 @@ ufo = Fontisan::Ufo::Convert::FromBinData.convert(ttf)
 Fontisan::Ufo::Writer.new(ufo).write("MyFont.ufo")
 ----
 
+== Conversion wrappers (Phase 3)
+
+For every binary format fontisan can write, there's a UFO → that
+format wrapper under `Ufo::Convert`. They split into two flavors:
+
+1-step wrappers (compile + write directly): `ToTtf`, `ToOtf`,
+`ToOtf2`.
+
+2-step wrappers (compile to TTF/OTF in a tmpfile, then encode):
+`ToWoff`, `ToWoff2`, `ToDfont`, `ToTtc`, `ToOtc`, `ToPfb`,
+`ToPfa`.
+
+The 2-step chain looks like:
+
+....
+UFO → Compile::*Compiler → tmpfile → FontLoader.load →
+       WoffWriter / Woff2Encoder / DfontBuilder /
+       Collection::Builder / Type1::PFB/PFAGenerator → output
+....
+
+The tmpfile is auto-cleaned (`Dir.mktmpdir`); the original UFO is
+never mutated.
+
+Use the unified dispatcher to pick a format by symbol:
+
+[source,ruby]
+----
+require "fontisan"
+
+ufo = Fontisan::Ufo::Font.open("MyFont.ufo")
+
+# 1-step
+Fontisan::Ufo::Convert.convert(ufo, to: :ttf, output_path: "MyFont.ttf")
+Fontisan::Ufo::Convert.convert(ufo, to: :otf, output_path: "MyFont.otf")
+
+# 2-step
+Fontisan::Ufo::Convert.convert(ufo, to: :woff2, output_path: "MyFont.woff2")
+Fontisan::Ufo::Convert.convert(ufo, to: :pfb,    output_path: "MyFont.pfb")
+----
+
+Format keys: `:ttf`, `:otf`, `:otf2`, `:woff`, `:woff2`, `:dfont`,
+`:ttc`, `:otc`, `:pfb`, `:pfa`. Unknown keys raise `ArgumentError`.
+
+For per-format options (zlib level, brotli quality, etc.) call the
+wrapper module directly — options forward through:
+
+[source,ruby]
+----
+Fontisan::Ufo::Convert::ToWoff2.convert(ufo,
+  output_path: "MyFont.woff2",
+  compiler: :otf,             # intermediate format
+  brotli_quality: 11,         # passed to Woff2Encoder
+  transform_tables: true)
+----
+
+== Glyph-processing filters (Phase 2)
+
+Filters sit between the UFO model and the binary compilers. Each is
+a stateless module under `Ufo::Compile::Filters` with a `.run(glyphs,
+**opts)` entry that mutates the glyph list in place. They're
+registered in `Filters::REGISTRY` so the compiler (or any caller)
+can apply them by symbol:
+
+[source,ruby]
+----
+glyphs = ufo.layers.default_layer.glyphs.values
+Fontisan::Ufo::Compile::Filters.apply(
+  %i[cubic_to_quadratic reverse_contour_direction sort_contours],
+  glyphs
+)
+----
+
+Available filters:
+
+[cols="1,3", options="header"]
+|===
+| Filter | What it does
+
+| `cubic_to_quadratic`
+| Convert cubic Bezier curves to quadratic (TrueType only supports
+  quadratic; UFO sources typically use cubic).
+
+| `reverse_contour_direction`
+| Reverse point order in every contour (TrueType wants clockwise
+  outer winding; UFO is PostScript counter-clockwise).
+
+| `decompose_components`
+| Replace composite-glyph components with their base glyph's
+  contours.
+
+| `flatten_components`
+| Collapse nested component chains (A→B→C becomes A→C).
+
+| `transformations`
+| Apply a 2×3 affine matrix to every glyph's contours + components
+  (mirroring, slant, scaling, custom offsets).
+
+| `sort_contours`
+| Rotate each contour to start with an on-curve point and sort
+  contours within each glyph by Y (descending) for hinting
+  compatibility.
+
+| `propagate_anchors`
+| Copy anchors from base glyphs to composite glyphs (transformed by
+  the component matrix) so the GPOS mark feature writer can find
+  them on composites.
+|===
+
+Adding a new filter = one file under `compile/filters/` + one entry
+in `REGISTRY`. No edits to other filters required (OCP).
+
+== CLI
+
+`fontisan ufo` exposes the four common operations:
+
+[source,bash]
+----
+# Compile a UFO to a binary font
+fontisan ufo build MyFont.ufo --output MyFont.ttf [--to otf|otf2]
+
+# Convert in either direction (UFO ↔ binary)
+fontisan ufo convert MyFont.ufo MyFont.woff2
+fontisan ufo convert MyFont.ttf  MyFont.ufo
+
+# Structural checks (no .notdef, no family name, etc.)
+fontisan ufo validate MyFont.ufo
+
+# Render one glyph as a standalone SVG
+fontisan ufo extract MyFont.ufo A A.svg
+----
+
+The `build` and `convert` commands route through the
+`Ufo::Convert.convert` dispatcher, so adding a new format = one
+registry entry — no CLI edits.
+
 == See also
 
+* link:AFDKO_MIGRATION.adoc[AFDKO Migration Guide] — switching from
+  `makeotf` / `otf2ttf` / `ttx` to fontisan's UFO pipeline.
 * link:CFF2_SUPPORT.adoc[CFF2 Support Guide] — variable-font blend
-  operators, FDSelect, subroutines, VariationStore
+  operators, FDSelect, subroutines, VariationStore.
 * link:VARIABLE_FONT_OPERATIONS.adoc[Variable Font Operations] —
-  reading and modifying existing variable fonts
-- link:STITCHER_GUIDE.adoc[Stitcher Guide] — multi-source assembly
+  reading and modifying existing variable fonts.
+* link:STITCHER_GUIDE.adoc[Stitcher Guide] — multi-source assembly.
+
