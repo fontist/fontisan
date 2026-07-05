@@ -15,7 +15,9 @@ and Adobe Type 1 fonts (OTF, TTF, OTC, TTC, dfont, PFB, PFA).
 The gem provides both a Ruby library API and a command-line interface, with
 structured output formats (YAML, JSON, text) via lutaml-model.
 
-Fontisan is designed to replace the following tools:
+Fontisan is designed to replace the following tools (see
+link:docs/FEATURE_PARITY.adoc[Feature Parity] for the full list and
+per-tool coverage):
 
 * `otfinfo` from http://www.lcdf.org/type/[LCDF Typetools]. Fontisan supports
 all features provided by `otfinfo`, including extraction of font metadata,
@@ -29,6 +31,26 @@ all `extract_ttc` functionality plus comprehensive font analysis, subsetting,
 validation, format conversion, and collection creation. See
 link:docs/EXTRACT_TTC_MIGRATION.md[extract_ttc Migration Guide] for detailed
 command mappings and usage examples.
+
+* **Adobe AFDKO** — `makeotf`, `otf2ttf`, `ttx`, `mergeFonts`,
+  `checkOutlinesUFO`, `rotateFont`. See
+  link:docs/AFDKO_MIGRATION.adoc[AFDKO Migration Guide].
+
+* **Python fontTools + ufoLib2 + ufo2ft** — UFO model layer, UFO
+  compile pipeline (TTF/OTF/CFF2 + variable), glyph filters (8/8),
+  feature writers (GDEF, kern, mark, mkmk, curs), `pyftsubset`,
+  `pyftmerge`, `varLib`. See link:docs/UFO_COMPILATION.adoc[UFO Compilation Guide].
+
+* **`ttx` (TTX format)** — full read/write of the FontTools XML
+  format. See link:docs/TTX.adoc[TTX Support].
+
+* **Google `woff2_compress` / `woff2_decompress`** — WOFF and
+  WOFF2 compression/decompression in pure Ruby. See
+  link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Formats Guide].
+
+* **Type 1 utilities** (`t1disasm`, `t1asm`, `t1embed`, `pfm2afm`)
+  — full PFB/PFA parse/generate, eexec decryption, PFM↔AFM
+  round-trip. See link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide].
 
 
 == Installation

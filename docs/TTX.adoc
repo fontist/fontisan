@@ -1,0 +1,176 @@
+= TTX (FontTools XML) Support
+
+fontisan can read and write the TTX format — the human-readable
+XML representation of OpenType fonts defined by Adobe/FontTools'.
+`ttx` tool. TTX is the standard interchange format for OpenType
+table data: every binary table has a corresponding XML element,
+and round-tripping TTX ↔ binary preserves the table contents.
+
+== Why TTX
+
+* **Diff-friendly**: TTX is text, so changes to a font's tables can
+  be reviewed in version control.
+* **Edit-friendly**: you can hand-edit table values without writing
+  binary parsers.
+* **Tool interchange**: any tool that understands TTX (fontTools,
+  AFDKO's `ttx`, several IDE plugins) can read fontisan's output
+  and vice versa.
+
+== What fontisan supports
+
+[cols="1,3", options="header"]
+|===
+| Capability | Notes
+
+| Read `.ttx` (parse XML → typed tables)
+| Every standard table that fontisan parses as binary also has a
+  TTX parser entry. Unknown tables fall through to a binary-blob
+  representation.
+
+| Write `.ttx` (typed tables → XML)
+| Same coverage as the read path. Each table knows how to render
+  itself as TTX.
+
+| CLI `fontisan export FONT --format ttx`
+| Dumps every table or a subset via `--tables`.
+
+| CLI `fontisan info FONT` (auto-detect)
+| Auto-detects `.ttx` files alongside binary formats. No
+  `--format` flag needed.
+
+| Per-table type mapping (lib/fontisan/models/ttx/tables/*.rb)
+| `head`, `hhea`, `maxp`, `name`, `OS/2`, `post` have typed
+  representations; everything else is `BinaryTable` (raw bytes).
+|===
+
+== CLI usage
+
+[source,bash]
+----
+# Dump the entire font as TTX
+fontisan export MyFont.ttf --format ttx --output MyFont.ttx
+
+# Dump just the head + name tables
+fontisan export MyFont.ttf --format ttx --tables head name --output subset.ttx
+
+# Read a TTX file (auto-detected)
+fontisan info MyFont.ttx
+fontisan validate MyFont.ttx
+----
+
+== Ruby API
+
+=== Generate TTX from a loaded font
+
+[source,ruby]
+----
+require "fontisan"
+
+font = Fontisan::FontLoader.load("MyFont.ttf")
+generator = Fontisan::Export::TtxGenerator.new(font, "MyFont.ttf")
+ttx_xml = generator.generate
+File.write("MyFont.ttx", ttx_xml)
+----
+
+=== Parse TTX into typed tables
+
+[source,ruby]
+----
+require "fontisan/export"
+
+ttx_xml = File.read("MyFont.ttx")
+parser = Fontisan::Export::TtxParser.new
+tt_font = parser.parse(ttx_xml)
+
+puts "sfnt version: #{tt_font.sfnt_version}"
+puts "tables: #{tt_font.tables.keys.join(', ')}"
+
+head = tt_font.tables["head"]
+puts "units per em: #{head.units_per_em}" if head
+----
+
+=== Round-trip
+
+Read TTX → modify → write TTX:
+
+[source,ruby]
+----
+parser = Fontisan::Export::TtxParser.new
+tt_font = parser.parse(File.read("MyFont.ttx"))
+
+# Bump units-per-em (caution: this rescales visually)
+tt_font.tables["head"].units_per_em = 2048
+
+# Re-emit as TTX
+generator = Fontisan::Export::TtxGenerator.from_tt_font(tt_font)
+File.write("MyFont-edited.ttx", generator.generate)
+----
+
+== Typed table coverage
+
+fontisan's TTX layer is a parallel hierarchy to the binary
+`Tables::*` classes. Each TTX table class lives under
+`Fontisan::Models::Ttx::Tables`:
+
+[cols="1,1", options="header"]
+|===
+| Binary table | TTX class
+
+| `head`
+| `Models::Ttx::Tables::HeadTable`
+
+| `hhea`
+| `Models::Ttx::Tables::HheaTable`
+
+| `maxp`
+| `Models::Ttx::Tables::MaxpTable`
+
+| `name`
+| `Models::Ttx::Tables::NameTable`
+
+| `OS/2`
+| `Models::Ttx::Tables::Os2Table`
+
+| `post`
+| `Models::Ttx::Tables::PostTable`
+
+| (any other)
+| `Models::Ttx::Tables::BinaryTable` — raw bytes, no typed
+  interpretation
+|===
+
+Adding a new typed TTX representation = one file under
+`models/ttx/tables/` + one entry in the parser dispatch table.
+
+== Compatibility with fontTools `ttx`
+
+fontisan's TTX output is byte-compatible with fontTools `ttx`
+output for the typed tables. The XML element names, attribute
+names, and value formats match the fontTools schema.
+
+The `BinaryTable` representation differs slightly: fontTools
+emits a hex-dumped `<hexdata>` block for tables it doesn't
+understand; fontisan emits the same format.
+
+== Related formats
+
+fontisan also exports YAML and JSON via the same `fontisan export`
+command — useful for scripting and AI/automation pipelines where
+XML's verbosity is a drawback:
+
+[source,bash]
+----
+fontisan export MyFont.ttf --format yaml --output MyFont.yaml
+fontisan export MyFont.ttf --format json --output MyFont.json
+----
+
+== See also
+
+* link:UFO_COMPILATION.adoc[UFO Compilation Guide] — UFO is a
+  richer source format than TTX (full glyph outlines + naming +
+  features); use TTX for binary-table inspection, UFO for source
+  editing.
+* link:AFDKO_MIGRATION.adoc[AFDKO Migration Guide] — fontisan
+  replaces AFDKO's `ttx` command.
+* link:FEATURE_PARITY.adoc[Feature Parity] — every external tool
+  fontisan replaces.

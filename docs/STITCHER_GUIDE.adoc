@@ -21,6 +21,13 @@ There are no defaults and no after-the-fact splitting.
 
 | `add_source(label, font)` | Register a source font under a Symbol label
 
+| `add_source(label, font, remap:)` | Register a source with a
+  `{src_codepoint => target_codepoint}` remap. Useful for donor
+  fonts whose glyphs live at non-canonical codepoints (PUA, ASCII-
+  mapped pre-Unicode fonts). Source codepoints not in the remap
+  are hidden — the donor's other coverage (often ASCII/PUA noise)
+  does not leak into the output.
+
 | `include_range(range, from:, into:)` | Add codepoint range from `from` into `into`
 
 | `include_codepoints(cps, from:, into:)` | Add an explicit Array of codepoints
@@ -80,6 +87,37 @@ Each subfont is compiled independently, then packed by
 `Collection::Builder` with table deduplication enabled — shared tables
 (head, name, OS/2, ...) are stored once and referenced from each
 subfont's offset table.
+
+== Donor remap (non-canonical codepoints)
+
+Some donor fonts ship glyphs at codepoints that don't match the
+canonical Unicode assignment — a keyboard-mapped font whose letters
+live at ASCII slots, or a PUA-allocated pre-Unicode font. Pass a
+`remap:` hash to `add_source` to expose those glyphs at their
+canonical targets without mutating the donor's cmap:
+
+[source,ruby]
+----
+donor = Fontisan::FontLoader.load("TolongSikiMappedToASCII.ttf")
+
+stitcher = Fontisan::Stitcher.new
+stitcher.add_source(:tolong_siki, donor, remap: {
+                      0x41 => 0x11DB0, # ASCII A → Tolong Siki KA
+                      0x42 => 0x11DB1, # ASCII B → Tolong Siki NGA
+                      # ...
+                    })
+stitcher.include_codepoints((0x11DB0..0x11DC0).to_a,
+                            from: :tolong_siki, into: :tolong)
+----
+
+With a remap set, the source answers `gid_for_codepoint(target)`
+by translating through the inverse remap to the donor's source
+codepoint. Source codepoints not in the remap are hidden — only
+remapped coverage is exposed.
+
+The donor's cmap is never mutated. `remap:` is a translation layer
+at the source's API boundary; multiple sources on the same
+Stitcher can have different remaps (or none at all).
 
 `write_collection` returns a `Stitcher::CollectionResult` Struct with
 the output `path`, total `bytes`, and one `Stitcher::SubfontStats`
@@ -188,13 +226,69 @@ A `Blueprint` is a `Struct.new(:partitions, keyword_init: true)`;
 `Blueprint#apply_to(stitcher)` calls `apply_to` on each partition in
 order and returns the list of declared subfont names.
 
-=== Future: ByBlock, ByScript
+=== ByBlock — partition by Unicode Blocks.txt
 
-ByBlock (Unicode Blocks.txt, ~350 entries) and ByScript (Scripts.txt)
-are tracked as a follow-up. The framework is already open for them:
-add `by_block.rb` / `by_script.rb` under
-`lib/fontisan/stitcher/partition_strategy/` and an autoload entry in
-`partition_strategy.rb`.
+`PartitionStrategy::ByBlock` partitions codepoints by their Unicode
+block. Each non-empty block becomes one partition. The full Unicode
+16.0 block list (~340 entries covering BMP, SMP, SIP, TIP, SSP) is
+inlined as `ByBlock::BLOCKS` so the partitioner is self-contained
+(no external data file). Codepoints in unassigned planes fall into
+`:block_other`.
+
+[source,ruby]
+----
+bp = Fontisan::Stitcher::PartitionStrategy::ByBlock.new
+blueprint = bp.call(cp_map)
+blueprint.names  # => [:block_basic_latin, :block_cjk_unified_ideographs, ...]
+----
+
+Every block is treated as atomic — if a single block alone exceeds
+`cap`, ByBlock raises `PartitionCapExceededError` (callers must
+either use ByPlane with carve-outs or implement a custom
+partitioner).
+
+=== ByScript — partition by Unicode script property
+
+`PartitionStrategy::ByScript` partitions codepoints by Unicode
+script (Latin, Greek, Cyrillic, Han, Hangul, etc.). Derived from
+`ByBlock::BLOCKS` via a `SCRIPT_OF_BLOCK` map — keeps the data DRY.
+
+Scripts that overflow `cap` are chunked with alphabetic suffixes
+matching ByPlane's sub-split convention (e.g. `:script_han`,
+`:script_han_a`, `:script_han_b`). Common and Inherited scripts
+get their own buckets — useful for separating shared punctuation
+and combining marks.
+
+[source,ruby]
+----
+sp = Fontisan::Stitcher::PartitionStrategy::ByScript.new
+blueprint = sp.call(cp_map)
+blueprint.names  # => [:script_common, :script_latin, :script_han, ...]
+----
+
+=== Choosing a strategy
+
+|===
+| Strategy | When to use
+
+| `ByPlane`
+| CJK-heavy fonts that need to respect the 65,535-glyph cap per
+  plane. Sub-splits only the SIP CJK extensions and the BMP
+  carve-out blocks.
+
+| `ByBlock`
+| Fonts that span many small Unicode blocks where each block
+  should land in its own subfont (e.g. for selective subsetting
+  per block). Each block is atomic.
+
+| `ByScript`
+| Web font delivery where each subfont should cover one script
+  (Latin-only file, Greek-only file, etc.). Chunks large scripts
+  (Han) when they overflow the cap.
+|===
+
+All three autoload from `lib/fontisan/stitcher/partition_strategy/`.
+Adding a new strategy = new file + one autoload entry (OCP).
 
 == Per-subfont metadata (Ufo::Info.for_subfont)
 
