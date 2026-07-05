@@ -20,6 +20,12 @@ module Fontisan
       autoload :ToOtf2, "fontisan/ufo/convert/to_otf2"
       autoload :ToWoff, "fontisan/ufo/convert/to_woff"
       autoload :ToWoff2, "fontisan/ufo/convert/to_woff2"
+      autoload :ToDfont, "fontisan/ufo/convert/to_dfont"
+      autoload :ToTtc, "fontisan/ufo/convert/to_ttc"
+      autoload :ToOtc, "fontisan/ufo/convert/to_otc"
+      autoload :ToPostscript, "fontisan/ufo/convert/to_postscript"
+      autoload :ToPfb, "fontisan/ufo/convert/to_postscript"
+      autoload :ToPfa, "fontisan/ufo/convert/to_postscript"
 
       # Single source of truth for "which compiler handles this
       # output format?". OCP: adding a format = adding one entry
@@ -39,6 +45,11 @@ module Fontisan
       WRAPPER_FOR_FORMAT = {
         woff: ToWoff,
         woff2: ToWoff2,
+        dfont: ToDfont,
+        ttc: ToTtc,
+        otc: ToOtc,
+        pfb: ToPfb,
+        pfa: ToPfa,
       }.freeze
 
       # Convert a UFO to a binary format, writing to +output_path+.

@@ -65,6 +65,29 @@ module Fontisan
         end
       end
 
+      desc "extract UFO GLYPH_NAME OUTPUT.svg",
+           "Render a single glyph from a UFO as a standalone SVG"
+      def extract(ufo, glyph_name, output)
+        font = Font.open(ufo)
+        glyph = font.glyph(glyph_name)
+        raise ArgumentError, "glyph not found: #{glyph_name.inspect}" unless glyph
+
+        head = font.info
+        renderer = Fontisan::Svg::StandaloneGlyph.new(
+          units_per_em: head.units_per_em || 1000,
+          ascent: head.ascender || 800,
+          descent: head.descender || -200,
+        )
+        File.write(output, renderer.generate(glyph))
+        puts "wrote #{output} (#{File.size(output)} bytes)"
+      rescue ArgumentError => e
+        warn e.message
+        exit 1
+      rescue Errno::ENOENT
+        warn "UFO not found: #{ufo}"
+        exit 1
+      end
+
       private
 
       def ufo?(path)
