@@ -54,7 +54,8 @@ module Fontisan
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param options [Hash{Symbol => Object}] Per-call options:
       #   - `:brotli_quality` (0–11, default from config or 11)
-      #   - `:transform_tables` (bool, default false)
+      #   - `:transform_tables` (bool, default false; glyf/loca are always
+      #     transformed per WOFF2 spec section 5.3 regardless of this flag)
       #   - `:quality` — legacy alias for `:brotli_quality` (backward compat)
       # @return [Hash{Symbol => String}] `{ woff2_binary: <bytes> }`
       # @raise [ArgumentError] if any option fails validation
@@ -73,16 +74,20 @@ module Fontisan
         table_data = collect_tables(font, options)
         Woff2::EncoderRules.apply!(table_data)
 
+        glyf_transform = apply_glyf_loca_transform!(table_data, font)
+
         transformer = Woff2::TableTransformer.new(font)
         transform_enabled = resolved.fetch(:transform_tables, false)
         entries, transformed_data = build_table_entries(table_data,
                                                         transformer,
-                                                        transform_enabled)
+                                                        transform_enabled,
+                                                        glyf_transform:)
 
         compressed_data = compress_tables(entries, table_data,
                                           transformed_data, quality)
 
-        total_sfnt_size = calculate_sfnt_size(table_data)
+        total_sfnt_size = calculate_sfnt_size(table_data,
+                                              glyf_transform:)
         header = build_header(
           flavor: flavor,
           num_tables: entries.size,
@@ -214,6 +219,40 @@ module Fontisan
         end
       end
 
+      # Apply the WOFF2 glyf/loca paired transform per spec section 5.1/5.3.
+      #
+      # Returns a hash with the transformed glyf bytes and the original
+      # loca length needed to emit its synthetic directory entry, or nil
+      # for CFF fonts or fonts missing glyf/loca. The original glyf bytes
+      # are kept in `table_data` so its `origLength` is preserved; the
+      # transformed bytes are passed to the entries builder separately.
+      #
+      # @return [Hash{Symbol => Object}, nil]
+      def apply_glyf_loca_transform!(table_data, font)
+        return nil unless font.respond_to?(:has_table?)
+        return nil unless font.has_table?("glyf") && font.has_table?("loca")
+
+        glyf_data = table_data["glyf"]
+        loca_data = table_data["loca"]
+        return nil unless glyf_data && loca_data
+
+        maxp = font.table("maxp")
+        head = font.table("head")
+        return nil unless maxp && head
+
+        transformed = Woff2::GlyfLocaTransform.new(
+          glyf_data:,
+          loca_data:,
+          num_glyphs: maxp.num_glyphs,
+          index_format: head.index_to_loc_format,
+        ).transform
+
+        loca_orig_length = loca_data.bytesize
+        table_data.delete("loca")
+
+        { transformed_glyf: transformed, loca_orig_length: }
+      end
+
       def get_table_data(font, tag)
         if font.respond_to?(:table_data)
           font.table_data[tag]
@@ -225,35 +264,78 @@ module Fontisan
 
       # Build table directory entries.
       #
+      # When `glyf_transform` is provided, glyf gets a transformLength entry
+      # (transformed bytes via Woff2::GlyfLocaTransform) and a synthetic
+      # loca entry follows glyf per spec section 5.5 with transformLength=0.
+      #
       # @return [Array(Array<Entry>, Hash<String, String>)]
       #   Pair of entries and the transformed-by-tag data map.
-      def build_table_entries(table_data, transformer, transform_enabled)
+      def build_table_entries(table_data, transformer, transform_enabled,
+                              glyf_transform: nil)
         entries = []
         transformed_data = {}
 
         table_data.keys.sort.each do |tag|
-          # loca is combined into glyf during transformation.
-          next if tag == "loca" && transform_enabled && transformer.transformable?("glyf")
-
-          entry = Woff2::Directory::Entry.new
-          entry.tag = tag
-
-          data = table_data[tag]
-          entry.orig_length = data.bytesize
-
-          if transform_enabled && transformer.transformable?(tag)
-            transformed = transformer.transform_table(tag)
-            if transformed&.bytesize&.positive? && transformed.bytesize < data.bytesize
-              entry.transform_length = transformed.bytesize
-              transformed_data[tag] = transformed
-            end
+          if tag == "glyf" && glyf_transform
+            entries << build_glyf_entry(table_data["glyf"],
+                                        glyf_transform[:transformed_glyf])
+            entries << build_loca_entry(glyf_transform[:loca_orig_length])
+            transformed_data["glyf"] = glyf_transform[:transformed_glyf]
+          else
+            entry = build_entry(tag:, data: table_data[tag], transformer:,
+                                transform_enabled:, transformed_data:)
+            entries << entry if entry
           end
-
-          entry.flags = entry.calculate_flags
-          entries << entry
         end
 
         [entries, transformed_data]
+      end
+
+      def build_entry(tag:, data:, transformer:, transform_enabled:,
+                      transformed_data:)
+        return nil unless data
+
+        # loca is combined into glyf during transformation.
+        return nil if tag == "loca" && transform_enabled && transformer.transformable?("glyf")
+
+        entry = Woff2::Directory::Entry.new
+        entry.tag = tag
+        entry.orig_length = data.bytesize
+
+        if transform_enabled && transformer.transformable?(tag) && tag != "glyf" && tag != "loca"
+          transformed = transformer.transform_table(tag)
+          if transformed&.bytesize&.positive? && transformed.bytesize < data.bytesize
+            entry.transform_length = transformed.bytesize
+            transformed_data[tag] = transformed
+          end
+        end
+
+        entry.flags = entry.calculate_flags
+        entry
+      end
+
+      # Build the glyf directory entry. origLength is the original (input)
+      # glyf size; transformLength is the size of the WOFF2-transformed
+      # glyf stream per spec section 5.1.
+      def build_glyf_entry(orig_data, transformed_data)
+        entry = Woff2::Directory::Entry.new
+        entry.tag = "glyf"
+        entry.orig_length = orig_data.bytesize
+        entry.transform_length = transformed_data.bytesize
+        entry.flags = entry.calculate_flags
+        entry
+      end
+
+      # Build the synthetic loca directory entry for transformed glyf/loca.
+      # Per spec section 5.3, transformLength MUST be 0 and the data is
+      # omitted from the brotli-compressed block.
+      def build_loca_entry(orig_length)
+        entry = Woff2::Directory::Entry.new
+        entry.tag = "loca"
+        entry.orig_length = orig_length
+        entry.transform_length = 0
+        entry.flags = entry.calculate_flags
+        entry
       end
 
       def compress_tables(entries, table_data, transformed_data, quality)
@@ -269,13 +351,25 @@ module Fontisan
         Utilities::BrotliWrapper.compress(combined_data, quality: quality)
       end
 
-      def calculate_sfnt_size(table_data)
+      # Calculate total SFNT size (uncompressed) per spec.
+      #
+      # When glyf/loca are transformed, loca's data is omitted from the
+      # brotli-compressed block but is reconstructed by the decoder. The
+      # SFNT size still includes the reconstructed loca table.
+      def calculate_sfnt_size(table_data, glyf_transform: nil)
         size = 12 # offset table
         size += table_data.size * 16 # table directory
+        size += 16 if glyf_transform # synthetic loca directory entry
 
         table_data.each_value do |data|
           size += data.bytesize
           size += (4 - (data.bytesize % 4)) % 4 # pad to 4-byte boundary
+        end
+
+        if glyf_transform
+          loca_len = glyf_transform[:loca_orig_length]
+          size += loca_len
+          size += (4 - (loca_len % 4)) % 4
         end
 
         size

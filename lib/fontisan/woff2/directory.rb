@@ -46,15 +46,22 @@ module Fontisan
         "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"
       ].freeze
 
-      # Transformation versions
-      # According to WOFF2 spec:
-      # - glyf/loca: version 0 or 3 WITH transformLength = transformed
-      # - glyf/loca: version 1 or 2 WITHOUT transformLength = not transformed
-      # - hmtx: version 1 WITH transformLength = transformed
-      # - hmtx: version 0, 2, or 3 WITHOUT transformLength = not transformed
-      TRANSFORM_NONE = 3           # Use version 3 when not transformed (works for all tables)
-      TRANSFORM_GLYF_LOCA = 0      # glyf/loca use version 0 when transformed
-      TRANSFORM_HMTX = 1           # hmtx uses version 1 when transformed
+      # Transformation versions per WOFF2 spec section 5.1, 5.3, 5.4.
+      #
+      # glyf/loca:
+      #   - version 0: transformed format (spec section 5.1 / 5.3)
+      #   - version 3: null transform — original bytes passed to brotli as-is
+      #     (Chrome's OTS does not accept version 3 for glyf/loca; encoders
+      #     that want to interoperate with browsers MUST use version 0).
+      # hmtx:
+      #   - version 0: null transform (default)
+      #   - version 1: transformed format (spec section 5.4)
+      # All other tables use version 0 for the null transform.
+      TRANSFORM_NULL = 3              # glyf/loca null transform
+      TRANSFORM_NONE = TRANSFORM_NULL # deprecated alias kept for older callers
+      TRANSFORM_GLYF_LOCA = 0         # glyf/loca transformed format
+      TRANSFORM_HMTX = 1              # hmtx transformed format
+      TRANSFORM_HMTX_NULL = 0         # hmtx null transform
 
       # Custom tag indicator
       CUSTOM_TAG_INDEX = 0x3F
@@ -92,11 +99,18 @@ module Fontisan
           KNOWN_TAGS.include?(tag)
         end
 
-        # Check if table is transformed
+        # Whether this entry will be serialized with a transformLength field.
         #
-        # @return [Boolean] True if transformed
+        # Per WOFF2 spec section 4.1, transformLength is encoded when the
+        # table is in a transformed format. For loca the value is always 0
+        # (spec section 5.3), so we cannot use `.positive?` to detect the
+        # transformed state — the encoder explicitly sets `transform_length`
+        # (even to 0) when emitting a transformed entry, and leaves it nil
+        # otherwise.
+        #
+        # @return [Boolean] True if a transformLength field should be written
         def transformed?
-          !transform_length.nil? && transform_length.positive?
+          !transform_length.nil?
         end
 
         # Get transformation version from flags
@@ -113,39 +127,22 @@ module Fontisan
           flags & 0x3F
         end
 
-        # Determine transformation version for this table
+        # Determine the transform version to encode in the flags byte.
         #
-        # Returns the appropriate version based on:
-        # 1. Whether table has transform_length set (is transformed)
-        # 2. Which table it is (glyf/loca vs hmtx vs other)
+        # Per WOFF2 spec section 5.1, glyf/loca use version 0 for the
+        # transformed format and version 3 for the null transform; hmtx
+        # uses version 1 for transformed and version 0 for null. The
+        # encoder sets `transform_length` (or leaves it nil) to indicate
+        # which case applies — see `transformed?`.
         #
         # @return [Integer] Transform version (0-3)
         def determine_transform_version
-          if transformed?
-            # Table IS transformed - use appropriate transform version
-            case tag
-            when "glyf", "loca"
-              TRANSFORM_GLYF_LOCA  # Version 0 for transformed glyf/loca
-            when "hmtx"
-              TRANSFORM_HMTX       # Version 1 for transformed hmtx
-            else
-              TRANSFORM_NONE       # Shouldn't happen, but use safe default
-            end
+          if ["glyf", "loca"].include?(tag)
+            transformed? ? TRANSFORM_GLYF_LOCA : TRANSFORM_NULL
+          elsif tag == "hmtx"
+            transformed? ? TRANSFORM_HMTX : TRANSFORM_HMTX_NULL
           else
-            # Table is NOT transformed - use version that indicates no transformation
-            case tag
-            when "glyf", "loca"
-              # For glyf/loca, version 0 means transformed
-              # so use version 3 to indicate NOT transformed
-              TRANSFORM_NONE # Version 3
-            when "hmtx"
-              # For hmtx, version 1 means transformed
-              # so use version 0 to indicate NOT transformed
-              0
-            else
-              # All other tables use version 0 (no transformation)
-              0
-            end
+            0
           end
         end
 

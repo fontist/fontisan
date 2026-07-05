@@ -113,45 +113,8 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
   end
 
   describe "#convert" do
-    let(:font) do
-      double("Font",
-             table: nil,
-             table_names: %w[head hhea maxp hmtx cmap glyf loca])
-    end
-
-    let(:table_data_hash) do
-      {
-        "head" => "H" * 54,
-        "hhea" => "H" * 36,
-        "maxp" => "M" * 32,
-        "hmtx" => "H" * 100,
-        "cmap" => "C" * 200,
-        "glyf" => "G" * 1000,
-        "loca" => "L" * 100,
-      }
-    end
-
-    before do
-      # Mock has_table? calls
-      allow(font).to receive(:has_table?).with("glyf").and_return(true)
-      allow(font).to receive(:has_table?).with("CFF ").and_return(false)
-      allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-
-      # Mock required tables
-      allow(font).to receive(:table).with("head").and_return(double("HeadTable"))
-      allow(font).to receive(:table).with("hhea").and_return(double("HheaTable"))
-      allow(font).to receive(:table).with("maxp").and_return(double("MaxpTable"))
-      allow(font).to receive(:table).with("glyf").and_return(double("GlyfTable"))
-      allow(font).to receive(:table).with("CFF ").and_return(nil)
-      allow(font).to receive(:table).with("CFF2").and_return(nil)
-
-      # Mock table_data to return hash
-      allow(font).to receive(:table_data).and_return(table_data_hash)
-      # Also handle table_data(tag) calls with argument
-      allow(font).to receive(:table_data) do |tag|
-        tag ? table_data_hash[tag] : table_data_hash
-      end
-    end
+    let(:ttf_path) { fixture_path("fonttools/TestTTF.ttf") }
+    let(:font) { Fontisan::FontLoader.load(ttf_path) }
 
     it "returns hash with woff2_binary key" do
       result = encoder.convert(font)
@@ -191,16 +154,10 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
       result = encoder.convert(font)
       binary = result[:woff2_binary]
 
-      # Calculate total input size
-      input_size = 0
-      font.table_names.each do |tag|
-        data = font.table_data(tag)
-        input_size += data.bytesize if data
-      end
+      input_size = font.table_data.values.sum(&:bytesize)
 
-      # WOFF2 should be smaller (compressed)
-      # Account for header overhead but should still be smaller overall
-      expect(binary.bytesize).to be < input_size + 200
+      # WOFF2 should be smaller (compressed) than the raw SFNT input.
+      expect(binary.bytesize).to be < input_size
     end
   end
 
@@ -269,6 +226,16 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
 
         # Should include 1 byte of padding for 55-byte table
         expect(size).to be >= 12 + 16 + 56
+      end
+
+      it "includes synthetic loca entry when glyf_transform is provided" do
+        tables = { "glyf" => "G" * 100, "head" => "H" * 54 }
+        glyf_transform = { transformed_glyf: "T" * 80, loca_orig_length: 14 }
+
+        size = encoder.send(:calculate_sfnt_size, tables, glyf_transform:)
+
+        # 12 (header) + 2 entries × 16 + glyf bytes + head bytes + loca 14 bytes (padded to 16)
+        expect(size).to be >= 12 + (2 * 16) + 100 + 54 + 14
       end
     end
   end

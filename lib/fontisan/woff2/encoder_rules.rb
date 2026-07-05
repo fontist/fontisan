@@ -19,6 +19,12 @@ module Fontisan
       # Sanitizer (OTS) rejects WOFF2 files that still contain DSIG.
       EXCLUDED_TABLES = %w[DSIG].freeze
 
+      # Tables that MUST be transformed (when present) per WOFF2 spec
+      # section 5.3: glyf and loca are paired — both are either
+      # transformed (version 0) or null-transformed (version 3) together.
+      # Browsers (Chrome OTS) only accept the transformed form.
+      TRANSFORMED_TABLES = %w[glyf loca].freeze
+
       # Apply all WOFF2 encoder rules to `table_data` in place.
       #
       # @param table_data [Hash{String => String}] Map of tag → binary
