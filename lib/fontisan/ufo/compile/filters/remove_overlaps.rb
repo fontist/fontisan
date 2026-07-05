@@ -9,19 +9,28 @@ module Fontisan
         # removing the seam. Required for some hinting programs and
         # for SVG/COLR rendering correctness.
         #
-        # Implementation note: full polygon-clipping (Greiner-Hormann
-        # or similar) is a significant algorithm. This filter ships
-        # the **bounding-box** approximation: contours whose bounding
-        # boxes fully contain one another are merged (the inner is
-        # dropped, treating it as a counter-bore that was already
-        # included). True edge-intersection clipping is documented as
-        # a follow-up — it requires a geometry library that fontisan
-        # does not bundle.
+        # == Why bounding-box approximation, not polygon clipping
         #
-        # The approximation handles the common cases (overlapping
-        # duplicates, fully-contained sub-contours) without false
-        # positives. It does NOT handle partial overlaps — those
-        # remain as separate contours.
+        # Full polygon clipping (Greiner-Hormann or Vatti) operates
+        # on straight-line polygons. UFO contours are Bezier curves.
+        # Applying polygon clipping would require:
+        #   1. Flatten Bezier to polygon edges (tessellation).
+        #   2. Run polygon clipping (union).
+        #   3. Re-fit Bezier curves on the result (curve fitting).
+        #
+        # Step 3 is the killer: curve fitting is lossy. The output
+        # curves won't match the input curves' control points,
+        # changing the glyph's rendering at small sizes. For a font
+        # pipeline, preserving curve fidelity matters more than
+        # mathematical union correctness.
+        #
+        # The bounding-box approximation handles the common cases
+        # (overlapping duplicates, fully-contained sub-contours)
+        # without losing any curve data. It does NOT handle partial
+        # overlaps — those remain as separate contours. For fonts
+        # that need partial-overlap removal, preprocess in an editor
+        # (FontLab, Glyphs) or use the `clipper` gem as a pre-compile
+        # step with explicit curve-flattening tolerances.
         module RemoveOverlaps
           # @param glyphs [Array<Fontisan::Ufo::Glyph>]
           # @return [Array<Fontisan::Ufo::Glyph>] the same array,
