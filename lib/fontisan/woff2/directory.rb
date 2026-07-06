@@ -235,48 +235,20 @@ module Fontisan
         raise Fontisan::Error, "Invalid UIntBase128 encoding"
       end
 
-      # Encode 255UInt16 value
-      #
-      # Used in transformed glyf table:
-      # - 0-252: value itself (1 byte)
-      # - 253: next byte + 253 (2 bytes)
-      # - 254: next 2 bytes as big-endian (3 bytes)
-      # - 255: next 2 bytes + 506 (3 bytes)
+      # Encode 255UInt16. Delegates to {UInt255} (single source of truth).
       #
       # @param value [Integer] Value to encode (0-65535)
       # @return [String] Binary encoded data
       def self.encode_255_uint16(value)
-        if value < 253
-          [value].pack("C")
-        elsif value < 506
-          [253, value - 253].pack("C*")
-        elsif value < 65536
-          [254].pack("C") + [value].pack("n")
-        else
-          [255].pack("C") + [value - 506].pack("n")
-        end
+        UInt255.encode(value)
       end
 
-      # Decode 255UInt16 from IO
+      # Decode 255UInt16 from IO. Delegates to {UInt255}.
       #
       # @param io [IO] Input stream
       # @return [Integer] Decoded value
       def self.decode_255_uint16(io)
-        first = io.read(1)&.unpack1("C")
-        return nil unless first
-
-        case first
-        when 0..252
-          first
-        when 253
-          second = io.read(1)&.unpack1("C")
-          253 + second
-        when 254
-          io.read(2)&.unpack1("n")
-        when 255
-          value = io.read(2)&.unpack1("n")
-          value + 506
-        end
+        UInt255.decode(io)
       end
     end
   end

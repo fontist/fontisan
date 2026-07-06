@@ -127,7 +127,7 @@ module Fontisan
         # nPoints stream: per-contour point counts (NOT endPtsOfContours).
         prev_end = -1
         end_pts.each do |ep|
-          s.n_points << encode_255_uint16(ep - prev_end)
+          s.n_points << UInt255.encode(ep - prev_end)
           prev_end = ep
         end
 
@@ -157,7 +157,7 @@ module Fontisan
         end
 
         # glyphStream carries per-glyph instructionLength; bytes go to instructionStream
-        s.glyph << encode_255_uint16(instructions.bytesize)
+        s.glyph << UInt255.encode(instructions.bytesize)
         s.instructions << instructions
 
         # Spec: simple glyphs omit bbox when it matches calculated bounds.
@@ -191,7 +191,7 @@ module Fontisan
         if have_instructions
           inst_len = io.read(2).unpack1("n")
           instructions = io.read(inst_len)
-          s.glyph << encode_255_uint16(instructions.bytesize)
+          s.glyph << UInt255.encode(instructions.bytesize)
           s.instructions << instructions
         end
 
@@ -312,18 +312,6 @@ module Fontisan
         return nil if xs.empty?
 
         [xs.min, ys.min, xs.max, ys.max]
-      end
-
-      def encode_255_uint16(value)
-        if value < 253
-          [value].pack("C")
-        elsif value < 506
-          [253, value - 253].pack("CC")
-        elsif value < 65_536
-          [254].pack("C") + [value].pack("n")
-        else
-          [255].pack("C") + [value - 506].pack("n")
-        end
       end
     end
   end

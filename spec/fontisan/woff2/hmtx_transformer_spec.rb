@@ -3,33 +3,6 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Woff2::HmtxTransformer do
-  describe ".read_255_uint16" do
-    it "reads single-byte values (< 253)" do
-      io = StringIO.new([100].pack("C"))
-      expect(described_class.send(:read_255_uint16, io)).to eq(100)
-    end
-
-    it "reads code 253 format (253 + uint16)" do
-      io = StringIO.new([253, 100].pack("Cn"))
-      expect(described_class.send(:read_255_uint16, io)).to eq(353)  # 253 + 100
-    end
-
-    it "reads code 254 format (506 + uint16)" do
-      io = StringIO.new([254, 100].pack("Cn"))
-      expect(described_class.send(:read_255_uint16, io)).to eq(606)  # 253*2 + 100
-    end
-
-    it "reads code 255 format (759 + uint16)" do
-      io = StringIO.new([255, 100].pack("Cn"))
-      expect(described_class.send(:read_255_uint16, io)).to eq(859)  # 253*3 + 100
-    end
-
-    it "handles maximum single-byte value (252)" do
-      io = StringIO.new([252].pack("C"))
-      expect(described_class.send(:read_255_uint16, io)).to eq(252)
-    end
-  end
-
   describe ".build_hmtx_table" do
     it "builds standard hmtx table with full metrics" do
       advance_widths = [500, 600, 700]

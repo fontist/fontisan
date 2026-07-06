@@ -401,7 +401,7 @@ num_glyphs)
 
         # Write advance widths using proportional encoding
         # First advance width is explicit
-        data << encode_255_uint16(advance_widths[0])
+        data << UInt255.encode(advance_widths[0])
 
         # Remaining advance widths as deltas
         (1...num_h_metrics).each do |i|
@@ -473,7 +473,7 @@ num_glyphs)
             prev_pt = -1
             glyph[:end_pts].each do |pt|
               delta = pt - prev_pt - 1
-              n_points_stream << encode_255_uint16(delta)
+              n_points_stream << UInt255.encode(delta)
               prev_pt = pt
             end
 
@@ -488,7 +488,7 @@ num_glyphs)
             glyph[:bbox].each { |v| bbox_stream << [v].pack("n") }
 
             # Write instructions
-            instruction_stream << encode_255_uint16(glyph[:instructions].bytesize)
+            instruction_stream << UInt255.encode(glyph[:instructions].bytesize)
             instruction_stream << glyph[:instructions] if glyph[:instructions].bytesize.positive?
 
           when :composite
@@ -566,22 +566,6 @@ num_glyphs)
                     end
 
           prev = coord
-        end
-      end
-
-      # Encode 255UInt16 value
-      #
-      # @param value [Integer] Value to encode
-      # @return [String] Encoded bytes
-      def encode_255_uint16(value)
-        if value < 253
-          [value].pack("C")
-        elsif value < 506
-          [253, value - 253].pack("CC")
-        elsif value < 65536
-          [254].pack("C") + [value].pack("n")
-        else
-          [255].pack("C") + [value - 506].pack("n")
         end
       end
 

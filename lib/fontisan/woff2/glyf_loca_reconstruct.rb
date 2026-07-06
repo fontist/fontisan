@@ -143,7 +143,7 @@ module Fontisan
         end_pts = []
         cumulative = -1
         num_contours.times do
-          pts_of_contour = read_255_uint16(streams[:n_points])
+          pts_of_contour = UInt255.decode(streams[:n_points])
           cumulative += pts_of_contour
           end_pts << cumulative
         end
@@ -169,7 +169,7 @@ module Fontisan
         end
 
         # Step 4-5: read instructionLength from glyphStream, bytes from instructionStream.
-        inst_len = read_255_uint16(streams[:glyph])
+        inst_len = UInt255.decode(streams[:glyph])
         instructions = streams[:instructions].read(inst_len)
 
         # Bbox: emit explicit bbox if bboxBitmap bit is set for this glyph,
@@ -209,7 +209,7 @@ module Fontisan
 
         instructions = String.new(encoding: Encoding::BINARY)
         if have_instructions
-          inst_len = read_255_uint16(streams[:glyph])
+          inst_len = UInt255.decode(streams[:glyph])
           instructions = streams[:instructions].read(inst_len)
         end
 
@@ -250,26 +250,6 @@ module Fontisan
                   end
         bytes = io.read(n_bytes)
         bytes ? bytes.bytes : Array.new(n_bytes, 0)
-      end
-
-      def read_255_uint16(io)
-        return 0 if io.eof?
-
-        code = io.read(1)&.unpack1("C")
-        return 0 unless code
-
-        case code
-        when 0..252 then code
-        when 253
-          b = io.read(1)&.unpack1("C") || 0
-          253 + b
-        when 254
-          io.read(2)&.unpack1("n") || 0
-
-        when 255
-          v = io.read(2)&.unpack1("n") || 0
-          v + 506
-        end
       end
 
       def read_uint16_io(io)
