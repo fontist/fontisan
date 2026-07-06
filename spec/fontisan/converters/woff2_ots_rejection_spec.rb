@@ -128,6 +128,36 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
       end
     end
 
+    it "emits loca.origLength matching the reconstructed short loca size" do
+      # The glyf transform always emits indexFormat=0, so the decoder
+      # reconstructs a short loca (2 bytes per offset). The directory's
+      # loca.origLength must match that reconstructed size, not the source
+      # font's loca bytesize — otherwise fontTools and Chrome's OTS reject
+      # the file for the loca size mismatch.
+      long_loca_ttf = fixture_path(
+        "fonts/Libertinus/Libertinus-7.051/static/TTF/LibertinusKeyboard-Regular.ttf"
+      )
+      skip "long-loca fixture missing" unless File.exist?(long_loca_ttf)
+
+      source = Fontisan::FontLoader.load(long_loca_ttf)
+      skip "fixture is not long-loca" unless source.table("head").index_to_loc_format == 1
+
+      woff2 = encode_to_woff2(long_loca_ttf)
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "out.woff2")
+        File.binwrite(path, woff2)
+
+        loca_entry = Fontisan::Woff2Font.from_file(path).table_entries
+          .find { |e| e.tag == "loca" }
+        num_glyphs = source.table("maxp").num_glyphs
+        expected = (num_glyphs + 1) * 2
+        expect(loca_entry.orig_length).to eq(expected),
+                                          "loca.origLength must match the reconstructed short loca " \
+                                          "(numGlyphs+1)*2=#{expected}, got #{loca_entry.orig_length}; " \
+                                          "Chrome OTS rejects size mismatch"
+      end
+    end
+
     it "places loca immediately after glyf in the table directory" do
       woff2 = encode_to_woff2(input_ttf)
       Dir.mktmpdir do |dir|
