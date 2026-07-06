@@ -732,22 +732,6 @@ module Fontisan
       self.class.read_uint_base128_from_io(io)
     end
 
-    # Read 255UInt16 variable-length integer
-    def read_255_uint16(io)
-      code = io.read(1).unpack1("C")
-
-      case code
-      when 0..252
-        code
-      when 253
-        253 + io.read(1).unpack1("C")
-      when 254
-        io.read(2).unpack1("n")
-      when 255
-        io.read(2).unpack1("n") + 506
-      end
-    end
-
     # Calculate offset table fields
     def calculate_offset_table_fields(num_tables)
       entry_selector = (Math.log(num_tables) / Math.log(2)).floor

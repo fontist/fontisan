@@ -13,6 +13,7 @@ module Fontisan
     autoload :HmtxTransformer, "fontisan/woff2/hmtx_transformer"
     autoload :TableTransformer, "fontisan/woff2/table_transformer"
     autoload :TripletCodec, "fontisan/woff2/triplet_codec"
+    autoload :UInt255, "fontisan/woff2/uint255"
     autoload :Woff2Header, "fontisan/woff2/header"
   end
 end

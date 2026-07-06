@@ -133,14 +133,14 @@ module Fontisan
         pos += 4
         raise InvalidFontError, "Unsupported CollectionHeader version 0x#{version.to_s(16)}" unless version == 0x00010000
 
-        num_fonts, pos = read_255_uint16(pos)
+        num_fonts, pos = UInt255.decode_at(@data, pos)
         font_entries = Array.new(num_fonts) do
-          num_tables_f, pos2 = read_255_uint16(pos)
+          num_tables_f, pos2 = UInt255.decode_at(@data, pos)
           pos = pos2
           flavor = @data[pos, 4].unpack1("N")
           pos += 4
           indices = Array.new(num_tables_f) do
-            idx, pos2 = read_255_uint16(pos)
+            idx, pos2 = UInt255.decode_at(@data, pos)
             pos = pos2
             idx
           end
@@ -200,26 +200,6 @@ module Fontisan
           value = (value << 7) | (byte & 0x7F)
         end
         raise InvalidFontError, "UIntBase128 sequence exceeds 5 bytes"
-      end
-
-      def read_255_uint16(pos)
-        code = @data.getbyte(pos)
-        pos += 1
-        case code
-        when 0..252 then [code, pos]
-        when 253
-          v = @data.getbyte(pos)
-          pos += 1
-          [253 + v, pos]
-        when 254
-          v = @data[pos, 2].unpack1("n")
-          pos += 2
-          [v, pos]
-        when 255
-          v = @data[pos, 2].unpack1("n")
-          pos += 2
-          [v + 506, pos]
-        end
       end
     end
   end

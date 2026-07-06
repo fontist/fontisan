@@ -238,7 +238,7 @@ module Fontisan
       def write_collection_directory(io, fonts, font_to_ckeys, ckey_to_index)
         # CollectionHeader
         io.write([0x00010000].pack("N")) # version 1.0
-        io.write(encode_255_uint16(fonts.size))
+        io.write(UInt255.encode(fonts.size))
 
         # One CollectionFontEntry per font
         fonts.each_with_index do |font, fi|
@@ -254,12 +254,12 @@ module Fontisan
           ordered << "loca" if has_placeholder
           ordered = ordered.sort
 
-          io.write(encode_255_uint16(ordered.size))
+          io.write(UInt255.encode(ordered.size))
           io.write([font_flavor(font)].pack("N"))
           ordered.each do |tag|
             ckey = font_keys[tag] || placeholder_key
             index = ckey_to_index.fetch(ckey)
-            io.write(encode_255_uint16(index))
+            io.write(UInt255.encode(index))
           end
         end
       end
@@ -269,18 +269,6 @@ module Fontisan
           Constants::SFNT_VERSION_OTTO
         else
           Constants::SFNT_VERSION_TRUETYPE
-        end
-      end
-
-      def encode_255_uint16(value)
-        if value < 253
-          [value].pack("C")
-        elsif value < 506
-          [253, value - 253].pack("CC")
-        elsif value < 65_536
-          [254].pack("C") + [value].pack("n")
-        else
-          [255].pack("C") + [value - 506].pack("n")
         end
       end
     end

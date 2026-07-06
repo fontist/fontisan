@@ -46,7 +46,7 @@ glyf_lsbs = nil)
         if (flags & HMTX_FLAG_EXPLICIT_ADVANCE_WIDTHS).zero?
           # Proportional encoding - read deltas
           # First advance width is explicit
-          first_advance = read_255_uint16(io)
+          first_advance = UInt255.decode(io)
           advance_widths << first_advance
 
           # Remaining are deltas from previous
@@ -57,7 +57,7 @@ glyf_lsbs = nil)
         else
           # Explicit advance widths in transformed format
           num_h_metrics.times do
-            advance_widths << read_255_uint16(io)
+            advance_widths << UInt255.decode(io)
           end
         end
 
@@ -86,31 +86,6 @@ glyf_lsbs = nil)
 
         # Build standard hmtx table
         build_hmtx_table(advance_widths, lsbs, num_h_metrics, num_glyphs)
-      end
-
-      # Read variable-length 255UInt16 integer
-      #
-      # Format from WOFF2 spec:
-      # - value < 253: one byte
-      # - value == 253: 253 + next uint16
-      # - value == 254: 253 * 2 + next uint16
-      # - value == 255: 253 * 3 + next uint16
-      #
-      # @param io [StringIO] Input stream
-      # @return [Integer] Decoded value
-      def self.read_255_uint16(io)
-        code = read_uint8(io)
-
-        case code
-        when 255
-          759 + read_uint16(io)  # 253 * 3 + value
-        when 254
-          506 + read_uint16(io)  # 253 * 2 + value
-        when 253
-          253 + read_uint16(io)
-        else
-          code
-        end
       end
 
       # Build standard hmtx table format

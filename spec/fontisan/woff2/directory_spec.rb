@@ -108,10 +108,10 @@ RSpec.describe Fontisan::Woff2::Directory do
       expect(encoded.bytesize).to eq(1)
     end
 
-    it "encodes 253 in 2 bytes" do
+    it "encodes 253 in 2 bytes (code 255 + 0)" do
       encoded = described_class.encode_255_uint16(253)
       expect(encoded.bytesize).to eq(2)
-      expect(encoded.unpack("C*")).to eq([253, 0])
+      expect(encoded.unpack("C*")).to eq([255, 0])
     end
 
     it "encodes values 253-505 in 2 bytes" do

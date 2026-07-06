@@ -358,44 +358,6 @@ RSpec.describe Fontisan::Woff2Font do
           .to raise_error(Fontisan::InvalidFontError, /Invalid UIntBase128/)
       end
     end
-
-    describe "#read_255_uint16" do
-      it "reads values 0-252 directly" do
-        woff2 = described_class.new
-        io = StringIO.new([100].pack("C"))
-
-        result = woff2.send(:read_255_uint16, io)
-
-        expect(result).to eq(100)
-      end
-
-      it "reads value 253 format (253 + next byte)" do
-        woff2 = described_class.new
-        io = StringIO.new([253, 10].pack("C*"))
-
-        result = woff2.send(:read_255_uint16, io)
-
-        expect(result).to eq(263) # 253 + 10
-      end
-
-      it "reads value 254 format (next 2 bytes)" do
-        woff2 = described_class.new
-        io = StringIO.new([254, 0x01, 0x00].pack("C*"))
-
-        result = woff2.send(:read_255_uint16, io)
-
-        expect(result).to eq(256)
-      end
-
-      it "reads value 255 format (next 2 bytes + 506)" do
-        woff2 = described_class.new
-        io = StringIO.new([255, 0x00, 0x0A].pack("C*"))
-
-        result = woff2.send(:read_255_uint16, io)
-
-        expect(result).to eq(516) # 10 + 506
-      end
-    end
   end
 
   describe "Woff2TableDirectoryEntry" do
