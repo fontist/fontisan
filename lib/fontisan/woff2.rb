@@ -4,6 +4,7 @@
 
 module Fontisan
   module Woff2
+    autoload :CollectionDecoder, "fontisan/woff2/collection_decoder"
     autoload :CollectionEncoder, "fontisan/woff2/collection_encoder"
     autoload :Directory, "fontisan/woff2/directory"
     autoload :EncoderRules, "fontisan/woff2/encoder_rules"

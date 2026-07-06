@@ -116,6 +116,7 @@ module Fontisan
   autoload :OutlineExtractor, "fontisan/outline_extractor"
   autoload :SfntFont, "fontisan/sfnt_font"
   autoload :SfntTable, "fontisan/sfnt_table"
+  autoload :SfntBuilder, "fontisan/sfnt_builder"
   autoload :Stitcher, "fontisan/stitcher"
   autoload :StitcherCli, "fontisan/stitcher_cli"
   autoload :Tasks, "fontisan/tasks"
@@ -123,6 +124,7 @@ module Fontisan
   autoload :TrueTypeFont, "fontisan/true_type_font"
   autoload :TrueTypeFontExtensions, "fontisan/true_type_font_extensions"
   autoload :Type1Font, "fontisan/type1_font"
+  autoload :Woff2Collection, "fontisan/woff2_collection"
   autoload :Woff2Font, "fontisan/woff2_font"
   autoload :WoffFont, "fontisan/woff_font"
 

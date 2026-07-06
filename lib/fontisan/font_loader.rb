@@ -45,6 +45,7 @@ module Fontisan
       ttc: TrueTypeCollection,
       otc: OpenTypeCollection,
       dfont: DfontCollection,
+      woff2_collection: Woff2Collection,
     }.freeze
     private_constant :COLLECTION_CLASSES
 
@@ -83,6 +84,8 @@ module Fontisan
                                                  lazy: resolved_lazy)
       when :ttc, :otc then load_from_collection(path, format, font_index,
                                                 mode: resolved_mode)
+      when :woff2_collection then load_from_collection(path, format, font_index,
+                                                       mode: resolved_mode)
       when :dfont then load_dfont(path, font_index: font_index,
                                         mode: resolved_mode)
       when :pfa, :pfb then Type1Font.from_file(path, mode: resolved_mode)
@@ -185,7 +188,7 @@ module Fontisan
                when Constants::SFNT_OTTO_MAGIC then :otf
                when Constants::SFNT_TRUETYPE_MAGIC, Constants::SFNT_TRUE_MAGIC then :ttf
                when Constants::WOFF_MAGIC then :woff
-               when Constants::WOFF2_MAGIC then :woff2
+               when Constants::WOFF2_MAGIC then scan_woff2(io)
                when Constants::DFONT_RESOURCE_HEADER
                  io.rewind
                  Parsers::DfontParser.dfont?(io) ? :dfont : nil
@@ -238,6 +241,18 @@ module Fontisan
       nil
     end
 
+    # Distinguish a WOFF2 collection (flavor='ttcf') from a single-font
+    # WOFF2. The 8-byte probe covers the WOFF2 signature + flavor field;
+    # spec section 3.2 requires flavor='ttcf' (0x74746366) for collections.
+    def self.scan_woff2(io)
+      io.rewind
+      io.read(4) # signature (already matched)
+      flavor = io.read(4)&.unpack1("N")
+      flavor == Woff2::CollectionDecoder::TTC_FLAVOR ? :woff2_collection : :woff2
+    rescue IOError
+      :woff2
+    end
+
     # Mode override from FONTISAN_MODE env var, or nil.
     def self.env_mode
       env_value = ENV["FONTISAN_MODE"]
@@ -287,6 +302,7 @@ module Fontisan
     private_class_method :detect,
                          :type1_format_from_header,
                          :scan_collection,
+                         :scan_woff2,
                          :env_mode,
                          :env_lazy,
                          :load_from_collection,
