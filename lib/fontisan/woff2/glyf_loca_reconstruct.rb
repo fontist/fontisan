@@ -48,6 +48,14 @@ module Fontisan
 
       # Reconstruct glyf and loca tables.
       #
+      # Per OpenType glyf table spec, loca offsets must be even (short
+      # format) or multiples of 4 (long format). Each reconstructed glyph
+      # is padded to the loca-format alignment boundary so the next
+      # glyph starts at a valid offset. Without this padding, Chrome's
+      # OTS rejects the font with "Failed to convert WOFF 2.0 font to
+      # SFNT" because glyf.origLength understates the padded size every
+      # conformant decoder produces.
+      #
       # @return [Hash{Symbol => String}] `{ glyf:, loca: }`
       def reconstruct
         header = parse_header
@@ -55,10 +63,14 @@ module Fontisan
 
         glyf = String.new(encoding: Encoding::BINARY)
         offsets = [0]
+        align = @index_format.zero? ? 2 : 4
 
         num_glyphs.times do |glyph_id|
           glyph = decode_glyph(glyph_id, streams)
           glyf << glyph
+          # Pad to alignment boundary so next glyph starts at a valid loca offset
+          remainder = glyf.bytesize % align
+          glyf << ("\x00" * (align - remainder)) if remainder.positive?
           offsets << glyf.bytesize
         end
 
