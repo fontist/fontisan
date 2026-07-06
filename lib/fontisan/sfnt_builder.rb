@@ -45,6 +45,8 @@ module Fontisan
       # table data with 4-byte padding. The directory entries' offset
       # fields were precomputed assuming this layout.
       sorted = records.sort_by { |r| r[:tag] }
+      # rubocop:disable Style/CombinableLoops
+      # SFNT requires all directory entries before any table data
       sorted.each do |r|
         out << r[:tag].ljust(4, "\x00")
         out << [r[:checksum]].pack("N")
@@ -56,6 +58,7 @@ module Fontisan
         out << r[:data]
         out << ("\x00" * r[:padding])
       end
+      # rubocop:enable Style/CombinableLoops
 
       out
     end
