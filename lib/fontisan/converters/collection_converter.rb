@@ -121,9 +121,10 @@ module Fontisan
           raise ArgumentError, "Collection file not found: #{collection_path}"
         end
 
-        unless %i[ttc otc dfont].include?(target_type)
+        unless %i[ttc otc dfont woff2_collection].include?(target_type)
           raise ArgumentError,
-                "Invalid target type: #{target_type}. Must be :ttc, :otc, or :dfont"
+                "Invalid target type: #{target_type}. Must be :ttc, :otc, " \
+                ":dfont, or :woff2_collection"
         end
 
         unless options[:output]
@@ -145,6 +146,8 @@ module Fontisan
                   unpack_ttc_otc(collection_path)
                 when :dfont
                   unpack_dfont(collection_path)
+                when :woff2_collection
+                  unpack_woff2_collection(collection_path)
                 else
                   raise Error, "Unknown collection type: #{source_type}"
                 end
@@ -155,7 +158,7 @@ module Fontisan
       # Detect collection type from file
       #
       # @param path [String] Collection path
-      # @return [Symbol] Collection type (:ttc, :otc, or :dfont)
+      # @return [Symbol] Collection type (:ttc, :otc, :dfont, or :woff2_collection)
       def detect_collection_type(path)
         File.open(path, "rb") do |io|
           signature = io.read(4)
@@ -165,6 +168,12 @@ module Fontisan
             # TTC or OTC - check extension
             ext = File.extname(path).downcase
             ext == ".otc" ? :otc : :ttc
+          elsif signature == "wOF2"
+            # WOFF2 collection or single font — distinguish by flavor
+            io.read(8) # signature + flavor
+            io.rewind
+            flavor = File.binread(path, 4, 4)&.unpack1("N")
+            flavor == Woff2::CollectionDecoder::TTC_FLAVOR ? :woff2_collection : (raise Error, "Not a WOFF2 collection: #{path}")
           elsif Parsers::DfontParser.dfont?(io)
             :dfont
           else
@@ -205,6 +214,15 @@ module Fontisan
         end
 
         fonts
+      end
+
+      # Unpack fonts from WOFF2 collection (spec section 4.2).
+      #
+      # @param path [String] WOFF2 collection path
+      # @return [Array<Font>] Unpacked fonts
+      def unpack_woff2_collection(path)
+        collection = FontLoader.load_collection(path)
+        collection.extract_fonts
       end
 
       # Convert fonts if outline format change needed
@@ -380,6 +398,8 @@ conv_options = nil)
           repack_ttc_otc(fonts, target_type, output_path, options)
         when :dfont
           repack_dfont(fonts, output_path, options)
+        when :woff2_collection
+          repack_woff2_collection(fonts, output_path, options)
         else
           raise Error, "Unknown target type: #{target_type}"
         end
@@ -413,6 +433,19 @@ conv_options = nil)
       def repack_dfont(fonts, output_path, _options)
         builder = Collection::DfontBuilder.new(fonts)
         builder.build_to_file(output_path)
+      end
+
+      # Repack fonts into a WOFF2 collection (spec section 4.2).
+      #
+      # @param fonts [Array<Font>] Fonts
+      # @param output_path [String] Output path (.woff2)
+      # @param options [Hash] Options (looks for :brotli_quality)
+      # @return [void]
+      def repack_woff2_collection(fonts, output_path, options)
+        brotli_quality = options.fetch(:brotli_quality, 11)
+        encoder = Woff2::CollectionEncoder.new(brotli_quality:)
+        bytes = encoder.encode_fonts(fonts)
+        File.binwrite(output_path, bytes)
       end
 
       # Build conversion result

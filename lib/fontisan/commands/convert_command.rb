@@ -299,7 +299,7 @@ module Fontisan
       # Determine collection type from format
       #
       # @param format [Symbol] Target format
-      # @return [Symbol, nil] Collection type (:ttc, :otc, :dfont) or nil
+      # @return [Symbol, nil] Collection type (:ttc, :otc, :dfont, :woff2_collection) or nil
       def collection_type_from_format(format)
         case format
         when :ttc
@@ -308,6 +308,8 @@ module Fontisan
           :otc
         when :dfont
           :dfont
+        when :woff2
+          :woff2_collection
         else
           # Check output extension
           ext = File.extname(@output_path).downcase
@@ -318,6 +320,8 @@ module Fontisan
             :otc
           when ".dfont"
             :dfont
+          when ".woff2"
+            :woff2_collection
           end
         end
       end

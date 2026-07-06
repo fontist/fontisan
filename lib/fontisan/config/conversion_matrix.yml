@@ -377,6 +377,42 @@ conversions:
       Unpacks dfont suitcase and repacks as OTC. If dfont contains TrueType
       fonts, they are converted to OpenType/CFF format.
 
+  # WOFF2 collection conversions (spec section 4.2)
+  - from: ttc
+    to: woff2_collection
+    strategy: collection_converter
+    description: "Convert TrueType Collection to WOFF2 collection"
+    status: implemented
+    notes: >
+      Unpacks TTC, encodes each font per WOFF2 spec, packs as a single
+      WOFF2 collection file (flavor='ttcf'). Tables shared across fonts
+      are deduplicated.
+
+  - from: otc
+    to: woff2_collection
+    strategy: collection_converter
+    description: "Convert OpenType Collection to WOFF2 collection"
+    status: implemented
+    notes: >
+      Unpacks OTC, encodes each font per WOFF2 spec, packs as a single
+      WOFF2 collection file (flavor='ttcf').
+
+  - from: woff2_collection
+    to: ttc
+    strategy: collection_converter
+    description: "Convert WOFF2 collection to TrueType Collection"
+    status: implemented
+    notes: >
+      Decodes WOFF2 collection, extracts each font, repacks as TTC.
+
+  - from: woff2_collection
+    to: otc
+    strategy: collection_converter
+    description: "Convert WOFF2 collection to OpenType Collection"
+    status: implemented
+    notes: >
+      Decodes WOFF2 collection, extracts each font, repacks as OTC.
+
 # Conversion compatibility matrix
 #
 # This section documents which source features are preserved in conversions.
