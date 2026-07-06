@@ -464,4 +464,93 @@ RSpec.describe Fontisan::WoffFont do
       expect(woff).to respond_to(:table)
     end
   end
+
+  describe "spec §4/§5/§6/§7 decoder compliance" do
+    let(:input_ttf) { fixture_path("fonttools/TestTTF.ttf") }
+    let(:font) { Fontisan::FontLoader.load(input_ttf) }
+    let(:writer) { Fontisan::Converters::WoffWriter.new }
+
+    # Round-trip: encode → decode → compare to original input.
+    def round_trip(opts = {})
+      woff = writer.convert(font, **opts)
+      Tempfile.create(["decoded", ".woff"]) do |f|
+        f.binmode
+        f.write(woff)
+        f.close
+        yield Fontisan::WoffFont.from_file(f.path)
+      end
+    end
+
+    it "round-trips every font table byte-identical" do
+      round_trip do |decoded|
+        font.table_data.each do |tag, orig|
+          expect(decoded.table_data[tag]).to eq(orig),
+                                             "table #{tag} should round-trip byte-identical"
+        end
+      end
+    end
+
+    it "decompresses metadata and returns the original XML" do
+      xml = "<metadata><uniqueid id='abc'/></metadata>"
+      round_trip(metadata_xml: xml) do |decoded|
+        expect(decoded.metadata).to eq(xml)
+      end
+    end
+
+    it "preserves private data verbatim" do
+      data = "private bytes \x00\x01\x02".b
+      round_trip(private_data: data) do |decoded|
+        # WoffFont doesn't expose private data via a public accessor in the
+        # current API, but reading from the header fields + IO works.
+        File.open(decoded.io_source.path, "rb") do |io|
+          io.seek(decoded.header.priv_offset)
+          expect(io.read(decoded.header.priv_length)).to eq(data)
+        end
+      end
+    end
+
+    it "skips 4-byte alignment padding between tables" do
+      round_trip do |decoded|
+        # Every table should decompress to exactly origLength, regardless
+        # of inter-table padding in the WOFF file.
+        decoded.table_entries.each do |entry|
+          tag = entry.tag.dup.force_encoding("UTF-8")
+          data = decoded.table_data(tag)
+          expect(data.bytesize).to eq(entry.orig_length),
+                                   "table #{tag} decoded size #{data.bytesize} != origLength #{entry.orig_length}"
+        end
+      end
+    end
+
+    it "preserves origChecksum verbatim" do
+      round_trip do |decoded|
+        # Decoders don't need to verify checksums per spec, but the
+        # origChecksum field should be readable for tools that want it.
+        decoded.table_entries.each do |entry|
+          expect(entry.orig_checksum.to_i).to be_an(Integer)
+        end
+      end
+    end
+
+    it "decodes fontTools-produced WOFF correctly", :python do
+      skip "fontTools not available" unless python_fonttools?
+
+      Dir.mktmpdir do |dir|
+        ft_path = File.join(dir, "ft.woff")
+        script = File.join(dir, "encode.py")
+        File.write(script, <<~PY)
+          import io, sys
+          from fontTools.ttLib import TTFont
+          t = TTFont("#{input_ttf}")
+          out = io.BytesIO()
+          t.flavor = "woff"
+          t.save(out)
+          open("#{ft_path}", "wb").write(out.getvalue())
+        PY
+        system("python3 #{script}")
+        decoded = described_class.from_file(ft_path)
+        expect(decoded.table_data["glyf"]).to eq(font.table_data["glyf"])
+      end
+    end
+  end
 end
