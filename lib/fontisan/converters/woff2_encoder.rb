@@ -219,23 +219,23 @@ module Fontisan
         end
       end
 
-      # Apply the WOFF2 glyf/loca paired transform per spec section 5.1/5.3.
+      # Pick the optimal output loca format and run the glyf/loca transform.
       #
-      # Returns a hash with the transformed glyf bytes and the original
-      # loca length needed to emit its synthetic directory entry, or nil
-      # for CFF fonts or fonts missing glyf/loca. The original glyf bytes
-      # are kept in `table_data` so its `origLength` is preserved; the
-      # transformed bytes are passed to the entries builder separately.
+      # fontTools' encoder prefers short loca when the glyf table fits,
+      # because short loca is half the size of long loca. Chrome's OTS
+      # accepts both formats but rejects files where the format is
+      # inconsistent with the glyf layout. We make the format choice in
+      # one place ({LocaFormat.choose_for}) and propagate it to the
+      # transform, the reconstruct, the head table, and the directory.
       #
-      # glyf.origLength is computed by round-tripping the transformed glyf
-      # through the decoder — this guarantees the directory matches what
-      # any compliant decoder will produce, including padding and minor
-      # re-encoding differences (OFF section 5.3.3 allows multiple valid
-      # reconstructions of the same glyph data).
+      # glyf.origLength / loca.origLength are computed by round-tripping
+      # the transformed glyf through the decoder — this guarantees the
+      # directory matches what any compliant decoder will produce,
+      # including padding and minor re-encoding differences (OFF section
+      # 5.3.3 allows multiple valid reconstructions of the same glyph data).
       #
       # @return [Hash{Symbol => Object}, nil]
       def apply_glyf_loca_transform!(table_data, font)
-        return nil unless font.respond_to?(:has_table?)
         return nil unless font.has_table?("glyf") && font.has_table?("loca")
 
         glyf_data = table_data["glyf"]
@@ -246,26 +246,25 @@ module Fontisan
         head = font.table("head")
         return nil unless maxp && head
 
-        index_format = head.index_to_loc_format
+        target_format = Woff2::LocaFormat.choose_for(glyf_bytesize: glyf_data.bytesize)
 
         transformed = Woff2::GlyfLocaTransform.new(
           glyf_data:,
           loca_data:,
           num_glyphs: maxp.num_glyphs,
-          index_format:,
+          source_index_format: head.index_to_loc_format,
+          target_format:,
         ).transform
 
-        # Round-trip through the decoder to get the exact reconstructed
-        # sizes the directory must advertise. fontTools re-compiles glyf
-        # during encoding, producing sizes that differ from the source by
-        # small amounts (encoding variations per OFF section 5.3.3). Using
-        # the source bytesize causes fontTools' decoder to reject the
-        # WOFF2 with "not enough 'glyf' table data".
         reconstructed = Woff2::GlyfLocaReconstruct.new(
           transformed_glyf: transformed,
           num_glyphs: maxp.num_glyphs,
-          index_format:,
+          loca_format: target_format,
         ).reconstruct
+
+        # Realign head.indexToLocFormat with the chosen output format so
+        # the reconstructed SFNT is self-consistent.
+        head.index_to_loc_format = target_format.code
 
         glyf_orig_length = reconstructed[:glyf].bytesize
         loca_orig_length = reconstructed[:loca].bytesize

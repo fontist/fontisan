@@ -12,7 +12,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
       glyf_data: font.table_data["glyf"],
       loca_data: font.table_data["loca"],
       num_glyphs: font.table("maxp").num_glyphs,
-      index_format: font.table("head").index_to_loc_format,
+      source_index_format: font.table("head").index_to_loc_format,
+      target_format: Fontisan::Woff2::LocaFormat::SHORT,
     )
   end
 
@@ -24,19 +25,17 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
       expect(result.encoding).to eq(Encoding::BINARY)
     end
 
-    it "writes the spec-mandated 36-byte header" do
+    it "writes the spec-mandated 36-byte header with target loca format" do
       # version (uint16) + optionFlags (uint16) + numGlyphs (uint16) +
       # indexFormat (uint16) + 7 × uint32 stream sizes
       version, option_flags, num_glyphs, index_format = result[0, 8].unpack("S>S>S>S>")
       expect(version).to eq(0)
       expect(num_glyphs).to eq(6)
-      # indexFormat matches the source head.indexToLocFormat per WOFF2
-      # spec section 5.1. Chrome OTS accepts both 0 and 1.
-      expect(index_format).to eq(font.table("head").index_to_loc_format)
+      expect(index_format).to eq(Fontisan::Woff2::LocaFormat::SHORT.code)
       expect(option_flags).to eq(0) # TestTTF has no OVERLAP_SIMPLE glyphs
     end
 
-    it "preserves source head.indexToLocFormat in the glyf transform header" do
+    it "emits long loca indexFormat when target_format is LONG" do
       long_loca_path = fixture_path("fonts/Libertinus/Libertinus-7.051/static/TTF/LibertinusKeyboard-Regular.ttf")
       long_loca_font = Fontisan::FontLoader.load(long_loca_path)
       skip "long-loca fixture missing" unless long_loca_font.table("head").index_to_loc_format == 1
@@ -45,12 +44,13 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
         glyf_data: long_loca_font.table_data["glyf"],
         loca_data: long_loca_font.table_data["loca"],
         num_glyphs: long_loca_font.table("maxp").num_glyphs,
-        index_format: 1, # source has long loca
+        source_index_format: 1, # source has long loca
+        target_format: Fontisan::Woff2::LocaFormat::LONG,
       ).transform
 
       _, _, _, index_format = transformed[0, 8].unpack("S>S>S>S>")
       expect(index_format).to eq(1),
-                              "glyf transform header should preserve source indexToLocFormat (1 for long loca)"
+                              "glyf transform header should reflect target_format (LONG)"
     end
 
     it "writes 7 stream size prefixes after the header" do
@@ -133,7 +133,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
         glyf_data: empty_glyf,
         loca_data: empty_loca,
         num_glyphs: 1,
-        index_format: 0,
+        source_index_format: 0,
+        target_format: Fontisan::Woff2::LocaFormat::SHORT,
       )
       result = t.transform
       expect(result.bytesize).to be >= 36 # at least the header

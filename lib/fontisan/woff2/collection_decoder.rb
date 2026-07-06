@@ -165,10 +165,11 @@ module Fontisan
         index_format = parse_index_format(font_tables)
         return unless num_glyphs && index_format
 
+        loca_format = index_format.zero? ? LocaFormat::SHORT : LocaFormat::LONG
         result = GlyfLocaReconstruct.new(
           transformed_glyf: glyf_bytes,
           num_glyphs:,
-          index_format:,
+          loca_format:,
         ).reconstruct
         font_tables["glyf"] = result[:glyf]
         font_tables["loca"] = result[:loca]

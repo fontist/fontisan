@@ -11,6 +11,7 @@ module Fontisan
     autoload :GlyfLocaReconstruct, "fontisan/woff2/glyf_loca_reconstruct"
     autoload :GlyfLocaTransform, "fontisan/woff2/glyf_loca_transform"
     autoload :HmtxTransformer, "fontisan/woff2/hmtx_transformer"
+    autoload :LocaFormat, "fontisan/woff2/loca_format"
     autoload :TableTransformer, "fontisan/woff2/table_transformer"
     autoload :TripletCodec, "fontisan/woff2/triplet_codec"
     autoload :UInt255, "fontisan/woff2/uint255"

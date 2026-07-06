@@ -7,7 +7,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
   let(:input_ttf) { fixture_path("fonttools/TestTTF.ttf") }
   let(:font) { Fontisan::FontLoader.load(input_ttf) }
   let(:num_glyphs) { font.table("maxp").num_glyphs }
-  let(:index_format) { font.table("head").index_to_loc_format }
+  let(:source_index_format) { font.table("head").index_to_loc_format }
+  let(:target_format) { Fontisan::Woff2::LocaFormat::SHORT }
   let(:orig_glyf) { font.table_data["glyf"] }
   let(:orig_loca) { font.table_data["loca"] }
 
@@ -18,12 +19,13 @@ RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
       glyf_data: orig_glyf,
       loca_data: orig_loca,
       num_glyphs:,
-      index_format:,
+      source_index_format:,
+      target_format:,
     ).transform
   end
 
   let(:reconstructor) do
-    described_class.new(transformed_glyf:, num_glyphs:, index_format:)
+    described_class.new(transformed_glyf:, num_glyphs:, loca_format: target_format)
   end
 
   describe "#reconstruct" do
@@ -41,9 +43,9 @@ RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
       expect(result[:loca].encoding).to eq(Encoding::BINARY)
     end
 
-    it "produces a loca table with the right size for the indexFormat" do
-      # loca size = (numGlyphs + 1) × 2 (short) or × 4 (long)
-      expected_size = (num_glyphs + 1) * (index_format.zero? ? 2 : 4)
+    it "produces a loca table with the right size for the loca format" do
+      # loca size = (numGlyphs + 1) × entry_width
+      expected_size = target_format.loca_size(num_glyphs)
       expect(result[:loca].bytesize).to eq(expected_size)
     end
 

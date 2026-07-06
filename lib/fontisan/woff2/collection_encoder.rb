@@ -71,11 +71,13 @@ module Fontisan
         return nil unless maxp && head
 
         loca_orig_length = tables["loca"].bytesize
+        target_format = LocaFormat.choose_for(glyf_bytesize: tables["glyf"].bytesize)
         tables["glyf"] = GlyfLocaTransform.new(
           glyf_data: tables["glyf"],
           loca_data: tables["loca"],
           num_glyphs: maxp.num_glyphs,
-          index_format: head.index_to_loc_format,
+          source_index_format: head.index_to_loc_format,
+          target_format:,
         ).transform
         tables.delete("loca")
         loca_orig_length

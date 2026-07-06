@@ -41,21 +41,24 @@ module Fontisan
       # Simple glyph records start with int16 numberOfContours + 4 int16 bbox.
       SIMPLE_HEADER_SIZE = 10
 
-      attr_reader :num_glyphs, :source_index_format
+      attr_reader :num_glyphs, :source_index_format, :target_format
 
       # @param glyf_data [String] raw glyf table bytes
       # @param loca_data [String] raw loca table bytes
       # @param num_glyphs [Integer] from maxp
-      # @param index_format [Integer] 0 (short) or 1 (long), from head.
-      #   Used to parse the source loca; the WOFF2 transformed glyf
-      #   always emits indexFormat=0 (Chrome OTS silently rejects any
-      #   other value, even though WOFF2 spec section 5.1 allows the
-      #   source's indexToLocFormat).
-      def initialize(glyf_data:, loca_data:, num_glyphs:, index_format:)
+      # @param source_index_format [Integer] 0 (short) or 1 (long), from
+      #   head.indexToLocFormat of the source font. Used only to parse the
+      #   source loca offsets.
+      # @param target_format [LocaFormat] the loca format to encode in the
+      #   transformed glyf header. Defaults to {LocaFormat::SHORT} per
+      #   Chrome's preference; the encoder re-picks based on glyf size.
+      def initialize(glyf_data:, loca_data:, num_glyphs:, source_index_format:,
+                     target_format: LocaFormat::SHORT)
         @glyf_data = glyf_data
         @loca_data = loca_data
         @num_glyphs = num_glyphs
-        @source_index_format = index_format
+        @source_index_format = source_index_format
+        @target_format = target_format
       end
 
       # Encode the glyf/loca transform, returning the transformed glyf bytes.
@@ -255,11 +258,7 @@ module Fontisan
         out << [0].pack("S>")                                  # version
         out << [(s.has_overlap? ? 1 : 0)].pack("S>")           # optionFlags
         out << [@num_glyphs].pack("S>")
-        # Emit the source's indexFormat. The earlier "always 0" override
-        # (commit 5f7e32d) was based on a misdiagnosis — Chrome's OTS
-        # accepts both 0 and 1, but short loca (0) can't address glyf
-        # offsets > 0x20000 bytes, so large fonts MUST use 1.
-        out << [@source_index_format].pack("S>")
+        out << [target_format.code].pack("S>")
         out << [s.n_contour.bytesize].pack("L>")
         out << [s.n_points.bytesize].pack("L>")
         out << [s.flags.bytesize].pack("L>")

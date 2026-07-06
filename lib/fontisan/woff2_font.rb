@@ -558,10 +558,11 @@ module Fontisan
       # transformed. Per spec section 4.1, transformLength is present IFF
       # the table is transformed, so a non-nil value indicates transform.
       if glyf_entry&.transform_length && decompressed_tables["glyf"]
+        loca_format = index_format.zero? ? Woff2::LocaFormat::SHORT : Woff2::LocaFormat::LONG
         result = Woff2::GlyfLocaReconstruct.new(
           transformed_glyf: decompressed_tables["glyf"],
           num_glyphs:,
-          index_format:,
+          loca_format:,
         ).reconstruct
         decompressed_tables["glyf"] = result[:glyf]
         decompressed_tables["loca"] = result[:loca]

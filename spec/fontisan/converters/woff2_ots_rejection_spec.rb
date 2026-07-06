@@ -129,18 +129,20 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
     end
 
     it "emits loca.origLength matching the reconstructed loca size" do
-      # The glyf transform preserves the source's indexFormat, so the
-      # decoder reconstructs loca in that format. The directory's
-      # loca.origLength must match the reconstructed size — otherwise
-      # fontTools and Chrome's OTS reject the file for the loca size
-      # mismatch.
+      # The encoder picks the most compact format that fits the glyf
+      # table (per fontTools' behavior). The directory's loca.origLength
+      # must match that chosen format's reconstructed size — otherwise
+      # fontTools and Chrome's OTS reject the file for the size mismatch.
       long_loca_ttf = fixture_path(
         "fonts/Libertinus/Libertinus-7.051/static/TTF/LibertinusKeyboard-Regular.ttf",
       )
       skip "long-loca fixture missing" unless File.exist?(long_loca_ttf)
 
       source = Fontisan::FontLoader.load(long_loca_ttf)
-      skip "fixture is not long-loca" unless source.table("head").index_to_loc_format == 1
+      num_glyphs = source.table("maxp").num_glyphs
+      glyf_bytesize = source.table_data["glyf"].bytesize
+      expected_format = Fontisan::Woff2::LocaFormat.choose_for(glyf_bytesize:)
+      expected = expected_format.loca_size(num_glyphs)
 
       woff2 = encode_to_woff2(long_loca_ttf)
       Dir.mktmpdir do |dir|
@@ -149,13 +151,10 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
 
         loca_entry = Fontisan::Woff2Font.from_file(path).table_entries
           .find { |e| e.tag == "loca" }
-        num_glyphs = source.table("maxp").num_glyphs
-        index_format = source.table("head").index_to_loc_format
-        bytes_per_entry = index_format.zero? ? 2 : 4
-        expected = (num_glyphs + 1) * bytes_per_entry
         expect(loca_entry.orig_length).to eq(expected),
                                           "loca.origLength must match the reconstructed loca " \
-                                          "(numGlyphs+1)*#{bytes_per_entry}=#{expected}, got #{loca_entry.orig_length}"
+                                          "size for format #{expected_format.short? ? 'SHORT' : 'LONG'}: " \
+                                          "expected #{expected}, got #{loca_entry.orig_length}"
       end
     end
 
@@ -208,7 +207,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         glyf_data: font.table_data["glyf"],
         loca_data: font.table_data["loca"],
         num_glyphs: font.table("maxp").num_glyphs,
-        index_format: font.table("head").index_to_loc_format,
+        source_index_format: font.table("head").index_to_loc_format,
       )
       ours = transformer.transform
 

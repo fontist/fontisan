@@ -35,26 +35,27 @@ module Fontisan
       # 8-byte header + 7 × 4-byte stream sizes.
       HEADER_SIZE = 36
 
-      attr_reader :num_glyphs, :index_format
+      attr_reader :num_glyphs, :loca_format
 
       # @param transformed_glyf [String] bytes of the transformed glyf table
       # @param num_glyphs [Integer] from maxp
-      # @param index_format [Integer] 0 (short) or 1 (long), from head
-      def initialize(transformed_glyf:, num_glyphs:, index_format:)
+      # @param loca_format [LocaFormat] the loca format to reconstruct with.
+      #   Must match the indexFormat field in the transformed glyf header.
+      def initialize(transformed_glyf:, num_glyphs:, loca_format:)
         @data = transformed_glyf
         @num_glyphs = num_glyphs
-        @index_format = index_format
+        @loca_format = loca_format
       end
 
       # Reconstruct glyf and loca tables.
       #
-      # Per OpenType glyf table spec, loca offsets must be even (short
-      # format) or multiples of 4 (long format). Each reconstructed glyph
-      # is padded to the loca-format alignment boundary so the next
-      # glyph starts at a valid offset. Without this padding, Chrome's
-      # OTS rejects the font with "Failed to convert WOFF 2.0 font to
-      # SFNT" because glyf.origLength understates the padded size every
-      # conformant decoder produces.
+      # Glyph data is concatenated with padding between glyphs per the
+      # loca format's alignment requirement: short loca (indexFormat=0)
+      # requires 2-byte-aligned offsets; long loca has no alignment
+      # requirement. The result must match what every conformant decoder
+      # produces — Chrome's OTS rejects with "Failed to convert WOFF 2.0
+      # font to SFNT" when glyf.origLength doesn't equal the reconstructed
+      # size.
       #
       # @return [Hash{Symbol => String}] `{ glyf:, loca: }`
       def reconstruct
@@ -63,14 +64,12 @@ module Fontisan
 
         glyf = String.new(encoding: Encoding::BINARY)
         offsets = [0]
-        align = @index_format.zero? ? 2 : 4
 
         num_glyphs.times do |glyph_id|
           glyph = decode_glyph(glyph_id, streams)
           glyf << glyph
-          # Pad to alignment boundary so next glyph starts at a valid loca offset
-          remainder = glyf.bytesize % align
-          glyf << ("\x00" * (align - remainder)) if remainder.positive?
+          pad = loca_format.padding_after(glyf.bytesize)
+          glyf << ("\x00" * pad) if pad.positive?
           offsets << glyf.bytesize
         end
 
@@ -89,9 +88,10 @@ module Fontisan
           raise InvalidFontError,
                 "WOFF2 glyf numGlyphs mismatch: header says #{ng}, expected #{@num_glyphs}"
         end
-        if idx_fmt != @index_format
+        if idx_fmt != loca_format.code
           raise InvalidFontError,
-                "WOFF2 glyf indexFormat mismatch: header says #{idx_fmt}, expected #{@index_format}"
+                "WOFF2 glyf indexFormat mismatch: header says #{idx_fmt}, " \
+                "expected #{loca_format.code} (#{loca_format.short? ? 'short' : 'long'} loca)"
         end
 
         {
@@ -381,7 +381,7 @@ module Fontisan
 
       # Build loca table from accumulated glyph offsets per spec section 5.3.
       def build_loca(offsets)
-        if @index_format.zero?
+        if loca_format.short?
           offsets.map { |o| o / 2 }.pack("n*")
         else
           offsets.pack("N*")
