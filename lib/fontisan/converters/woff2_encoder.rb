@@ -247,7 +247,12 @@ module Fontisan
           index_format: head.index_to_loc_format,
         ).transform
 
-        loca_orig_length = loca_data.bytesize
+        # The glyf transform always emits indexFormat=0 (Chrome OTS
+        # requirement), so the decoder reconstructs a short loca
+        # (2 bytes per offset). The directory's origLength must match
+        # the reconstructed size, not the source's bytesize — otherwise
+        # fontTools and Chrome's OTS reject the file for the size mismatch.
+        loca_orig_length = (maxp.num_glyphs + 1) * 2
         table_data.delete("loca")
 
         { transformed_glyf: transformed, loca_orig_length: }
