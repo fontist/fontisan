@@ -47,7 +47,9 @@ RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
       expect(result[:loca].bytesize).to eq(expected_size)
     end
 
-    it "decodes glyphs with semantically equivalent outlines" do
+    it "decodes glyphs with semantically equivalent outlines", :python do
+      skip "fontTools not available" unless python_fonttools?
+
       Dir.mktmpdir do |dir|
         # Round-trip through the encoder → decoder to validate.
         woff2 = Fontisan::Converters::Woff2Encoder.new

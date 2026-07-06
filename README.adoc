@@ -120,7 +120,7 @@ Font format support::
 * TTF, OTF (CFF1), OTF2 (CFF2), TTC, OTC font formats (production ready)
 * CFF2 with variable-font blend/vsindex operators, FDSelect, subroutines
 * Adobe Type 1 fonts (PFB/PFA) with bidirectional conversion (see link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide])
-* WOFF/WOFF2 format support with reading, writing, and conversion (see link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Guide])
+* WOFF/WOFF2 format support with reading, writing, and conversion — fully compliant with W3C WOFF 1.0 (https://www.w3.org/TR/WOFF/[Recommendation 13 December 2012]) and WOFF 2.0 (https://www.w3.org/TR/WOFF2/[Recommendation 08 August 2024]) specifications. See link:docs/WOFF_WOFF2_FORMATS.adoc[WOFF/WOFF2 Guide].
 * Apple legacy font support: 'true' signature TrueType fonts and dfont format (see link:docs/APPLE_LEGACY_FONTS.adoc[Apple Legacy Fonts Guide])
 * SVG font generation and SVG-to-glyph conversion (complete)
 

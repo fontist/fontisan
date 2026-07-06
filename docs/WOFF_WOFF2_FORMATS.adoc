@@ -8,6 +8,79 @@ including reading, writing, and conversion between these and other font formats.
 WOFF is a wrapper around SFNT fonts (TTF/OTF) using zlib compression, while WOFF2
 uses Brotli compression for better compression ratios and table transformations.
 
+== W3C specification compliance
+
+Fontisan's WOFF and WOFF2 implementations are fully compliant with the
+W3C Recommendations:
+
+* **WOFF 1.0** (W3C Recommendation, 13 December 2012):
+  https://www.w3.org/TR/WOFF/[spec] — reading and writing
+* **WOFF 2.0** (W3C Recommendation, 08 August 2024):
+  https://www.w3.org/TR/WOFF2/[spec] — reading and writing
+
+=== WOFF 2.0 (spec section references below)
+
+Compliance covers every normative requirement of the WOFF2 spec:
+
+* *Section 3.2 (WOFF2 Header)*: 48-byte header with correct signature
+  (`wOF2`), flavor, file length, reserved=0, totalSfntSize,
+  totalCompressedSize, version, and meta/private offset/length fields.
+* *Section 4.1 (Table directory)*: flags byte structure (bits 0-5 tag
+  index, bits 6-7 transform version); optional 4-byte custom tag when
+  index=63; `transformLength` field present IFF table is transformed.
+* *Section 4.2 (Collection directory)*: full support for flavor=`ttcf`
+  font collections — CollectionHeader + CollectionFontEntry per font,
+  with deduplicated tables shared across fonts via directory indices.
+* *Section 5 (Compressed data)*: single Brotli stream of all tables in
+  directory order; `DSIG` table removed per encoder rule; `head.flags`
+  bit 11 set to indicate lossless modifying transform.
+* *Section 5.1 (Transformed glyf table)*: 36-byte header (uint16
+  version + uint16 optionFlags + uint16 numGlyphs + uint16 indexFormat
+  + 7 × uint32 stream sizes); 7 streams in spec order (nContour,
+  nPoints, flags, glyph, composite, bbox with bboxBitmap prefix,
+  instructions); optional overlapSimpleBitmap when optionFlags bit 0
+  is set; bboxBitmap semantics per spec (composite glyphs always have
+  explicit bbox, simple glyphs omit when calculated bbox matches,
+  empty glyphs MUST have all-zero bbox).
+* *Section 5.2 (Triplet coordinate encoding)*: variable-length
+  coordinate codec with all 128 flag index variants (1-4 byte
+  payloads based on coordinate magnitude); bit 7 = off-curve flag.
+* *Section 5.3 (Transformed loca table)*: `transformLength` MUST be 0;
+  loca data omitted from compressed stream (reconstructed by decoder
+  from glyf).
+* *Section 5.4 (Transformed hmtx table)*: optional version 1 transform
+  exploiting `lsb == xMin` redundancy.
+* *Section 5.5 (Table order constraints)*: loca MUST immediately
+  follow glyf in table directory; for collections, loca MUST
+  immediately follow its corresponding glyf with no other tables in
+  between.
+
+Validation: fontisan's WOFF2 output is verified byte-identical to
+fontTools' output for transformed glyf tables, and round-trips
+correctly through the W3C `woff2_decompress` reference tool.
+
+=== WOFF 1.0
+
+* *Section 4 (WOFF Header)*: 44-byte header with correct signature
+  (`wOFF`), flavor, length, numTables, reserved=0, totalSfntSize,
+  version, and meta/private offset/length fields.
+* *Section 5 (Table directory)*: 20-byte entries with tag, offset,
+  compLength, origLength, origChecksum. Tables sorted in input font
+  order per spec ("MUST be stored in the same order as the
+  well-formed input font").
+* *Section 6 (Font data tables)*: tables compressed individually with
+  zlib (compress2-compatible); each table 4-byte aligned and
+  zero-padded to next boundary ("MUST begin on 4-byte boundaries and
+  be zero-padded to the next 4-byte boundary").
+* *Section 7 (Extended metadata)*: optional block of XML data,
+  always zlib-compressed ("it is never stored in uncompressed form").
+* *Section 8 (Private data)*: optional block of arbitrary bytes,
+  always 4-byte aligned.
+
+Validation: fontisan's WOFF 1 output round-trips through fontTools
+without errors; all 4-byte alignment, padding, and compression
+requirements verified by spec-conformance specs.
+
 === Display WOFF/WOFF2 font information
 
 Show metadata specific to WOFF/WOFF2 fonts including version, compression details,
