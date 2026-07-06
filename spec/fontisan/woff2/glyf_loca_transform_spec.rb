@@ -30,14 +30,13 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
       version, option_flags, num_glyphs, index_format = result[0, 8].unpack("S>S>S>S>")
       expect(version).to eq(0)
       expect(num_glyphs).to eq(6)
-      # Encoder always emits indexFormat=0 per Chrome OTS requirement
-      # (WOFF2 spec section 5.1 allows the source's indexToLocFormat, but
-      # Chrome silently rejects any value other than 0).
-      expect(index_format).to eq(0)
+      # indexFormat matches the source head.indexToLocFormat per WOFF2
+      # spec section 5.1. Chrome OTS accepts both 0 and 1.
+      expect(index_format).to eq(font.table("head").index_to_loc_format)
       expect(option_flags).to eq(0) # TestTTF has no OVERLAP_SIMPLE glyphs
     end
 
-    it "emits indexFormat=0 even when source head.indexToLocFormat=1 (Chrome OTS requirement)" do
+    it "preserves source head.indexToLocFormat in the glyf transform header" do
       long_loca_path = fixture_path("fonts/Libertinus/Libertinus-7.051/static/TTF/LibertinusKeyboard-Regular.ttf")
       long_loca_font = Fontisan::FontLoader.load(long_loca_path)
       skip "long-loca fixture missing" unless long_loca_font.table("head").index_to_loc_format == 1
@@ -50,8 +49,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
       ).transform
 
       _, _, _, index_format = transformed[0, 8].unpack("S>S>S>S>")
-      expect(index_format).to eq(0),
-                              "WOFF2 glyf transform header indexFormat must always be 0 (Chrome OTS rejects others)"
+      expect(index_format).to eq(1),
+                              "glyf transform header should preserve source indexToLocFormat (1 for long loca)"
     end
 
     it "writes 7 stream size prefixes after the header" do

@@ -255,10 +255,11 @@ module Fontisan
         out << [0].pack("S>")                                  # version
         out << [(s.has_overlap? ? 1 : 0)].pack("S>")           # optionFlags
         out << [@num_glyphs].pack("S>")
-        # Always emit indexFormat=0 per Chrome OTS requirement. WOFF2 spec
-        # section 5.1 allows the source's indexToLocFormat, but Chrome's
-        # OTS silently rejects any value other than 0.
-        out << [0].pack("S>")
+        # Emit the source's indexFormat. The earlier "always 0" override
+        # (commit 5f7e32d) was based on a misdiagnosis — Chrome's OTS
+        # accepts both 0 and 1, but short loca (0) can't address glyf
+        # offsets > 0x20000 bytes, so large fonts MUST use 1.
+        out << [@source_index_format].pack("S>")
         out << [s.n_contour.bytesize].pack("L>")
         out << [s.n_points.bytesize].pack("L>")
         out << [s.flags.bytesize].pack("L>")
