@@ -12,7 +12,8 @@ module Fontisan
     #
     # - `zlib_level` (0–9) — zlib compression level
     # - `uncompressed` (bool) — store tables uncompressed (legal per WOFF 1.0
-    #   §5.1; `compLength == origLength`)
+    #   §5.1; `compLength == origLength`). Metadata is still compressed per
+    #   spec §7 ("it is never stored in uncompressed form").
     # - `compression_threshold` (bytes) — skip compression for tables smaller
     #   than N bytes (rarely needed; keeps tiny tables uncompressed)
     # - `metadata_xml` (string) — optional metadata block
@@ -119,24 +120,35 @@ module Fontisan
 
       # Write font to WOFF binary.
       #
+      # Layout per WOFF 1.0 spec:
+      #   [header (44)] [table directory (20 × N)] [font tables, 4-byte aligned]
+      #   [optional metadata, 4-byte aligned] [optional private data, 4-byte aligned]
+      #
+      # Each font table is padded with 0-3 null bytes to a 4-byte boundary
+      # (spec §5/§6: "Font data tables in the WOFF file have the same
+      # requirement: they MUST begin on 4-byte boundaries and be zero-padded
+      # to the next 4-byte boundary"). Padding aligns the next block.
+      #
       # @param font [TrueTypeFont, OpenTypeFont] Source font
       # @param zlib_level [Integer] 0–9
-      # @param uncompressed [Boolean] skip zlib; store as-is
+      # @param uncompressed [Boolean] skip zlib; store tables as-is
       # @param compression_threshold [Integer] skip compression below N bytes
-      # @param metadata [String, nil] optional metadata XML
+      # @param metadata [String, nil] optional metadata XML (always compressed
+      #   per spec §7 — "it is never stored in uncompressed form")
       # @param private_data [String, nil] optional private data
       # @return [Hash{Symbol => String}] `{ woff_binary: <bytes> }`
       def write_font(font, zlib_level:, uncompressed:, compression_threshold:,
                      metadata: nil, private_data: nil)
-        tables_data = collect_tables_data(font)
+        tables = collect_tables_data(font)
         compressed_tables = compress_tables(
-          tables_data,
+          tables,
           zlib_level: uncompressed ? 0 : zlib_level,
           skip_compression: uncompressed,
           compression_threshold: compression_threshold,
         )
-        compressed_metadata = compress_metadata(metadata, zlib_level: zlib_level,
-                                                          skip_compression: uncompressed)
+        # Per spec §7, metadata MUST always be zlib-compressed regardless of
+        # the per-table `uncompressed` flag.
+        compressed_metadata = compress_metadata(metadata, zlib_level:)
         binary = build_woff_file(compressed_tables, font, compressed_metadata,
                                  private_data)
         { woff_binary: binary }
@@ -152,14 +164,16 @@ module Fontisan
         options.select { |k, _| names.include?(k.to_sym) }
       end
 
-      # Collect all table data from font.
+      # Collect all table data from font in input-font order (spec §6: tables
+      # MUST be stored in the same order as the well-formed input font).
       #
       # @param font [TrueTypeFont, OpenTypeFont]
       # @return [Hash<String, String>]
       def collect_tables_data(font)
-        font.table_names.to_h do |tag|
-          [tag, font.table_data[tag]]
-        end.compact
+        font.table_names.each_with_object({}) do |tag, h|
+          data = font.table_data[tag]
+          h[tag] = data if data
+        end
       end
 
       # Compress tables with zlib (or skip compression entirely).
@@ -197,71 +211,92 @@ module Fontisan
         end
       end
 
-      # Compress metadata with zlib.
+      # Compress metadata with zlib. Per spec §7, metadata MUST always be
+      # zlib-compressed — `skip_compression` is intentionally not exposed
+      # here. The zlib output is used even when it is larger than the input
+      # (e.g. tiny XML payloads where zlib header+checksum overhead exceeds
+      # any compression gain); the spec mandates compression, not optimality.
+      # Returns nil if no metadata was supplied.
       #
       # @param metadata [String, nil]
       # @param zlib_level [Integer]
-      # @param skip_compression [Boolean]
       # @return [Hash, nil]
-      def compress_metadata(metadata, zlib_level:, skip_compression:)
+      def compress_metadata(metadata, zlib_level:)
         return nil unless metadata
 
         original_length = metadata.bytesize
-        if skip_compression
-          return {
-            original_data: metadata,
-            compressed_data: metadata,
-            original_length: original_length,
-            compressed_length: original_length,
-          }
-        end
-
         compressed = Zlib::Deflate.deflate(metadata, zlib_level)
-        use_compressed = compressed.bytesize < original_length
         {
           original_data: metadata,
-          compressed_data: use_compressed ? compressed : metadata,
+          compressed_data: compressed,
           original_length: original_length,
-          compressed_length: use_compressed ? compressed.bytesize : original_length,
+          compressed_length: compressed.bytesize,
         }
+      end
+
+      # Padding bytes needed to bring `length` up to a 4-byte boundary.
+      def padding_to_4(length)
+        (4 - (length % 4)) % 4
       end
 
       # Assemble complete WOFF binary.
       #
-      # @param compressed_tables [Hash]
+      # Computes the full layout (offsets + padding) up front so the header
+      # fields (metaOffset, privOffset) point to the correct locations, then
+      # emits header → directory → tables → optional metadata → optional
+      # private data.
+      #
+      # @param compressed_tables [Hash<String, Hash>] in input-font order
       # @param font [TrueTypeFont, OpenTypeFont]
       # @param compressed_metadata [Hash, nil]
       # @param private_data [String, nil]
       # @return [String]
       def build_woff_file(compressed_tables, font, compressed_metadata,
                           private_data)
-        io = StringIO.new
-        io.set_encoding(Encoding::BINARY)
-
         header_size = 44
         num_tables = compressed_tables.length
-        table_dir_size = num_tables * 20
-        data_offset = header_size + table_dir_size
-        metadata_offset = data_offset
-        metadata_size = compressed_metadata ? compressed_metadata[:compressed_length] : 0
-        total_compressed_size = compressed_tables.values.sum do |t|
-          t[:compressed_length]
-        end
-        private_offset = data_offset + total_compressed_size + metadata_size
-        private_size = private_data ? private_data.bytesize : 0
-        total_size = private_offset + private_size
-        total_sfnt_size = compressed_tables.values.sum do |t|
-          t[:original_length]
-        end +
-          header_size + table_dir_size
+        data_start = header_size + (num_tables * 20)
 
+        # Lay out tables in input-font order with 4-byte alignment padding.
+        # Each entry: { tag:, info:, offset:, pad_bytes: }
+        entries = []
+        cursor = data_start
+        compressed_tables.each do |tag, info|
+          pad = padding_to_4(info[:compressed_length])
+          entries << { tag:, info:, offset: cursor, pad_bytes: "\x00" * pad }
+          cursor += info[:compressed_length] + pad
+        end
+        tables_end = cursor
+
+        metadata_size = compressed_metadata ? compressed_metadata[:compressed_length] : 0
+        # metaOffset/privOffset are 0 when their block is absent (spec §4:
+        # offsets to optional blocks; convention is 0 for "not present").
+        metadata_offset = compressed_metadata ? tables_end : 0
+        metadata_end = tables_end + metadata_size
+
+        private_size = private_data ? private_data.bytesize : 0
+        private_offset = private_data ? metadata_end : 0
+        total_size = metadata_end + private_size
+
+        # totalSfntSize: reconstructed SFNT size with per-table 4-byte padding.
+        # spec §4: "Total size needed for the uncompressed font data, including
+        # the sfnt header, directory, and font tables (including padding)."
+        sfnt_header_size = 12
+        sfnt_dir_size = num_tables * 16
+        sfnt_tables_size = compressed_tables.values.sum do |t|
+          t[:original_length] + padding_to_4(t[:original_length])
+        end
+        total_sfnt_size = sfnt_header_size + sfnt_dir_size + sfnt_tables_size
+
+        io = StringIO.new
+        io.set_encoding(Encoding::BINARY)
         write_woff_header(
           io, font, total_size, total_sfnt_size, num_tables,
           compressed_metadata, metadata_offset, metadata_size,
           private_offset, private_size
         )
-        write_table_directory(io, compressed_tables, data_offset)
-        write_compressed_table_data(io, compressed_tables)
+        write_table_directory(io, entries)
+        write_compressed_table_data(io, entries)
         write_metadata(io, compressed_metadata) if compressed_metadata
         write_private_data(io, private_data) if private_data
 
@@ -293,25 +328,25 @@ module Fontisan
         io.write([private_size].pack("N"))             # privLength
       end
 
-      # Write table directory entries (20 bytes each).
-      def write_table_directory(io, compressed_tables, data_offset)
-        current_offset = data_offset
-        compressed_tables.sort_by { |tag, _| tag }.each do |tag, info|
+      # Write table directory entries (20 bytes each), one per laid-out entry.
+      def write_table_directory(io, entries)
+        entries.each do |e|
           checksum = Utilities::ChecksumCalculator
-            .calculate_table_checksum(info[:original_data])
-          io.write(tag)                                  # tag
-          io.write([current_offset].pack("N"))           # offset
-          io.write([info[:compressed_length]].pack("N")) # compLength
-          io.write([info[:original_length]].pack("N"))   # origLength
-          io.write([checksum].pack("N"))                 # origChecksum
-          current_offset += info[:compressed_length]
+            .calculate_table_checksum(e[:info][:original_data])
+          io.write(e[:tag])                                    # tag
+          io.write([e[:offset]].pack("N"))                     # offset
+          io.write([e[:info][:compressed_length]].pack("N"))   # compLength
+          io.write([e[:info][:original_length]].pack("N"))     # origLength
+          io.write([checksum].pack("N"))                       # origChecksum
         end
       end
 
-      # Write compressed table data, sorted by tag (matches directory order).
-      def write_compressed_table_data(io, compressed_tables)
-        compressed_tables.sort_by { |tag, _| tag }.each do |_, info|
-          io.write(info[:compressed_data])
+      # Write each table's compressed data followed by 4-byte alignment
+      # padding (spec §5/§6: tables MUST be zero-padded to next boundary).
+      def write_compressed_table_data(io, entries)
+        entries.each do |e|
+          io.write(e[:info][:compressed_data])
+          io.write(e[:pad_bytes])
         end
       end
 
