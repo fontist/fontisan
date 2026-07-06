@@ -538,59 +538,42 @@ module Fontisan
     # @param decompressed_tables [Hash<String, String>] Decompressed tables
     # @return [void] Modifies decompressed_tables in place
     def self.apply_transformations!(table_entries, decompressed_tables)
-      # Find entries that need transformation
       glyf_entry = table_entries.find { |e| e.tag == "glyf" }
       hmtx_entry = table_entries.find { |e| e.tag == "hmtx" }
 
-      # Get required metadata for transformations
       maxp_data = decompressed_tables["maxp"]
       hhea_data = decompressed_tables["hhea"]
+      head_data = decompressed_tables["head"]
 
-      return unless maxp_data && hhea_data
+      return unless maxp_data && hhea_data && head_data
 
-      # Parse num_glyphs from maxp table
       # maxp format: version(4) + numGlyphs(2) + ...
       num_glyphs = maxp_data[4, 2].unpack1("n")
-
-      # Parse numberOfHMetrics from hhea table
       # hhea format: ... + numberOfHMetrics(2) at offset 34
       number_of_h_metrics = hhea_data[34, 2].unpack1("n")
+      # head format: ... + indexToLocFormat(2) at offset 50
+      index_format = head_data[50, 2].unpack1("n")
 
-      # Check if this is a variable font by checking for fvar table
-      variable_font = table_entries.any? { |e| e.tag == "fvar" }
-
-      # Transform glyf/loca if needed
-      # transform_length is only set when table is actually transformed
-      # Check that transform_length exists and is greater than 0
-      if glyf_entry&.instance_variable_defined?(:@transform_length) &&
-          glyf_entry.transform_length&.positive?
-        transformed_glyf = decompressed_tables["glyf"]
-
-        if transformed_glyf
-          result = Woff2::GlyfTransformer.reconstruct(
-            transformed_glyf,
-            num_glyphs,
-            variable_font: variable_font,
-          )
-          decompressed_tables["glyf"] = result[:glyf]
-          decompressed_tables["loca"] = result[:loca]
-        end
+      # Reconstruct glyf/loca per spec section 5.1/5.3 when glyf is
+      # transformed. Per spec section 4.1, transformLength is present IFF
+      # the table is transformed, so a non-nil value indicates transform.
+      if glyf_entry&.transform_length && decompressed_tables["glyf"]
+        result = Woff2::GlyfLocaReconstruct.new(
+          transformed_glyf: decompressed_tables["glyf"],
+          num_glyphs:,
+          index_format:,
+        ).reconstruct
+        decompressed_tables["glyf"] = result[:glyf]
+        decompressed_tables["loca"] = result[:loca]
       end
 
-      # Transform hmtx if needed
-      # transform_length is only set when table is actually transformed
-      # Check that transform_length exists and is greater than 0
-      if hmtx_entry&.instance_variable_defined?(:@transform_length) &&
-          hmtx_entry.transform_length&.positive?
-        transformed_hmtx = decompressed_tables["hmtx"]
-
-        if transformed_hmtx
-          decompressed_tables["hmtx"] = Woff2::HmtxTransformer.reconstruct(
-            transformed_hmtx,
-            num_glyphs,
-            number_of_h_metrics,
-          )
-        end
+      # Reconstruct hmtx per spec section 5.4 when hmtx is transformed.
+      if hmtx_entry&.transform_length && decompressed_tables["hmtx"]
+        decompressed_tables["hmtx"] = Woff2::HmtxTransformer.reconstruct(
+          decompressed_tables["hmtx"],
+          num_glyphs,
+          number_of_h_metrics,
+        )
       end
     end
 
