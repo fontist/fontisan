@@ -63,14 +63,20 @@ module Fontisan
 
         glyf = String.new(encoding: Encoding::BINARY)
         offsets = [0]
-        align = @index_format.zero? ? 2 : 4
+        # Short loca (indexFormat=0) stores offset/2 as uint16, so glyph
+        # offsets must be even — pad to 2-byte boundary. Long loca
+        # (indexFormat=1) has no alignment requirement (fontTools does
+        # not pad). Matching fontTools exactly is required: Chrome OTS
+        # rejects when glyf.origLength doesn't equal the decoder's output.
+        align = @index_format.zero? ? 2 : 1
 
         num_glyphs.times do |glyph_id|
           glyph = decode_glyph(glyph_id, streams)
           glyf << glyph
-          # Pad to alignment boundary so next glyph starts at a valid loca offset
-          remainder = glyf.bytesize % align
-          glyf << ("\x00" * (align - remainder)) if remainder.positive?
+          if align > 1
+            remainder = glyf.bytesize % align
+            glyf << ("\x00" * (align - remainder)) if remainder.positive?
+          end
           offsets << glyf.bytesize
         end
 
