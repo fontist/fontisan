@@ -51,7 +51,7 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
 
       _, _, _, index_format = transformed[0, 8].unpack("S>S>S>S>")
       expect(index_format).to eq(0),
-        "WOFF2 glyf transform header indexFormat must always be 0 (Chrome OTS rejects others)"
+                              "WOFF2 glyf transform header indexFormat must always be 0 (Chrome OTS rejects others)"
     end
 
     it "writes 7 stream size prefixes after the header" do
