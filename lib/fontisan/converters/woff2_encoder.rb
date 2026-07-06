@@ -227,6 +227,12 @@ module Fontisan
       # are kept in `table_data` so its `origLength` is preserved; the
       # transformed bytes are passed to the entries builder separately.
       #
+      # glyf.origLength is computed by round-tripping the transformed glyf
+      # through the decoder — this guarantees the directory matches what
+      # any compliant decoder will produce, including padding and minor
+      # re-encoding differences (OFF section 5.3.3 allows multiple valid
+      # reconstructions of the same glyph data).
+      #
       # @return [Hash{Symbol => Object}, nil]
       def apply_glyf_loca_transform!(table_data, font)
         return nil unless font.respond_to?(:has_table?)
@@ -240,22 +246,32 @@ module Fontisan
         head = font.table("head")
         return nil unless maxp && head
 
+        index_format = head.index_to_loc_format
+
         transformed = Woff2::GlyfLocaTransform.new(
           glyf_data:,
           loca_data:,
           num_glyphs: maxp.num_glyphs,
-          index_format: head.index_to_loc_format,
+          index_format:,
         ).transform
 
-        # The glyf transform always emits indexFormat=0 (Chrome OTS
-        # requirement), so the decoder reconstructs a short loca
-        # (2 bytes per offset). The directory's origLength must match
-        # the reconstructed size, not the source's bytesize — otherwise
-        # fontTools and Chrome's OTS reject the file for the size mismatch.
-        loca_orig_length = (maxp.num_glyphs + 1) * 2
+        # Round-trip through the decoder to get the exact reconstructed
+        # sizes the directory must advertise. fontTools re-compiles glyf
+        # during encoding, producing sizes that differ from the source by
+        # small amounts (encoding variations per OFF section 5.3.3). Using
+        # the source bytesize causes fontTools' decoder to reject the
+        # WOFF2 with "not enough 'glyf' table data".
+        reconstructed = Woff2::GlyfLocaReconstruct.new(
+          transformed_glyf: transformed,
+          num_glyphs: maxp.num_glyphs,
+          index_format:,
+        ).reconstruct
+
+        glyf_orig_length = reconstructed[:glyf].bytesize
+        loca_orig_length = reconstructed[:loca].bytesize
         table_data.delete("loca")
 
-        { transformed_glyf: transformed, loca_orig_length: }
+        { transformed_glyf: transformed, glyf_orig_length:, loca_orig_length: }
       end
 
       def get_table_data(font, tag)
@@ -282,7 +298,7 @@ module Fontisan
 
         table_data.keys.sort.each do |tag|
           if tag == "glyf" && glyf_transform
-            entries << build_glyf_entry(table_data["glyf"],
+            entries << build_glyf_entry(glyf_transform[:glyf_orig_length],
                                         glyf_transform[:transformed_glyf])
             entries << build_loca_entry(glyf_transform[:loca_orig_length])
             transformed_data["glyf"] = glyf_transform[:transformed_glyf]
@@ -319,13 +335,13 @@ module Fontisan
         entry
       end
 
-      # Build the glyf directory entry. origLength is the original (input)
-      # glyf size; transformLength is the size of the WOFF2-transformed
-      # glyf stream per spec section 5.1.
-      def build_glyf_entry(orig_data, transformed_data)
+      # Build the glyf directory entry. origLength is the reconstructed
+      # glyf size (what a decoder will produce); transformLength is the
+      # size of the WOFF2-transformed glyf stream per spec section 5.1.
+      def build_glyf_entry(glyf_orig_length, transformed_data)
         entry = Woff2::Directory::Entry.new
         entry.tag = "glyf"
-        entry.orig_length = orig_data.bytesize
+        entry.orig_length = glyf_orig_length
         entry.transform_length = transformed_data.bytesize
         entry.flags = entry.calculate_flags
         entry
