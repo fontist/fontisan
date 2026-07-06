@@ -48,9 +48,7 @@ module Fontisan
         validate_data!(data)
 
         begin
-          # Use Brotli gem with specified quality
-          # The brotli gem doesn't expose mode constants, only quality
-          Brotli.deflate(data, quality: quality)
+          Brotli.deflate(data, quality: quality, mode: mode)
         rescue StandardError => e
           raise Fontisan::Error,
                 "Brotli compression failed: #{e.message}"
