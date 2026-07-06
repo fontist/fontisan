@@ -41,17 +41,21 @@ module Fontisan
       # Simple glyph records start with int16 numberOfContours + 4 int16 bbox.
       SIMPLE_HEADER_SIZE = 10
 
-      attr_reader :num_glyphs, :index_format
+      attr_reader :num_glyphs, :source_index_format
 
       # @param glyf_data [String] raw glyf table bytes
       # @param loca_data [String] raw loca table bytes
       # @param num_glyphs [Integer] from maxp
-      # @param index_format [Integer] 0 (short) or 1 (long), from head
+      # @param index_format [Integer] 0 (short) or 1 (long), from head.
+      #   Used to parse the source loca; the WOFF2 transformed glyf
+      #   always emits indexFormat=0 (Chrome OTS silently rejects any
+      #   other value, even though WOFF2 spec section 5.1 allows the
+      #   source's indexToLocFormat).
       def initialize(glyf_data:, loca_data:, num_glyphs:, index_format:)
         @glyf_data = glyf_data
         @loca_data = loca_data
         @num_glyphs = num_glyphs
-        @index_format = index_format
+        @source_index_format = index_format
       end
 
       # Encode the glyf/loca transform, returning the transformed glyf bytes.
@@ -251,7 +255,10 @@ module Fontisan
         out << [0].pack("S>")                                  # version
         out << [(s.has_overlap? ? 1 : 0)].pack("S>")           # optionFlags
         out << [@num_glyphs].pack("S>")
-        out << [@index_format].pack("S>")
+        # Always emit indexFormat=0 per Chrome OTS requirement. WOFF2 spec
+        # section 5.1 allows the source's indexToLocFormat, but Chrome's
+        # OTS silently rejects any value other than 0.
+        out << [0].pack("S>")
         out << [s.n_contour.bytesize].pack("L>")
         out << [s.n_points.bytesize].pack("L>")
         out << [s.flags.bytesize].pack("L>")
@@ -271,7 +278,7 @@ module Fontisan
       end
 
       def parse_loca_offsets
-        if @index_format.zero?
+        if @source_index_format.zero?
           @loca_data.unpack("n*").map { |v| v * 2 }
         else
           @loca_data.unpack("N*")

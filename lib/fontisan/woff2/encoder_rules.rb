@@ -52,13 +52,20 @@ module Fontisan
       # the 'flags' field of the head table ... to indicate that a recreated
       # font file was subjected to lossless modifying transform."
       #
-      # Uses the model-driven Head BinData record so the bit is set via a
+      # Also forces head.indexToLocFormat=0 when the glyf/loca tables are
+      # transformed, because Chrome's OTS only accepts WOFF2 glyf
+      # indexFormat=0 (see GlyfLocaTransform). For the reconstructed font
+      # to be self-consistent, head.indexToLocFormat must match the loca
+      # format that the decoder will produce (always short, format=0).
+      #
+      # Uses the model-driven Head BinData record so the bits are set via a
       # named attribute on a typed object, not via raw byte slicing.
       def self.mark_lossless_modifying!(table_data)
         return unless table_data.key?("head")
 
         head = Tables::Head.read(table_data["head"])
         head.flags |= Tables::Head::FLAG_LOSSLESS_MODIFYING
+        head.index_to_loc_format = 0
         table_data["head"] = head.to_binary_s
       end
     end
