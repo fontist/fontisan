@@ -79,14 +79,14 @@ module Fontisan
       #
       # @return [Time] Creation time
       def created
-        longdatetime_to_time(created_raw)
+        self.class.longdatetime_to_time(created_raw)
       end
 
       # Convert modified timestamp to Time object
       #
       # @return [Time] Modification time
       def modified
-        longdatetime_to_time(modified_raw)
+        self.class.longdatetime_to_time(modified_raw)
       end
 
       # Validate that the magic number is correct
@@ -157,12 +157,23 @@ module Fontisan
       end
 
       # Current wall clock time as a LONGDATETIME integer (seconds since
-      # Mac epoch). Used by WOFF2 encoder to set head.modified to a
-      # post-creation value Chrome's OTS accepts.
+      # Mac epoch). Used wherever a `created`/`modified` timestamp needs
+      # to be set to a meaningful "now" value (WOFF2 encoder, Type 1
+      # converter, UFO compile fallback).
       #
       # @return [Integer] Seconds since 1904-01-01 00:00:00 UTC
       def self.now_longdatetime
-        Time.now.to_i + MAC_EPOCH_OFFSET
+        to_longdatetime(Time.now)
+      end
+
+      # Convert a Unix-epoch `Time` (or Integer seconds) to a LONGDATETIME
+      # integer (Mac-epoch seconds). Symmetric with `#longdatetime_to_time`
+      # — pair them whenever you convert across the epoch boundary.
+      #
+      # @param time [Time, Integer] Unix-epoch time, default `Time.now`
+      # @return [Integer] Seconds since 1904-01-01 00:00:00 UTC
+      def self.to_longdatetime(time = Time.now)
+        time.to_i + MAC_EPOCH_OFFSET
       end
 
       # Validate magic number and raise error if invalid
@@ -182,13 +193,11 @@ module Fontisan
       # Alias for backward compatibility
       alias validate! validate_magic_number!
 
-      private
-
       # Convert LONGDATETIME to Ruby Time
       #
       # @param seconds [Integer] Seconds since 1904-01-01 00:00:00
       # @return [Time] Ruby Time object
-      def longdatetime_to_time(seconds)
+      def self.longdatetime_to_time(seconds)
         Time.at(seconds - MAC_EPOCH_OFFSET)
       end
     end
