@@ -44,6 +44,20 @@ RSpec.describe "CFF2 binary primitives" do
       data_start = 4 + 1 + (items.size + 1) * 1
       expect(bytes[data_start..]).to eq("helloworld")
     end
+
+    it "packs 3-byte offsets when data spans 0xFFFF+1..0xFFFFFF bytes" do
+      # CFF2 INDEXes that exceed 64 KB need offSize=3. The previous
+      # implementation called pack("C3") on a single Integer, raising
+      # ArgumentError; the OTC (CFF2) build of any large font hit this
+      # immediately on the CharStrings INDEX.
+      skip "allocation too large for CI" if ENV["CI"]
+
+      big = ["X".b * 70_000] # > 0xFFFF → offSize 3
+      bytes = described_class.build(big)
+      expect(bytes[4].unpack1("C")).to eq(3) # offSize header
+      # Offsets: [1, 70001]. 70001 = 0x011171 → 3-byte BE = 0x01, 0x11, 0x71
+      expect(bytes[5, 6].bytes).to eq([0x00, 0x00, 0x01, 0x01, 0x11, 0x71])
+    end
   end
 
   describe Fontisan::Tables::Cff2::DictEncoder do
