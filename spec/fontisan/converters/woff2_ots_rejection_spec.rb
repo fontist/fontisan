@@ -92,6 +92,27 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         expect(output).to include("head"), "head table missing from WOFF2"
       end
     end
+
+    it "recomputes head.checksumAdjustment after glyf/loca transformation" do
+      # Chrome's OTS validates head.checksumAdjustment against the SFNT
+      # the WOFF2 decoder reconstructs. A stale source value fails once
+      # glyf/loca have been transformed and head.flags bit 11 has been
+      # set — the encoder must recompute.
+      source = Fontisan::FontLoader.load(input_ttf)
+      source_csa = source.table("head").checksum_adjustment.to_i
+
+      woff2 = encode_to_woff2(input_ttf)
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "out.woff2")
+        File.binwrite(path, woff2)
+
+        encoded_csa = Fontisan::Woff2Font.from_file(path).table("head")
+          .checksum_adjustment.to_i
+        expect(encoded_csa).not_to eq(source_csa),
+                                   "head.checksumAdjustment must be recomputed; " \
+                                   "source value is stale after glyf/loca transform"
+      end
+    end
   end
 
   describe "glyf/loca paired transform (spec section 5.1/5.3)" do

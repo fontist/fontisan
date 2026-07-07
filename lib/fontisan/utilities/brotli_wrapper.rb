@@ -48,9 +48,7 @@ module Fontisan
         validate_data!(data)
 
         begin
-          # Use Brotli gem with specified quality
-          # The brotli gem doesn't expose mode constants, only quality
-          Brotli.deflate(data, quality: quality)
+          Brotli.deflate(data, quality: quality, mode: mode)
         rescue StandardError => e
           raise Fontisan::Error,
                 "Brotli compression failed: #{e.message}"
@@ -139,19 +137,6 @@ module Fontisan
             raise ArgumentError,
                   "Data must be a String-like object, got #{data.class}"
           end
-        end
-
-        # Convert mode symbol to Brotli constant
-        #
-        # NOTE: The brotli gem doesn't expose mode constants
-        # This method is kept for API compatibility but unused
-        #
-        # @param mode [Symbol] Mode symbol
-        # @return [Integer] Mode value (unused)
-        def brotli_mode(_mode)
-          # The brotli gem only accepts quality parameter
-          # Mode is not configurable in current version
-          0
         end
       end
     end
