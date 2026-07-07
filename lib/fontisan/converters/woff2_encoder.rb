@@ -28,6 +28,11 @@ module Fontisan
     class Woff2Encoder
       include ConversionStrategy
 
+      # Highest glyf offset addressable by short loca (uint16 max × 2).
+      # Above this, loca MUST use the long format. Public so specs can
+      # reference the same threshold the encoder uses.
+      SHORT_LOCA_GLYF_MAX = 0x1FFFE
+
       # @return [Hash] Configuration settings
       attr_reader :config
 
@@ -82,6 +87,13 @@ module Fontisan
                                                         transformer,
                                                         transform_enabled,
                                                         glyf_transform:)
+
+        # Recompute head.checksumAdjustment for the SFNT the decoder
+        # reconstructs. Chrome's OTS validates this strictly; a stale
+        # source value fails once glyf/loca/head have been modified.
+        # Must run AFTER touch_head_modified! so the modified timestamp
+        # change is included in the checksum.
+        update_checksum_adjustment!(table_data, flavor:, glyf_transform:)
 
         compressed_data = compress_tables(entries, table_data,
                                           transformed_data, quality)
@@ -221,17 +233,17 @@ module Fontisan
 
       # Apply the WOFF2 glyf/loca paired transform per spec section 5.1/5.3.
       #
-      # Returns a hash with the transformed glyf bytes and the original
-      # loca length needed to emit its synthetic directory entry, or nil
-      # for CFF fonts or fonts missing glyf/loca. The original glyf bytes
-      # are kept in `table_data` so its `origLength` is preserved; the
-      # transformed bytes are passed to the entries builder separately.
+      # Returns a hash with the transformed glyf bytes and reconstructed
+      # glyf/loca bytes the directory/checksum must reference, or nil for
+      # CFF fonts or fonts missing glyf/loca.
       #
-      # glyf.origLength is computed by round-tripping the transformed glyf
-      # through the decoder — this guarantees the directory matches what
-      # any compliant decoder will produce, including padding and minor
-      # re-encoding differences (OFF section 5.3.3 allows multiple valid
-      # reconstructions of the same glyph data).
+      # The source glyf is first canonicalized to 4-byte-per-glyph
+      # alignment via `Woff2::GlyfCanonicalizer`, matching fontTools'
+      # `_normaliseGlyfAndLoca(padding=4)`. Chrome's OTS fails to
+      # reconstruct "unpadded" glyf tables — see fontTools'
+      # WOFF2Writer.close() comment. The canonical glyf is the input to
+      # the WOFF2 transform, the value of `glyf.origLength` in the
+      # directory, and the bytes the SFNT checksum is computed over.
       #
       # @return [Hash{Symbol => Object}, nil]
       def apply_glyf_loca_transform!(table_data, font)
@@ -246,32 +258,55 @@ module Fontisan
         head = font.table("head")
         return nil unless maxp && head
 
-        index_format = head.index_to_loc_format
+        source_format = head.index_to_loc_format
 
-        transformed = Woff2::GlyfLocaTransform.new(
+        # Pick the most compact loca format the canonical glyf fits in.
+        # The canonical glyf adds ≤ 3 padding bytes per glyph; estimate
+        # the upper bound so the format choice is safe. fontTools'
+        # encoder does the same — short loca halves the loca table size
+        # and Chrome's OTS accepts both formats.
+        max_canonical_glyf_size = glyf_data.bytesize + 3 * maxp.num_glyphs
+        target_format = if max_canonical_glyf_size <= SHORT_LOCA_GLYF_MAX
+                          0
+                        else
+                          source_format
+                        end
+
+        canonical = Woff2::GlyfCanonicalizer.new(
           glyf_data:,
           loca_data:,
           num_glyphs: maxp.num_glyphs,
-          index_format:,
+          source_format:,
+          target_format:,
+        ).canonical
+        canonical_glyf = canonical[:glyf]
+        canonical_loca = canonical[:loca]
+
+        transformed = Woff2::GlyfLocaTransform.new(
+          glyf_data: canonical_glyf,
+          loca_data: canonical_loca,
+          num_glyphs: maxp.num_glyphs,
+          index_format: target_format,
         ).transform
 
-        # Round-trip through the decoder to get the exact reconstructed
-        # sizes the directory must advertise. fontTools re-compiles glyf
-        # during encoding, producing sizes that differ from the source by
-        # small amounts (encoding variations per OFF section 5.3.3). Using
-        # the source bytesize causes fontTools' decoder to reject the
-        # WOFF2 with "not enough 'glyf' table data".
-        reconstructed = Woff2::GlyfLocaReconstruct.new(
-          transformed_glyf: transformed,
-          num_glyphs: maxp.num_glyphs,
-          index_format:,
-        ).reconstruct
+        if target_format != source_format
+          Woff2::EncoderRules.set_head_index_to_loc_format!(
+            table_data, target_format
+          )
+        end
 
-        glyf_orig_length = reconstructed[:glyf].bytesize
-        loca_orig_length = reconstructed[:loca].bytesize
+        glyf_orig_length = canonical_glyf.bytesize
+        loca_orig_length = canonical_loca.bytesize
+        table_data["glyf"] = canonical_glyf
         table_data.delete("loca")
 
-        { transformed_glyf: transformed, glyf_orig_length:, loca_orig_length: }
+        {
+          transformed_glyf: transformed,
+          reconstructed_glyf: canonical_glyf,
+          reconstructed_loca: canonical_loca,
+          glyf_orig_length:,
+          loca_orig_length:,
+        }
       end
 
       def get_table_data(font, tag)
@@ -394,6 +429,45 @@ module Fontisan
         end
 
         size
+      end
+
+      # Recompute head.checksumAdjustment for the SFNT the WOFF2 decoder
+      # will reconstruct. The decoder assembles glyf/loca from the
+      # transformed stream and uses the source bytes for every other
+      # table; the resulting SFNT's whole-file uint32 sum must equal
+      # 0xB1B0AFBA once checksumAdjustment is applied. Source's value is
+      # stale after head.flags/glyf/indexToLocFormat edits and Chrome's
+      # OTS rejects files that fail the checksum check.
+      #
+      # Mutates `table_data["head"]` in place via the Head BinData model.
+      def update_checksum_adjustment!(table_data, flavor:, glyf_transform:)
+        return unless table_data.key?("head")
+
+        # The synthetic loca entry was removed from table_data by
+        # apply_glyf_loca_transform!, but it's still part of the
+        # reconstructed SFNT, so it must be included in the checksum.
+        tags = table_data.keys.sort
+        if glyf_transform && !tags.include?("loca")
+          loca_idx = tags.index { |t| t > "loca" } || tags.length
+          tags.insert(loca_idx, "loca")
+        end
+
+        tables = tags.map do |tag|
+          bytes = if tag == "glyf" && glyf_transform
+                    glyf_transform[:reconstructed_glyf]
+                  elsif tag == "loca" && glyf_transform
+                    glyf_transform[:reconstructed_loca]
+                  else
+                    table_data[tag]
+                  end
+          Woff2::SfntChecksum::Table.new(tag:, bytes:)
+        end
+
+        adjustment = Woff2::SfntChecksum.new(flavor:, tables:).adjustment
+
+        head = Tables::Head.read(table_data["head"])
+        head.checksum_adjustment = adjustment
+        table_data["head"] = head.to_binary_s
       end
 
       def build_header(flavor:, num_tables:, total_sfnt_size:,

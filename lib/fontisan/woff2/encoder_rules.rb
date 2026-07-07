@@ -33,6 +33,7 @@ module Fontisan
       def self.apply!(table_data)
         exclude_tables!(table_data)
         mark_lossless_modifying!(table_data)
+        touch_head_modified!(table_data)
         table_data
       end
 
@@ -59,6 +60,44 @@ module Fontisan
 
         head = Tables::Head.read(table_data["head"])
         head.flags |= Tables::Head::FLAG_LOSSLESS_MODIFYING
+        table_data["head"] = head.to_binary_s
+      end
+
+      # Set head.indexToLocFormat to match the chosen output loca format.
+      #
+      # fontTools' WOFF2 encoder re-picks the loca format (preferring short
+      # when glyf fits). The reconstructed SFNT must carry the matching
+      # indexToLocFormat in head, or Chrome's OTS rejects the file with
+      # "Failed to convert WOFF 2.0 font to SFNT".
+      #
+      # @param table_data [Hash{String => String}]
+      # @param format_code [Integer] 0 (short) or 1 (long)
+      def self.set_head_index_to_loc_format!(table_data, format_code)
+        return unless table_data.key?("head")
+
+        head = Tables::Head.read(table_data["head"])
+        head.index_to_loc_format = format_code
+        table_data["head"] = head.to_binary_s
+      end
+
+      # Bump head.modified past head.created.
+      #
+      # Chrome's OTS rejects fonts whose modified timestamp is not strictly
+      # greater than created (source fonts often have modified == created,
+      # which fails this check). Setting modified = created + 1 is the
+      # minimal change that satisfies the constraint.
+      #
+      # Must be called BEFORE checksum recompute so the modified bytes are
+      # included in the checksum.
+      #
+      # @param table_data [Hash{String => String}]
+      def self.touch_head_modified!(table_data)
+        return unless table_data.key?("head")
+
+        head = Tables::Head.read(table_data["head"])
+        return if head.modified_raw.to_i > head.created_raw.to_i
+
+        head.modified_raw = head.created_raw + 1
         table_data["head"] = head.to_binary_s
       end
     end
