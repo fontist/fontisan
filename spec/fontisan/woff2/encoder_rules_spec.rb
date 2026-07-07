@@ -92,4 +92,65 @@ RSpec.describe Fontisan::Woff2::EncoderRules do
       expect(described_class.apply!(table_data)).to be(table_data)
     end
   end
+
+  describe "::touch_head_modified!" do
+    it "sets head.modified to the current LONGDATETIME value" do
+      described_class.touch_head_modified!(table_data)
+      head = Fontisan::Tables::Head.read(table_data["head"])
+      now_ldt = Fontisan::Tables::Head.now_longdatetime
+      expect((head.modified_raw - now_ldt).abs).to be <= 5,
+                                                   "head.modified should be ~Tables::Head.now_longdatetime"
+    end
+
+    it "overwrites the source modified timestamp even when it is valid" do
+      # fontTools always sets modified = Time.now on every save; we do
+      # the same so Chrome's OTS sees a delta it accepts. The pre-existing
+      # value must NOT be preserved.
+      head = Fontisan::Tables::Head.read(table_data["head"])
+      original_modified = head.modified_raw
+      described_class.touch_head_modified!(table_data)
+      new_head = Fontisan::Tables::Head.read(table_data["head"])
+      expect(new_head.modified_raw).not_to eq(original_modified)
+    end
+
+    it "is a no-op when no head table is present" do
+      table_data.delete("head")
+      expect { described_class.touch_head_modified!(table_data) }.not_to raise_error
+    end
+
+    it "leaves head.created untouched" do
+      head_before = Fontisan::Tables::Head.read(table_data["head"])
+      described_class.touch_head_modified!(table_data)
+      head_after = Fontisan::Tables::Head.read(table_data["head"])
+      expect(head_after.created_raw).to eq(head_before.created_raw)
+    end
+  end
+
+  describe "::set_head_index_to_loc_format!" do
+    it "writes the requested format code to head.indexToLocFormat" do
+      described_class.set_head_index_to_loc_format!(table_data, 0)
+      head = Fontisan::Tables::Head.read(table_data["head"])
+      expect(head.index_to_loc_format).to eq(0)
+
+      described_class.set_head_index_to_loc_format!(table_data, 1)
+      head = Fontisan::Tables::Head.read(table_data["head"])
+      expect(head.index_to_loc_format).to eq(1)
+    end
+
+    it "is a no-op when no head table is present" do
+      table_data.delete("head")
+      expect do
+        described_class.set_head_index_to_loc_format!(table_data, 0)
+      end.not_to raise_error
+    end
+
+    it "preserves all other head fields" do
+      head_before = Fontisan::Tables::Head.read(table_data["head"])
+      described_class.set_head_index_to_loc_format!(table_data, 1)
+      head_after = Fontisan::Tables::Head.read(table_data["head"])
+      expect(head_after.flags).to eq(head_before.flags)
+      expect(head_after.units_per_em).to eq(head_before.units_per_em)
+      expect(head_after.created_raw).to eq(head_before.created_raw)
+    end
+  end
 end
