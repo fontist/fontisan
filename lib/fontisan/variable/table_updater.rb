@@ -169,8 +169,7 @@ module Fontisan
         rest = io.read # Remaining data
 
         # Convert Time to LONGDATETIME (seconds since 1904-01-01)
-        # Difference between 1904 and 1970 (Unix epoch) is 2082844800 seconds
-        longdatetime = timestamp.to_i + 2_082_844_800
+        longdatetime = timestamp.to_i + Tables::Head::MAC_EPOCH_OFFSET
 
         # Build updated head binary
         output = String.new(encoding: Encoding::BINARY)

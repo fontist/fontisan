@@ -504,6 +504,11 @@ module Fontisan
         end
 
         woff2_data << compressed_data
+        # Chrome's OTS rejects WOFF2 files whose total length is not a
+        # multiple of 4. fontTools' WOFF2Writer pads the file with null
+        # bytes to a 4-byte boundary; we mirror that here.
+        remainder = woff2_data.bytesize % 4
+        woff2_data << ("\x00" * (4 - remainder)) if remainder.positive?
         update_woff2_length!(woff2_data)
         woff2_data
       end

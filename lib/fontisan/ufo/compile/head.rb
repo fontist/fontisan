@@ -14,8 +14,10 @@ module Fontisan
         LOCA_FORMAT_SHORT = 0
         LOCA_FORMAT_LONG = 1
         MAC_STYLE_REGULAR = 0
-        # Seconds between 1904-01-01 (Mac epoch) and 1970-01-01 (Unix epoch)
-        MAC_EPOCH_OFFSET = 2_082_844_800
+        # @!attribute [rw] MAC_EPOCH_OFFSET
+        #   LONGDATETIME epoch conversion lives on Tables::Head — see
+        #   {Fontisan::Tables::Head::MAC_EPOCH_OFFSET}.
+        MAC_EPOCH_OFFSET = Tables::Head::MAC_EPOCH_OFFSET
 
         # @param font [Fontisan::Ufo::Font]
         # @param glyphs [Array<Fontisan::Ufo::Glyph>] (unused here;
