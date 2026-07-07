@@ -571,12 +571,10 @@ module Fontisan
         data << [1000].pack("n")
 
         # Created (LONGDATETIME) - use current time
-        created_seconds = Time.now.to_i + 2_082_844_800
-        data << [created_seconds].pack("Q>")
+        data << [Tables::Head.now_longdatetime].pack("Q>")
 
         # Modified (LONGDATETIME) - use current time
-        modified_seconds = Time.now.to_i + 2_082_844_800
-        data << [modified_seconds].pack("Q>")
+        data << [Tables::Head.now_longdatetime].pack("Q>")
 
         # Bounding box (int16 each)
         data << [font_bbox[0]].pack("s>") # x_min

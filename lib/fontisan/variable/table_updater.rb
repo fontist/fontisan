@@ -168,8 +168,7 @@ module Fontisan
         _old_modified = io.read(8) # Skip old modified timestamp
         rest = io.read # Remaining data
 
-        # Convert Time to LONGDATETIME (seconds since 1904-01-01)
-        longdatetime = timestamp.to_i + Tables::Head::MAC_EPOCH_OFFSET
+        longdatetime = Tables::Head.to_longdatetime(timestamp)
 
         # Build updated head binary
         output = String.new(encoding: Encoding::BINARY)

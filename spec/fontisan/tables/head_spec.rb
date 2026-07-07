@@ -239,4 +239,53 @@ RSpec.describe Fontisan::Tables::Head do
       expect(head).not_to be_valid
     end
   end
+
+  describe "::MAC_EPOCH_OFFSET" do
+    it "equals the seconds between 1904-01-01 and 1970-01-01 UTC" do
+      expect(described_class::MAC_EPOCH_OFFSET).to eq(2_082_844_800)
+    end
+
+    it "matches Time.at(0) - Time.at(0).local(1904, 1, 1)" do
+      mac_epoch = Time.utc(1904, 1, 1)
+      unix_epoch = Time.utc(1970, 1, 1)
+      expect(described_class::MAC_EPOCH_OFFSET).to eq(unix_epoch.to_i - mac_epoch.to_i)
+    end
+  end
+
+  describe "::now_longdatetime" do
+    it "returns current Unix time offset by MAC_EPOCH_OFFSET" do
+      result = described_class.now_longdatetime
+      now = Time.now.to_i + described_class::MAC_EPOCH_OFFSET
+      expect((result - now).abs).to be <= 2
+    end
+
+    it "is a positive integer" do
+      expect(described_class.now_longdatetime).to be > 0
+      expect(described_class.now_longdatetime).to be_an(Integer)
+    end
+  end
+
+  describe "::to_longdatetime" do
+    it "converts a Time object to LONGDATETIME seconds" do
+      t = Time.utc(2024, 1, 1, 0, 0, 0)
+      expect(described_class.to_longdatetime(t)).to eq(t.to_i + described_class::MAC_EPOCH_OFFSET)
+    end
+
+    it "converts an Integer (Unix seconds) to LONGDATETIME" do
+      expect(described_class.to_longdatetime(0)).to eq(described_class::MAC_EPOCH_OFFSET)
+    end
+
+    it "defaults to Time.now when no argument" do
+      result = described_class.to_longdatetime
+      expect(result).to be_within(2).of(described_class.now_longdatetime)
+    end
+
+    it "is the inverse of #longdatetime_to_time" do
+      t = Time.utc(2024, 6, 15, 12, 0, 0)
+      roundtripped = described_class.longdatetime_to_time(described_class.to_longdatetime(t))
+      # Round to seconds — longdatetime_to_time returns Time.at which preserves
+      # sub-second precision but we only roundtrip whole seconds here.
+      expect(roundtripped.to_i).to eq(t.to_i)
+    end
+  end
 end

@@ -14,10 +14,6 @@ module Fontisan
         LOCA_FORMAT_SHORT = 0
         LOCA_FORMAT_LONG = 1
         MAC_STYLE_REGULAR = 0
-        # @!attribute [rw] MAC_EPOCH_OFFSET
-        #   LONGDATETIME epoch conversion lives on Tables::Head — see
-        #   {Fontisan::Tables::Head::MAC_EPOCH_OFFSET}.
-        MAC_EPOCH_OFFSET = Tables::Head::MAC_EPOCH_OFFSET
 
         # @param font [Fontisan::Ufo::Font]
         # @param glyphs [Array<Fontisan::Ufo::Glyph>] (unused here;
@@ -78,7 +74,7 @@ module Fontisan
         # OpenType head.created/modified are LONGDATETIME seconds
         # since 1904-01-01. If the UFO field is absent, use now.
         def self.time_to_longdatetime(value)
-          return Time.now.to_i + MAC_EPOCH_OFFSET if value.nil?
+          return Tables::Head.now_longdatetime if value.nil?
 
           require "time"
           parsed = nil
@@ -91,7 +87,7 @@ module Fontisan
               parsed = Time.now
             end
           end
-          parsed.to_i + MAC_EPOCH_OFFSET
+          Tables::Head.to_longdatetime(parsed)
         end
         private_class_method :time_to_longdatetime
       end
