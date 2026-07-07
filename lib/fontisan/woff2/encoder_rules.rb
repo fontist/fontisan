@@ -80,24 +80,25 @@ module Fontisan
         table_data["head"] = head.to_binary_s
       end
 
-      # Bump head.modified past head.created.
+      # Set head.modified to the current time.
       #
-      # Chrome's OTS rejects fonts whose modified timestamp is not strictly
-      # greater than created (source fonts often have modified == created,
-      # which fails this check). Setting modified = created + 1 is the
-      # minimal change that satisfies the constraint.
+      # Chrome's OTS rejects WOFF2 fonts whose head.modified is not
+      # meaningfully later than head.created. Source fonts frequently
+      # carry modified == created (or modified within seconds of it),
+      # which Chrome rejects. Setting modified to the actual current
+      # wall-clock time matches fontTools' behaviour (it sets
+      # head.modified = timestampNow() on every save) and gives Chrome
+      # a delta large enough to accept.
       #
-      # Must be called BEFORE checksum recompute so the modified bytes are
-      # included in the checksum.
+      # Must be called BEFORE checksum recompute so the modified bytes
+      # are included in the checksum.
       #
       # @param table_data [Hash{String => String}]
       def self.touch_head_modified!(table_data)
         return unless table_data.key?("head")
 
         head = Tables::Head.read(table_data["head"])
-        return if head.modified_raw.to_i > head.created_raw.to_i
-
-        head.modified_raw = head.created_raw + 1
+        head.modified_raw = Tables::Head.now_longdatetime
         table_data["head"] = head.to_binary_s
       end
     end

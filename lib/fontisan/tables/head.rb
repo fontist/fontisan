@@ -28,6 +28,12 @@ module Fontisan
       # rejects WOFF2 files where it is not set.
       FLAG_LOSSLESS_MODIFYING = 0x0800
 
+      # Difference between 1904-01-01 00:00:00 UTC (Mac epoch, used by
+      # LONGDATETIME fields) and 1970-01-01 00:00:00 UTC (Unix epoch).
+      # Single source of truth for converting between the two — head's
+      # created/modified fields are LONGDATETIME.
+      MAC_EPOCH_OFFSET = 2_082_844_800
+
       # Version as 16.16 fixed-point (stored as int32)
       int32 :version_raw
 
@@ -150,6 +156,15 @@ module Fontisan
         glyph_data_format.zero?
       end
 
+      # Current wall clock time as a LONGDATETIME integer (seconds since
+      # Mac epoch). Used by WOFF2 encoder to set head.modified to a
+      # post-creation value Chrome's OTS accepts.
+      #
+      # @return [Integer] Seconds since 1904-01-01 00:00:00 UTC
+      def self.now_longdatetime
+        Time.now.to_i + MAC_EPOCH_OFFSET
+      end
+
       # Validate magic number and raise error if invalid
       #
       # @raise [Fontisan::CorruptedTableError] If magic number is invalid
@@ -174,8 +189,7 @@ module Fontisan
       # @param seconds [Integer] Seconds since 1904-01-01 00:00:00
       # @return [Time] Ruby Time object
       def longdatetime_to_time(seconds)
-        # Difference between 1904 and 1970 (Unix epoch) is 2082844800 seconds
-        Time.at(seconds - 2_082_844_800)
+        Time.at(seconds - MAC_EPOCH_OFFSET)
       end
     end
   end

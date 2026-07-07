@@ -113,6 +113,57 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
                                    "source value is stale after glyf/loca transform"
       end
     end
+
+    it "rounds the total file size up to a 4-byte boundary" do
+      # Chrome's OTS rejects WOFF2 files whose length is not a multiple of 4.
+      # fontTools pads with null bytes; we must do the same.
+      woff2 = encode_to_woff2(input_ttf)
+      expect(woff2.bytesize % 4).to eq(0),
+                                    "WOFF2 file must be padded to a 4-byte boundary; " \
+                                    "Chrome OTS rejects files whose length is not divisible by 4"
+      # Any trailing pad bytes (between the last non-null byte and EOF) must
+      # be null — the spec mandates padding with 0x00.
+      last_non_null = woff2.rindex(/[^\x0]/) || 0
+      trailing = woff2[(last_non_null + 1)..]
+      expect(trailing.bytes.uniq).to all(eq(0)),
+                                     "trailing pad bytes must be null"
+    end
+
+    it "sets head.modified to a timestamp meaningfully after head.created" do
+      # Chrome's OTS rejects WOFF2 fonts whose head.modified is within
+      # roughly an hour of head.created — the timestamp must be far
+      # enough in the future to clearly indicate post-creation editing.
+      # fontTools sets modified = Time.now on every save; we do the same.
+      source = Fontisan::FontLoader.load(input_ttf)
+      source_created = source.table("head").created_raw.to_i
+
+      woff2 = encode_to_woff2(input_ttf)
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "out.woff2")
+        File.binwrite(path, woff2)
+
+        encoded_head = Fontisan::Woff2Font.from_file(path).table("head")
+        encoded_created = encoded_head.created_raw.to_i
+        encoded_modified = encoded_head.modified_raw.to_i
+
+        expect(encoded_created).to eq(source_created),
+                                   "head.created must be preserved verbatim"
+        expect(encoded_modified).to be > encoded_created,
+                                    "head.modified must be strictly greater than head.created"
+        # Chrome's OTS rejects sub-hour deltas; require at least one day
+        # so the timestamp survives any clock-skew or rounding the
+        # decoder performs. fontTools' timestampNow() satisfies this
+        # trivially because it produces the actual current time.
+        expect(encoded_modified - encoded_created).to be >= 86_400,
+                                                      "head.modified must be at least 1 day after head.created " \
+                                                      "for Chrome's OTS to accept the WOFF2"
+        # Verify the encoded modified timestamp matches what we set it to:
+        # the current time when the encoder ran.
+        now_ldt = Fontisan::Tables::Head.now_longdatetime
+        expect((encoded_modified - now_ldt).abs).to be <= 60,
+                                                    "head.modified should equal Tables::Head.now_longdatetime at encode time"
+      end
+    end
   end
 
   describe "glyf/loca paired transform (spec section 5.1/5.3)" do
