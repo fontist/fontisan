@@ -273,9 +273,14 @@ module Fontisan
 
       compiled = Fontisan::FontLoader.load(path)
 
+      # Read every table as raw bytes straight from the file's table
+      # directory. We deliberately bypass #table (which parses via
+      # BinData) because some tables — notably CFF2 — don't yet have
+      # round-trippable BinData models; calling #table on them returns
+      # nil and would silently drop them from the rewritten font.
       tables = {}
       compiled.table_names.each do |tag|
-        raw = extract_raw_table(compiled, tag)
+        raw = compiled.table_data[tag]
         tables[tag] = raw if raw
       end
 
@@ -286,15 +291,6 @@ module Fontisan
 
       sfnt = tables.key?("CFF ") || tables.key?("CFF2") ? 0x4F54544F : 0x00010000
       Fontisan::FontWriter.write_to_file(tables, path, sfnt_version: sfnt)
-    end
-
-    def extract_raw_table(font, tag)
-      sfnt_table = font.table(tag)
-      return nil unless sfnt_table
-
-      sfnt_table.raw_data
-    rescue StandardError
-      nil
     end
 
     def add_all_cbdt_glyphs(source, target)
