@@ -34,7 +34,7 @@ module Fontisan
       records = tables.map do |tag, data|
         length = data.bytesize
         checksum = Utilities::ChecksumCalculator.calculate_table_checksum(data)
-        padding = (4 - (length % 4)) % 4
+        padding = Utilities::Padding.boundary(length)
         record = { tag:, checksum:, offset: cursor, length:, data:, padding: }
         cursor += length + padding
         record

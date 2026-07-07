@@ -418,14 +418,12 @@ module Fontisan
         size += 16 if glyf_transform # synthetic loca directory entry
 
         table_data.each_value do |data|
-          size += data.bytesize
-          size += (4 - (data.bytesize % 4)) % 4 # pad to 4-byte boundary
+          size += Utilities::Padding.aligned_size(data)
         end
 
         if glyf_transform
           loca_len = glyf_transform[:loca_orig_length]
-          size += loca_len
-          size += (4 - (loca_len % 4)) % 4
+          size += Utilities::Padding.aligned_size(loca_len)
         end
 
         size
@@ -504,11 +502,12 @@ module Fontisan
         end
 
         woff2_data << compressed_data
-        # Chrome's OTS rejects WOFF2 files whose total length is not a
-        # multiple of 4. fontTools' WOFF2Writer pads the file with null
-        # bytes to a 4-byte boundary; we mirror that here.
-        remainder = woff2_data.bytesize % 4
-        woff2_data << ("\x00" * (4 - remainder)) if remainder.positive?
+        # Per WOFF2 spec section 5.3, the table directory + compressed
+        # font block MUST be padded with null bytes so the total file
+        # length is a multiple of 4. fontTools' WOFF2Writer does the
+        # same: `pad(directory + compressedFont, size=4)`.
+        pad = Utilities::Padding.boundary(woff2_data)
+        woff2_data << ("\x00" * pad) if pad.positive?
         update_woff2_length!(woff2_data)
         woff2_data
       end

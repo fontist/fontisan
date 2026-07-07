@@ -212,7 +212,7 @@ module Fontisan
           binary << table_info[:data]
 
           # Pad to 4-byte boundary
-          padding = calculate_padding(table_info[:data].bytesize)
+          padding = Utilities::Padding.boundary(table_info[:data])
           binary << ("\x00" * padding) if padding.positive?
         end
       end
@@ -244,26 +244,12 @@ module Fontisan
         binary << ("\x00" * padding_needed)
       end
 
-      # Calculate padding needed for 4-byte alignment
-      #
-      # @param size [Integer] Current size
-      # @return [Integer] Padding bytes needed
-      def calculate_padding(size)
-        remainder = size % 4
-        return 0 if remainder.zero?
-
-        4 - remainder
-      end
-
       # Calculate table checksum
       #
       # @param data [String] Table data
       # @return [Integer] Checksum
       def calculate_table_checksum(data)
-        # Pad to 4-byte boundary
-        padded_data = data.dup
-        padding_length = calculate_padding(data.bytesize)
-        padded_data << ("\x00" * padding_length) if padding_length.positive?
+        padded_data = Utilities::Padding.pad(data)
 
         # Sum all uint32 values
         sum = 0
