@@ -43,7 +43,7 @@ module Fontisan
         # All tables every OTF/TTF must have, plus optional feature
         # tables (GPOS for kerning) when the UFO source has kerning data.
         def build_tables
-          glyphs = font.glyphs.values
+          glyphs = compiler_glyph_order
           tables = {
             "head" => Head.build(font, glyphs: glyphs),
             "hhea" => Hhea.build(font, glyphs: glyphs),
@@ -60,6 +60,21 @@ module Fontisan
           tables["GPOS"] = gpos if gpos
 
           tables.merge(build_outline_tables)
+        end
+
+        # OpenType requires GID 0 to be `.notdef`. If the source UFO
+        # doesn't declare one (synthetic SVG donors and similar don't),
+        # insert an empty `.notdef` at the front and shift every other
+        # glyph by one. Without this, the alphabetically-first source
+        # glyph lands at GID 0 and the cmap parser (which treats GID 0
+        # as `.notdef` per spec) silently drops it from the cmap.
+        def compiler_glyph_order
+          source = font.glyphs.values
+          return source if source.empty? || source.first.name == ".notdef"
+
+          notdef = Ufo::Glyph.new(name: ".notdef")
+          notdef.width = font.info&.units_per_em&.to_i || 1000
+          [notdef, *source]
         end
 
         def write(tables_hash, output_path)

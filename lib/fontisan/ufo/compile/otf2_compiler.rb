@@ -18,12 +18,12 @@ module Fontisan
 
         def build_outline_tables
           {
-            "CFF2" => Cff2.build(font, glyphs: font.glyphs.values),
+            "CFF2" => Cff2.build(font, glyphs: compiler_glyph_order),
           }
         end
 
         def compile(output_path:)
-          glyphs = font.glyphs.values
+          glyphs = compiler_glyph_order
 
           tables = {
             "head" => Head.build(font, glyphs: glyphs, loca_format: Head::LOCA_FORMAT_LONG),
