@@ -714,7 +714,7 @@ module Fontisan
         io.write(data)
 
         # Add padding to align to 4-byte boundary
-        padding = (Constants::TABLE_ALIGNMENT - (io.pos % Constants::TABLE_ALIGNMENT)) % Constants::TABLE_ALIGNMENT
+        padding = Utilities::Padding.boundary(io.pos)
         io.write(PADDING_BYTES[0, padding]) if padding.positive?
 
         # Zero out checksumAdjustment field in head table

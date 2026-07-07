@@ -234,11 +234,6 @@ module Fontisan
         }
       end
 
-      # Padding bytes needed to bring `length` up to a 4-byte boundary.
-      def padding_to_4(length)
-        (4 - (length % 4)) % 4
-      end
-
       # Assemble complete WOFF binary.
       #
       # Computes the full layout (offsets + padding) up front so the header
@@ -262,7 +257,7 @@ module Fontisan
         entries = []
         cursor = data_start
         compressed_tables.each do |tag, info|
-          pad = padding_to_4(info[:compressed_length])
+          pad = Utilities::Padding.boundary(info[:compressed_length])
           entries << { tag:, info:, offset: cursor, pad_bytes: "\x00" * pad }
           cursor += info[:compressed_length] + pad
         end
@@ -284,7 +279,7 @@ module Fontisan
         sfnt_header_size = 12
         sfnt_dir_size = num_tables * 16
         sfnt_tables_size = compressed_tables.values.sum do |t|
-          t[:original_length] + padding_to_4(t[:original_length])
+          Utilities::Padding.aligned_size(t[:original_length])
         end
         total_sfnt_size = sfnt_header_size + sfnt_dir_size + sfnt_tables_size
 

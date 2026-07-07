@@ -165,7 +165,7 @@ module Fontisan
         checksum = calculate_table_checksum(data)
 
         # Calculate padding to 4-byte boundary
-        padding_length = (4 - (data.bytesize % 4)) % 4
+        padding_length = Utilities::Padding.boundary(data)
         padding = "\0" * padding_length
 
         entries << {
@@ -235,10 +235,7 @@ module Fontisan
     # @param data [String] Table binary data
     # @return [Integer] Table checksum
     def calculate_table_checksum(data)
-      # Pad to 4-byte boundary
-      padded_data = data.dup
-      padding_length = (4 - (data.bytesize % 4)) % 4
-      padded_data << ("\0" * padding_length) if padding_length.positive?
+      padded_data = Utilities::Padding.pad(data)
 
       # Sum all uint32 values
       sum = 0
@@ -285,10 +282,7 @@ module Fontisan
     # @param data [String] Complete font binary
     # @return [Integer] Font checksum
     def calculate_font_checksum(data)
-      # Pad to 4-byte boundary
-      padded_data = data.dup
-      padding_length = (4 - (data.bytesize % 4)) % 4
-      padded_data << ("\0" * padding_length) if padding_length.positive?
+      padded_data = Utilities::Padding.pad(data)
 
       # Sum all uint32 values
       sum = 0
