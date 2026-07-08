@@ -1,291 +1,170 @@
 # frozen_string_literal: true
 
-require "stringio"
-
 module Fontisan
   module Tables
-    # CBLC (Color Bitmap Location) table parser
+    # CBLC (Color Bitmap Location) table.
     #
-    # The CBLC table contains location information for bitmap glyphs at various
-    # sizes (strikes). It works together with the CBDT table which contains the
-    # actual bitmap data.
+    # CBLC indexes glyph IDs into CBDT byte offsets across one or more
+    # bitmap strikes (each strike = a ppem + bit depth combination). For
+    # each strike, a list of IndexSubTable records describes how to locate
+    # the bitmap of each glyph in a contiguous glyph range.
     #
-    # CBLC Table Structure:
-    # ```
-    # CBLC Table = Header (8 bytes)
-    #            + BitmapSize Records (48 bytes each)
-    # ```
+    # Layout:
+    #   uint32 version                (0x00020000 or 0x00030000)
+    #   uint32 num_sizes              (number of BitmapSize records)
+    #   CblcBitmapSize[num_sizes]     (48 bytes each)
+    #   IndexSubTableArray entries    (8 bytes each, per BitmapSize)
+    #   IndexSubTable records         (variable, format-specific)
     #
-    # Header (8 bytes):
-    # - version (uint32): Table version (0x00020000 or 0x00030000)
-    # - numSizes (uint32): Number of BitmapSize records
+    # This model parses the header + BitmapSize records via BinData, then
+    # lazily walks the IndexSubTableArray / IndexSubTable structures on
+    # demand so callers can iterate [(gid, strike) → CBDT location] pairs.
     #
-    # Each BitmapSize record (48 bytes) contains:
-    # - indexSubTableArrayOffset (uint32): Offset to index subtable array
-    # - indexTablesSize (uint32): Size of index subtables
-    # - numberOfIndexSubTables (uint32): Number of index subtables
-    # - colorRef (uint32): Not used, set to 0
-    # - hori (SbitLineMetrics, 12 bytes): Horizontal line metrics
-    # - vert (SbitLineMetrics, 12 bytes): Vertical line metrics
-    # - startGlyphIndex (uint16): First glyph ID in strike
-    # - endGlyphIndex (uint16): Last glyph ID in strike
-    # - ppemX (uint8): Horizontal pixels per em
-    # - ppemY (uint8): Vertical pixels per em
-    # - bitDepth (uint8): Bit depth (1, 2, 4, 8, 32)
-    # - flags (int8): Flags
+    # Reference: OpenType CBLC specification.
+    # https://learn.microsoft.com/en-us/typography/opentype/spec/cblc
     #
-    # Reference: OpenType CBLC specification
-    # https://docs.microsoft.com/en-us/typography/opentype/spec/cblc
-    #
-    # @example Reading a CBLC table
-    #   data = font.table_data['CBLC']
-    #   cblc = Fontisan::Tables::Cblc.read(data)
-    #   strikes = cblc.strikes
-    #   puts "Font has #{strikes.length} bitmap strikes"
+    # @example Enumerate every glyph's CBDT bitmap location
+    #   cblc = Fontisan::Tables::Cblc.read(font.table_data["CBLC"])
+    #   cblc.each_glyph_location do |loc|
+    #     puts "gid=#{loc.glyph_id} cbdt_offset=#{loc.cbdt_offset}"
+    #   end
     class Cblc < Binary::BaseRecord
-      # OpenType table tag for CBLC
       TAG = "CBLC"
 
-      # Supported CBLC versions
+      # CBLC v2.0 — original release
       VERSION_2_0 = 0x00020000
+      # CBLC v3.0 — adds PNG image format support
       VERSION_3_0 = 0x00030000
 
-      # SbitLineMetrics structure (12 bytes)
+      uint32 :version
+      uint32 :num_sizes
+      array :bitmap_sizes,
+            type: Fontisan::Tables::CblcBitmapSize,
+            initial_length: :num_sizes
+
+      # Iterate every (glyph_id, strike) → CblcGlyphBitmapLocation pair
+      # across all strikes. Each strike's IndexSubTables are walked in
+      # turn so the caller sees every glyph's CBDT location exactly once
+      # per strike.
       #
-      # Contains metrics for horizontal or vertical layout
-      class SbitLineMetrics < Binary::BaseRecord
-        endian :big
-        int8 :ascender
-        int8 :descender
-        uint8 :width_max
-        int8 :caret_slope_numerator
-        int8 :caret_slope_denominator
-        int8 :caret_offset
-        int8 :min_origin_sb
-        int8 :min_advance_sb
-        int8 :max_before_bl
-        int8 :min_after_bl
-        int8 :pad1
-        int8 :pad2
-      end
+      # @yield [CblcGlyphBitmapLocation]
+      # @return [Enumerator] if no block given
+      def each_glyph_location(&block)
+        return enum_for(:each_glyph_location) unless block
 
-      # BitmapSize record structure (48 bytes)
-      #
-      # Describes a bitmap strike at a specific ppem size
-      class BitmapSize < Binary::BaseRecord
-        endian :big
-        uint32 :index_subtable_array_offset
-        uint32 :index_tables_size
-        uint32 :number_of_index_subtables
-        uint32 :color_ref
-
-        # Read the SbitLineMetrics structures manually
-        def self.read(io)
-          data = io.is_a?(String) ? io : io.read
-          size = new
-
-          io = StringIO.new(data)
-          size.instance_variable_set(:@index_subtable_array_offset,
-                                     io.read(4).unpack1("N"))
-          size.instance_variable_set(:@index_tables_size,
-                                     io.read(4).unpack1("N"))
-          size.instance_variable_set(:@number_of_index_subtables,
-                                     io.read(4).unpack1("N"))
-          size.instance_variable_set(:@color_ref, io.read(4).unpack1("N"))
-
-          # Parse hori and vert metrics (12 bytes each)
-          hori_data = io.read(12)
-          vert_data = io.read(12)
-          size.instance_variable_set(:@hori, SbitLineMetrics.read(hori_data))
-          size.instance_variable_set(:@vert, SbitLineMetrics.read(vert_data))
-
-          # Parse remaining fields
-          size.instance_variable_set(:@start_glyph_index,
-                                     io.read(2).unpack1("n"))
-          size.instance_variable_set(:@end_glyph_index, io.read(2).unpack1("n"))
-          size.instance_variable_set(:@ppem_x, io.read(1).unpack1("C"))
-          size.instance_variable_set(:@ppem_y, io.read(1).unpack1("C"))
-          size.instance_variable_set(:@bit_depth, io.read(1).unpack1("C"))
-          size.instance_variable_set(:@flags, io.read(1).unpack1("c"))
-
-          size
-        end
-
-        attr_reader :index_subtable_array_offset, :index_tables_size,
-                    :number_of_index_subtables, :color_ref, :hori, :vert,
-                    :start_glyph_index, :end_glyph_index, :ppem_x, :ppem_y,
-                    :bit_depth, :flags
-
-        # Get ppem size (assumes square pixels)
-        #
-        # @return [Integer] Pixels per em
-        def ppem
-          ppem_x
-        end
-
-        # Get glyph range for this strike
-        #
-        # @return [Range] Range of glyph IDs
-        def glyph_range
-          start_glyph_index..end_glyph_index
-        end
-
-        # Check if this strike includes a specific glyph ID
-        #
-        # @param glyph_id [Integer] Glyph ID to check
-        # @return [Boolean] True if glyph is in range
-        def includes_glyph?(glyph_id)
-          glyph_range.include?(glyph_id)
+        index_sub_tables.each do |sub|
+          sub.locations.each(&block)
         end
       end
 
-      # @return [Integer] CBLC version
-      attr_reader :version
-
-      # @return [Integer] Number of bitmap size records
-      attr_reader :num_sizes
-
-      # @return [Array<BitmapSize>] Parsed bitmap size records
-      attr_reader :bitmap_sizes
-
-      # @return [String] Raw binary data for the entire CBLC table
-      attr_reader :raw_data
-
-      # Override read to parse CBLC structure
+      # All IndexSubTable records across every strike.
       #
-      # @param io [IO, String] Binary data to read
-      # @return [Cblc] Parsed CBLC table
-      def self.read(io)
-        cblc = new
-        return cblc if io.nil?
-
-        data = io.is_a?(String) ? io : io.read
-        cblc.parse!(data)
-        cblc
+      # @return [Array<CblcIndexSubTable>]
+      def index_sub_tables
+        @index_sub_tables ||= bitmap_sizes.flat_map { |s| sub_tables_for(s) }
       end
 
-      # Parse the CBLC table structure
+      # Locate a glyph's CBDT bitmap at a specific ppem.
       #
-      # @param data [String] Binary data for the CBLC table
-      # @raise [CorruptedTableError] If CBLC structure is invalid
-      def parse!(data)
-        @raw_data = data
-        io = StringIO.new(data)
+      # @param glyph_id [Integer] source glyph ID
+      # @param ppem [Integer] strike ppem
+      # @return [CblcGlyphBitmapLocation, nil]
+      def bitmap_offset_for_gid(glyph_id, ppem)
+        strike = bitmap_sizes.find do |s|
+          s.ppem == ppem && s.includes_glyph?(glyph_id)
+        end
+        return nil unless strike
 
-        # Parse CBLC header (8 bytes)
-        parse_header(io)
-        validate_header!
-
-        # Parse bitmap size records
-        parse_bitmap_sizes(io)
-      rescue StandardError => e
-        raise CorruptedTableError, "Failed to parse CBLC table: #{e.message}"
+        sub_tables_for(strike).each do |sub|
+          loc = sub.locations.find { |l| l.glyph_id == glyph_id }
+          return loc if loc
+        end
+        nil
       end
 
-      # Get bitmap strikes (sizes)
+      # Iterate every IndexSubTable in a single strike.
       #
-      # @return [Array<BitmapSize>] Array of bitmap strikes
-      def strikes
-        bitmap_sizes || []
-      end
+      # @param strike [CblcBitmapSize]
+      # @return [Array<CblcIndexSubTable>]
+      def sub_tables_for(strike)
+        return [] if strike.number_of_index_subtables.zero?
 
-      # Get strikes for specific ppem size
-      #
-      # @param ppem [Integer] Pixels per em
-      # @return [Array<BitmapSize>] Strikes matching ppem
-      def strikes_for_ppem(ppem)
-        strikes.select { |size| size.ppem == ppem }
-      end
+        array_offset = strike.index_subtable_array_offset
+        entries = read_index_subtable_array(strike, array_offset)
 
-      # Check if glyph has bitmap at ppem size
-      #
-      # @param glyph_id [Integer] Glyph ID
-      # @param ppem [Integer] Pixels per em
-      # @return [Boolean] True if glyph has bitmap
-      def has_bitmap_for_glyph?(glyph_id, ppem)
-        strikes_for_ppem(ppem).any? do |strike|
-          strike.includes_glyph?(glyph_id)
+        entries.map do |entry|
+          absolute = array_offset + entry.additional_offset_to_index_subtable
+          CblcIndexSubTable.parse(
+            raw_data,
+            index_subtable_offset: absolute,
+            first_glyph_index: entry.first_glyph_index,
+            last_glyph_index: entry.last_glyph_index,
+          )
         end
       end
 
-      # Get all available ppem sizes
+      # All available ppem sizes across every strike.
       #
-      # @return [Array<Integer>] Sorted array of ppem sizes
+      # @return [Array<Integer>]
       def ppem_sizes
-        strikes.map(&:ppem).uniq.sort
+        bitmap_sizes.map(&:ppem).uniq.sort
       end
 
-      # Get all glyph IDs that have bitmaps across all strikes
+      # Number of bitmap strikes.
       #
-      # @return [Array<Integer>] Array of glyph IDs
-      def glyph_ids_with_bitmaps
-        strikes.flat_map { |strike| strike.glyph_range.to_a }.uniq.sort
-      end
-
-      # Get strikes that include a specific glyph ID
-      #
-      # @param glyph_id [Integer] Glyph ID
-      # @return [Array<BitmapSize>] Strikes containing glyph
-      def strikes_for_glyph(glyph_id)
-        strikes.select { |strike| strike.includes_glyph?(glyph_id) }
-      end
-
-      # Get the number of bitmap strikes
-      #
-      # @return [Integer] Number of strikes
+      # @return [Integer]
       def num_strikes
-        num_sizes || 0
+        num_sizes
       end
 
-      # Validate the CBLC table structure
+      # Strikes that cover a given glyph ID.
       #
-      # @return [Boolean] True if valid
+      # @param glyph_id [Integer]
+      # @return [Array<CblcBitmapSize>]
+      def strikes_for_glyph(glyph_id)
+        bitmap_sizes.select { |s| s.includes_glyph?(glyph_id) }
+      end
+
+      # Strikes that match a specific ppem.
+      #
+      # @param ppem [Integer]
+      # @return [Array<CblcBitmapSize>]
+      def strikes_for_ppem(ppem)
+        bitmap_sizes.select { |s| s.ppem == ppem }
+      end
+
+      # All glyph IDs that have any bitmap across every strike.
+      #
+      # @return [Array<Integer>]
+      def glyph_ids_with_bitmaps
+        bitmap_sizes.flat_map { |s| s.glyph_range.to_a }.uniq.sort
+      end
+
+      # Whether the CBLC header is one fontisan understands and at least
+      # the header fields parsed successfully.
+      #
+      # @return [Boolean]
       def valid?
         return false if version.nil?
         return false unless [VERSION_2_0, VERSION_3_0].include?(version)
-        return false if num_sizes.nil? || num_sizes.negative?
-        return false unless bitmap_sizes
 
         true
       end
 
       private
 
-      # Parse CBLC header (8 bytes)
+      # Read the IndexSubTableArray entries for one strike.
       #
-      # @param io [StringIO] Input stream
-      def parse_header(io)
-        @version = io.read(4).unpack1("N")
-        @num_sizes = io.read(4).unpack1("N")
-      end
+      # @param strike [CblcBitmapSize]
+      # @param array_offset [Integer] absolute offset within CBLC bytes
+      # @return [Array<CblcIndexSubTableArrayEntry>]
+      def read_index_subtable_array(strike, array_offset)
+        count = strike.number_of_index_subtables
+        bytes = raw_data[array_offset, count * 8]
+        return [] unless bytes
 
-      # Validate header values
-      #
-      # @raise [CorruptedTableError] If validation fails
-      def validate_header!
-        unless [VERSION_2_0, VERSION_3_0].include?(version)
-          raise CorruptedTableError,
-                "Unsupported CBLC version: 0x#{version.to_s(16).upcase} " \
-                "(only versions 2.0 and 3.0 supported)"
-        end
-
-        if num_sizes.negative?
-          raise CorruptedTableError,
-                "Invalid numSizes: #{num_sizes}"
-        end
-      end
-
-      # Parse bitmap size records
-      #
-      # @param io [StringIO] Input stream
-      def parse_bitmap_sizes(io)
-        @bitmap_sizes = []
-        return if num_sizes.zero?
-
-        # Each BitmapSize record is 48 bytes
-        num_sizes.times do
-          size_data = io.read(48)
-          @bitmap_sizes << BitmapSize.read(size_data)
+        Array.new(count) do |i|
+          CblcIndexSubTableArrayEntry.read(bytes[i * 8, 8])
         end
       end
     end

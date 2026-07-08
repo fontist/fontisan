@@ -88,6 +88,11 @@ Lint/UnusedMethodArgument:
     - 'lib/fontisan/tables/cff2/private_dict_blend_handler.rb'
     - 'lib/fontisan/variation/table_accessor.rb'
     - 'lib/fontisan/woff_font.rb'
+    # Subset strategies share a uniform (context:, tag:, table:) interface
+    # so the dispatcher can call every registered class the same way. Not
+    # every strategy reads every arg; the interface contract justifies the
+    # unused warnings here.
+    - 'lib/fontisan/subset/table_strategy/**/*'
 
 # Offense count: 5
 Lint/UselessConstantScoping:
