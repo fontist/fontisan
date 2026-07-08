@@ -27,7 +27,7 @@ module Fontisan
             checksum_adjustment: 0, # patched by FontWriter
             magic_number: MAGIC_NUMBER,
             flags: DEFAULT_FLAGS,
-            units_per_em: units_per_em || font.info.units_per_em || 1000,
+            units_per_em: units_per_em || font.info.units_per_em || Glyph::DEFAULT_UNITS_PER_EM,
             created_raw: time_to_longdatetime(font.info.created),
             modified_raw: time_to_longdatetime(font.info.modified),
             x_min: bbox[:x_min].to_i,

@@ -79,4 +79,43 @@ RSpec.describe Fontisan::Ufo::Glyph do
       expect(described_class.from_glif(xml).composite?).to be(false)
     end
   end
+
+  describe ".notdef" do
+    it "returns a Glyph named '.notdef'" do
+      expect(described_class.notdef.name).to eq(".notdef")
+    end
+
+    it "defaults width to DEFAULT_UNITS_PER_EM when no units_per_em given" do
+      expect(described_class.notdef.width).to eq(described_class::DEFAULT_UNITS_PER_EM)
+    end
+
+    it "uses the provided units_per_em as width" do
+      expect(described_class.notdef(units_per_em: 2048).width).to eq(2048)
+    end
+
+    it "coerces string units_per_em to integer" do
+      expect(described_class.notdef(units_per_em: "1024").width).to eq(1024)
+    end
+
+    it "produces an empty glyph (no contours, unicodes, components)" do
+      g = described_class.notdef
+      expect(g.contours).to be_empty
+      expect(g.unicodes).to be_empty
+      expect(g.components).to be_empty
+    end
+
+    it "is idempotent across calls (no shared state)" do
+      a = described_class.notdef(units_per_em: 1000)
+      b = described_class.notdef(units_per_em: 1000)
+      expect(a).not_to be(b)
+      a.width = 0
+      expect(b.width).to eq(1000), "instances must not share mutable state"
+    end
+  end
+
+  describe "::DEFAULT_UNITS_PER_EM" do
+    it "is 1000 (the OpenType common-default for fonts without unitsPerEm)" do
+      expect(described_class::DEFAULT_UNITS_PER_EM).to eq(1000)
+    end
+  end
 end

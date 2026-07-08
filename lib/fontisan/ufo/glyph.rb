@@ -11,6 +11,30 @@ module Fontisan
     # The `.glif` XML format has multiple revisions (1, 2, 3); the
     # parser accepts all of them.
     class Glyph
+      # OpenType requires GID 0 to be a glyph named `.notdef`. UFO
+      # sources that lack an explicit `.notdef` (synthetic SVG donors,
+      # programmatic sources) need one injected before compile. This
+      # constant is the default width used for that injected glyph, and
+      # doubles as the fallback unitsPerEm in Head.build when UFO info
+      # omits the field. Single source of truth for both call sites.
+      DEFAULT_UNITS_PER_EM = 1000
+
+      # Synthesize an empty `.notdef` glyph suitable for GID 0.
+      #
+      # OpenType mandates GID 0 be `.notdef`. UFO sources that lack an
+      # explicit `.notdef` (synthetic SVG donors, programmatic sources)
+      # need one injected before compile. The width defaults to the
+      # font's units_per_em so the .notdef consumes one em of advance.
+      #
+      # @param units_per_em [Integer, nil] Advance width for the
+      #   synthesized glyph. Defaults to DEFAULT_UNITS_PER_EM when nil.
+      # @return [Glyph]
+      def self.notdef(units_per_em: nil)
+        new(name: ".notdef").tap do |g|
+          g.width = units_per_em&.to_i || DEFAULT_UNITS_PER_EM
+        end
+      end
+
       attr_accessor :width, :height, :note, :lib
       attr_reader :name, :unicodes, :contours, :components, :anchors,
                   :guidelines, :images
