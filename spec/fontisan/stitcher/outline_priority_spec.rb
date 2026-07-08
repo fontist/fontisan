@@ -130,15 +130,12 @@ RSpec.describe Fontisan::Stitcher do
           cmap = loaded.table("cmap").unicode_mappings
 
           # All three codepoints must be present in the cmap.
-          unless cmap.key?(shared_cp)
-            raise "shared codepoint U+%06X missing from cmap" % shared_cp
-          end
-          unless cmap.key?(outline_only_cp)
-            raise "outline-only codepoint U+%06X missing from cmap" % outline_only_cp
-          end
-          unless cmap.key?(cbdt_only_cp)
-            raise "CBDT-only codepoint U+%06X missing (placeholder should still cover)" % cbdt_only_cp
-          end
+          expect(cmap).to include(shared_cp),
+                          "shared codepoint U+%06X missing from cmap" % shared_cp
+          expect(cmap).to include(outline_only_cp),
+                          "outline-only codepoint U+%06X missing from cmap" % outline_only_cp
+          expect(cmap).to include(cbdt_only_cp),
+                          "CBDT-only codepoint U+%06X missing (placeholder should still cover)" % cbdt_only_cp
 
           # The shared codepoint must map to a glyph whose advance_width
           # is 500 (the outline donor's value). The CBDT placeholder
@@ -182,7 +179,7 @@ RSpec.describe Fontisan::Stitcher do
             ttc = Fontisan::TrueTypeCollection.read(io)
             face = ttc.font(0, io)
             cmap = face.table("cmap").unicode_mappings
-            expect(cmap.key?(shared_cp)).to be true
+            expect(cmap).to include(shared_cp)
 
             hmtx = face.table("hmtx")
             hhea = face.table("hhea")

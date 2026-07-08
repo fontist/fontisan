@@ -13,19 +13,27 @@ module Fontisan
     # trivial — the Stitcher only propagates the raw table bytes, it
     # never decodes bitmap blocks during stitch.
     #
-    # Output: a TTF file that +FontLoader.load+ can read, with:
-    #   - .notdef + N placeholder glyphs (one per codepoint)
-    #   - cmap mapping each codepoint to its placeholder GID
-    #   - CBDT/CBLC tables (minimal valid headers + one tiny bitmap)
+    # Layouts are constructed via the BinData table models in
+    # `Fontisan::Tables::*` so this fixture stays in sync with the
+    # model definitions and cannot drift into invalid binary. Tables
+    # without a BinData model that the loader needs to read (head, hhea,
+    # OS/2, name, post) use minimal hand-rolled bytes that match the
+    # OpenType spec; a self-test in
+    # `spec/support/cbdt_fixture_spec.rb` round-trips the built font
+    # through every model to catch any layout drift.
     module CbdtFixture
-      HEAD_TAG = "head"
-      CMAP_TAG = "cmap"
-      CBDT_TAG = "CBDT"
-      CBLC_TAG = "CBLC"
-      MAXP_TAG = "maxp"
+      # Image format 17: smallGlyphMetrics (5 bytes) + PNG data
+      IMAGE_FORMAT_SMALL_PNG = 17
+      # IndexSubTable format 1: variable-size, uint32 offset array
+      INDEX_FORMAT_VAR_U32 = 1
+
+      # Pixels-per-em for the single strike this fixture emits.
+      PPEM = 16
+      # Bit depth for the single strike (32-bit RGBA PNG).
+      BIT_DEPTH = 32
 
       # @param codepoints [Array<Integer>] codepoints the fixture covers.
-      #   One placeholder glyph is created per codepoint.
+      #   One placeholder glyph is created per codepoint (GID 1..N).
       # @param path [String] where to write the TTF.
       # @return [void]
       def self.write_font(codepoints:, path:)
@@ -41,16 +49,16 @@ module Fontisan
         glyph_count = codepoints.size + 1 # +1 for .notdef
 
         {
-          HEAD_TAG => head_table,
+          "head" => head_table,
           "hhea" => hhea_table(glyph_count),
-          MAXP_TAG => maxp_table(glyph_count),
+          "maxp" => maxp_table(glyph_count),
           "OS/2" => os2_table,
           "name" => name_table,
           "post" => post_table,
           "hmtx" => hmtx_table(glyph_count),
-          CMAP_TAG => cmap_table(codepoints),
-          CBDT_TAG => cbdt_table(codepoints),
-          CBLC_TAG => cblc_table(codepoints),
+          "cmap" => cmap_table(codepoints),
+          "CBDT" => cbdt_table(codepoints),
+          "CBLC" => cblc_table(codepoints),
         }
       end
 
@@ -59,85 +67,86 @@ module Fontisan
         0x00010000
       end
 
-      # ---- Table builders ----
+      # ---- Table builders ------------------------------------------------
 
       def self.head_table
         [
-          0x00010000,  # version 1.0
-          0x00005000,  # fontRevision 0.5
-          0x00000000,  # checksumAdjustment (filled by FontWriter)
-          0x5F0F3CF5,  # magicNumber
-          0x000B,      # flags (baseline at 0, left sidebearing at 0, etc.)
-          1000,        # unitsPerEm
-          0, 0,        # created, modified (LONGDATETIME, zeros ok for test)
-          0, 0, 0, 0, 0, 0, 0, 0,  # xMin, yMin, xMax, yMax (all 0)
-          0x0000,      # macStyle
-          8,           # lowestRecPPEM
-          2,           # fontDirectionHint
-          0,           # indexToLocFormat (unused since no glyf/loca)
-          0,           # glyphDataFormat
-        ].pack("N N N N n n N N n n n n n n n n")
+          0x00010000, # version 1.0
+          0x00005000, # fontRevision 0.5
+          0x00000000, # checksumAdjustment (filled by FontWriter)
+          0x5F0F3CF5, # magicNumber
+          0x000B,     # flags
+          1000,       # unitsPerEm
+          0, 0,       # created, modified (LONGDATETIME)
+          0, 0, 0, 0, 0, 0, 0, 0, # xMin, yMin, xMax, yMax
+          0x0000,     # macStyle
+          8,          # lowestRecPPEM
+          2,          # fontDirectionHint
+          0,          # indexToLocFormat (no glyf/loca)
+          0 # glyphDataFormat
+        ].pack("NNNNnnNNnnnnnnnnnn")
       end
 
       def self.hhea_table(num_glyphs)
         [
-          0x00010000,  # version 1.0
-          800,         # ascent
-          -200,        # descent
-          0,           # lineGap
-          1000,        # advanceWidthMax
-          0,           # minLeftSideBearing
-          0,           # minRightSideBearing
-          1000,        # xMaxExtent
-          1, 0,        # caretSlopeRise, caretSlopeRun
-          0,           # caretOffset
-          0, 0, 0, 0,  # reserved * 4
-          0,           # metricDataFormat
-          num_glyphs,  # numberOfHMetrics
-        ].pack("N n n n n n n n n n n n n n n n")
+          0x00010000, # version 1.0
+          800,        # ascent
+          -200,       # descent
+          0,          # lineGap
+          1000,       # advanceWidthMax
+          0,          # minLeftSideBearing
+          0,          # minRightSideBearing
+          1000,       # xMaxExtent
+          1, 0,       # caretSlopeRise, caretSlopeRun
+          0,          # caretOffset
+          0, 0, 0, 0, # reserved * 4
+          0,          # metricDataFormat
+          num_glyphs # numberOfHMetrics
+        ].pack("Nnnnnnnnnnnnnnnn")
       end
 
       def self.maxp_table(num_glyphs)
-        # Version 0.5 (minimal, sufficient for non-TT fonts)
-        [0x00005000, num_glyphs].pack("N n")
+        # Version 0.5 (CFF-style, 6 bytes) — sufficient for non-TT fonts.
+        Tables::Maxp.new(version_raw: Tables::Maxp::VERSION_0_5,
+                         num_glyphs: num_glyphs).to_binary_s
       end
 
       def self.os2_table
-        # Minimal OS/2 v4.0. Fields the loader actually reads (weight,
-        # fsSelection, usWinAscent/Descent) are populated; the rest are
-        # zeroed. Layout matches the OpenType spec byte-for-byte so
-        # BinData parses it without raising.
+        # OS/2 v4.0. Only fields the loader actually reads are populated;
+        # the rest are zeroed. Layout matches the spec byte-for-byte.
+        # 13 uint16 + 10 uint8 (panose) + 4 uint32 + a4 + 8 uint16 +
+        # 2 uint32 + 4 uint16.
         [
-          0x0004,      # version 4
-          1000,        # xAvgCharWidth
-          400,         # usWeightClass (regular)
-          5,           # usWidthClass (medium)
-          0,           # fsType
-          0, 0, 0, 0, 0, # ySubscript / ySuperscript (5 uint16 fields)
-          0, 0,        # yStrikeoutSize, yStrikeoutPosition
-          0,           # sFamilyClass
+          0x0004,   # version 4
+          1000,     # xAvgCharWidth
+          400,      # usWeightClass (regular)
+          5,        # usWidthClass (medium)
+          0,        # fsType
+          0, 0, 0, 0, 0, # ySubscript / ySuperscript (5 uint16)
+          0, 0,     # yStrikeoutSize, yStrikeoutPosition
+          0,        # sFamilyClass
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, # panose (10 bytes)
-          0, 0, 0, 0,  # ulUnicodeRange 1-4
-          "TEST",      # achVendID
-          0x0040,      # fsSelection (regular)
-          0x0020,      # usFirstCharIndex
-          0xFFFF,      # usLastCharIndex
-          800,         # sTypoAscender
-          -200,        # sTypoDescender
-          0,           # sTypoLineGap
-          800,         # usWinAscent
-          200,         # usWinDescent
-          0, 0,        # ulCodePageRange 1-2
-          1000,        # sxHeight
-          800,         # sCapHeight
-          0,           # usDefaultChar
-          0xFFFD,      # usBreakChar
-          1,           # usMaxContext
-        ].pack("n n n n n n n n n n n n n C10 N N N N a4 n n n n n n n n N N n n n n")
+          0, 0, 0, 0, # ulUnicodeRange 1-4
+          "TEST",   # achVendID
+          0x0040,   # fsSelection (regular)
+          0x0020,   # usFirstCharIndex
+          0xFFFF,   # usLastCharIndex
+          800,      # sTypoAscender
+          -200,     # sTypoDescender
+          0,        # sTypoLineGap
+          800,      # usWinAscent
+          200,      # usWinDescent
+          0, 0,     # ulCodePageRange 1-2
+          1000,     # sxHeight
+          800,      # sCapHeight
+          0,        # usDefaultChar
+          0xFFFD,   # usBreakChar
+          1 # usMaxContext
+        ].pack("nnnnnnnnnnnnnC10NNNNa4nnnnnnnnNNnnnn")
       end
 
       def self.name_table
-        # Minimal name table with nameID 1 (family) and 6 (PostScript)
+        # Two records: nameID 1 (family) and 6 (PostScript).
         records = [
           [3, 1, 0x0409, 1, "CBDT Test".encode("UTF-16BE").b],
           [3, 1, 0x0409, 6, "CBDTTest-Regular".encode("UTF-16BE").b],
@@ -145,27 +154,28 @@ module Fontisan
         string_data = String.new(encoding: Encoding::BINARY)
         record_bytes = String.new(encoding: Encoding::BINARY)
         records.each do |pid, eid, lid, nid, encoded|
-          offset = 6 + records.size * 12 + string_data.bytesize
-          record_bytes << [pid, eid, lid, nid, encoded.bytesize, offset].pack("n n n n n n")
+          offset = 6 + (records.size * 12) + string_data.bytesize
+          record_bytes << [pid, eid, lid, nid, encoded.bytesize,
+                           offset].pack("nnnnnn")
           string_data << encoded
         end
-        header = [0, records.size, 6 + records.size * 12].pack("n n n")
+        header = [0, records.size, 6 + (records.size * 12)].pack("nnn")
         header + record_bytes + string_data
       end
 
       def self.post_table
-        # Version 3.0 (no glyph names), all metrics zero
-        [0x00030000, 0, -100, 50, 0, 0, 0, 0, 0].pack("N N n n N N N N N")
+        # Version 3.0 (no glyph names), zeroed metrics.
+        [0x00030000, 0, -100, 50, 0, 0, 0, 0, 0].pack("NNnnNNNNN")
       end
 
       def self.hmtx_table(num_glyphs)
-        # All glyphs: advance 1000, lsb 0
-        Array.new(num_glyphs) { [1000, 0] }.flatten.pack("n" * (num_glyphs * 2))
+        # All glyphs: advance 1000, lsb 0.
+        Array.new(num_glyphs) { [1000, 0] }.flatten.pack("n*")
       end
 
       def self.cmap_table(codepoints)
         # Format 4 (BMP) + Format 12 (full), platform 3 encodings 1 + 10.
-        # One segment per codepoint (no contiguous runs needed for the test).
+        # One segment per codepoint + the mandatory 0xFFFF sentinel.
         bmp = codepoints.select { |cp| cp <= 0xFFFF }
         full = codepoints
 
@@ -183,35 +193,43 @@ module Fontisan
       end
 
       def self.format4_subtable(cps)
-        # One segment per cp + sentinel. Minimal but valid.
-        # GID 0 is .notdef; first codepoint gets GID 1.
+        # One segment per cp + the 0xFFFF sentinel. GID 0 is .notdef;
+        # first codepoint gets GID 1.
         segments = cps.sort.map { |cp| cp..cp }
-        segments << (0xFFFF..0xFFFF) # sentinel
+        segments << (0xFFFF..0xFFFF)
         seg_count = segments.size
         search_range = largest_pow2_le(seg_count) * 2
-        entry_selector = (Math.log([1, search_range / 2].max) / Math.log(2)).to_i
-        range_shift = seg_count * 2 - search_range
+        search_range = 2 if search_range < 2
+        entry_selector = Math.log2(search_range / 2).to_i
+        range_shift = (seg_count * 2) - search_range
 
         end_codes = segments.map(&:end)
         start_codes = segments.map(&:begin)
         id_deltas = segments.each_with_index.map do |range, i|
-          start_cp = range.begin
-          gid = i + 1 # .notdef is gid 0; first codepoint is gid 1
-          if start_cp == 0xFFFF
-            1
+          if range.begin == 0xFFFF
+            1 # sentinel: 0xFFFF + 1 wraps to gid 0
           else
-            (gid - start_cp) & 0xFFFF
+            ((i + 1) - range.begin) & 0xFFFF
           end
         end
 
         body = String.new(encoding: Encoding::BINARY)
-        body << [seg_count * 2, search_range, entry_selector, range_shift].pack("nnnn")
+        body << [seg_count * 2, search_range, entry_selector,
+                 range_shift].pack("nnnn")
         body << end_codes.pack("n*")
-        body << [0].pack("n")
+        body << [0].pack("n") # reservedPad
         body << start_codes.pack("n*")
         body << id_deltas.pack("n*")
-        body << Array.new(seg_count, 0).pack("n*")
-        length = 14 + body.bytesize
+        body << Array.new(seg_count, 0).pack("n*") # idRangeOffset
+        14 + body.bytesize # 14 = format(2)+length(2)+language(2)+header(8)... wait
+
+        # Format 4 subtable header: format u16, length u16, language u16,
+        # then segCountX2, searchRange, entrySelector, rangeShift.
+        # `body` already includes those 4 seg header fields above. The 14
+        # is format+length+language (6 bytes) + the 4 seg header fields
+        # are in body. Let me recompute: body includes segCountX2 onward,
+        # which is 8 bytes of header. Add 6 for format/length/language.
+        length = 6 + body.bytesize
         [4, length, 0].pack("nnn") + body
       end
 
@@ -219,10 +237,9 @@ module Fontisan
         segments = cps.sort.map { |cp| cp..cp }
         body = String.new(encoding: Encoding::BINARY)
         segments.each_with_index do |range, i|
-          gid = i + 1 # .notdef is gid 0
-          body << [range.begin, range.end, gid].pack("NNN")
+          body << [range.begin, range.end, i + 1].pack("NNN")
         end
-        length = 16 + body.bytesize
+        length = 16 + body.bytesize # 16-byte format-12 header
         [12, 0].pack("nn") + [length, 0, segments.size].pack("NNN") + body
       end
 
@@ -232,70 +249,92 @@ module Fontisan
         1 << (n.bit_length - 1)
       end
 
+      # ---- CBDT/CBLC (built via the BinData models) ---------------------
+
       def self.cbdt_table(codepoints)
-        # CBDT v2.0 header (4 bytes) + one bitmap block per glyph. The
-        # bitmap payload is a placeholder byte; the Stitcher propagates
-        # raw bytes without decoding them, so validity of the bitmap
-        # data itself is irrelevant for the regression we exercise.
-        header = [0x0002, 0x0000].pack("nn")
+        # CBDT v3.0: 4-byte header + one format-17 bitmap block per
+        # placeholder glyph. Format 17 = smallGlyphMetrics (5 bytes) +
+        # PNG data. The PNG payload is a single placeholder byte; the
+        # Stitcher propagates raw bytes without decoding them.
+        header = [3, 0].pack("nn") # majorVersion=3, minorVersion=0
 
         body = String.new(encoding: Encoding::BINARY)
-        codepoints.each_with_index do |_cp, _gid|
-          body << [2].pack("C") # format = 2 (BigGlyphMetrics + byte data)
-          body << [1, 1, 0, 0, 1000, 0, 0, 1000].pack("n n n n n n n n")
-          body << [1].pack("N")
-          body << "\xFF".b # 1 byte of bitmap data
+        codepoints.each do |_cp|
+          # smallGlyphMetrics: height u8, width u8, bearingX i8,
+          # bearingY i8, advance i8 = 5 bytes total.
+          body << [10, 10, 0, 0, 10].pack("CCCcc")
+          body << "\xFF".b # 1 byte of placeholder "PNG" data
         end
 
-        header + body
+        Tables::Cbdt.read(header + body).to_binary_s
       end
 
-      def self.cblc_table(codepoints)
-        # CBLC v2.0 header (4 bytes) + one bitmap size table per strike.
-        # Minimal: one strike, format 1 index subtable, gid 0..N.
-        header = [0x0002, 0x0000].pack("nn") # v2.0
-        num_sizes = 1
-        header << [num_sizes].pack("N")
+      # Per-glyph byte length of one CBDT format-17 block: 5-byte
+      # smallGlyphMetrics + 1-byte placeholder PNG payload. Used to
+      # build a realistic format-1 IndexSubTable offset array.
+      CBDT_BLOCK_SIZE = 6
 
-        # bitmapSizeTable: 48 bytes
-        # indexSubTableArray: one entry (firstgid, lastgid, indexSubTableOffset, indexSubTableSize)
+      def self.cblc_table(codepoints)
         first_gid = 1
         last_gid = codepoints.size
-        index_subtable_offset = 8 + (num_sizes * 48) + 8 # after header + size table + indexSubTableArray entry
-        index_format = 1
-        image_format = 2
-        image_data_offset = 4 # offset into CBDT (after CBDT's 4-byte header)
+        glyph_count = last_gid - first_gid + 1
 
-        # indexSubTableArray entry: 12 bytes (startGlyphIndex, endGlyphIndex, indexSubTableOffset, indexSubTableSize)
-        index_array = [first_gid, last_gid, index_subtable_offset, 16].pack("N N N N")
+        # IST sits after header(8) + BitmapSize(48) + ISTA(8) = 64.
+        ista_offset = 8 + 48
+        ist_offset = ista_offset + 8
 
-        # indexSubTableHeader (format 1): indexFormat(2) + imageFormat(2) + imageDataOffset(4) + sbitOffsets[]
-        index_subtable = [index_format, image_format, image_data_offset].pack("nnN")
-        # sbitOffsets: one per glyph + 1 sentinel. Each is uint32 offset into CBDT.
-        # Point each glyph to offset 4 (start of bitmap data in CBDT).
-        (last_gid - first_gid + 2).times do
-          index_subtable << [4].pack("N")
-        end
+        # IndexSubTable format 1: 8-byte header + uint32 offsetArray[N+1].
+        # Each glyph's bitmap block is CBDT_BLOCK_SIZE bytes, laid out
+        # back-to-back starting at the CBDT body (offset 4 past the CBDT
+        # header). offsetArray[i] = i * CBDT_BLOCK_SIZE (relative to
+        # imageDataOffset); offsetArray[N+1] marks the end.
+        offset_array = Array.new(glyph_count + 1) { |i| i * CBDT_BLOCK_SIZE }
+        ist_bytes = [INDEX_FORMAT_VAR_U32, IMAGE_FORMAT_SMALL_PNG,
+                     4].pack("nnN") + offset_array.pack("N*")
 
-        # bitmapSizeTable (48 bytes)
-        size_table = [
-          1, 1,                  # hori: ascender, descender (sbitLineMetrics)
-          1, 1000, 0, 0,         # hori: widthMax, caretSlopeRise, caretSlopeRun
-          1, 0, 0, 0,            # hori: caretOffset, minOriginSB, minAdvanceSB, maxBeforeBL
-          0,                     # hori: minAfterBL
-          1, 1,                  # vert: ascender, descender
-          1, 1000, 0, 0,
-          1, 0, 0, 0,
-          0,                     # vert: minAfterBL
-          0x0002,                # startGlyphIndex (placeholder, overwritten below)
-          last_gid,              # endGlyphIndex
-          1,                     # ppemX
-          1,                     # ppemY
-          0,                     # bitDepth
-          2,                     # flags
-        ].pack("n n n n n n n n n n n n n n n n n n n n n n n n n")
+        # ISTA entry: u16 first, u16 last, u32 additionalOffset (relative
+        # to ista_offset).
+        ista_entry = Tables::CblcIndexSubTableArrayEntry.new(
+          first_glyph_index: first_gid,
+          last_glyph_index: last_gid,
+          additional_offset_to_index_subtable: ist_offset - ista_offset,
+        ).to_binary_s
 
-        header + size_table + index_array + index_subtable
+        bitmap_size = Tables::CblcBitmapSize.new(
+          index_subtable_array_offset: ista_offset,
+          index_tables_size: ista_entry.bytesize + ist_bytes.bytesize,
+          number_of_index_subtables: 1,
+          color_ref: 0,
+          hori: sbit_line_metrics,
+          vert: sbit_line_metrics,
+          start_glyph_index: first_gid,
+          end_glyph_index: last_gid,
+          ppem_x: PPEM,
+          ppem_y: PPEM,
+          bit_depth: BIT_DEPTH,
+          flags: 2,
+        )
+
+        # CBLC header: version uint32 + numSizes uint32.
+        header = [Tables::Cblc::VERSION_3_0, 1].pack("NN")
+        header + bitmap_size.to_binary_s + ista_entry + ist_bytes
+      end
+
+      def self.sbit_line_metrics
+        Tables::CblcSbitLineMetrics.new(
+          ascender: 1,
+          descender: 0,
+          width_max: 1,
+          caret_slope_numerator: 0,
+          caret_slope_denominator: 1,
+          caret_offset: 0,
+          min_origin_sb: 0,
+          min_advance_sb: 0,
+          max_before_bl: 0,
+          min_after_bl: 0,
+          pad1: 0,
+          pad2: 0,
+        )
       end
     end
   end
