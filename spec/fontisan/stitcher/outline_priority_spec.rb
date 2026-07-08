@@ -156,11 +156,10 @@ RSpec.describe Fontisan::Stitcher do
       # Collection variant of the same regression: each subfont is
       # compiled independently, then packed via Collection::Builder.
       # Verifies the cmap survives the round-trip through the multi-face
-      # pipeline without losing the outline-first priority.
+      # pipeline without losing the outline-first priority, AND that the
+      # CBDT placeholder names ("gid{N}") don't overwrite outline glyphs
+      # sharing the same donor-gid naming scheme.
       it "write_collection preserves outline-first cmap priority across faces" do
-        skip "Stitcher currently raises on a CBDT source without at least one outline codepoint in each face — " \
-             "collection-mode coverage needs CbdtPropagator hardening tracked separately."
-
         shared_cp = 0x1F600
         outline = make_outline_source_with("outline-emoji", shared_cp, width: 500)
         cbdt_font = make_cbdt_source_with([shared_cp])

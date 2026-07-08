@@ -60,6 +60,19 @@ module Fontisan
       # Outline data is intentionally absent — the bitmap lives in
       # the CBDT table that #propagate_tables_into will copy later.
       #
+      # == Why placeholders are name-deconflicted
+      #
+      # Placeholders are named after the CBDT source's gid ("gid{N}").
+      # Outline donors compiled earlier into the same target use the
+      # SAME naming scheme (see Source#extract_truetype_glyph), so a
+      # CBDT placeholder at "gid110" would collide with an outline
+      # glyph at "gid110" from a different donor. Layer#add raises on
+      # conflict (it never silently overwrites — that path previously
+      # erased real outline glyphs and dropped their cmap entries,
+      # causing the CJK Ext G loss in Essenfont-Regular.ttc). We
+      # allocate a unique name via UniqueGlyphName so each placeholder
+      # lands at its own GID slot without touching the outlines.
+      #
       # Glyphs are NOT registered with the deduplicator: each CBDT
       # glyph is unique to its source, and deduplication would
       # incorrectly collapse distinct bitmaps.
@@ -69,7 +82,10 @@ module Fontisan
       def add_placeholder_glyphs(source, target)
         ufo = source.font.is_a?(Ufo::Font) ? source.font : nil
         if ufo
-          ufo.glyphs.each_value { |g| target.layers.default_layer.add(clone_glyph(g, name: g.name)) }
+          ufo.glyphs.each_value do |g|
+            name = UniqueGlyphName.in(target, g.name)
+            target.layers.default_layer.add(clone_glyph(g, name: name))
+          end
           return
         end
 
@@ -82,7 +98,8 @@ module Fontisan
         mappings.each { |cp, gid| gid_cps[gid] << cp }
 
         num_glyphs.times do |gid|
-          name = gid.zero? ? ".notdef" : "gid#{gid}"
+          base_name = gid.zero? ? ".notdef" : "gid#{gid}"
+          name = UniqueGlyphName.in(target, base_name)
           glyph = Ufo::Glyph.new(name: name)
           glyph.width = 0
           gid_cps[gid].each { |cp| glyph.add_unicode(cp) }

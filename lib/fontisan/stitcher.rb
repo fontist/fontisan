@@ -36,6 +36,7 @@ module Fontisan
     autoload :PartitionStrategy, "fontisan/stitcher/partition_strategy"
     autoload :CbdtPropagator,   "fontisan/stitcher/cbdt_propagator"
     autoload :GlyphCopier,      "fontisan/stitcher/glyph_copier"
+    autoload :UniqueGlyphName,  "fontisan/stitcher/unique_glyph_name"
 
     # Internal: pairs a compiled loaded font with its stats so
     # +write_collection+ can build the collection and the result from a
