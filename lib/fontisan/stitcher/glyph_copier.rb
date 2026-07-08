@@ -106,15 +106,7 @@ module Fontisan
       end
 
       def unique_target_name(target_font, base_name)
-        return base_name unless target_font.glyphs.key?(base_name)
-
-        suffix = 1
-        loop do
-          candidate = "#{base_name}.#{suffix}"
-          return candidate unless target_font.glyphs.key?(candidate)
-
-          suffix += 1
-        end
+        UniqueGlyphName.in(target_font, base_name)
       end
 
       def clone_glyph(original, name:)
