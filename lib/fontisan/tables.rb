@@ -4,6 +4,17 @@
 
 module Fontisan
   module Tables
+    autoload :CblcBigGlyphMetrics, "fontisan/tables/cblc_big_glyph_metrics"
+    autoload :CblcBitmapSize, "fontisan/tables/cblc_bitmap_size"
+    autoload :CblcGlyphBitmapLocation, "fontisan/tables/cblc_glyph_bitmap_location"
+    autoload :CblcIndexSubTable, "fontisan/tables/cblc_index_subtable"
+    autoload :CblcIndexSubTableArrayEntry,
+             "fontisan/tables/cblc_index_subtable_array_entry"
+    autoload :CblcIndexSubTableFormatParser,
+             "fontisan/tables/cblc_index_subtable_format_parser"
+    autoload :CblcIndexSubTableHeader,
+             "fontisan/tables/cblc_index_subtable_header"
+    autoload :CblcSbitLineMetrics, "fontisan/tables/cblc_sbit_line_metrics"
     autoload :Cbdt, "fontisan/tables/cbdt"
     autoload :Cblc, "fontisan/tables/cblc"
     autoload :Cff, "fontisan/tables/cff"
