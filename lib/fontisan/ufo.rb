@@ -17,7 +17,8 @@ module Fontisan
   #
   # Reference: https://unifiedfontobject.org
   module Ufo
-    autoload :Font,        "fontisan/ufo/font"
+    autoload :Font, "fontisan/ufo/font"
+    autoload :GlyphExistsError, "fontisan/ufo/glyph_exists_error"
     autoload :Info,        "fontisan/ufo/info"
     autoload :Layer,       "fontisan/ufo/layer"
     autoload :LayerSet,    "fontisan/ufo/layer_set"

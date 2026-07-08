@@ -35,6 +35,7 @@ module Fontisan
     autoload :FormatMetadata,   "fontisan/stitcher/format_metadata"
     autoload :PartitionStrategy, "fontisan/stitcher/partition_strategy"
     autoload :CbdtPropagator,   "fontisan/stitcher/cbdt_propagator"
+    autoload :GlyphCloner,      "fontisan/stitcher/glyph_cloner"
     autoload :GlyphCopier,      "fontisan/stitcher/glyph_copier"
     autoload :UniqueGlyphName,  "fontisan/stitcher/unique_glyph_name"
 

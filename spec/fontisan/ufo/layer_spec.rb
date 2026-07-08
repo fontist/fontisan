@@ -34,7 +34,7 @@ RSpec.describe Fontisan::Ufo::Layer do
       layer.add(glyph_a)
 
       expect { layer.add(glyph_a_duplicate) }
-        .to raise_error(Fontisan::Ufo::Layer::GlyphExistsError, /"A"/)
+        .to raise_error(Fontisan::Ufo::GlyphExistsError, /"A"/)
     end
 
     it "preserves the original glyph when a second add raises" do
@@ -43,7 +43,7 @@ RSpec.describe Fontisan::Ufo::Layer do
 
       expect { layer.add(glyph_a_duplicate) }.to raise_error(StandardError)
       expect(layer["A"]).to be(glyph_a),
-                              "original glyph must NOT be replaced when add raises"
+                            "original glyph must NOT be replaced when add raises"
     end
 
     it "inserts glyphs with distinct names without raising" do
@@ -78,7 +78,7 @@ RSpec.describe Fontisan::Ufo::Layer do
 
       begin
         layer.add(glyph_a_duplicate)
-      rescue described_class::GlyphExistsError => e
+      rescue Fontisan::Ufo::GlyphExistsError => e
         expect(e.name).to eq("A")
       end
     end
