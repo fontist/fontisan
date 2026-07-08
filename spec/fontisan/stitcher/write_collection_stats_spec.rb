@@ -122,12 +122,27 @@ RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
       File.open(path, "rb") do |io|
         ttc = Fontisan::TrueTypeCollection.read(io)
         face = ttc.font(0, io)
-        unless face.has_table?("CBDT")
-          raise "CBDT table missing from collection face (propagation regression)"
-        end
-        unless face.has_table?("CBLC")
-          raise "CBLC table missing from collection face (propagation regression)"
-        end
+        expect(face.table_data).to include("CBDT"),
+                                   "CBDT table missing from collection face (propagation regression)"
+        expect(face.table_data).to include("CBLC"),
+                                   "CBLC table missing from collection face (propagation regression)"
+
+        # Stronger: also verify the shared codepoint resolves to the
+        # outline glyph (advance_width 500), not the CBDT placeholder
+        # (advance_width 1000). This catches the regression the PR's
+        # outline_priority sibling test covers, in collection mode.
+        cmap = face.table("cmap").unicode_mappings
+        expect(cmap).to include(shared_cp)
+
+        hmtx = face.table("hmtx")
+        hhea = face.table("hhea")
+        maxp_t = face.table("maxp")
+        hmtx.parse_with_context(hhea.number_of_h_metrics, maxp_t.num_glyphs)
+        gid = cmap[shared_cp]
+        metric = hmtx.metric_for(gid)
+        expect(metric[:advance_width]).to eq(500),
+                                          "shared codepoint mapped to CBDT placeholder (width 1000) " \
+                                          "instead of outline glyph (width 500) in collection mode"
       end
     end
   end
