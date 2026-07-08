@@ -11,6 +11,14 @@ module Fontisan
       # Both subtables share the same segment list (capped to BMP for
       # format 4); format 4 is required by Windows even though format
       # 12 is more capable.
+      #
+      # Contract — first-wins: when multiple glyphs declare the same
+      # codepoint, the glyph at the LOWER GID wins the cp→gid mapping.
+      # Callers that want one donor to outrank another for a shared
+      # codepoint (e.g. outline donor vs. CBDT placeholder) MUST order
+      # the higher-priority glyphs earlier in the `glyphs:` array.
+      # Stitcher relies on this for outline-first stitching.
+      #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/cmap
       module Cmap
         PLATFORM_WINDOWS = 3
