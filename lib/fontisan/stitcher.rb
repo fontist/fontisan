@@ -139,6 +139,15 @@ module Fontisan
       cbdts.first
     end
 
+    # Safe variant of #cbdt_source: returns nil instead of raising when
+    # the project has multiple CBDT sources. Used inside the per-subfont
+    # glyph-copy pass where raising mid-compile would leave partial state.
+    def safe_cbdt_source
+      cbdt_source
+    rescue MultipleCbdtSourcesError
+      nil
+    end
+
     def build_target_for(subfont_name)
       bindings = @subfonts[subfont_name] || []
       target = Ufo::Font.new
@@ -171,25 +180,22 @@ module Fontisan
     def assign_gids_and_copy_glyphs(bindings, target, deduplicator)
       cbdt = safe_cbdt_source
 
-      if cbdt
-        # Outline donors must be stitched first so the cmap builder
-        # (which uses first-wins semantics) maps each codepoint to the
-        # real outline glyph rather than to the empty CBDT placeholder
-        # added below. CBDT glyph data still propagates via the
-        # separate propagate_cbdt_tables mechanism.
-        add_notdef_from(bindings, target, deduplicator)
-        add_outline_glyphs(bindings, target, deduplicator, cbdt)
-        add_all_cbdt_glyphs(cbdt, target)
-      else
-        add_notdef_from(bindings, target, deduplicator)
-        add_outline_glyphs(bindings, target, deduplicator, nil)
-      end
+      # Glyph ordering matters: Cmap.build uses first-wins semantics
+      # (Cmap.build docstring), so outline donors must be stitched
+      # before CBDT placeholders. Otherwise the empty CBDT placeholder
+      # would land at a lower GID and win the cp→gid mapping for any
+      # codepoint covered by both donors, hiding the real outline glyph.
+      # CBDT bitmap data still propagates via propagate_cbdt_tables.
+      add_notdef_from(bindings, target, deduplicator)
+      add_outline_glyphs(bindings, target, deduplicator,
+                         skip_sources: cbdt ? [cbdt] : [])
+      add_all_cbdt_glyphs(cbdt, target) if cbdt
     end
 
-    def add_outline_glyphs(bindings, target, deduplicator, cbdt)
+    def add_outline_glyphs(bindings, target, deduplicator, skip_sources:)
       sorted_bindings(bindings).each do |binding|
         next if binding[:donor_gid].zero?
-        next if cbdt && binding[:source].equal?(cbdt)
+        next if skip_sources.any? { |s| s.equal?(binding[:source]) }
 
         glyph = binding[:source].glyph_for_gid(binding[:donor_gid])
         next unless glyph
@@ -205,13 +211,6 @@ module Fontisan
           deduplicator&.register(glyph, name)
         end
       end
-    end
-
-    def safe_cbdt_source
-      cbdts = @sources.values.select { |s| s.bitmap_mode == :cbdt }
-      cbdts.size == 1 ? cbdts.first : nil
-    rescue MultipleCbdtSourcesError
-      nil
     end
 
     def sorted_bindings(bindings)
