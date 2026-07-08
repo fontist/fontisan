@@ -34,6 +34,8 @@ module Fontisan
     autoload :SubfontStats,     "fontisan/stitcher/collection_result"
     autoload :FormatMetadata,   "fontisan/stitcher/format_metadata"
     autoload :PartitionStrategy, "fontisan/stitcher/partition_strategy"
+    autoload :CbdtPropagator,   "fontisan/stitcher/cbdt_propagator"
+    autoload :GlyphCopier,      "fontisan/stitcher/glyph_copier"
 
     # Internal: pairs a compiled loaded font with its stats so
     # +write_collection+ can build the collection and the result from a
@@ -98,7 +100,7 @@ module Fontisan
       metadata = FormatMetadata.resolve(format)
       metadata.compiler_class.new(target).compile(output_path: path)
 
-      propagate_cbdt_tables(path) if cbdt_source
+      cbdt_propagator.propagate_tables_into(cbdt_propagator.cbdt_source, path)
       path
     end
 
@@ -129,25 +131,6 @@ module Fontisan
       end
     end
 
-    def cbdt_source
-      cbdts = @sources.values.select { |s| s.bitmap_mode == :cbdt }
-      if cbdts.size > 1
-        raise MultipleCbdtSourcesError,
-              "multiple CBDT sources not supported (found #{cbdts.size})"
-      end
-
-      cbdts.first
-    end
-
-    # Safe variant of #cbdt_source: returns nil instead of raising when
-    # the project has multiple CBDT sources. Used inside the per-subfont
-    # glyph-copy pass where raising mid-compile would leave partial state.
-    def safe_cbdt_source
-      cbdt_source
-    rescue MultipleCbdtSourcesError
-      nil
-    end
-
     def build_target_for(subfont_name)
       bindings = @subfonts[subfont_name] || []
       target = Ufo::Font.new
@@ -165,7 +148,7 @@ module Fontisan
       Dir.mktmpdir do |dir|
         sub_path = File.join(dir, "sub#{subfont_name}#{metadata.extension}")
         metadata.compiler_class.new(target).compile(output_path: sub_path)
-        propagate_cbdt_tables(sub_path) if cbdt_source
+        cbdt_propagator.propagate_tables_into(cbdt_propagator.cbdt_source, sub_path)
 
         loaded = Fontisan::FontLoader.load(sub_path)
         stats = SubfontStats.new(
@@ -178,152 +161,22 @@ module Fontisan
     end
 
     def assign_gids_and_copy_glyphs(bindings, target, deduplicator)
-      cbdt = safe_cbdt_source
+      cbdt = cbdt_propagator.safe_cbdt_source
+      copier = GlyphCopier.new(deduplicator)
 
       # Glyph ordering matters: Cmap.build uses first-wins semantics
       # (Cmap.build docstring), so outline donors must be stitched
       # before CBDT placeholders. Otherwise the empty CBDT placeholder
       # would land at a lower GID and win the cp→gid mapping for any
       # codepoint covered by both donors, hiding the real outline glyph.
-      # CBDT bitmap data still propagates via propagate_cbdt_tables.
-      add_notdef_from(bindings, target, deduplicator)
-      add_outline_glyphs(bindings, target, deduplicator,
-                         skip_sources: cbdt ? [cbdt] : [])
-      add_all_cbdt_glyphs(cbdt, target) if cbdt
+      # CBDT bitmap data still propagates via CbdtPropagator.
+      copier.inject_notdef(bindings, target)
+      copier.copy_outlines(bindings, target, skip_sources: cbdt ? [cbdt] : [])
+      cbdt_propagator.add_placeholder_glyphs(cbdt, target) if cbdt
     end
 
-    def add_outline_glyphs(bindings, target, deduplicator, skip_sources:)
-      sorted_bindings(bindings).each do |binding|
-        next if binding[:donor_gid].zero?
-        next if skip_sources.any? { |s| s.equal?(binding[:source]) }
-
-        glyph = binding[:source].glyph_for_gid(binding[:donor_gid])
-        next unless glyph
-
-        canonical = deduplicator&.find(glyph)
-        if canonical && target.glyphs.key?(canonical)
-          add_extra_unicode(target, canonical, binding[:codepoint])
-        else
-          name = unique_target_name(target, glyph.name)
-          copy_glyph_into(target, name: name, source: binding[:source],
-                                  donor_gid: binding[:donor_gid],
-                                  codepoint: binding[:codepoint])
-          deduplicator&.register(glyph, name)
-        end
-      end
-    end
-
-    def sorted_bindings(bindings)
-      bindings.sort_by { |b| [b[:codepoint] || Float::INFINITY, b[:donor_gid]] }
-    end
-
-    def add_notdef_from(bindings, target, deduplicator)
-      notdef_binding = bindings.find { |b| b[:donor_gid].zero? }
-      if notdef_binding
-        copy_glyph_into(target, name: ".notdef",
-                                source: notdef_binding[:source],
-                                donor_gid: 0)
-      else
-        target.layers.default_layer.add(Ufo::Glyph.new(name: ".notdef"))
-      end
-      dedup_target = target.glyphs[".notdef"]
-      deduplicator&.register(dedup_target, ".notdef") if dedup_target
-    end
-
-    def copy_glyph_into(target_font, name:, source:, donor_gid:, codepoint: nil)
-      original = source.glyph_for_gid(donor_gid)
-      return unless original
-
-      copy = clone_glyph(original, name: name)
-      copy.add_unicode(codepoint) if codepoint
-      target_font.layers.default_layer.add(copy)
-    end
-
-    def add_extra_unicode(target_font, glyph_name, codepoint)
-      return unless codepoint
-
-      glyph = target_font.glyph(glyph_name)
-      glyph.add_unicode(codepoint) unless glyph.unicodes.include?(codepoint)
-    end
-
-    def unique_target_name(target_font, base_name)
-      return base_name unless target_font.glyphs.key?(base_name)
-
-      suffix = 1
-      loop do
-        candidate = "#{base_name}.#{suffix}"
-        return candidate unless target_font.glyphs.key?(candidate)
-
-        suffix += 1
-      end
-    end
-
-    def clone_glyph(original, name:)
-      copy = Ufo::Glyph.new(name: name)
-      copy.width = original.width
-      copy.height = original.height
-      original.contours.each { |c| copy.add_contour(clone_contour(c)) }
-      original.components.each { |c| copy.add_component(c) }
-      original.anchors.each { |a| copy.add_anchor(a) }
-      original.guidelines.each { |g| copy.add_guideline(g) }
-      copy
-    end
-
-    def clone_contour(original)
-      points = original.points.map do |p|
-        Ufo::Point.new(x: p.x, y: p.y, type: p.type, smooth: p.smooth)
-      end
-      Ufo::Contour.new(points)
-    end
-
-    def propagate_cbdt_tables(path)
-      source = cbdt_source
-      return unless source
-
-      compiled = Fontisan::FontLoader.load(path)
-
-      # Read every table as raw bytes straight from the file's table
-      # directory. We deliberately bypass #table (which parses via
-      # BinData) because some tables — notably CFF2 — don't yet have
-      # round-trippable BinData models; calling #table on them returns
-      # nil and would silently drop them from the rewritten font.
-      tables = {}
-      compiled.table_names.each do |tag|
-        raw = compiled.table_data[tag]
-        tables[tag] = raw if raw
-      end
-
-      cbdt_bytes = source.raw_table_bytes("CBDT")
-      cblc_bytes = source.raw_table_bytes("CBLC")
-      tables["CBDT"] = cbdt_bytes if cbdt_bytes
-      tables["CBLC"] = cblc_bytes if cblc_bytes
-
-      sfnt = tables.key?("CFF ") || tables.key?("CFF2") ? 0x4F54544F : 0x00010000
-      Fontisan::FontWriter.write_to_file(tables, path, sfnt_version: sfnt)
-    end
-
-    def add_all_cbdt_glyphs(source, target)
-      ufo = source.font.is_a?(Ufo::Font) ? source.font : nil
-      if ufo
-        ufo.glyphs.each_value { |g| target.layers.default_layer.add(clone_glyph(g, name: g.name)) }
-        return
-      end
-
-      maxp = source.font.table("maxp")
-      num_glyphs = maxp&.num_glyphs || 0
-      cmap = source.font.table("cmap")
-      mappings = cmap&.unicode_mappings || {}
-
-      gid_cps = Hash.new { |h, k| h[k] = [] }
-      mappings.each { |cp, gid| gid_cps[gid] << cp }
-
-      num_glyphs.times do |gid|
-        name = gid.zero? ? ".notdef" : "gid#{gid}"
-        glyph = Ufo::Glyph.new(name: name)
-        glyph.width = 0
-        gid_cps[gid].each { |cp| glyph.add_unicode(cp) }
-        target.layers.default_layer.add(glyph)
-      end
+    def cbdt_propagator
+      @cbdt_propagator ||= CbdtPropagator.new(@sources.values)
     end
   end
 end
