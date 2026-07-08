@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "fontisan/stitcher"
+require_relative "../../support/cbdt_fixture"
 require "tmpdir"
 
 RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
@@ -82,8 +83,52 @@ RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
   end
 
   it "propagates CBDT/CBLC tables in collection mode (bug fix coverage)" do
-    skip "requires a CBDT source fixture; tracked as a follow-up" unless
-      FixtureFonts::FONTS.key?("NotoColorEmoji") &&
-        File.exist?(font_fixture_path("NotoColorEmoji", "NotoColorEmoji.ttf"))
+    # Builds an in-memory CBDT source via CbdtFixture (no external
+    # fixture needed). Stitches it with an outline donor covering a
+    # shared codepoint. The output TTC must contain the CBDT/CBLC
+    # tables on every face.
+    shared_cp = 0x1F600
+
+    outline = ufo::Font.new
+    outline.info.units_per_em = 1000
+    outline.glyphs[".notdef"] = ufo::Glyph.new(name: ".notdef")
+    g = ufo::Glyph.new(name: "outline-emoji")
+    g.width = 500
+    g.add_unicode(shared_cp)
+    g.add_contour(ufo::Contour.new([
+                                     ufo::Point.new(x: 0, y: 0, type: "line"),
+                                     ufo::Point.new(x: 500, y: 0, type: "line"),
+                                     ufo::Point.new(x: 500, y: 100, type: "line"),
+                                   ]))
+    outline.glyphs["outline-emoji"] = g
+
+    cbdt_dir = Dir.mktmpdir
+    cbdt_path = File.join(cbdt_dir, "cbdt.ttf")
+    Fontisan::SpecHelpers::CbdtFixture.write_font(
+      codepoints: [shared_cp], path: cbdt_path,
+    )
+    cbdt_font = Fontisan::FontLoader.load(cbdt_path)
+
+    stitcher = described_class.new
+    stitcher.add_source(:outline, outline)
+    stitcher.add_source(:cbdt, cbdt_font)
+    stitcher.include_notdef(from: :outline, into: :main)
+    stitcher.include_codepoints([shared_cp], from: :outline, into: :main)
+
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "out.ttc")
+      stitcher.write_collection(path, format: :ttf)
+
+      File.open(path, "rb") do |io|
+        ttc = Fontisan::TrueTypeCollection.read(io)
+        face = ttc.font(0, io)
+        unless face.has_table?("CBDT")
+          raise "CBDT table missing from collection face (propagation regression)"
+        end
+        unless face.has_table?("CBLC")
+          raise "CBLC table missing from collection face (propagation regression)"
+        end
+      end
+    end
   end
 end
