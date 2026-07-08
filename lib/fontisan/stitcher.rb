@@ -172,11 +172,21 @@ module Fontisan
       cbdt = safe_cbdt_source
 
       if cbdt
+        # Outline donors must be stitched first so the cmap builder
+        # (which uses first-wins semantics) maps each codepoint to the
+        # real outline glyph rather than to the empty CBDT placeholder
+        # added below. CBDT glyph data still propagates via the
+        # separate propagate_cbdt_tables mechanism.
+        add_notdef_from(bindings, target, deduplicator)
+        add_outline_glyphs(bindings, target, deduplicator, cbdt)
         add_all_cbdt_glyphs(cbdt, target)
       else
         add_notdef_from(bindings, target, deduplicator)
+        add_outline_glyphs(bindings, target, deduplicator, nil)
       end
+    end
 
+    def add_outline_glyphs(bindings, target, deduplicator, cbdt)
       sorted_bindings(bindings).each do |binding|
         next if binding[:donor_gid].zero?
         next if cbdt && binding[:source].equal?(cbdt)
