@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require_relative "../../../lib/fontisan/stitcher"
+require_relative "../../../spec/support/cbdt_fixture"
 require "tmpdir"
 
 # Regression coverage for the outline-vs-CBDT cmap-priority bug (PR #104).
@@ -32,6 +33,17 @@ RSpec.describe Fontisan::Stitcher do
                                      ]))
       font.glyphs[name] = g
       font
+    end
+
+    # Build an in-memory CBDT source font covering the given codepoints.
+    # Each codepoint resolves to a placeholder glyph with advance_width
+    # 1000 (distinct from the outline donor's 500/600 so we can tell
+    # from the stitched font's hmtx which glyph the cmap mapped to).
+    def make_cbdt_source_with(codepoints)
+      dir = Dir.mktmpdir
+      path = File.join(dir, "cbdt.ttf")
+      Fontisan::SpecHelpers::CbdtFixture.write_font(codepoints: codepoints, path: path)
+      Fontisan::FontLoader.load(path)
     end
 
     describe "Cmap first-wins contract" do
@@ -80,13 +92,108 @@ RSpec.describe Fontisan::Stitcher do
 
     describe "outline-first ordering with CBDT donor" do
       # End-to-end regression for the original Emoticons cmap-loss bug.
-      # Requires a real CBDT source fixture (CBDT + CBLC tables, no glyf).
-      # Until a small CBDT fixture is bundled with the test suite, this
-      # spec is skipped — tracked as a follow-up alongside the existing
-      # NotoColorEmoji skip in write_collection_stats_spec.rb:84.
+      # Uses a synthesized CBDT source (see CbdtFixture) — no bundled
+      # fixture file needed. Verifies that a codepoint covered by BOTH
+      # the outline donor and the CBDT donor maps to the outline glyph
+      # (advance_width 500 from make_outline_source_with), not to the
+      # CBDT placeholder (advance_width 1000 from CbdtFixture).
       it "cmap maps shared codepoint to outline glyph GID, not CBDT placeholder" do
-        skip "CBDT source fixture not bundled; tracked as follow-up. " \
-             "Existing skip at write_collection_stats_spec.rb:84 also covers this gap."
+        shared_cp = 0x1F600          # in both CBDT source and outline donor
+        outline_only_cp = 0x41       # only in outline donor
+        cbdt_only_cp = 0x1F601       # only in CBDT source
+
+        outline = make_outline_source_with("outline-emoji", shared_cp, width: 500)
+        # add a second outline glyph for the outline-only codepoint
+        g = ufo::Glyph.new(name: "outline-A")
+        g.width = 600
+        g.add_unicode(outline_only_cp)
+        g.add_contour(ufo::Contour.new([
+                                         ufo::Point.new(x: 0, y: 0, type: "line"),
+                                         ufo::Point.new(x: 600, y: 0, type: "line"),
+                                         ufo::Point.new(x: 300, y: 700, type: "line"),
+                                       ]))
+        outline.glyphs["outline-A"] = g
+
+        cbdt_font = make_cbdt_source_with([shared_cp, cbdt_only_cp])
+
+        stitcher = described_class.new
+        stitcher.add_source(:outline, outline)
+        stitcher.add_source(:cbdt, cbdt_font)
+        stitcher.include_notdef(from: :outline, into: :main)
+        stitcher.include_codepoints([shared_cp, outline_only_cp], from: :outline, into: :main)
+
+        Dir.mktmpdir do |dir|
+          path = File.join(dir, "out.ttf")
+          stitcher.write_to(path, format: :ttf, subfont: :main)
+
+          loaded = Fontisan::FontLoader.load(path)
+          cmap = loaded.table("cmap").unicode_mappings
+
+          # All three codepoints must be present in the cmap.
+          unless cmap.key?(shared_cp)
+            raise "shared codepoint U+%06X missing from cmap" % shared_cp
+          end
+          unless cmap.key?(outline_only_cp)
+            raise "outline-only codepoint U+%06X missing from cmap" % outline_only_cp
+          end
+          unless cmap.key?(cbdt_only_cp)
+            raise "CBDT-only codepoint U+%06X missing (placeholder should still cover)" % cbdt_only_cp
+          end
+
+          # The shared codepoint must map to a glyph whose advance_width
+          # is 500 (the outline donor's value). The CBDT placeholder
+          # would have width 1000, so a wrong cmap mapping is detectable.
+          hmtx = loaded.table("hmtx")
+          hhea = loaded.table("hhea")
+          maxp_t = loaded.table("maxp")
+          hmtx.parse_with_context(hhea.number_of_h_metrics, maxp_t.num_glyphs)
+
+          shared_gid = cmap[shared_cp]
+          metric = hmtx.metric_for(shared_gid)
+          expect(metric[:advance_width]).to eq(500),
+                                            "shared codepoint mapped to CBDT placeholder (width 1000) " \
+                                            "instead of outline glyph (width 500); outline-first fix regressed"
+        end
+      end
+
+      # Collection variant of the same regression: each subfont is
+      # compiled independently, then packed via Collection::Builder.
+      # Verifies the cmap survives the round-trip through the multi-face
+      # pipeline without losing the outline-first priority.
+      it "write_collection preserves outline-first cmap priority across faces" do
+        skip "Stitcher currently raises on a CBDT source without at least one outline codepoint in each face — " \
+             "collection-mode coverage needs CbdtPropagator hardening tracked separately."
+
+        shared_cp = 0x1F600
+        outline = make_outline_source_with("outline-emoji", shared_cp, width: 500)
+        cbdt_font = make_cbdt_source_with([shared_cp])
+
+        stitcher = described_class.new
+        stitcher.add_source(:outline, outline)
+        stitcher.add_source(:cbdt, cbdt_font)
+        stitcher.include_notdef(from: :outline, into: :main)
+        stitcher.include_codepoints([shared_cp], from: :outline, into: :main)
+
+        Dir.mktmpdir do |dir|
+          path = File.join(dir, "out.ttc")
+          stitcher.write_collection(path, format: :ttf)
+
+          File.open(path, "rb") do |io|
+            ttc = Fontisan::TrueTypeCollection.read(io)
+            face = ttc.font(0, io)
+            cmap = face.table("cmap").unicode_mappings
+            expect(cmap.key?(shared_cp)).to be true
+
+            hmtx = face.table("hmtx")
+            hhea = face.table("hhea")
+            maxp_t = face.table("maxp")
+            hmtx.parse_with_context(hhea.number_of_h_metrics, maxp_t.num_glyphs)
+            gid = cmap[shared_cp]
+            metric = hmtx.metric_for(gid)
+            expect(metric[:advance_width]).to eq(500),
+                                              "collection mode mapped shared codepoint to CBDT placeholder"
+          end
+        end
       end
     end
 
