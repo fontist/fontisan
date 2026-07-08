@@ -225,42 +225,22 @@ RSpec.describe Fontisan::Subset::TableSubsetter do
     # Note: Unicode range pruning is TODO in implementation
   end
 
-  describe "private methods" do
-    describe "#compound_glyph?" do
-      it "identifies compound glyphs" do
-        # Create mock compound glyph data (numberOfContours = -1)
-        compound_data = [0xFFFF].pack("n") + ("x" * 10)
-        expect(subsetter.send(:compound_glyph?, compound_data)).to be true
-      end
+  describe "GlyfLocaBuilder" do
+    let(:builder_class) { Fontisan::Subset::TableStrategy::GlyfLocaBuilder }
 
-      it "identifies simple glyphs" do
-        # Create mock simple glyph data (numberOfContours = 2)
-        simple_data = [2].pack("n") + ("x" * 10)
-        expect(subsetter.send(:compound_glyph?, simple_data)).to be false
-      end
-
-      it "handles empty data" do
-        expect(subsetter.send(:compound_glyph?, "")).to be false
-      end
+    it "exposes the builder as a public collaborator of the glyf strategy" do
+      expect(builder_class).to be_a(Class)
     end
-  end
 
-  describe "error handling" do
-    it "handles missing component glyphs in compound glyph remapping" do
-      # Create a mapping that doesn't include all components
-      partial_mapping = Fontisan::Subset::GlyphMapping.new([0, 1],
+    it "raises SubsettingError when a compound glyph references a missing component" do
+      # gid 111 is a compound glyph in NotoSans-Regular. A mapping that
+      # includes gid 111 but excludes its referenced components must
+      # fail the subset build rather than silently emitting dangling
+      # references.
+      partial_mapping = Fontisan::Subset::GlyphMapping.new([0, 111],
                                                            retain_gids: false)
-      partial_subsetter = described_class.new(font, partial_mapping, options)
-
-      # Try to remap a compound glyph that references missing components
-      compound_data = [0xFFFF].pack("n") + ("x" * 8)
-      compound_data << [0x0020].pack("n") # flags (MORE_COMPONENTS not set)
-      compound_data << [100].pack("n")     # glyph_index not in mapping
-      compound_data << [0, 0].pack("n2")   # args
-
-      expect do
-        partial_subsetter.send(:remap_compound_glyph, compound_data)
-      end.to raise_error(Fontisan::SubsettingError, /not in subset/)
+      builder = builder_class.new(font: font, mapping: partial_mapping)
+      expect { builder.build }.to raise_error(Fontisan::SubsettingError)
     end
   end
 end

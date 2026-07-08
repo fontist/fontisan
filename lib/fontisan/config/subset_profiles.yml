@@ -55,6 +55,8 @@ web:
     - glyf
     - GSUB
     - GPOS
+    - CBDT
+    - CBLC
 
 # Minimal Profile: Absolute minimum tables for font rendering
 minimal:
