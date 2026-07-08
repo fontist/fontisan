@@ -84,7 +84,7 @@ module Fontisan
         if ufo
           ufo.glyphs.each_value do |g|
             name = UniqueGlyphName.in(target, g.name)
-            target.layers.default_layer.add(clone_glyph(g, name: name))
+            target.layers.default_layer.add(GlyphCloner.clone(g, name: name))
           end
           return
         end
@@ -117,6 +117,31 @@ module Fontisan
       #
       # No-op when called with a non-CBDT source or nil.
       #
+      # == Limitation: GID stability
+      #
+      # The propagation copies CBDT/CBLC bytes verbatim. CBLC indexes
+      # glyphs by SOURCE GID — the GIDs of the CBDT donor. The compiled
+      # font's GIDs may differ because:
+      #
+      #   1. +add_placeholder_glyphs+ renames CBDT placeholders via
+      #      UniqueGlyphName when their default "gid{N}" name collides
+      #      with outline glyphs sharing the same donor-gid scheme
+      #      (see Layer's naming contract).
+      #   2. The compiler assigns GIDs in target-namespace order, which
+      #      is not the same as source-GID order once renaming happens.
+      #
+      # The bitmaps line up correctly only when the CBDT source and
+      # every outline source cover disjoint codepoint ranges (the
+      # Essenfont TTC case: emoji vs CJK Ext G). When ranges overlap,
+      # CBLC's source-GID-indexed bitmaps may point at the wrong
+      # compiled glyphs and the colour rendering for affected
+      # codepoints will fall back to outlines.
+      #
+      # A proper fix requires a CBLC rebuild pass: walk the compiled
+      # font's cmap to find the new GID for every CBDT-covered source
+      # glyph, then rewrite CBLC's IndexSubTableArray + IndexSubTable
+      # offsets to match. Tracked as a follow-up.
+      #
       # @param source [Stitcher::Source, nil] the CBDT source
       # @param path [String] compiled font file to rewrite
       def propagate_tables_into(source, path)
@@ -142,26 +167,6 @@ module Fontisan
 
         sfnt = tables.key?("CFF ") || tables.key?("CFF2") ? 0x4F54544F : 0x00010000
         FontWriter.write_to_file(tables, path, sfnt_version: sfnt)
-      end
-
-      private
-
-      def clone_glyph(original, name:)
-        copy = Ufo::Glyph.new(name: name)
-        copy.width = original.width
-        copy.height = original.height
-        original.contours.each { |c| copy.add_contour(clone_contour(c)) }
-        original.components.each { |c| copy.add_component(c) }
-        original.anchors.each { |a| copy.add_anchor(a) }
-        original.guidelines.each { |g| copy.add_guideline(g) }
-        copy
-      end
-
-      def clone_contour(original)
-        points = original.points.map do |p|
-          Ufo::Point.new(x: p.x, y: p.y, type: p.type, smooth: p.smooth)
-        end
-        Ufo::Contour.new(points)
       end
     end
   end

@@ -1,4 +1,4 @@
-# frozen_string: true
+# frozen_string_literal: true
 
 module Fontisan
   class Stitcher
@@ -74,7 +74,7 @@ module Fontisan
           if canonical && target.glyphs.key?(canonical)
             add_extra_unicode(target, canonical, binding[:codepoint])
           else
-            name = unique_target_name(target, glyph.name)
+            name = UniqueGlyphName.in(target, glyph.name)
             copy_glyph_into(target, name: name, source: binding[:source],
                                     donor_gid: binding[:donor_gid],
                                     codepoint: binding[:codepoint])
@@ -93,7 +93,7 @@ module Fontisan
         original = source.glyph_for_gid(donor_gid)
         return unless original
 
-        copy = clone_glyph(original, name: name)
+        copy = GlyphCloner.clone(original, name: name)
         copy.add_unicode(codepoint) if codepoint
         target_font.layers.default_layer.add(copy)
       end
@@ -103,28 +103,6 @@ module Fontisan
 
         glyph = target_font.glyph(glyph_name)
         glyph.add_unicode(codepoint) unless glyph.unicodes.include?(codepoint)
-      end
-
-      def unique_target_name(target_font, base_name)
-        UniqueGlyphName.in(target_font, base_name)
-      end
-
-      def clone_glyph(original, name:)
-        copy = Ufo::Glyph.new(name: name)
-        copy.width = original.width
-        copy.height = original.height
-        original.contours.each { |c| copy.add_contour(clone_contour(c)) }
-        original.components.each { |c| copy.add_component(c) }
-        original.anchors.each { |a| copy.add_anchor(a) }
-        original.guidelines.each { |g| copy.add_guideline(g) }
-        copy
-      end
-
-      def clone_contour(original)
-        points = original.points.map do |p|
-          Ufo::Point.new(x: p.x, y: p.y, type: p.type, smooth: p.smooth)
-        end
-        Ufo::Contour.new(points)
       end
     end
   end

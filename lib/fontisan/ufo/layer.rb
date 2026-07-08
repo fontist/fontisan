@@ -13,32 +13,21 @@ module Fontisan
     # data (e.g. CJK Ext G cmap loss when CBDT placeholders collided
     # with outline glyphs sharing "gid{N}" names).
     #
-    # To make that contract unbreakable, +#add+ RAISES on conflict.
-    # Callers who want one of the other two semantics pick the method
-    # that names it:
+    # To make that contract unbreakable, +#add+ RAISES +GlyphExistsError+
+    # on conflict. Callers who want one of the other two semantics pick
+    # the method that names it:
     #
     #   +#add+::    insert; raise if the name is taken (the safe default)
     #   +#put+::    insert; overwrite any existing glyph with the same name
     #
     # Callers that need auto-renaming (insertion without giving up on a
-    # collision) call +UniqueGlyphName.in(target, base)+ first, then
-    # +#add+ the glyph under the returned name.
+    # collision) call +Stitcher::UniqueGlyphName.in(target, base)+ first,
+    # then +#add+ the glyph under the returned name.
+    #
+    # The error class itself lives at +Fontisan::Ufo::GlyphExistsError+
+    # (sibling, not nested) so the namespace stays flat.
     class Layer
       DEFAULT_NAME = "public.default"
-
-      # Raised by +#add+ when a glyph with the same name already exists.
-      # Surfaces what would otherwise be a silent overwrite so the
-      # caller can decide between +#put+ (intentional replace) and
-      # +UniqueGlyphName.in+ (auto-rename).
-      class GlyphExistsError < StandardError
-        attr_reader :name
-
-        def initialize(name)
-          @name = name
-          super("a glyph named #{name.inspect} already exists; use #put " \
-                "to overwrite or UniqueGlyphName.in to deconflict")
-        end
-      end
 
       attr_reader :name, :glyphs
 
