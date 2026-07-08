@@ -195,7 +195,7 @@ module Fontisan
 
         def self.build_empty(glyph_count)
           # Minimal gvar with no variation data
-          header = [VERSION_MAJOR, VERSION_MINOR, 0, 0, 0, glyph_count, 1, glyph_count * 1 + 16].pack("nnnnnnNN")
+          header = [VERSION_MAJOR, VERSION_MINOR, 0, 0, 0, glyph_count, 1, glyph_count + 16].pack("nnnnnnNN")
           offsets = Array.new(glyph_count + 1, 0).pack("C*")
           header + offsets
         end
