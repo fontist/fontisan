@@ -16,14 +16,8 @@ module Fontisan
       class Otf2Compiler < BaseCompiler
         SFNT_VERSION = SFNT_VERSION_OPEN_TYPE
 
-        def build_outline_tables
-          {
-            "CFF2" => Cff2.build(font, glyphs: compiler_glyph_order),
-          }
-        end
-
         def compile(output_path:)
-          glyphs = compiler_glyph_order
+          glyphs = glyphs_with_notdef
 
           tables = {
             "head" => Head.build(font, glyphs: glyphs, loca_format: Head::LOCA_FORMAT_LONG),

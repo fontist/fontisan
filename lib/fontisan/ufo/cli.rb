@@ -55,7 +55,11 @@ module Fontisan
         issues << "no glyphs in default layer" if font.glyphs.empty?
         issues << "no family name" unless font.info.family_name
         issues << "unitsPerEm not set" unless font.info.units_per_em
-        issues << "missing .notdef glyph" unless font.glyph(".notdef")
+        # The compiler auto-injects an empty .notdef at GID 0 when the
+        # UFO source omits it (OpenType requires GID 0 to be .notdef).
+        # Surface this as a warning, not a failure — compilation will
+        # still succeed.
+        warn "NOTE  missing .notdef glyph — compiler will inject one at GID 0" unless font.glyph(".notdef")
 
         if issues.empty?
           puts "OK  #{ufo}"

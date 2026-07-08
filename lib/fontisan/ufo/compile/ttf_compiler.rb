@@ -14,7 +14,7 @@ module Fontisan
 
         # @return [Hash<String, #to_binary_s>] all TTF tables, not yet written
         def build_tables
-          glyphs = compiler_glyph_order
+          glyphs = glyphs_with_notdef
 
           # Deep-clone glyphs so filters don't mutate the source UFO.
           filtered = clone_glyphs(glyphs)

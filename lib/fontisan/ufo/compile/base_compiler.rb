@@ -43,7 +43,7 @@ module Fontisan
         # All tables every OTF/TTF must have, plus optional feature
         # tables (GPOS for kerning) when the UFO source has kerning data.
         def build_tables
-          glyphs = compiler_glyph_order
+          glyphs = glyphs_with_notdef
           tables = {
             "head" => Head.build(font, glyphs: glyphs),
             "hhea" => Hhea.build(font, glyphs: glyphs),
@@ -62,19 +62,29 @@ module Fontisan
           tables.merge(build_outline_tables)
         end
 
-        # OpenType requires GID 0 to be `.notdef`. If the source UFO
-        # doesn't declare one (synthetic SVG donors and similar don't),
-        # insert an empty `.notdef` at the front and shift every other
-        # glyph by one. Without this, the alphabetically-first source
-        # glyph lands at GID 0 and the cmap parser (which treats GID 0
-        # as `.notdef` per spec) silently drops it from the cmap.
-        def compiler_glyph_order
+        # OpenType requires GID 0 to be `.notdef`. Normalize the source
+        # glyph list so that:
+        #   - if `.notdef` is already at GID 0, the list is unchanged;
+        #   - if `.notdef` exists elsewhere, it's moved to GID 0;
+        #   - if no `.notdef` exists, an empty one is prepended.
+        #
+        # Without this, the alphabetically-first source glyph lands at
+        # GID 0 and the cmap parser (which treats GID 0 as `.notdef` per
+        # spec) silently drops it from the cmap.
+        def glyphs_with_notdef
           source = font.glyphs.values
-          return source if source.empty? || source.first.name == ".notdef"
+          return source if source.empty?
 
-          notdef = Ufo::Glyph.new(name: ".notdef")
-          notdef.width = font.info&.units_per_em&.to_i || 1000
-          [notdef, *source]
+          existing = source.find { |g| g.name == ".notdef" }
+          return source if existing == source.first
+
+          rest = source - [existing]
+          notdef = existing || Ufo::Glyph.notdef(units_per_em: default_units_per_em)
+          [notdef, *rest]
+        end
+
+        def default_units_per_em
+          font.info&.units_per_em&.to_i || Ufo::Glyph::DEFAULT_UNITS_PER_EM
         end
 
         def write(tables_hash, output_path)
