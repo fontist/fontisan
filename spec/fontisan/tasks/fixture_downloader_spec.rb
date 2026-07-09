@@ -271,8 +271,13 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
       expect(captured_options["User-Agent"]).to start_with("fontisan-fixtures/")
     end
 
-    it "sends Bearer Authorization when github_token is provided" do
+    it "sends Bearer Authorization when github_token is set and URL is GitHub" do
       captured_options = nil
+      # Mutate the shared parsed_uri so its host is github.com — the
+      # before-block URI.parse stub makes a fresh URI.parse() return
+      # this same instance, so we can't construct a separate github
+      # URI inline (it would come back as the example.com one).
+      parsed_uri.host = "github.com"
       allow(parsed_uri).to receive(:open) do |options|
         captured_options = options
         StringIO.new("ok")
@@ -286,6 +291,28 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
       ).call
 
       expect(captured_options["Authorization"]).to eq("Bearer ghs_test_token_123")
+    ensure
+      parsed_uri.host = "example.com"
+    end
+
+    it "withholds Authorization from non-GitHub hosts even when token is set" do
+      # Credential-leak guard: an attacker who controls a third-party
+      # host must not be able to harvest the GITHUB_TOKEN. The downloader
+      # must only send it to known GitHub-owned hosts.
+      captured_options = nil
+      allow(parsed_uri).to receive(:open) do |options|
+        captured_options = options
+        StringIO.new("ok")
+      end
+
+      described_class.new(
+        url: "https://evil.example.com/steal",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token_123",
+      ).call
+
+      expect(captured_options).not_to have_key("Authorization")
     end
 
     it "omits Authorization when github_token is nil" do
@@ -307,6 +334,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
 
     it "defaults github_token from ENV['GITHUB_TOKEN']" do
       captured_options = nil
+      parsed_uri.host = "github.com"
       allow(parsed_uri).to receive(:open) do |options|
         captured_options = options
         StringIO.new("ok")
@@ -322,6 +350,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         ).call
       ensure
         ENV["GITHUB_TOKEN"] = previous
+        parsed_uri.host = "example.com"
       end
 
       expect(captured_options["Authorization"]).to eq("Bearer env_token_abc")

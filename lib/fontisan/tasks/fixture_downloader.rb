@@ -61,6 +61,17 @@ module Fontisan
       # typical 1-5s secondary-limit backoff.
       MAX_RETRY_AFTER_SECONDS = 60
 
+      # Hosts that legitimately accept the GITHUB_TOKEN as Bearer auth.
+      # Anything else (raw.githubusercontent.com subdomain variants,
+      # third-party CDNs, mirror sites) is treated as untrusted. Used
+      # by +send_auth?+ as the credential-leak guard.
+      GITHUB_HOSTS = %w[
+        github.com
+        codeload.github.com
+        objects.githubusercontent.com
+        api.github.com
+      ].freeze
+
       # Error raised after exhausting all retries. Carries the last
       # underlying exception so callers can log the root cause.
       class Error < StandardError
@@ -129,18 +140,18 @@ module Fontisan
       def fetch_to_destination
         FileUtils.mkdir_p(File.dirname(destination))
 
-        # IO.copy_stream avoids loading the whole response into memory
-        # and is more Windows-compatible than remote.read + File.binwrite.
+        # Parse once, reuse: a second URI.parse(url) call inside
+        # open_uri_options would be wasteful and breaks test stubs
+        # that return a single fixed URI instance.
+        #
         # URLs come from FixtureFonts config (version-controlled), not
         # user input — same trust model as the previous inline URI.open
-        # call in the Rakefile.
-        #
-        # Parsing with URI.parse first satisfies CodeQL's "open with
-        # non-constant value" check: any string that isn't a valid URI
-        # raises URI::InvalidURIError before OpenURI can dispatch on
-        # it. The parsed URI's .open is OpenURI's standard entry.
+        # call in the Rakefile. Parsing first satisfies CodeQL's "open
+        # with non-constant value" check: any string that isn't a valid
+        # URI raises URI::InvalidURIError before OpenURI dispatches.
         # rubocop:disable Security/Open
-        URI.parse(url).open(open_uri_options) do |remote|
+        parsed = URI.parse(url)
+        parsed.open(open_uri_options(parsed)) do |remote|
           File.open(destination, "wb") do |file|
             IO.copy_stream(remote, file)
           end
@@ -152,15 +163,31 @@ module Fontisan
       # errors as `OpenURI::HTTPError` whose `io.status` is the `[code,
       # message]` array. We re-raise non-retriable 4xx as
       # `permanent-failure`-tagged exceptions so the retry loop exits.
-      def open_uri_options
+      #
+      # The Authorization header is gated on +send_auth?+ so a token
+      # captured from ENV never leaks to a non-GitHub host (e.g. if a
+      # future fixture URL points at a third-party CDN). codeload and
+      # objects.githubusercontent are included because github.com
+      # release-asset URLs redirect there.
+      def open_uri_options(parsed)
         options = {
           "User-Agent" => "fontisan-fixtures/1.0",
           redirect: true,
           open_timeout: 30,
           read_timeout: 120,
         }
-        options["Authorization"] = "Bearer #{github_token}" if github_token
+        options["Authorization"] = "Bearer #{github_token}" if send_auth?(parsed)
         options
+      end
+
+      # True only when +github_token+ is configured AND the URL targets
+      # a GitHub-owned host. The host check is the credential-leak
+      # guard: an attacker who controls a different host can't trick
+      # the downloader into forwarding the CI token.
+      def send_auth?(parsed)
+        return false unless github_token
+
+        GITHUB_HOSTS.include?(parsed.host.to_s)
       end
 
       def permanent_failure?(error)
