@@ -426,6 +426,46 @@ RSpec.describe FixtureFonts::Downloader do
 
       expect(File.read(destination)).to eq("via-open-uri")
     end
+
+    it "warns once when falling back to open-uri for a GitHub URL (Octokit missing)" do
+      # The silent-degradation gap: open-uri loses the Authorization
+      # header on github.com → raw.githubusercontent.com redirects.
+      # When the downloader takes that path for a GitHub URL + token,
+      # it emits ONE informational warning per process so the user
+      # knows their downloads are rate-limit-prone and how to fix it.
+      downloader = described_class.new(
+        url: "https://github.com/owner/repo/raw/main/font.ttf",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token",
+      )
+      allow(URI).to receive(:parse).and_return(github_uri)
+      allow(downloader).to receive(:octokit_loaded?).and_return(false)
+      allow(github_uri).to receive(:open) do |_, &block|
+        block.call(StringIO.new("via-open-uri"))
+      end
+
+      expect { downloader.call }.to output(
+        /Octokit not loaded.*bundle install/,
+      ).to_stderr
+
+      # Second call: no repeated warning (one-time-per-process).
+      expect { downloader.call }.not_to output(/Octokit not loaded/).to_stderr
+    end
+
+    it "stays silent for non-GitHub URLs even when Octokit is missing" do
+      downloader = described_class.new(
+        url: "https://example.com/font.ttf",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token",
+      )
+      allow(parsed_uri).to receive(:open) do |_, &block|
+        block.call(StringIO.new("ok"))
+      end
+
+      expect { downloader.call }.not_to output.to_stderr
+    end
   end
 
   describe described_class::Error do
