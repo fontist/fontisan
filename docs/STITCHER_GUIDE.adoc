@@ -364,12 +364,56 @@ stitcher.write_to("out.ttf", format: :ttf, subfont: :main)
 # → out.ttf has glyf + CBDT + CBLC, emoji renders correctly
 ----
 
-Constraints:
+=== Outline-first cmap priority
+
+When a codepoint is covered by BOTH an outline donor and the CBDT
+donor, the cmap maps it to the outline glyph — never to the CBDT
+placeholder. The Cmap compiler follows first-wins semantics, and
+`GlyphCopier` runs before `CbdtPropagator` so the outline GID is
+registered first. This was the fix for the Emoticons cmap-loss bug
+where shared codepoints silently dropped out of the cmap.
+
+=== Placeholder name deconfliction
+
+CBDT placeholders are named after the source's glyph IDs
+(`"gid1"`, `"gid2"`, …), which is the SAME naming scheme
+`Source#extract_truetype_glyph` uses for outline glyphs from TTF
+donors. Without protection, a placeholder at `"gid110"` would
+silently overwrite an outline glyph at `"gid110"` from a different
+donor via `Layer#add` — the original cmap-loss vector for the
+Essenfont CJK Ext G regression.
+
+The Stitcher resolves this with two pieces:
+
+* `Ufo::Layer#add` RAISES `Ufo::GlyphExistsError` on name conflict.
+  Silent overwrites are no longer possible. Callers that want to
+  replace an existing glyph use the explicit `Ufo::Layer#put`.
+* `Stitcher::UniqueGlyphName.in(target, base)` allocates a
+  non-colliding name (`"gid110"`, then `"gid110.1"`, `"gid110.2"`,
+  …). `GlyphCopier` and `CbdtPropagator` both call it before every
+  `Layer#add`, so each glyph lands at its own GID slot without
+  touching the others.
+
+=== Limitations
 
 * Only ONE CBDT source per Stitcher. Multiple CBDT sources raise
   `Fontisan::MultipleCbdtSourcesError`.
-* The CBDT source is processed first (GIDs 0..N-1) so the CBLC's GID
-  references remain valid in the output.
+* **GID stability for overlapping codepoint ranges.** The raw-bytes
+  CBDT/CBLC propagation (`CbdtPropagator#propagate_tables_into`)
+  copies the source's CBLC verbatim. CBLC indexes glyphs by SOURCE
+  GID. After placeholder renaming (`"gid110"` → `"gid110.1"`), the
+  compiled GID no longer matches the source GID, so CBLC's source-
+  GID-indexed bitmaps can dangle. This is masked in the typical
+  Essenfont case (CBDT donor NotoColorEmoji and outline donors
+  cover disjoint codepoint ranges) but would produce wrong bitmaps
+  for any stitch where CBDT and outline sources share codepoint
+  ranges. A proper fix requires a CBLC rebuild pass that walks the
+  compiled cmap to remap source GIDs to compiled GIDs — tracked as
+  follow-up.
+* **Collection-mode single-face coverage.** Each face is compiled
+  independently; `CbdtPropagator` currently requires at least one
+  outline codepoint per face. Collection-mode coverage of the
+  outline-first cmap-priority invariant is tracked as follow-up.
 
 == CLI
 

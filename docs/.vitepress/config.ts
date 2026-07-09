@@ -322,6 +322,7 @@ export default defineConfig({
             { text: "ConversionOptions", link: "/api/conversion-options" },
             { text: "SfntFont", link: "/api/sfnt-font" },
             { text: "Type1Font", link: "/api/type1-font" },
+            { text: "Ufo::Layer", link: "/api/layer" },
           ],
         },
         {

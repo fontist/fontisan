@@ -28,6 +28,7 @@ fontisan subset FONT [options]
 | `--glyphs LIST` | Glyph names/IDs |
 | `--output PATH` | Output file |
 | `--output-format FORMAT` | Output format |
+| `--profile PROFILE` | Subsetting profile (`pdf`, `web`, `minimal`, `full`; default `pdf`) |
 | `--retain-gids` | Retain glyph IDs |
 
 ## Examples
@@ -85,6 +86,36 @@ fontisan subset font.ttf --chars "ABC" --output-format woff2 --output subset.wof
 ```
 
 ## Subsetting Strategies
+
+### Profile selection
+
+The `--profile` option controls which font tables the subset retains. The right choice depends on what the subset is for:
+
+| Profile | When to use | Notable tables dropped |
+|---------|-------------|------------------------|
+| `pdf` (default) | PDF embedding, smallest valid output | GSUB, GPOS, CBDT, CBLC |
+| `web` | Browser/web font, **retains color-emoji bitmaps** | nothing that browsers need |
+| `minimal` | Absolute smallest core that still renders | glyf/loca, CBDT/CBLC, GSUB/GPOS |
+| `full` | Lossless re-export | (none) |
+
+```bash
+# Web subset that keeps color-emoji bitmaps so 😀 renders in color
+fontisan subset NotoColorEmoji.ttf \
+  --chars "😀😁😂🤣😊" \
+  --profile web \
+  --output-format woff2 \
+  --output emoji.woff2
+
+# PDF embedding — drops color bitmaps for size
+fontisan subset NotoColorEmoji.ttf \
+  --chars "😀" \
+  --profile pdf \
+  --output emoji-pdf.ttf
+```
+
+#### Web profile and CBDT/CBLC
+
+The `web` profile is the only built-in profile that retains CBDT (Color Bitmap Data) and CBLC (Color Bitmap Location) tables. The subsetter walks CBLC to find each retained glyph's bitmap block, rewrites CBDT to keep only those blocks, and rebuilds CBLC's IndexSubTableArray to point at the new offsets. Glyph IDs are remapped through the subset's `GlyphMapping`, so the output CBLC references subset GIDs, not source GIDs.
 
 ### Web Font Optimization
 
