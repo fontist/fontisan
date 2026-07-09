@@ -36,7 +36,9 @@ module Fontisan
             end
           end
 
-          subtable_bmp = format4_subtable(mappings.reject { |cp, _| cp > 0xFFFF })
+          subtable_bmp = format4_subtable(mappings.reject do |cp, _|
+            cp > 0xFFFF
+          end)
           subtable_full = format12_subtable(mappings)
 
           header_size = 4 + (2 * 8) # version + numTables + 2 records
@@ -44,8 +46,10 @@ module Fontisan
           offset_full = header_size + subtable_bmp.bytesize
 
           header = [0, 2].pack("nn")
-          header << subtable_record(PLATFORM_WINDOWS, ENCODING_WINDOWS_BMP, offset_bmp)
-          header << subtable_record(PLATFORM_WINDOWS, ENCODING_WINDOWS_FULL, offset_full)
+          header << subtable_record(PLATFORM_WINDOWS, ENCODING_WINDOWS_BMP,
+                                    offset_bmp)
+          header << subtable_record(PLATFORM_WINDOWS, ENCODING_WINDOWS_FULL,
+                                    offset_full)
           header + subtable_bmp + subtable_full
         end
 
@@ -82,7 +86,8 @@ module Fontisan
           segments = build_segments(mappings) + [0xFFFF..0xFFFF] # sentinel
           seg_count = segments.size
           search_range = largest_pow2_le(seg_count) * 2
-          entry_selector = (Math.log([1, search_range / 2].max) / Math.log(2)).to_i
+          entry_selector = (Math.log([1,
+                                      search_range / 2].max) / Math.log(2)).to_i
           range_shift = seg_count * 2 - search_range
 
           end_codes = segments.map(&:end)
@@ -98,7 +103,8 @@ module Fontisan
           end
 
           body = +""
-          body << [seg_count * 2, search_range, entry_selector, range_shift].pack("nnnn")
+          body << [seg_count * 2, search_range, entry_selector,
+                   range_shift].pack("nnnn")
           body << end_codes.pack("n*")
           body << [0].pack("n") # reservedPad
           body << start_codes.pack("n*")

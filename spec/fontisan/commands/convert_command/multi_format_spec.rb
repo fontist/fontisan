@@ -36,7 +36,8 @@ RSpec.describe Fontisan::Commands::ConvertCommand, "#run multi-format" do
 
   it "flattens mixed array + comma input" do
     output_path = File.join(output_dir, "out")
-    cmd = described_class.new(ttf_path, to: ["woff,woff2", "woff"], output: output_path)
+    cmd = described_class.new(ttf_path, to: ["woff,woff2", "woff"],
+                                        output: output_path)
     expect(cmd.target_formats).to eq(%i[woff woff2])
   end
 

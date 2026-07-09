@@ -6,10 +6,14 @@ require "fontisan/ufo/compile/filters"
 RSpec.describe Fontisan::Ufo::Compile::Filters::RemoveOverlaps do
   def square(x_min:, y_min:, size:)
     Fontisan::Ufo::Contour.new([
-                                 Fontisan::Ufo::Point.new(x: x_min, y: y_min, type: "line"),
-                                 Fontisan::Ufo::Point.new(x: x_min + size, y: y_min, type: "line"),
-                                 Fontisan::Ufo::Point.new(x: x_min + size, y: y_min + size, type: "line"),
-                                 Fontisan::Ufo::Point.new(x: x_min, y: y_min + size, type: "line"),
+                                 Fontisan::Ufo::Point.new(x: x_min, y: y_min,
+                                                          type: "line"),
+                                 Fontisan::Ufo::Point.new(x: x_min + size,
+                                                          y: y_min, type: "line"),
+                                 Fontisan::Ufo::Point.new(x: x_min + size,
+                                                          y: y_min + size, type: "line"),
+                                 Fontisan::Ufo::Point.new(x: x_min,
+                                                          y: y_min + size, type: "line"),
                                ])
   end
 
@@ -53,20 +57,30 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::RemoveOverlaps do
     it "does not drop a contained contour with more points than its container" do
       glyph = Fontisan::Ufo::Glyph.new(name: "g")
       outer = Fontisan::Ufo::Contour.new([
-                                           Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 0, y: 100, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 0, y: 0,
+                                                                    type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 100,
+                                                                    y: 0, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 100,
+                                                                    y: 100, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 0,
+                                                                    y: 100, type: "line"),
                                          ])
       # Inner has 6 points (more than outer's 4) — should be
       # preserved even though its bbox is contained.
       inner = Fontisan::Ufo::Contour.new([
-                                           Fontisan::Ufo::Point.new(x: 25, y: 25, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 50, y: 25, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 75, y: 25, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 75, y: 75, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 50, y: 75, type: "line"),
-                                           Fontisan::Ufo::Point.new(x: 25, y: 75, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 25,
+                                                                    y: 25, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 50,
+                                                                    y: 25, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 75,
+                                                                    y: 25, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 75,
+                                                                    y: 75, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 50,
+                                                                    y: 75, type: "line"),
+                                           Fontisan::Ufo::Point.new(x: 25,
+                                                                    y: 75, type: "line"),
                                          ])
       glyph.add_contour(outer)
       glyph.add_contour(inner)

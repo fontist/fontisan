@@ -81,7 +81,13 @@ module Fontisan
         Check.new(
           name: :glyph_cap,
           passed: over.empty?,
-          message: over.empty? ? nil : "faces over cap: #{over.map { |s| "##{s.index}=#{s.glyph_count}" }.join(', ')}",
+          message: if over.empty?
+                     nil
+                   else
+                     "faces over cap: #{over.map do |s|
+                       "##{s.index}=#{s.glyph_count}"
+                     end.join(', ')}"
+                   end,
         )
       end
 

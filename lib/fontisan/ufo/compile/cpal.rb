@@ -38,7 +38,8 @@ module Fontisan
           offset = HEADER_SIZE + (num_palettes * 2) # header + indices
 
           io = +""
-          io << [VERSION, num_entries, num_palettes, num_records, offset].pack("nnnnN")
+          io << [VERSION, num_entries, num_palettes, num_records,
+                 offset].pack("nnnnN")
           indices.each { |idx| io << [idx].pack("n") }
           records.each { |c| io << color_bytes(c) }
           io

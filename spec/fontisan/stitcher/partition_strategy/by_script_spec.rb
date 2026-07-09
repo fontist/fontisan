@@ -55,7 +55,8 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByScript do
       }
       blueprint = partitioner.call(cp_map)
 
-      expect(blueprint.names).to contain_exactly(:script_common, :script_han, :script_hangul)
+      expect(blueprint.names).to contain_exactly(:script_common, :script_han,
+                                                 :script_hangul)
     end
 
     it "uses :script_other for codepoints in unmapped blocks" do
@@ -71,7 +72,8 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByScript do
 
       expect(blueprint.names).to eq(%i[script_han script_han_a script_han_b])
       all_cps = blueprint.partitions.flat_map(&:cps)
-      expect(all_cps).to contain_exactly(0x4E00, 0x4E01, 0x4E02, 0x4E03, 0x4E04, 0x4E05)
+      expect(all_cps).to contain_exactly(0x4E00, 0x4E01, 0x4E02, 0x4E03,
+                                         0x4E04, 0x4E05)
     end
 
     it "names Common and Inherited scripts explicitly" do
@@ -81,7 +83,8 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByScript do
       }
       blueprint = partitioner.call(cp_map)
 
-      expect(blueprint.names).to contain_exactly(:script_common, :script_inherited)
+      expect(blueprint.names).to contain_exactly(:script_common,
+                                                 :script_inherited)
     end
 
     it "preserves the donor_map for each partition" do

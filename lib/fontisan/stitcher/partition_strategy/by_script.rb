@@ -274,14 +274,18 @@ module Fontisan
         private
 
         def group_by_script(cp_map)
-          cp_map.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(cp, label), h|
+          cp_map.each_with_object(Hash.new do |h, k|
+            h[k] = []
+          end) do |(cp, label), h|
             script = script_of_codepoint(cp)
             h[script] << [cp, label]
           end
         end
 
         def script_of_codepoint(cp)
-          block_label = ByBlock::BLOCKS.find { |_label, range| range.cover?(cp) }&.first
+          block_label = ByBlock::BLOCKS.find do |_label, range|
+            range.cover?(cp)
+          end&.first
           return :other unless block_label
 
           SCRIPT_OF_BLOCK[block_label] || :other

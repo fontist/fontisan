@@ -71,7 +71,10 @@ module Fontisan
         end
 
         compiler = COMPILER_FOR_FORMAT[format_key]
-        raise ArgumentError, "unknown UFO output format: #{to.inspect}" unless compiler
+        unless compiler
+          raise ArgumentError,
+                "unknown UFO output format: #{to.inspect}"
+        end
 
         compiler.new(ufo).compile(output_path: output_path)
         output_path

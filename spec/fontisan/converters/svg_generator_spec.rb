@@ -156,10 +156,14 @@ RSpec.describe Fontisan::Converters::SvgGenerator do
           0x22 => "&quot;",
           0x27 => "&apos;",
         }
-        present = named_entities.select { |cp, _| cmap.unicode_mappings.key?(cp) }
+        present = named_entities.select do |cp, _|
+          cmap.unicode_mappings.key?(cp)
+        end
         skip "font has no XML-special codepoints in cmap" if present.empty?
 
-        present.each_value { |entity| expect(svg).to include(%(unicode="#{entity}")) }
+        present.each_value do |entity|
+          expect(svg).to include(%(unicode="#{entity}"))
+        end
 
         # No attribute value should contain a raw < or unescaped &.
         svg.scan(/unicode="([^"]*)"/).each do |(value)|
@@ -172,7 +176,9 @@ RSpec.describe Fontisan::Converters::SvgGenerator do
       end
 
       it "omits unicode= on .notdef (no cmap mapping)" do
-        notdef_line = svg.scan(/<glyph [^>]*\/>/).find { |l| l.include?('glyph-name=".notdef"') }
+        notdef_line = svg.scan(/<glyph [^>]*\/>/).find do |l|
+          l.include?('glyph-name=".notdef"')
+        end
         expect(notdef_line).not_to be_nil
         expect(notdef_line).not_to include("unicode=")
       end
@@ -182,7 +188,9 @@ RSpec.describe Fontisan::Converters::SvgGenerator do
         # non-breaking space share a glyph). The unicode attribute
         # should carry both, concatenated.
         cmap = font.table("cmap")
-        gid_to_cps = cmap.unicode_mappings.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(cp, gid), h|
+        gid_to_cps = cmap.unicode_mappings.each_with_object(Hash.new do |h, k|
+          h[k] = []
+        end) do |(cp, gid), h|
           h[gid] << cp
         end
         multi_cps_gid = gid_to_cps.find { |_gid, cps| cps.size > 1 }&.first

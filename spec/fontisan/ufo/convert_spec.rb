@@ -4,7 +4,9 @@ require "spec_helper"
 require "fontisan/ufo/convert"
 
 RSpec.describe Fontisan::Ufo::Convert::FromBinData do
-  let(:ufo_path) { "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo" }
+  let(:ufo_path) do
+    "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo"
+  end
   let(:tmpdir) { Dir.mktmpdir }
 
   after { FileUtils.remove_entry(tmpdir) if File.exist?(tmpdir) }
@@ -34,7 +36,9 @@ RSpec.describe Fontisan::Ufo::Convert::FromBinData do
   describe ".convert (direct TTF load)" do
     let(:noto_path) { "spec/fixtures/fonts/NotoSans/NotoSans-Regular.ttf" }
 
-    before { skip "NotoSans fixture not available" unless File.exist?(noto_path) }
+    before do
+      skip "NotoSans fixture not available" unless File.exist?(noto_path)
+    end
 
     it "converts a real TTF to a UFO with glyphs" do
       ttf = Fontisan::FontLoader.load(noto_path)

@@ -33,8 +33,10 @@ RSpec.describe Fontisan::Commands::ValidateCollectionCommand do
     g.add_unicode(cp)
     g.add_contour(ufo::Contour.new([
                                      ufo::Point.new(x: 0, y: 0, type: "line"),
-                                     ufo::Point.new(x: 100, y: 0,   type: "line"),
-                                     ufo::Point.new(x: 100, y: 100, type: "line"),
+                                     ufo::Point.new(x: 100, y: 0,
+                                                    type: "line"),
+                                     ufo::Point.new(x: 100, y: 100,
+                                                    type: "line"),
                                    ]))
     font.glyphs[name] = g
     font
@@ -50,7 +52,9 @@ RSpec.describe Fontisan::Commands::ValidateCollectionCommand do
   it "exits 1 when --expected-faces doesn't match" do
     # Silence stdout for the failure-path report.
     cmd = described_class.new(input: ttc_path, expected_faces: 5)
-    expect { suppress_stdout { cmd.run } }.to change { cmd.checks }.from(nil).to(anything)
+    expect { suppress_stdout { cmd.run } }.to change {
+      cmd.checks
+    }.from(nil).to(anything)
     face_count_check = cmd.checks.find { |c| c.name == :face_count }
     expect(face_count_check.passed).to be(false)
     expect(face_count_check.message).to include("expected 5 faces, got 2")

@@ -32,7 +32,10 @@ module Fontisan
       # @param fonts [Array<TrueTypeFont, OpenTypeFont>] Source fonts
       # @return [String] WOFF2 collection binary
       def encode_fonts(fonts)
-        raise ArgumentError, "fonts cannot be empty" if fonts.nil? || fonts.empty?
+        if fonts.nil? || fonts.empty?
+          raise ArgumentError,
+                "fonts cannot be empty"
+        end
 
         prepared = fonts.map.with_index { |font, i| prepare_font(font, i) }
         _, font_to_ckeys = deduplicate(prepared)

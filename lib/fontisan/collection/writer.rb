@@ -95,7 +95,8 @@ module Fontisan
       #
       # @return [String] TTC header binary
       def write_ttc_header
-        [TTC_TAG, VERSION_1_0_MAJOR, VERSION_1_0_MINOR, @fonts.size].pack("a4nnN")
+        [TTC_TAG, VERSION_1_0_MAJOR, VERSION_1_0_MINOR,
+         @fonts.size].pack("a4nnN")
       end
 
       # Write offset table

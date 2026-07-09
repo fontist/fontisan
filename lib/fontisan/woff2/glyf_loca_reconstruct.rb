@@ -131,7 +131,8 @@ module Fontisan
         streams[:bbox_entries] = StringIO.new(bbox_blob[bitmap_size..] || "")
 
         # overlapSimpleBitmap follows all streams when optionFlags bit 0 set.
-        streams[:overlap_bitmap] = header[:has_overlap_bitmap] ? @data[pos, overlap_size] : ""
+        streams[:overlap_bitmap] =
+          header[:has_overlap_bitmap] ? @data[pos, overlap_size] : ""
 
         # nContour is read positionally (int16 per glyph).
         nc_data = streams[:n_contour].string
@@ -178,7 +179,9 @@ module Fontisan
         x = 0
         y = 0
         triplet_flags.each do |flag|
-          dx, dy, oc = TripletCodec.decode(flag, read_triplet_payload(flag, streams[:glyph]))
+          dx, dy, oc = TripletCodec.decode(flag,
+                                           read_triplet_payload(flag,
+                                                                streams[:glyph]))
           x += dx
           y += dy
           xs << x

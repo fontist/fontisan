@@ -28,7 +28,8 @@ module Fontisan
 
           axes_bytes = build_axes(axes)
           instances_bytes = build_instances(instances || [], axes.size)
-          header = build_header(axes.size, axes_bytes, instances_bytes, instances)
+          header = build_header(axes.size, axes_bytes, instances_bytes,
+                                instances)
           header + axes_bytes + instances_bytes
         end
 
@@ -38,7 +39,8 @@ module Fontisan
         #   majorVersion (2) + minorVersion (2) + axesArrayOffset (2)
         #   + reserved (2) + axisCount (2) + axisSize (2)
         #   + instanceCount (2) + instanceSize (2)
-        def self.build_header(axis_count, axes_bytes, _instances_bytes, instances)
+        def self.build_header(axis_count, axes_bytes, _instances_bytes,
+instances)
           axes_offset = 16
           axes_offset + axes_bytes.bytesize
 
@@ -86,7 +88,9 @@ module Fontisan
             name_id = inst[:name_id] || inst["name_id"] || 0
             flags = inst[:flags] || inst["flags"] || 0
             coords = inst[:coords] || inst["coords"] || []
-            padded = coords.first(axis_count) + Array.new([axis_count - coords.size, 0].max, 0)
+            padded = coords.first(axis_count) + Array.new(
+              [axis_count - coords.size, 0].max, 0
+            )
             padded = padded.first(axis_count).map { |c| fixed_value(c) }
 
             io << [name_id, flags].pack("nn")

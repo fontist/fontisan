@@ -81,8 +81,11 @@ RSpec.describe Fontisan::Stitcher::Source, "#remap" do
     it "accepts string keys and coerces to Integer" do
       # Some manifests (YAML loaders) hand back string keys. Coerce
       # rather than blow up — matches the issue body's proposal.
-      source_with_strings = described_class.new(donor, remap: { source_cp.to_s => 0x11DB0.to_s })
-      expect { source_with_strings.gid_for_codepoint(0x11DB0) }.not_to raise_error
+      source_with_strings = described_class.new(donor,
+                                                remap: { source_cp.to_s => 0x11DB0.to_s })
+      expect do
+        source_with_strings.gid_for_codepoint(0x11DB0)
+      end.not_to raise_error
     end
 
     it "supports multiple sources with different remaps on one Stitcher" do

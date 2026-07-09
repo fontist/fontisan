@@ -40,7 +40,8 @@ RSpec.describe Fontisan::Stitcher::FormatMetadata do
 
     it "freezes no internal state — instances are immutable by contract" do
       meta = described_class.resolve(:ttf)
-      expect(meta).to respond_to(:name, :compiler_class, :collection_format, :extension)
+      expect(meta).to respond_to(:name, :compiler_class, :collection_format,
+                                 :extension)
       expect(meta).not_to respond_to(:name=)
     end
   end

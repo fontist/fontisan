@@ -41,7 +41,9 @@ RSpec.describe "Fontisan from_tables round-trip (issue #79)" do
     it "round-trips: table bytes extracted from the rebuilt font match the input" do
       # Normalize input keys to UTF-8 so Hash#eq (which is encoding-
       # sensitive via eql?) matches the normalized rebuilt.table_data.
-      input_normalized = tables.transform_keys { |k| k.dup.force_encoding("UTF-8") }
+      input_normalized = tables.transform_keys do |k|
+        k.dup.force_encoding("UTF-8")
+      end
       expect(rebuilt.table_data).to eq(input_normalized)
     end
 

@@ -4,7 +4,9 @@ require "spec_helper"
 require "fontisan/svg"
 
 RSpec.describe Fontisan::Svg::StandaloneGlyph do
-  let(:renderer) { described_class.new(units_per_em: 1000, ascent: 800, descent: -200) }
+  let(:renderer) do
+    described_class.new(units_per_em: 1000, ascent: 800, descent: -200)
+  end
 
   def make_glyph(name:, contours: [])
     g = Fontisan::Ufo::Glyph.new(name: name)
@@ -43,7 +45,8 @@ RSpec.describe Fontisan::Svg::StandaloneGlyph do
     it "emits a quadratic Bezier for one off-curve between on-curves" do
       contour = Fontisan::Ufo::Contour.new([
                                              make_point(0, 0),
-                                             make_point(50, 100, type: "offcurve"),
+                                             make_point(50, 100,
+                                                        type: "offcurve"),
                                              make_point(100, 0),
                                            ])
       glyph = make_glyph(name: "curve", contours: [contour])
@@ -57,8 +60,10 @@ RSpec.describe Fontisan::Svg::StandaloneGlyph do
     it "emits a cubic Bezier for two off-curves between on-curves" do
       contour = Fontisan::Ufo::Contour.new([
                                              make_point(0, 0),
-                                             make_point(33, 100, type: "offcurve"),
-                                             make_point(66, 100, type: "offcurve"),
+                                             make_point(33, 100,
+                                                        type: "offcurve"),
+                                             make_point(66, 100,
+                                                        type: "offcurve"),
                                              make_point(100, 0),
                                            ])
       glyph = make_glyph(name: "cubic", contours: [contour])

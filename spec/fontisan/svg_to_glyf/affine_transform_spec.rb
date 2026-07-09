@@ -86,8 +86,13 @@ RSpec.describe Fontisan::SvgToGlyf::Geometry::AffineTransform do
 
   describe "#==" do
     it "compares component-by-component" do
-      expect(described_class.translate(1, 2)).to eq(described_class.translate(1.0, 2.0))
-      expect(described_class.translate(1, 2)).not_to eq(described_class.translate(1, 3))
+      expect(described_class.translate(1,
+                                       2)).to eq(described_class.translate(1.0,
+                                                                           2.0))
+      expect(described_class.translate(1,
+                                       2)).not_to eq(described_class.translate(
+                                                       1, 3
+                                                     ))
     end
   end
 end

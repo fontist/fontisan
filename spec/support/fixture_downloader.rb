@@ -371,7 +371,10 @@ module FixtureFonts
         repo_full = "#{owner}/#{repo}"
         release = client.release_by_tag(repo_full, tag)
         asset = release.rels[:assets].get.find { |a| a.name == asset_name }
-        raise Octokit::NotFound, "asset #{asset_name} not in #{repo_full}@#{tag}" unless asset
+        unless asset
+          raise Octokit::NotFound,
+                "asset #{asset_name} not in #{repo_full}@#{tag}"
+        end
 
         client.get(asset.url, accept: "application/octet-stream")
       end

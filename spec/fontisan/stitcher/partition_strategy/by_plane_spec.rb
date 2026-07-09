@@ -75,7 +75,9 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByPlane do
 
     it "sub-splits a plane that exceeds the cap" do
       # 200 BMP codepoints under cap=100 → multiple :plane_0_X partitions
-      cp_map = (0x41..(0x41 + 199)).each_with_index.to_h { |cp, _i| [cp, :donor] }
+      cp_map = (0x41..(0x41 + 199)).each_with_index.to_h do |cp, _i|
+        [cp, :donor]
+      end
       blueprint = partitioner.call(cp_map, cap: 100)
 
       names = blueprint.names
@@ -86,10 +88,13 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByPlane do
     it "raises PartitionCapExceededError when a single atomic block exceeds the cap" do
       # CJK Ext B alone is 0x2A700..0x2B73F (~6592 cps). With cap=100 it
       # cannot be sub-split further.
-      cp_map = (0x2A700..0x2A700 + 200).each_with_index.to_h { |cp, _i| [cp, :cjk] }
+      cp_map = (0x2A700..0x2A700 + 200).each_with_index.to_h do |cp, _i|
+        [cp, :cjk]
+      end
       expect do
         partitioner.call(cp_map, cap: 100)
-      end.to raise_error(Fontisan::PartitionCapExceededError, /single Unicode block/)
+      end.to raise_error(Fontisan::PartitionCapExceededError,
+                         /single Unicode block/)
     end
 
     context "when BMP overflows the cap with CJK + Hangul present" do
@@ -126,7 +131,9 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByPlane do
 
       it "keeps Hangul Syllables in their own partition" do
         blueprint = partitioner.call(cp_map, cap: cap)
-        hangul_partition = blueprint.partitions.find { |p| p.cps.include?(0xAC00) }
+        hangul_partition = blueprint.partitions.find do |p|
+          p.cps.include?(0xAC00)
+        end
         expect(hangul_partition.cps).to contain_exactly(0xAC00, 0xAC01)
       end
     end
@@ -158,8 +165,10 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByPlane do
       g.add_unicode(cp)
       g.add_contour(ufo::Contour.new([
                                        ufo::Point.new(x: 0, y: 0, type: "line"),
-                                       ufo::Point.new(x: 100, y: 0,   type: "line"),
-                                       ufo::Point.new(x: 100, y: 100, type: "line"),
+                                       ufo::Point.new(x: 100, y: 0,
+                                                      type: "line"),
+                                       ufo::Point.new(x: 100, y: 100,
+                                                      type: "line"),
                                      ]))
       font.glyphs[name] = g
       font

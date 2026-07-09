@@ -53,7 +53,8 @@ RSpec.describe Fontisan::Ufo::Convert do
 
     it "raises ArgumentError for unknown formats" do
       expect do
-        described_class.convert(ufo, to: :unknown, output_path: "/tmp/out.unknown")
+        described_class.convert(ufo, to: :unknown,
+                                     output_path: "/tmp/out.unknown")
       end.to raise_error(ArgumentError, /unknown UFO output format/)
     end
   end

@@ -50,7 +50,8 @@ module Fontisan
           start_offset = source_offsets[i]
           end_offset = source_offsets[i + 1]
           if start_offset < end_offset
-            glyf << @glyf_data.byteslice(start_offset, end_offset - start_offset)
+            glyf << @glyf_data.byteslice(start_offset,
+                                         end_offset - start_offset)
           end
           remainder = glyf.bytesize % 4
           glyf << ("\x00" * (4 - remainder)) if remainder.positive?

@@ -8,10 +8,18 @@ RSpec.describe Fontisan::Ufo::Compile::Filters do
     it "runs named filters in order" do
       glyph = Fontisan::Ufo::Glyph.new(name: "test")
       glyph.add_contour(Fontisan::Ufo::Contour.new([
-                                                     Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 0, y: 100, type: "line"),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 0, y: 0, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 100, y: 0, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 100, y: 100, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 0, y: 100, type: "line",
+                                                     ),
                                                    ]))
       glyphs = [glyph]
 
@@ -30,9 +38,15 @@ RSpec.describe Fontisan::Ufo::Compile::Filters do
     it "reverses point order in each contour" do
       glyph = Fontisan::Ufo::Glyph.new(name: "A")
       glyph.add_contour(Fontisan::Ufo::Contour.new([
-                                                     Fontisan::Ufo::Point.new(x: 1, y: 2, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 3, y: 4, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 5, y: 6, type: "line"),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 1, y: 2, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 3, y: 4, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 5, y: 6, type: "line",
+                                                     ),
                                                    ]))
 
       described_class.run([glyph])
@@ -47,10 +61,18 @@ RSpec.describe Fontisan::Ufo::Compile::Filters do
     it "converts a cubic segment into a quadratic approximation" do
       glyph = Fontisan::Ufo::Glyph.new(name: "curve")
       glyph.add_contour(Fontisan::Ufo::Contour.new([
-                                                     Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 50, y: 100, type: "offcurve"),
-                                                     Fontisan::Ufo::Point.new(x: 150, y: 100, type: "offcurve"),
-                                                     Fontisan::Ufo::Point.new(x: 200, y: 0, type: "curve"),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 0, y: 0, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 50, y: 100, type: "offcurve",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 150, y: 100, type: "offcurve",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 200, y: 0, type: "curve",
+                                                     ),
                                                    ]))
 
       described_class.run([glyph])
@@ -69,9 +91,15 @@ RSpec.describe Fontisan::Ufo::Compile::Filters do
     it "leaves quadratic-only contours unchanged" do
       glyph = Fontisan::Ufo::Glyph.new(name: "quad")
       glyph.add_contour(Fontisan::Ufo::Contour.new([
-                                                     Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                     Fontisan::Ufo::Point.new(x: 100, y: 200, type: "offcurve"),
-                                                     Fontisan::Ufo::Point.new(x: 200, y: 0, type: "qcurve"),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 0, y: 0, type: "line",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 100, y: 200, type: "offcurve",
+                                                     ),
+                                                     Fontisan::Ufo::Point.new(
+                                                       x: 200, y: 0, type: "qcurve",
+                                                     ),
                                                    ]))
 
       described_class.run([glyph])

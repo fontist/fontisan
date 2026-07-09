@@ -13,8 +13,10 @@ RSpec.describe Fontisan::Ufo::Compile::VariableOtf do
     g.width = 500
     g.add_unicode(0x41)
     g.add_contour(Fontisan::Ufo::Contour.new([
-                                               Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 0, type: "line"),
                                              ]))
     f.glyphs["A"] = g
     f

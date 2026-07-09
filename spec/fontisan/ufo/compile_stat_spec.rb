@@ -77,7 +77,8 @@ RSpec.describe Fontisan::Ufo::Compile::Stat do
       value_offsets_offset = bytes.unpack1("@14 N")
       # First offset (uint32) points at the first axis value table.
       first_table_offset = bytes.unpack1("@#{value_offsets_offset} N")
-      format, axis_idx, flags, name_id = bytes[first_table_offset, 8].unpack("nnnn")
+      format, axis_idx, flags, name_id = bytes[first_table_offset,
+                                               8].unpack("nnnn")
       expect(format).to eq(1)
       expect(axis_idx).to eq(0)
       expect(flags).to eq(0)

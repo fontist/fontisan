@@ -13,7 +13,9 @@ require "open-uri"
 HttpStatusIo = Struct.new(:status, :meta)
 
 RSpec.describe FixtureFonts::Downloader do
-  let(:destination) { File.join(Dir.tmpdir, "fontisan-spec-#{Process.pid}-#{rand(10_000)}.dat") }
+  let(:destination) do
+    File.join(Dir.tmpdir, "fontisan-spec-#{Process.pid}-#{rand(10_000)}.dat")
+  end
   let(:sleeps) { [] }
   let(:sleep_method) { ->(seconds) { sleeps << seconds } }
   let(:parsed_uri) { URI.parse("https://example.com/font.ttf") }
@@ -136,7 +138,8 @@ RSpec.describe FixtureFonts::Downloader do
     end
 
     it "fails fast on 4xx without retrying (except 429)" do
-      allow(parsed_uri).to receive(:open).and_raise(http_error(404, "Not Found"))
+      allow(parsed_uri).to receive(:open).and_raise(http_error(404,
+                                                               "Not Found"))
 
       downloader = described_class.new(
         url: "https://example.com/missing.ttf",

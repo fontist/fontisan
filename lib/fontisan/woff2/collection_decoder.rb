@@ -131,7 +131,10 @@ module Fontisan
       def read_collection_directory(pos)
         version = @data[pos, 4].unpack1("N")
         pos += 4
-        raise InvalidFontError, "Unsupported CollectionHeader version 0x#{version.to_s(16)}" unless version == 0x00010000
+        unless version == 0x00010000
+          raise InvalidFontError,
+                "Unsupported CollectionHeader version 0x#{version.to_s(16)}"
+        end
 
         num_fonts, pos = UInt255.decode_at(@data, pos)
         font_entries = Array.new(num_fonts) do

@@ -27,7 +27,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaTransform do
     it "writes the spec-mandated 36-byte header" do
       # version (uint16) + optionFlags (uint16) + numGlyphs (uint16) +
       # indexFormat (uint16) + 7 × uint32 stream sizes
-      version, option_flags, num_glyphs, index_format = result[0, 8].unpack("S>S>S>S>")
+      version, option_flags, num_glyphs, index_format = result[0,
+                                                               8].unpack("S>S>S>S>")
       expect(version).to eq(0)
       expect(num_glyphs).to eq(6)
       # indexFormat matches the source head.indexToLocFormat per WOFF2

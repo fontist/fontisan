@@ -150,7 +150,8 @@ module Fontisan
       Dir.mktmpdir do |dir|
         sub_path = File.join(dir, "sub#{subfont_name}#{metadata.extension}")
         metadata.compiler_class.new(target).compile(output_path: sub_path)
-        cbdt_propagator.propagate_tables_into(cbdt_propagator.cbdt_source, sub_path)
+        cbdt_propagator.propagate_tables_into(cbdt_propagator.cbdt_source,
+                                              sub_path)
 
         loaded = Fontisan::FontLoader.load(sub_path)
         stats = SubfontStats.new(

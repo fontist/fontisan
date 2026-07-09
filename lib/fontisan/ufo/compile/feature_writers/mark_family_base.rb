@@ -28,7 +28,9 @@ module Fontisan
 
                 attachments[class_name] ||= new_class_entry
                 attachments[class_name][:marks][mark_name] = mark_anchor
-                bases.each { |n, a| attachments[class_name][base_bucket_key][n] = a }
+                bases.each do |n, a|
+                  attachments[class_name][base_bucket_key][n] = a
+                end
               end
             end
 

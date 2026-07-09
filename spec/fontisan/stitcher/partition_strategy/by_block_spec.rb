@@ -80,7 +80,8 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByBlock do
       cp_map = { 0x41 => :latin, 0x40000 => :unassigned }
       blueprint = partitioner.call(cp_map)
 
-      expect(blueprint.names).to contain_exactly(:block_basic_latin, :block_other)
+      expect(blueprint.names).to contain_exactly(:block_basic_latin,
+                                                 :block_other)
     end
 
     it "preserves the donor_map for each partition" do
@@ -90,7 +91,9 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByBlock do
       latin = blueprint.partitions.find { |p| p.name == :block_basic_latin }
       expect(latin.donor_map).to eq(0x41 => :donor_a)
 
-      cjk = blueprint.partitions.find { |p| p.name == :block_cjk_unified_ideographs }
+      cjk = blueprint.partitions.find do |p|
+        p.name == :block_cjk_unified_ideographs
+      end
       expect(cjk.donor_map).to eq(0x4E00 => :donor_b)
     end
 
@@ -99,7 +102,8 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::ByBlock do
       cp_map = (0x41..0x50).each_with_index.to_h { |cp, _i| [cp, :donor] }
       expect do
         partitioner.call(cp_map, cap: 10)
-      end.to raise_error(Fontisan::PartitionCapExceededError, /single Unicode block/)
+      end.to raise_error(Fontisan::PartitionCapExceededError,
+                         /single Unicode block/)
     end
 
     it "names partitions with canonical block labels (downcased, underscored)" do

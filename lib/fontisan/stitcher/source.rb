@@ -321,7 +321,8 @@ module Fontisan
         compound.components.each do |component|
           next unless component.args_are_xy?
 
-          raw = cache[:glyf].glyph_for(component.glyph_index, cache[:loca], cache[:head])
+          raw = cache[:glyf].glyph_for(component.glyph_index, cache[:loca],
+                                       cache[:head])
           next unless raw
 
           matrix = component.transformation_matrix

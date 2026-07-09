@@ -173,7 +173,12 @@ module Fontisan
             io.read(8) # signature + flavor
             io.rewind
             flavor = File.binread(path, 4, 4)&.unpack1("N")
-            flavor == Woff2::CollectionDecoder::TTC_FLAVOR ? :woff2_collection : (raise Error, "Not a WOFF2 collection: #{path}")
+            if flavor == Woff2::CollectionDecoder::TTC_FLAVOR
+              :woff2_collection
+            else
+              (raise Error,
+                     "Not a WOFF2 collection: #{path}")
+            end
           elsif Parsers::DfontParser.dfont?(io)
             :dfont
           else

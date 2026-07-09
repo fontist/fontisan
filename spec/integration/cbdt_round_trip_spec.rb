@@ -35,7 +35,9 @@ RSpec.describe "CBDT/CBLC subset round-trip", type: :integration do
     { "CBDT" => cbdt, "CBLC" => cblc }
   end
 
-  let(:source_font_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
+  let(:source_font_path) do
+    font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
+  end
 
   # Re-emit NotoSans with our synthetic CBDT/CBLC tables added, then
   # re-load so the table directory sees them. This is the closest to a

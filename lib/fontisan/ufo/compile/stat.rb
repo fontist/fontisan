@@ -26,7 +26,8 @@ module Fontisan
           axis_value_count = axis_value_list.size
 
           design_axes = serialize_design_axes(axes)
-          value_tables, value_offsets = serialize_axis_values(axis_value_list, design_axes.bytesize)
+          value_tables, value_offsets = serialize_axis_values(axis_value_list,
+                                                              design_axes.bytesize)
 
           header = serialize_header(
             design_axis_count: design_axis_count,
@@ -45,7 +46,8 @@ module Fontisan
           io
         end
 
-        def self.serialize_header(design_axis_count:, design_axes_size:, axis_value_count:, elided_name_id:)
+        def self.serialize_header(design_axis_count:, design_axes_size:,
+axis_value_count:, elided_name_id:)
           design_axes_offset = HEADER_SIZE
           offset_to_axis_value_offsets = design_axes_offset + design_axes_size
 
@@ -86,7 +88,8 @@ module Fontisan
             flags = av[:flags] || av["flags"] || 0
             name_id = av[:name_id] || av["name_id"] || 0
             value = f2dot14(av[:value] || av["value"] || 0)
-            value_tables << [format, axis_idx, flags, name_id, value].pack("nnnnn")
+            value_tables << [format, axis_idx, flags, name_id,
+                             value].pack("nnnnn")
           end
 
           [value_tables, value_offsets]

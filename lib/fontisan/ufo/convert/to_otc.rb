@@ -18,7 +18,10 @@ module Fontisan
         # @return [String] the output_path
         def self.convert(ufo, output_path:, compiler: :otf, **_opts)
           compiler_class = Convert::COMPILER_FOR_FORMAT[compiler.to_sym]
-          raise ArgumentError, "unknown intermediate compiler: #{compiler.inspect}" unless compiler_class
+          unless compiler_class
+            raise ArgumentError,
+                  "unknown intermediate compiler: #{compiler.inspect}"
+          end
 
           Dir.mktmpdir do |dir|
             intermediate_path = File.join(dir, "intermediate.otf")

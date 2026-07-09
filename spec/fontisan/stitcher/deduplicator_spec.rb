@@ -9,7 +9,9 @@ RSpec.describe Fontisan::Stitcher::Deduplicator do
   def make_glyph(name, width: 500, points: [[0, 0, "line"], [100, 0, "line"]])
     g = ufo::Glyph.new(name: name)
     g.width = width
-    g.add_contour(ufo::Contour.new(points.map { |x, y, t| ufo::Point.new(x: x, y: y, type: t) }))
+    g.add_contour(ufo::Contour.new(points.map do |x, y, t|
+      ufo::Point.new(x: x, y: y, type: t)
+    end))
     g
   end
 
@@ -35,7 +37,9 @@ RSpec.describe Fontisan::Stitcher::Deduplicator do
 
     it "does not match glyphs with different outlines" do
       dedup = described_class.new
-      dedup.register(make_glyph("A", points: [[0, 0, "line"], [100, 0, "line"]]), "A")
+      dedup.register(
+        make_glyph("A", points: [[0, 0, "line"], [100, 0, "line"]]), "A"
+      )
       different = make_glyph("B", points: [[0, 0, "line"], [200, 0, "line"]])
       expect(dedup.find(different)).to be_nil
     end
@@ -54,7 +58,9 @@ RSpec.describe Fontisan::Stitcher::Deduplicator do
       dedup = described_class.new
       dedup.register(make_glyph("A"), "A")
       dedup.register(make_glyph("B"), "B") # same outline as A
-      dedup.register(make_glyph("C", points: [[0, 0, "line"], [50, 50, "line"]]), "C")
+      dedup.register(
+        make_glyph("C", points: [[0, 0, "line"], [50, 50, "line"]]), "C"
+      )
       expect(dedup.size).to eq(2)
     end
   end

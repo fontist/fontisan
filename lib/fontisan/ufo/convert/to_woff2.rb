@@ -21,14 +21,19 @@ module Fontisan
         # @return [String] the output_path
         def self.convert(ufo, output_path:, compiler: :ttf, **woff2_options)
           compiler_class = Convert::COMPILER_FOR_FORMAT[compiler.to_sym]
-          raise ArgumentError, "unknown intermediate compiler: #{compiler.inspect}" unless compiler_class
+          unless compiler_class
+            raise ArgumentError,
+                  "unknown intermediate compiler: #{compiler.inspect}"
+          end
 
           Dir.mktmpdir do |dir|
-            intermediate_path = File.join(dir, "intermediate#{format_ext(compiler)}")
+            intermediate_path = File.join(dir,
+                                          "intermediate#{format_ext(compiler)}")
             compiler_class.new(ufo).compile(output_path: intermediate_path)
 
             loaded = Fontisan::FontLoader.load(intermediate_path)
-            result = Fontisan::Converters::Woff2Encoder.new.convert(loaded, woff2_options)
+            result = Fontisan::Converters::Woff2Encoder.new.convert(loaded,
+                                                                    woff2_options)
             File.binwrite(output_path, result[:woff2_binary])
           end
 

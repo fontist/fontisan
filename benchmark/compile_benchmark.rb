@@ -24,10 +24,17 @@ module FontisanBench
       g.width = 500
       g.add_unicode(0xE000 + i) if i < 0x1000
       g.add_contour(Fontisan::Ufo::Contour.new([
-                                                 Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 100, y: 100, type: "offcurve"),
-                                                 Fontisan::Ufo::Point.new(x: 50, y: 150, type: "curve"),
+                                                 Fontisan::Ufo::Point.new(x: 0,
+                                                                          y: 0, type: "line"),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 100, y: 0, type: "line",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 100, y: 100, type: "offcurve",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 50, y: 150, type: "curve",
+                                                 ),
                                                ]))
       font.glyphs["g#{i}"] = g
     end
@@ -38,7 +45,8 @@ module FontisanBench
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     yield
     elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
-    puts format("%-40<label>s %8.<elapsed>.2f ms", label: label, elapsed: elapsed * 1000)
+    puts format("%-40<label>s %8.<elapsed>.2f ms", label: label,
+                                                   elapsed: elapsed * 1000)
     elapsed
   end
 end

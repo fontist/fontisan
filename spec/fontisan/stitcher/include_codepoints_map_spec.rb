@@ -16,8 +16,10 @@ RSpec.describe Fontisan::Stitcher, "#include_codepoints_map" do
     g.add_unicode(cp)
     g.add_contour(ufo::Contour.new([
                                      ufo::Point.new(x: 0, y: 0, type: "line"),
-                                     ufo::Point.new(x: 100, y: 0,   type: "line"),
-                                     ufo::Point.new(x: 100, y: 100, type: "line"),
+                                     ufo::Point.new(x: 100, y: 0,
+                                                    type: "line"),
+                                     ufo::Point.new(x: 100, y: 100,
+                                                    type: "line"),
                                    ]))
     font.glyphs[name] = g
     font
@@ -31,11 +33,14 @@ RSpec.describe Fontisan::Stitcher, "#include_codepoints_map" do
     stitcher.add_source(:latin, latin)
     stitcher.add_source(:cjk, cjk)
 
-    stitcher.include_codepoints_map({ 0x41 => :latin, 0x4E00 => :cjk }, into: :main)
+    stitcher.include_codepoints_map({ 0x41 => :latin, 0x4E00 => :cjk },
+                                    into: :main)
 
     # Both bindings landed in the same subfont, each with its donor.
     expect(stitcher.subfont_names).to eq([:main])
-    expect(stitcher.subfonts[:main].map { |b| b[:source].font }.uniq.size).to eq(2)
+    expect(stitcher.subfonts[:main].map do |b|
+      b[:source].font
+    end.uniq.size).to eq(2)
   end
 
   it "sorts codepoints within each donor group for reproducible GID assignment" do
@@ -45,7 +50,9 @@ RSpec.describe Fontisan::Stitcher, "#include_codepoints_map" do
     stitcher = described_class.new
     stitcher.add_source(:latin, latin)
 
-    stitcher.include_codepoints_map({ 0x43 => :latin, 0x41 => :latin, 0x42 => :latin }, into: :main)
+    stitcher.include_codepoints_map(
+      { 0x43 => :latin, 0x41 => :latin, 0x42 => :latin }, into: :main
+    )
 
     # only 0x41 maps to a glyph in the donor; the others get dropped at
     # the gid lookup stage. We assert sort behaviour by checking the

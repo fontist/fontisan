@@ -15,7 +15,8 @@ RSpec.describe Fontisan::Ufo::Compile::SvgTable do
 
     it "produces a valid SVG header" do
       svg = "<svg/>"
-      bytes = described_class.build(entries: [{ start_gid: 0, end_gid: 0, svg: svg }])
+      bytes = described_class.build(entries: [{ start_gid: 0, end_gid: 0,
+                                                svg: svg }])
       version, doc_list_offset, reserved = bytes.unpack("nNN")
       expect(version).to eq(0)
       expect(doc_list_offset).to eq(10)
@@ -24,7 +25,8 @@ RSpec.describe Fontisan::Ufo::Compile::SvgTable do
 
     it "embeds SVG document data after the records" do
       svg = "<svg/>"
-      bytes = described_class.build(entries: [{ start_gid: 0, end_gid: 0, svg: svg }])
+      bytes = described_class.build(entries: [{ start_gid: 0, end_gid: 0,
+                                                svg: svg }])
       expect(bytes).to include(svg)
     end
   end

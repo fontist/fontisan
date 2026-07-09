@@ -115,7 +115,9 @@ RSpec.describe Fontisan::Woff2::EncoderRules do
 
     it "is a no-op when no head table is present" do
       table_data.delete("head")
-      expect { described_class.touch_head_modified!(table_data) }.not_to raise_error
+      expect do
+        described_class.touch_head_modified!(table_data)
+      end.not_to raise_error
     end
 
     it "leaves head.created untouched" do

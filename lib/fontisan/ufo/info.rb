@@ -81,8 +81,10 @@ module Fontisan
       # @return [Array(Integer, Integer)] [major, minor]
       def self.parse_version(version)
         case version.to_s
-        when /\A(\d+)\.(\d+)\.\d+\z/ then [Regexp.last_match(1).to_i, Regexp.last_match(2).to_i]
-        when /\A(\d+)\.(\d+)\z/      then [Regexp.last_match(1).to_i, Regexp.last_match(2).to_i]
+        when /\A(\d+)\.(\d+)\.\d+\z/ then [Regexp.last_match(1).to_i,
+                                           Regexp.last_match(2).to_i]
+        when /\A(\d+)\.(\d+)\z/      then [Regexp.last_match(1).to_i,
+                                           Regexp.last_match(2).to_i]
         when /\A(\d+)\z/             then [Regexp.last_match(1).to_i, 0]
         else [0, 0]
         end

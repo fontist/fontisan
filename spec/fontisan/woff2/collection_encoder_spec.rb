@@ -61,7 +61,8 @@ RSpec.describe Fontisan::Woff2::CollectionEncoder do
 
       # CollectionHeader starts here
       version = result[pos, 4].unpack1("N")
-      expect(version).to eq(0x00010000), "CollectionHeader version should be 1.0"
+      expect(version).to eq(0x00010000),
+                         "CollectionHeader version should be 1.0"
       num_fonts = result.getbyte(pos + 4)
       expect(num_fonts).to eq(2), "numFonts should match the input TTC"
     end

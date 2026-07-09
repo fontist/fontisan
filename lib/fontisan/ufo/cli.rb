@@ -74,7 +74,10 @@ module Fontisan
       def extract(ufo, glyph_name, output)
         font = Font.open(ufo)
         glyph = font.glyph(glyph_name)
-        raise ArgumentError, "glyph not found: #{glyph_name.inspect}" unless glyph
+        unless glyph
+          raise ArgumentError,
+                "glyph not found: #{glyph_name.inspect}"
+        end
 
         head = font.info
         renderer = Fontisan::Svg::StandaloneGlyph.new(

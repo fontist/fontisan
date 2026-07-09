@@ -44,8 +44,10 @@ RSpec.describe Fontisan::Stitcher do
       g.add_unicode(cp_a)
       g.add_contour(ufo::Contour.new([
                                        ufo::Point.new(x: 0, y: 0, type: "line"),
-                                       ufo::Point.new(x: 500, y: 0, type: "line"),
-                                       ufo::Point.new(x: 500, y: 100, type: "line"),
+                                       ufo::Point.new(x: 500, y: 0,
+                                                      type: "line"),
+                                       ufo::Point.new(x: 500, y: 100,
+                                                      type: "line"),
                                      ]))
       font.glyphs["gid1"] = g
       font

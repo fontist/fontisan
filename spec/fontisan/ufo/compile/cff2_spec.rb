@@ -14,10 +14,14 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
     a.add_unicode(0x41)
     a.width = 600
     a.add_contour(Fontisan::Ufo::Contour.new([
-                                               Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 100, type: "offcurve"),
-                                               Fontisan::Ufo::Point.new(x: 500, y: 100, type: "offcurve"),
-                                               Fontisan::Ufo::Point.new(x: 500, y: 0, type: "curve"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 100, type: "offcurve"),
+                                               Fontisan::Ufo::Point.new(x: 500,
+                                                                        y: 100, type: "offcurve"),
+                                               Fontisan::Ufo::Point.new(x: 500,
+                                                                        y: 0, type: "curve"),
                                              ]))
     f.glyphs["A"] = a
     f

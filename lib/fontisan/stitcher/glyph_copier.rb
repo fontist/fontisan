@@ -89,7 +89,8 @@ module Fontisan
         bindings.sort_by { |b| [b[:codepoint] || Float::INFINITY, b[:donor_gid]] }
       end
 
-      def copy_glyph_into(target_font, name:, source:, donor_gid:, codepoint: nil)
+      def copy_glyph_into(target_font, name:, source:, donor_gid:,
+codepoint: nil)
         original = source.glyph_for_gid(donor_gid)
         return unless original
 

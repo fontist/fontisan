@@ -116,7 +116,9 @@ RSpec.describe "SvgToGlyf integration" do
           pts = glyph.contours.first.points
           # scale(100) maps (1,1) → (100,100) in viewBox space.
           # Y-flip + UPM normalization: (100, 100) → (100, 1000-100) = (100, 900)
-          expect(pts.map { |p| [p.x, p.y] }).to eq([[100, 900], [900, 900], [500, 100]])
+          expect(pts.map do |p|
+            [p.x, p.y]
+          end).to eq([[100, 900], [900, 900], [500, 100]])
         end
       end
     end

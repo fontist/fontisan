@@ -32,7 +32,9 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::PropagateAnchors do
       composite.components.clear
       composite.add_component(Fontisan::Ufo::Component.new(
                                 base_glyph: "A",
-                                transformation: Fontisan::Ufo::Transformation.new(e: 50, f: 10),
+                                transformation: Fontisan::Ufo::Transformation.new(
+                                  e: 50, f: 10,
+                                ),
                               ))
 
       described_class.run([base_glyph, composite])
@@ -62,7 +64,8 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::PropagateAnchors do
 
     it "does not duplicate anchors the composite already has" do
       # Composite manually placed the same anchor the base would propagate.
-      composite.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 500, name: "top"))
+      composite.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 500,
+                                                     name: "top"))
 
       described_class.run([base_glyph, composite])
 
