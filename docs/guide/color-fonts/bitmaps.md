@@ -144,6 +144,23 @@ fontisan convert bitmap-font.ttf --to ttf --output bitmap-font.ttf
 fontisan convert bitmap-font.ttf --to ttf --no-bitmaps --output outline-only.ttf
 ```
 
+### Subsetting color-emoji fonts
+
+The `web` subsetting profile retains CBDT and CBLC tables and rewrites them to keep only the bitmaps for retained glyphs. Use it when subsetting a color-emoji source for browser delivery:
+
+```bash
+# Keep only 😀 + 😁 bitmaps; output WOFF2 for web
+fontisan subset NotoColorEmoji.ttf \
+  --chars "😀😁" \
+  --profile web \
+  --output-format woff2 \
+  --output emoji-subset.woff2
+```
+
+Other profiles (`pdf`, `minimal`, `full`) drop CBDT/CBLC — pick them when the subset doesn't need color-emoji rendering (e.g. PDF embedding where the subsetter is just selecting glyphs for outlines).
+
+See the [subset CLI docs](/cli/subset) and `docs/STITCHER_GUIDE.adoc` (CBDT/CBLC passthrough section) for the full story, including the GID-stability caveat when CBDT and outline donors cover overlapping codepoint ranges in stitch mode.
+
 ## Comparison
 
 | Feature | sbix | CBDT/CBLC |
