@@ -75,7 +75,8 @@ RSpec.describe Fontisan::Woff2::GlyfCanonicalizer do
           num_glyphs: 2,
           source_format: 1,
         ).canonical
-      end.to raise_error(Fontisan::InvalidFontError, /loca has 1 entries, expected 3/)
+      end.to raise_error(Fontisan::InvalidFontError,
+                         /loca has 1 entries, expected 3/)
     end
 
     it "matches fontTools' 4-byte-padded canonical form for a real font" do

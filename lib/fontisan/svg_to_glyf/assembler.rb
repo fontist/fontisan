@@ -74,7 +74,8 @@ module Fontisan
       private
 
       def build_from_doc_path(data, group_transform, doc, codepoint)
-        final = normalizer_for(width: doc.viewbox_width, height: doc.viewbox_height)
+        final = normalizer_for(width: doc.viewbox_width,
+                               height: doc.viewbox_height)
           .final_transform(group_transform)
         contours = build_contours(data, final)
         assemble_glyph(glyph_name_for(codepoint), contours, codepoint)
@@ -89,13 +90,15 @@ module Fontisan
       def transform_contour(contour, transform)
         points = contour.points.map do |pt|
           x, y = transform.apply(pt.x, pt.y)
-          Fontisan::Ufo::Point.new(x: x.round, y: y.round, type: pt.type, smooth: pt.smooth)
+          Fontisan::Ufo::Point.new(x: x.round, y: y.round, type: pt.type,
+                                   smooth: pt.smooth)
         end
         Fontisan::Ufo::Contour.new(points)
       end
 
       def normalizer_for(width:, height:)
-        Geometry::Normalizer.new(viewbox_width: width, viewbox_height: height, upm: @upm)
+        Geometry::Normalizer.new(viewbox_width: width, viewbox_height: height,
+                                 upm: @upm)
       end
 
       def assemble_glyph(name, contours, codepoint)

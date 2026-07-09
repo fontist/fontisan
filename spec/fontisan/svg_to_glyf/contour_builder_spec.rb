@@ -50,7 +50,9 @@ RSpec.describe Fontisan::SvgToGlyf::Path::ContourBuilder do
     it "handles H and V commands" do
       contours = build("M 0 0 H 100 V 50 L 0 50 Z")
       pts = contours.first.points
-      expect(pts.map { |p| [p.x, p.y] }).to eq([[0, 0], [100, 0], [100, 50], [0, 50]])
+      expect(pts.map do |p|
+        [p.x, p.y]
+      end).to eq([[0, 0], [100, 0], [100, 50], [0, 50]])
     end
 
     it "handles relative H and V" do
@@ -70,7 +72,8 @@ RSpec.describe Fontisan::SvgToGlyf::Path::ContourBuilder do
       # M(0,0,line), C1(25,50,off), C2(75,50,off), P3(100,0,curve),
       # reflected C1(125,-50,off), C2(175,-50,off), P3(200,0,curve)
       expect(pts.map { |p| [p.x, p.y] }).to eq(
-        [[0, 0], [25, 50], [75, 50], [100, 0], [125, -50], [175, -50], [200, 0]],
+        [[0, 0], [25, 50], [75, 50], [100, 0], [125, -50], [175, -50],
+         [200, 0]],
       )
     end
 

@@ -82,7 +82,8 @@ module Fontisan
 
           if raw && raw.encoding == Encoding::UTF_16BE
             raw.encode("UTF-8")
-          elsif raw && raw.bytesize >= 2 && raw.getbyte(0).between?(0, 127) && raw.getbyte(1).zero?
+          elsif raw && raw.bytesize >= 2 && raw.getbyte(0).between?(0,
+                                                                    127) && raw.getbyte(1).zero?
             # Looks like UTF-16BE
             raw.force_encoding("UTF-16BE").encode("UTF-8")
           else
@@ -165,7 +166,10 @@ module Fontisan
           return unless glyf && loca && head
 
           # Tables need context-aware initialization before per-glyph access.
-          loca.parse_with_context(head.index_to_loc_format, num_glyphs) if loca.respond_to?(:parse_with_context)
+          if loca.respond_to?(:parse_with_context)
+            loca.parse_with_context(head.index_to_loc_format,
+                                    num_glyphs)
+          end
 
           num_glyphs.times do |gid|
             glyph_name = glyph_name_for(font, gid) || "glyph#{gid}"

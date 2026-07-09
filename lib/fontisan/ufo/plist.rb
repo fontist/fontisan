@@ -25,7 +25,9 @@ module Fontisan
         root = doc.root
         raise ParseError, "no <plist> root element" unless root&.name == "plist"
 
-        parse_value(root.children.find { |c| c.element? || c.cdata? || c.text? && !c.text.strip.empty? })
+        parse_value(root.children.find do |c|
+          c.element? || c.cdata? || c.text? && !c.text.strip.empty?
+        end)
       end
 
       # @param value [Object] the value to serialize
@@ -73,7 +75,10 @@ module Fontisan
         # dict children are key/value pairs (key first, then value)
         while children.any?
           key_node = children.shift
-          raise ParseError, "dict key is not <key>" unless key_node.name == "key"
+          unless key_node.name == "key"
+            raise ParseError,
+                  "dict key is not <key>"
+          end
 
           value_node = children.shift
           result[key_node.text] = parse_value(value_node)

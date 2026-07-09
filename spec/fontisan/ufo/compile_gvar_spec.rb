@@ -8,10 +8,16 @@ RSpec.describe Fontisan::Ufo::Compile::Gvar do
     let(:default_glyph) do
       g = Fontisan::Ufo::Glyph.new(name: "A")
       g.add_contour(Fontisan::Ufo::Contour.new([
-                                                 Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 0, y: 100, type: "line"),
+                                                 Fontisan::Ufo::Point.new(x: 0,
+                                                                          y: 0, type: "line"),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 100, y: 0, type: "line",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 100, y: 100, type: "line",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(x: 0,
+                                                                          y: 100, type: "line"),
                                                ]))
       g
     end
@@ -19,10 +25,16 @@ RSpec.describe Fontisan::Ufo::Compile::Gvar do
     let(:bold_glyph) do
       g = Fontisan::Ufo::Glyph.new(name: "A")
       g.add_contour(Fontisan::Ufo::Contour.new([
-                                                 Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 120, y: 0, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 120, y: 120, type: "line"),
-                                                 Fontisan::Ufo::Point.new(x: 0, y: 120, type: "line"),
+                                                 Fontisan::Ufo::Point.new(x: 0,
+                                                                          y: 0, type: "line"),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 120, y: 0, type: "line",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 120, y: 120, type: "line",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(x: 0,
+                                                                          y: 120, type: "line"),
                                                ]))
       g
     end

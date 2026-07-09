@@ -134,8 +134,10 @@ module Fontisan
               right_c2 = Point.new(x: r2x, y: r2y, type: "offcurve")
               right_p3 = p3
 
-              left = subdivide_cubic(left_p0, left_c1, left_c2, left_p3, tolerance)
-              right = subdivide_cubic(right_p0, right_c1, right_c2, right_p3, tolerance)
+              left = subdivide_cubic(left_p0, left_c1, left_c2, left_p3,
+                                     tolerance)
+              right = subdivide_cubic(right_p0, right_c1, right_c2, right_p3,
+                                      tolerance)
 
               # Drop the duplicated midpoint point between halves
               left + right

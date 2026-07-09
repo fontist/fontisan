@@ -43,7 +43,8 @@ RSpec.describe Fontisan::Stitcher::CbdtPropagator do
       cbdt2 = cbdt_source_class.new(empty_ufo)
       propagator = described_class.new([cbdt1, cbdt2])
       expect { propagator.cbdt_source }
-        .to raise_error(Fontisan::MultipleCbdtSourcesError, /multiple CBDT sources/)
+        .to raise_error(Fontisan::MultipleCbdtSourcesError,
+                        /multiple CBDT sources/)
     end
 
     it "ignores non-CBDT sources when counting" do
@@ -101,7 +102,9 @@ RSpec.describe Fontisan::Stitcher::CbdtPropagator do
     it "is a no-op when source is nil" do
       propagator = described_class.new([])
       # No file is created, no exception raised.
-      expect { propagator.propagate_tables_into(nil, "/nonexistent/path") }.not_to raise_error
+      expect do
+        propagator.propagate_tables_into(nil, "/nonexistent/path")
+      end.not_to raise_error
     end
   end
 end

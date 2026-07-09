@@ -14,7 +14,9 @@ RSpec.describe "Collection pipeline" do
     g = ufo::Glyph.new(name: name)
     g.width = 500
     g.add_unicode(codepoint)
-    g.add_contour(ufo::Contour.new(points.map { |x, y, t| ufo::Point.new(x: x, y: y, type: t) }))
+    g.add_contour(ufo::Contour.new(points.map do |x, y, t|
+      ufo::Point.new(x: x, y: y, type: t)
+    end))
     font.glyphs[name] = g
     font
   end

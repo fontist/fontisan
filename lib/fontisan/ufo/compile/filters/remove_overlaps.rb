@@ -56,7 +56,8 @@ module Fontisan
                   next if i == j || drop.include?(j)
 
                   # Drop inner when its bbox is fully inside outer's.
-                  if contained_in?(bboxes[j], bboxes[i]) && (inner.points.size <= outer.points.size)
+                  if contained_in?(bboxes[j],
+                                   bboxes[i]) && (inner.points.size <= outer.points.size)
                     # Sanity: only drop if the point count is smaller —
                     # a fully-contained contour with MORE points is
                     # almost certainly the outer one in a malformed

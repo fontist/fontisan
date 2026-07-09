@@ -21,7 +21,8 @@ module Fontisan
     autoload :TablesCommand, "fontisan/commands/tables_command"
     autoload :UnicodeCommand, "fontisan/commands/unicode_command"
     autoload :UnpackCommand, "fontisan/commands/unpack_command"
-    autoload :ValidateCollectionCommand, "fontisan/commands/validate_collection_command"
+    autoload :ValidateCollectionCommand,
+             "fontisan/commands/validate_collection_command"
     autoload :ValidateCommand, "fontisan/commands/validate_command"
     autoload :VariableCommand, "fontisan/commands/variable_command"
   end

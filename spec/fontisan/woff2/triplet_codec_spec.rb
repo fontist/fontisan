@@ -21,7 +21,8 @@ RSpec.describe Fontisan::Woff2::TripletCodec do
 
     cases.each do |c|
       it "round-trips #{c}" do
-        flag, payload = described_class.encode(c[:dx], c[:dy], on_curve: c[:on_curve])
+        flag, payload = described_class.encode(c[:dx], c[:dy],
+                                               on_curve: c[:on_curve])
         rdx, rdy, roc = described_class.decode(flag, payload)
         expect([rdx, rdy, roc]).to eq([c[:dx], c[:dy], c[:on_curve]])
       end

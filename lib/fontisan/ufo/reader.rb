@@ -94,7 +94,9 @@ module Fontisan
               if order.first.is_a?(Hash)
                 order.reduce({}) { |h, pair| h.merge(pair) }
               else
-                order.to_h { |filename| [File.basename(filename, ".glif"), filename] }
+                order.to_h do |filename|
+                  [File.basename(filename, ".glif"), filename]
+                end
               end
             else
               raise "unsupported contents.plist format: #{order.class}"

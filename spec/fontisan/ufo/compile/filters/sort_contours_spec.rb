@@ -62,7 +62,9 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::SortContours do
       described_class.run([glyph])
 
       # Expected order: contour @ (10,100) < contour @ (50,100) < contour @ (0,0)
-      first_points = glyph.contours.map { |c| [c.points.first.x, c.points.first.y] }
+      first_points = glyph.contours.map do |c|
+        [c.points.first.x, c.points.first.y]
+      end
       expect(first_points).to eq([[10, 100], [50, 100], [0, 0]])
     end
 

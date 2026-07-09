@@ -4,7 +4,9 @@ require "spec_helper"
 require "fontisan/ufo/glyph"
 
 RSpec.describe Fontisan::Ufo::Glyph do
-  let(:ufo_path) { "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo" }
+  let(:ufo_path) do
+    "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo"
+  end
 
   before { skip "last-resort-font not available" unless Dir.exist?(ufo_path) }
 

@@ -20,7 +20,8 @@ RSpec.describe Fontisan::Woff2::UInt255 do
       (250..260).each do |v|
         encoded = described_class.encode(v)
         decoded = described_class.decode(StringIO.new(encoded))
-        expect(decoded).to eq(v), "value #{v} encoded as #{encoded.unpack1('H*')} decoded as #{decoded}"
+        expect(decoded).to eq(v),
+                           "value #{v} encoded as #{encoded.unpack1('H*')} decoded as #{decoded}"
       end
     end
 

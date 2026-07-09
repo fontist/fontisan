@@ -4,7 +4,9 @@ require "spec_helper"
 require "fontisan/stitcher"
 
 RSpec.describe Fontisan::Stitcher do
-  let(:ufo_path) { "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo" }
+  let(:ufo_path) do
+    "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo"
+  end
   let(:tmpdir) { Dir.mktmpdir }
 
   after { FileUtils.remove_entry(tmpdir) if File.exist?(tmpdir) }

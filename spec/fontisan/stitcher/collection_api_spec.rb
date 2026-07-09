@@ -7,7 +7,8 @@ require "tmpdir"
 RSpec.describe "Stitcher explicit subfont declaration" do
   let(:ufo) { Fontisan::Ufo }
 
-  def make_font_with(name, cp, points = [[0, 0, "line"], [100, 0, "line"], [100, 100, "line"]])
+  def make_font_with(name, cp,
+points = [[0, 0, "line"], [100, 0, "line"], [100, 100, "line"]])
     font = ufo::Font.new
     font.info.units_per_em = 1000
     font.glyphs[".notdef"] = ufo::Glyph.new(name: ".notdef")

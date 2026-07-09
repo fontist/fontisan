@@ -75,7 +75,8 @@ module Fontisan
             if glyph && glyph[:data]
               offsets << current_offset
               data = glyph[:data].b
-              glyph_data << [glyph[:origin_x] || 0, glyph[:origin_y] || 0].pack("nn")
+              glyph_data << [glyph[:origin_x] || 0,
+                             glyph[:origin_y] || 0].pack("nn")
               glyph_data << (glyph[:graphic_type] || PNG_TYPE).ljust(4)[0, 4]
               glyph_data << data
               current_offset += 8 + data.bytesize

@@ -62,7 +62,8 @@ module Fontisan
           io << [regions.size].pack("n") # regionCount
           regions.each do |region|
             region.each do |coords|
-              io << [f2dot14(coords[:start]), f2dot14(coords[:peak]), f2dot14(coords[:end])].pack("nnn")
+              io << [f2dot14(coords[:start]), f2dot14(coords[:peak]),
+                     f2dot14(coords[:end])].pack("nnn")
             end
           end
           io

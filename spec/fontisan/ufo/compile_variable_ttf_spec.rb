@@ -21,10 +21,14 @@ RSpec.describe Fontisan::Ufo::Compile::VariableTtf do
     a.add_unicode(0x41)
     a.width = 500
     a.add_contour(Fontisan::Ufo::Contour.new([
-                                               Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 0, y: 100, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 100, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 100, type: "line"),
                                              ]))
     font.glyphs["A"] = a
     font
@@ -44,17 +48,22 @@ RSpec.describe Fontisan::Ufo::Compile::VariableTtf do
     a.add_unicode(0x41)
     a.width = 600
     a.add_contour(Fontisan::Ufo::Contour.new([
-                                               Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 120, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 120, y: 120, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 0, y: 120, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 120,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 120,
+                                                                        y: 120, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 120, type: "line"),
                                              ]))
     font.glyphs["A"] = a
     font
   end
 
   let(:axes) do
-    [{ tag: "wght", min: 100, default: 400, max: 900, name_id: 256, ordering: 0 }]
+    [{ tag: "wght", min: 100, default: 400, max: 900, name_id: 256,
+       ordering: 0 }]
   end
 
   let(:masters) do

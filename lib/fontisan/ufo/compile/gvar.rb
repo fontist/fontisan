@@ -121,7 +121,9 @@ module Fontisan
           deltas = tuple[:deltas]
 
           # Encode delta data
-          all_fit_int8 = deltas.all? { |dx, dy| dx.between?(-127, 127) && dy.between?(-127, 127) }
+          all_fit_int8 = deltas.all? do |dx, dy|
+            dx.between?(-127, 127) && dy.between?(-127, 127)
+          end
 
           point_count = deltas.size
           flags = point_count & POINT_COUNT_MASK
@@ -195,7 +197,8 @@ module Fontisan
 
         def self.build_empty(glyph_count)
           # Minimal gvar with no variation data
-          header = [VERSION_MAJOR, VERSION_MINOR, 0, 0, 0, glyph_count, 1, glyph_count + 16].pack("nnnnnnNN")
+          header = [VERSION_MAJOR, VERSION_MINOR, 0, 0, 0, glyph_count, 1,
+                    glyph_count + 16].pack("nnnnnnNN")
           offsets = Array.new(glyph_count + 1, 0).pack("C*")
           header + offsets
         end

@@ -6,7 +6,9 @@ require "spec_helper"
 require "fontisan/ufo/compile"
 
 RSpec.describe "UFO → TTF/OTF compile (uses real last-resort-font)" do
-  let(:ufo_path) { "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo" }
+  let(:ufo_path) do
+    "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo"
+  end
   let(:font) { Fontisan::Ufo::Font.open(ufo_path) }
   let(:tmpdir) { Dir.mktmpdir }
 

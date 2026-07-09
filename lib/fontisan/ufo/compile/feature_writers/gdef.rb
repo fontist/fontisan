@@ -78,7 +78,9 @@ module Fontisan
           def heuristic_class(glyph)
             anchor_names = glyph.anchors.map(&:name)
             mark_anchor_pattern = /\A_[a-zA-Z]+\z/
-            return 3 if anchor_names.any? { |n| mark_anchor_pattern.match?(n.to_s) }
+            return 3 if anchor_names.any? do |n|
+              mark_anchor_pattern.match?(n.to_s)
+            end
             return 2 if glyph.name.to_s.end_with?(".liga")
 
             nil

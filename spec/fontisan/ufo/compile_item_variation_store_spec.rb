@@ -35,7 +35,9 @@ RSpec.describe Fontisan::Ufo::Compile::ItemVariationStore do
       )
       region_list_offset = bytes.unpack1("@2 N")
       data_offset = bytes.unpack1("@8 N")
-      expect(data_offset).to eq(region_list_offset + region_list_bytesize_for(1, 1))
+      expect(data_offset).to eq(region_list_offset + region_list_bytesize_for(
+        1, 1
+      ))
     end
 
     it "emits a VariationRegionList with one region per master" do

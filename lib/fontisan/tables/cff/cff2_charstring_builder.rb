@@ -40,8 +40,10 @@ module Fontisan
         # @param num_regions [Integer] number of variation regions
         # @param width [Integer, nil] advance width
         # @return [String] CFF2 charstring bytes with blend sequences
-        def self.build_variable(outline, master_outlines:, num_regions:, width: nil)
-          new.build_variable_outline(outline, master_outlines, num_regions, width)
+        def self.build_variable(outline, master_outlines:, num_regions:,
+width: nil)
+          new.build_variable_outline(outline, master_outlines, num_regions,
+                                     width)
         end
 
         # ---------- variable-font encoding ----------
@@ -65,7 +67,9 @@ module Fontisan
 
         # Process an outline with blend operators for each varying coordinate.
         def encode_variable_outline(outline, master_outlines, num_regions)
-          @master_states = master_outlines.map { MasterState.new(current_x: 0, current_y: 0) }
+          @master_states = master_outlines.map do
+            MasterState.new(current_x: 0, current_y: 0)
+          end
           @num_regions = num_regions
           @has_blend = false
 
@@ -90,7 +94,8 @@ module Fontisan
         # ---------- variable moveto ----------
 
         def encode_variable_moveto(cmd, master_cmds)
-          dx, dy, dx_deltas, dy_deltas = compute_variable_deltas(cmd, master_cmds)
+          dx, dy, dx_deltas, dy_deltas = compute_variable_deltas(cmd,
+                                                                 master_cmds)
 
           write_variable_number(dx, dx_deltas)
           write_variable_number(dy, dy_deltas)
@@ -102,7 +107,8 @@ module Fontisan
         # ---------- variable lineto ----------
 
         def encode_variable_lineto(cmd, master_cmds)
-          dx, dy, dx_deltas, dy_deltas = compute_variable_deltas(cmd, master_cmds)
+          dx, dy, dx_deltas, dy_deltas = compute_variable_deltas(cmd,
+                                                                 master_cmds)
 
           write_variable_number(dx, dx_deltas)
           write_variable_number(dy, dy_deltas)

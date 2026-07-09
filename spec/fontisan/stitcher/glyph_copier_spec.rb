@@ -29,8 +29,10 @@ RSpec.describe Fontisan::Stitcher::GlyphCopier do
     g.add_unicode(cp) if cp
     g.add_contour(ufo::Contour.new([
                                      ufo::Point.new(x: 0, y: 0, type: "line"),
-                                     ufo::Point.new(x: width, y: 0, type: "line"),
-                                     ufo::Point.new(x: width, y: 100, type: "line"),
+                                     ufo::Point.new(x: width, y: 0,
+                                                    type: "line"),
+                                     ufo::Point.new(x: width, y: 100,
+                                                    type: "line"),
                                    ]))
     g
   end

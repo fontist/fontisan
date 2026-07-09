@@ -51,7 +51,9 @@ module Fontisan
 
         def self.format0_bytes(records)
           # Strings are stored UTF-16BE on disk (Windows Unicode).
-          encoded = records.map { |r| r[:value].encode("UTF-16BE").force_encoding("BINARY") }
+          encoded = records.map do |r|
+            r[:value].encode("UTF-16BE").force_encoding("BINARY")
+          end
           storage = encoded.join
           storage_offset = 6 + (records.size * 12)
 

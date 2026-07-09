@@ -61,7 +61,8 @@ module Fontisan
             glyph_data = glyf.raw_data[offset, size]
 
             if glyph_data.bytesize >= 10
-              _n, gx_min, gy_min, gx_max, gy_max = glyph_data[0, 10].unpack("n5")
+              _n, gx_min, gy_min, gx_max, gy_max = glyph_data[0,
+                                                              10].unpack("n5")
               gx_min = to_signed_16(gx_min)
               gy_min = to_signed_16(gy_min)
               gx_max = to_signed_16(gx_max)

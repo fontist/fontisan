@@ -403,7 +403,9 @@ module Fontisan
         private
 
         def group_by_block(cp_map)
-          cp_map.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(cp, label), h|
+          cp_map.each_with_object(Hash.new do |h, k|
+            h[k] = []
+          end) do |(cp, label), h|
             block_label = find_block_label(cp) || :other
             h[block_label] << [cp, label]
           end

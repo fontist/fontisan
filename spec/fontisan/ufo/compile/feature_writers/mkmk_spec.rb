@@ -9,14 +9,18 @@ RSpec.describe Fontisan::Ufo::Compile::FeatureWriters::Mkmk do
 
     # acutecomb: a mark with _top (mark anchor) + _topmkmk (attach FROM)
     acutecomb = Fontisan::Ufo::Glyph.new(name: "acutecomb")
-    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 600, name: "_top"))
-    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 650, name: "_topmkmk"))
+    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 600,
+                                                   name: "_top"))
+    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 650,
+                                                   name: "_topmkmk"))
     f.glyphs["acutecomb"] = acutecomb
 
     # dieresiscomb: a mark with topmkmk (attach TO) + _top (mark anchor)
     dieresiscomb = Fontisan::Ufo::Glyph.new(name: "dieresiscomb")
-    dieresiscomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 700, name: "topmkmk"))
-    dieresiscomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 750, name: "_top"))
+    dieresiscomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 700,
+                                                      name: "topmkmk"))
+    dieresiscomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 750,
+                                                      name: "_top"))
     f.glyphs["dieresiscomb"] = dieresiscomb
     f
   end
@@ -34,7 +38,8 @@ RSpec.describe Fontisan::Ufo::Compile::FeatureWriters::Mkmk do
       attachments = out.data[:attachments]
 
       expect(attachments["top"][:marks]).to eq("acutecomb" => [100, 650])
-      expect(attachments["top"][:base_marks]).to eq("dieresiscomb" => [100, 700])
+      expect(attachments["top"][:base_marks]).to eq("dieresiscomb" => [100,
+                                                                       700])
     end
 
     it "returns nil when no glyph has _<name>mkmk anchors" do

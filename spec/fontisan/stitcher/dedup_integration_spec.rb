@@ -7,7 +7,8 @@ require "tmpdir"
 RSpec.describe "Stitcher dedup + gid-cap integration" do
   let(:ufo) { Fontisan::Ufo }
 
-  def make_font_with_glyph(name, codepoint, width: 500, points: [[0, 0, "line"], [100, 0, "line"], [100, 100, "line"]])
+  def make_font_with_glyph(name, codepoint, width: 500,
+points: [[0, 0, "line"], [100, 0, "line"], [100, 100, "line"]])
     font = ufo::Font.new
     font.info.units_per_em = 1000
     notdef = ufo::Glyph.new(name: ".notdef")
@@ -16,7 +17,9 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
     g = ufo::Glyph.new(name: name)
     g.width = width
     g.add_unicode(codepoint)
-    g.add_contour(ufo::Contour.new(points.map { |x, y, t| ufo::Point.new(x: x, y: y, type: t) }))
+    g.add_contour(ufo::Contour.new(points.map do |x, y, t|
+      ufo::Point.new(x: x, y: y, type: t)
+    end))
     font.glyphs[name] = g
     font
   end
@@ -49,13 +52,16 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
     end
 
     it "keeps separate gids for glyphs with different outlines" do
-      donor = make_font_with_glyph("A", 0x41, points: [[0, 0, "line"], [100, 0, "line"]])
+      donor = make_font_with_glyph("A", 0x41,
+                                   points: [[0, 0, "line"], [100, 0, "line"]])
       donor.glyphs["B"] = ufo::Glyph.new(name: "B").tap do |g|
         g.width = 500
         g.add_unicode(0x42)
         g.add_contour(ufo::Contour.new([
-                                         ufo::Point.new(x: 0, y: 0, type: "line"),
-                                         ufo::Point.new(x: 200, y: 0, type: "line"),
+                                         ufo::Point.new(x: 0, y: 0,
+                                                        type: "line"),
+                                         ufo::Point.new(x: 200, y: 0,
+                                                        type: "line"),
                                        ]))
       end
 
@@ -126,8 +132,12 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stub_const("Fontisan::Stitcher::GlyphLimit::TTF_GLYPH_CAP", 3)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.ttf"), format: :ttf, subfont: :main) }
-          .to raise_error(Fontisan::GlyphLimitExceededError, /exceeding the TTF limit/)
+        expect do
+          stitcher.write_to(File.join(dir, "out.ttf"), format: :ttf,
+                                                       subfont: :main)
+        end
+          .to raise_error(Fontisan::GlyphLimitExceededError,
+                          /exceeding the TTF limit/)
       end
     end
 
@@ -153,8 +163,12 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stub_const("Fontisan::Stitcher::GlyphLimit::OTF_GLYPH_CAP", 3)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf, subfont: :main) }
-          .to raise_error(Fontisan::GlyphLimitExceededError, /exceeding the OTF limit/)
+        expect do
+          stitcher.write_to(File.join(dir, "out.otf"), format: :otf,
+                                                       subfont: :main)
+        end
+          .to raise_error(Fontisan::GlyphLimitExceededError,
+                          /exceeding the OTF limit/)
       end
     end
 
@@ -166,7 +180,10 @@ RSpec.describe "Stitcher dedup + gid-cap integration" do
       stitcher.include_codepoints([0x41], from: :d, into: :main)
 
       Dir.mktmpdir do |dir|
-        expect { stitcher.write_to(File.join(dir, "out.otf"), format: :otf, subfont: :main) }
+        expect do
+          stitcher.write_to(File.join(dir, "out.otf"), format: :otf,
+                                                       subfont: :main)
+        end
           .not_to raise_error
       end
     end

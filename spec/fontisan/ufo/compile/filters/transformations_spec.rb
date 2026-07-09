@@ -7,9 +7,12 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::Transformations do
   let(:glyph) do
     g = Fontisan::Ufo::Glyph.new(name: "test")
     g.add_contour(Fontisan::Ufo::Contour.new([
-                                               Fontisan::Ufo::Point.new(x: 0, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 0, type: "line"),
-                                               Fontisan::Ufo::Point.new(x: 100, y: 100, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 0,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 0, type: "line"),
+                                               Fontisan::Ufo::Point.new(x: 100,
+                                                                        y: 100, type: "line"),
                                              ]))
     g.add_component(Fontisan::Ufo::Component.new(base_glyph: "A"))
     g
@@ -20,7 +23,9 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::Transformations do
       original_points = glyph.contours[0].points.map { |p| [p.x, p.y] }
       described_class.run([glyph], matrix: nil)
 
-      expect(glyph.contours[0].points.map { |p| [p.x, p.y] }).to eq(original_points)
+      expect(glyph.contours[0].points.map do |p|
+        [p.x, p.y]
+      end).to eq(original_points)
       expect(glyph.components[0].transformation).to be_nil
     end
 
@@ -28,7 +33,9 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::Transformations do
       original_points = glyph.contours[0].points.map { |p| [p.x, p.y] }
       described_class.run([glyph], matrix: [1, 0, 0, 1, 0, 0])
 
-      expect(glyph.contours[0].points.map { |p| [p.x, p.y] }).to eq(original_points)
+      expect(glyph.contours[0].points.map do |p|
+        [p.x, p.y]
+      end).to eq(original_points)
       expect(glyph.components[0].transformation).to be_nil
     end
 
@@ -58,12 +65,14 @@ RSpec.describe Fontisan::Ufo::Compile::Filters::Transformations do
       # First translate the whole glyph by (50, 100). Component's
       # transformation should now be the translate.
       described_class.run([glyph], matrix: [1, 0, 0, 1, 50, 100])
-      expect(glyph.components[0].transformation.to_a).to eq([1.0, 0.0, 0.0, 1.0, 50.0, 100.0])
+      expect(glyph.components[0].transformation.to_a).to eq([1.0, 0.0, 0.0,
+                                                             1.0, 50.0, 100.0])
 
       # Now apply scale(2,2). The new component transformation should
       # be scale ∘ translate: x' = 2x + 100, y' = 2y + 200.
       described_class.run([glyph], matrix: [2, 0, 0, 2, 0, 0])
-      expect(glyph.components[0].transformation.to_a).to eq([2.0, 0.0, 0.0, 2.0, 100.0, 200.0])
+      expect(glyph.components[0].transformation.to_a).to eq([2.0, 0.0, 0.0,
+                                                             2.0, 100.0, 200.0])
     end
 
     it "accepts a Transformation value object as the matrix" do

@@ -155,7 +155,10 @@ module Fontisan
           return +"" if glyphs.size <= 1
 
           bytes = +"\x00"
-          (1...glyphs.size).each { |_| bytes << [0].pack("n") } # SID 0 placeholder
+          # SID 0 placeholder
+          (1...glyphs.size).each do |_|
+            bytes << [0].pack("n")
+          end
           bytes
         end
 
@@ -193,7 +196,8 @@ module Fontisan
           when 1 then [value].pack("C")
           when 2 then [value].pack("n")
           when 3
-            [(value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF].pack("CCC")
+            [(value >> 16) & 0xFF, (value >> 8) & 0xFF,
+             value & 0xFF].pack("CCC")
           when 4 then [value].pack("N")
           end
         end

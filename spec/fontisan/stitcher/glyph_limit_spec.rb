@@ -26,12 +26,14 @@ RSpec.describe Fontisan::Stitcher::GlyphLimit do
 
     it "raises GlyphLimitExceededError when TTF cap is exceeded" do
       expect { described_class.check!(65_536, format: :ttf) }
-        .to raise_error(Fontisan::GlyphLimitExceededError, /65536 unique glyphs/)
+        .to raise_error(Fontisan::GlyphLimitExceededError,
+                        /65536 unique glyphs/)
     end
 
     it "raises GlyphLimitExceededError when OTF cap is exceeded" do
       expect { described_class.check!(100_000, format: :otf) }
-        .to raise_error(Fontisan::GlyphLimitExceededError, /100000 unique glyphs/)
+        .to raise_error(Fontisan::GlyphLimitExceededError,
+                        /100000 unique glyphs/)
     end
 
     it "includes actionable guidance in the error message" do

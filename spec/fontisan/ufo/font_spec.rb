@@ -16,9 +16,13 @@ RSpec.describe Fontisan::Ufo::Font do
   end
 
   describe ".open (uses real last-resort-font as fixture)" do
-    let(:ufo_path) { "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo" }
+    let(:ufo_path) do
+      "/Users/mulgogi/src/external/unicode/last-resort-font/font.ufo"
+    end
 
-    before { skip "last-resort-font not available at #{ufo_path}" unless Dir.exist?(ufo_path) }
+    before do
+      skip "last-resort-font not available at #{ufo_path}" unless Dir.exist?(ufo_path)
+    end
 
     it "reads fontinfo.plist correctly" do
       font = described_class.open(ufo_path)

@@ -50,7 +50,8 @@ module Fontisan
       end
 
       def write_fontinfo(path)
-        File.write(File.join(path, "fontinfo.plist"), Plist.emit(@font.info.to_plist))
+        File.write(File.join(path, "fontinfo.plist"),
+                   Plist.emit(@font.info.to_plist))
       end
 
       def write_layercontents(path)
@@ -75,11 +76,17 @@ module Fontisan
           FileUtils.mkpath(layer_dir)
 
           contents =
-            layer.glyphs.transform_values { |g| "#{safe_filename(g.name)}.glif" }
-          File.write(File.join(layer_dir, "contents.plist"), Plist.emit(contents))
+            layer.glyphs.transform_values do |g|
+              "#{safe_filename(g.name)}.glif"
+            end
+          File.write(File.join(layer_dir, "contents.plist"),
+                     Plist.emit(contents))
 
           layer.glyphs.each_value do |glyph|
-            File.write(File.join(layer_dir, "#{safe_filename(glyph.name)}.glif"), glyph.to_glif)
+            File.write(
+              File.join(layer_dir,
+                        "#{safe_filename(glyph.name)}.glif"), glyph.to_glif
+            )
           end
         end
       end
@@ -96,7 +103,8 @@ module Fontisan
       def write_kerning(path)
         return if @font.kerning.empty?
 
-        File.write(File.join(path, "kerning.plist"), Plist.emit(@font.kerning.to_plist))
+        File.write(File.join(path, "kerning.plist"),
+                   Plist.emit(@font.kerning.to_plist))
       end
 
       def write_features(path)

@@ -66,7 +66,8 @@ module Fontisan
           case off_size
           when 1 then [value].pack("C")
           when 2 then [value].pack("n")
-          when 3 then [(value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF].pack("CCC")
+          when 3 then [(value >> 16) & 0xFF, (value >> 8) & 0xFF,
+                       value & 0xFF].pack("CCC")
           when 4 then [value].pack("N")
           else raise ArgumentError, "invalid off_size: #{off_size}"
           end

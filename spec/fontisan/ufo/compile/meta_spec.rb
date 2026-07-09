@@ -30,7 +30,8 @@ RSpec.describe Fontisan::Ufo::Compile::Meta do
     end
 
     it "appends data values after the data maps" do
-      bytes = described_class.build(data: { "dlng" => "en-Latn", "slng" => "en" })
+      bytes = described_class.build(data: { "dlng" => "en-Latn",
+                                            "slng" => "en" })
       # Header(16) + 2 data maps(24) = 40 bytes before data
       dlng_data = bytes[40, 7]
       slng_data = bytes[47, 2]

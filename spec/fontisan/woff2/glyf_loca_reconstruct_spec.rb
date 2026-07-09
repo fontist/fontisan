@@ -80,7 +80,8 @@ RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
         PY
         names = font_rescue_glyph_names
         output = `python3 #{script} #{input_ttf} #{path} #{names.join(",")} 2>&1`
-        expect($?).to be_success, "fontTools glyph comparison failed:\n#{output}"
+        expect($?).to be_success,
+                      "fontTools glyph comparison failed:\n#{output}"
       end
     end
 

@@ -18,7 +18,9 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
     )
   end
 
-  let(:lentariso_path) { "/Users/mulgogi/src/essenfont/essenfont/references/input-fonts/Lentariso-Regular.ttf" }
+  let(:lentariso_path) do
+    "/Users/mulgogi/src/essenfont/essenfont/references/input-fonts/Lentariso-Regular.ttf"
+  end
 
   it "preserves all Plane 1 codepoints from Lentariso" do
     src = Fontisan::FontLoader.load(lentariso_path)
@@ -66,7 +68,9 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
       expect(out_beria.size).to eq(beria_erfe.size),
                                 "expected #{beria_erfe.size} Beria Erfe cps, got #{out_beria.size}; " \
-                                "dropped: #{(beria_erfe - out_beria).map { |cp| format('U+%04X', cp) }.join(', ')}"
+                                "dropped: #{(beria_erfe - out_beria).map do |cp|
+                                  format('U+%04X', cp)
+                                end.join(', ')}"
     end
   end
 
@@ -78,7 +82,9 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
 
     src = Fontisan::FontLoader.load(tangut_path)
     src_cmap = src.table("cmap").unicode_mappings
-    tangut = src_cmap.keys.select { |cp| cp >= 0x17000 && cp <= 0x187FF }.first(100)
+    tangut = src_cmap.keys.select do |cp|
+      cp >= 0x17000 && cp <= 0x187FF
+    end.first(100)
 
     stitcher = Fontisan::Stitcher.new
     stitcher.add_source(:tangut, src)
@@ -129,12 +135,14 @@ RSpec.describe "Stitcher cmap preservation (regression)", :donors do
       out_head = out.table("head")
       out_maxp = out.table("maxp")
       if out_loca.respond_to?(:parse_with_context)
-        out_loca.parse_with_context(out_head.index_to_loc_format, out_maxp.num_glyphs)
+        out_loca.parse_with_context(out_head.index_to_loc_format,
+                                    out_maxp.num_glyphs)
       end
       glyph = out_glyf.glyph_for(1, out_loca, out_head)
       expect(glyph).not_to be_nil
       is_simple = glyph.respond_to?(:simple?) && glyph.simple?
-      expect(is_simple).to be(true), "flattened compound should be a simple glyph in the output"
+      expect(is_simple).to be(true),
+                           "flattened compound should be a simple glyph in the output"
       contour_count = glyph.end_pts_of_contours&.size || 0
       expect(contour_count).to be > 0, "flattened compound has no contours"
     end

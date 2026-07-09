@@ -192,7 +192,9 @@ palette_index: 0)
       def build_glyph_to_codepoints(cmap)
         return {} unless cmap
 
-        cmap.unicode_mappings.each_with_object(Hash.new { |h, k| h[k] = [] }) do |(cp, gid), h|
+        cmap.unicode_mappings.each_with_object(Hash.new do |h, k|
+          h[k] = []
+        end) do |(cp, gid), h|
           h[gid] << cp
         end
       rescue StandardError => e

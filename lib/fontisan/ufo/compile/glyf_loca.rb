@@ -41,7 +41,8 @@ module Fontisan
               offsets.map { |o| o / 2 }.pack("n*")
             end
 
-          { "glyf" => glyf_bytes, "loca" => loca_bytes, :loca_format => use_long ? 1 : 0 }
+          { "glyf" => glyf_bytes, "loca" => loca_bytes,
+            :loca_format => use_long ? 1 : 0 }
         end
 
         # Encode a single glyph into glyf bytes. Empty glyphs (no
@@ -138,7 +139,8 @@ module Fontisan
           # nothing).
           ""
         end
-        private_class_method :encode_glyph, :encode_simple, :encode_points, :encode_composite
+        private_class_method :encode_glyph, :encode_simple, :encode_points,
+                             :encode_composite
       end
     end
   end

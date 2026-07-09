@@ -28,8 +28,10 @@ RSpec.describe Fontisan::Stitcher do
       g.add_unicode(cp)
       g.add_contour(ufo::Contour.new([
                                        ufo::Point.new(x: 0, y: 0, type: "line"),
-                                       ufo::Point.new(x: width, y: 0, type: "line"),
-                                       ufo::Point.new(x: width, y: 100, type: "line"),
+                                       ufo::Point.new(x: width, y: 0,
+                                                      type: "line"),
+                                       ufo::Point.new(x: width, y: 100,
+                                                      type: "line"),
                                      ]))
       font.glyphs[name] = g
       font
@@ -42,7 +44,8 @@ RSpec.describe Fontisan::Stitcher do
     def make_cbdt_source_with(codepoints)
       dir = Dir.mktmpdir
       path = File.join(dir, "cbdt.ttf")
-      Fontisan::SpecHelpers::CbdtFixture.write_font(codepoints: codepoints, path: path)
+      Fontisan::SpecHelpers::CbdtFixture.write_font(codepoints: codepoints,
+                                                    path: path)
       Fontisan::FontLoader.load(path)
     end
 
@@ -102,15 +105,19 @@ RSpec.describe Fontisan::Stitcher do
         outline_only_cp = 0x41       # only in outline donor
         cbdt_only_cp = 0x1F601       # only in CBDT source
 
-        outline = make_outline_source_with("outline-emoji", shared_cp, width: 500)
+        outline = make_outline_source_with("outline-emoji", shared_cp,
+                                           width: 500)
         # add a second outline glyph for the outline-only codepoint
         g = ufo::Glyph.new(name: "outline-A")
         g.width = 600
         g.add_unicode(outline_only_cp)
         g.add_contour(ufo::Contour.new([
-                                         ufo::Point.new(x: 0, y: 0, type: "line"),
-                                         ufo::Point.new(x: 600, y: 0, type: "line"),
-                                         ufo::Point.new(x: 300, y: 700, type: "line"),
+                                         ufo::Point.new(x: 0, y: 0,
+                                                        type: "line"),
+                                         ufo::Point.new(x: 600, y: 0,
+                                                        type: "line"),
+                                         ufo::Point.new(x: 300, y: 700,
+                                                        type: "line"),
                                        ]))
         outline.glyphs["outline-A"] = g
 
@@ -120,7 +127,8 @@ RSpec.describe Fontisan::Stitcher do
         stitcher.add_source(:outline, outline)
         stitcher.add_source(:cbdt, cbdt_font)
         stitcher.include_notdef(from: :outline, into: :main)
-        stitcher.include_codepoints([shared_cp, outline_only_cp], from: :outline, into: :main)
+        stitcher.include_codepoints([shared_cp, outline_only_cp],
+                                    from: :outline, into: :main)
 
         Dir.mktmpdir do |dir|
           path = File.join(dir, "out.ttf")
@@ -161,7 +169,8 @@ RSpec.describe Fontisan::Stitcher do
       # sharing the same donor-gid naming scheme.
       it "write_collection preserves outline-first cmap priority across faces" do
         shared_cp = 0x1F600
-        outline = make_outline_source_with("outline-emoji", shared_cp, width: 500)
+        outline = make_outline_source_with("outline-emoji", shared_cp,
+                                           width: 500)
         cbdt_font = make_cbdt_source_with([shared_cp])
 
         stitcher = described_class.new
@@ -223,7 +232,8 @@ RSpec.describe Fontisan::Stitcher do
           stitcher.write_to(File.join(Dir.mktmpdir, "x.ttf"),
                             format: :ttf, subfont: :test)
         end
-          .to raise_error(Fontisan::MultipleCbdtSourcesError, /multiple CBDT sources/)
+          .to raise_error(Fontisan::MultipleCbdtSourcesError,
+                          /multiple CBDT sources/)
       end
     end
   end

@@ -65,7 +65,8 @@ module Fontisan
         # SbitLineMetrics (12 bytes): height, width, hori/vert bearings
         def self.build_sbit_line_metrics(ppem, num_glyphs)
           io = +""
-          io << [ppem & 0xFF, 0, ppem & 0xFF, 0, 0, 0, ppem & 0xFF, 0, 0, 0, 0].pack("C11")
+          io << [ppem & 0xFF, 0, ppem & 0xFF, 0, 0, 0, ppem & 0xFF, 0, 0, 0,
+                 0].pack("C11")
           io << [12 + num_glyphs * 8].pack("n")
           io
         end

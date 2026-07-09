@@ -7,12 +7,15 @@ RSpec.describe Fontisan::Ufo::Compile::FeatureWriters::Mark do
   let(:font) do
     f = Fontisan::Ufo::Font.new
     f.glyphs["A"] = Fontisan::Ufo::Glyph.new(name: "A")
-    f.glyphs["A"].add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 700, name: "top"))
+    f.glyphs["A"].add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 700,
+                                                       name: "top"))
     f.glyphs["B"] = Fontisan::Ufo::Glyph.new(name: "B")
-    f.glyphs["B"].add_anchor(Fontisan::Ufo::Anchor.new(x: 90, y: 700, name: "top"))
+    f.glyphs["B"].add_anchor(Fontisan::Ufo::Anchor.new(x: 90, y: 700,
+                                                       name: "top"))
 
     acutecomb = Fontisan::Ufo::Glyph.new(name: "acutecomb")
-    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 600, name: "_top"))
+    acutecomb.add_anchor(Fontisan::Ufo::Anchor.new(x: 100, y: 600,
+                                                   name: "_top"))
     f.glyphs["acutecomb"] = acutecomb
     f
   end
@@ -30,7 +33,10 @@ RSpec.describe Fontisan::Ufo::Compile::FeatureWriters::Mark do
       attachments = out.data[:attachments]
 
       expect(attachments["top"][:marks]).to eq("acutecomb" => [100, 600])
-      expect(attachments["top"][:bases]).to eq("A" => [100, 700], "B" => [90, 700])
+      expect(attachments["top"][:bases]).to eq("A" => [100, 700],
+                                               "B" => [
+                                                 90, 700
+                                               ])
     end
 
     it "returns nil when the font has no mark glyphs" do

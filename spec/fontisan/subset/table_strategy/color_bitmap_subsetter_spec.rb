@@ -7,7 +7,8 @@ require "spec_helper"
 # offsets stay valid in the source. Format 17 = small metrics + PNG
 # image, the NotoColorEmoji layout.
 module ColorBitmapSpecHelpers
-  def build_color_font(bitmaps:, first_gid: 10, last_gid: 14, ppem: 16, image_format: 17, version: 0x00030000)
+  def build_color_font(bitmaps:, first_gid: 10, last_gid: 14, ppem: 16,
+image_format: 17, version: 0x00030000)
     count = bitmaps.length
     raise ArgumentError unless count == last_gid - first_gid + 1
 

@@ -19,7 +19,8 @@ module Fontisan
         # @param glyphs [Array<Fontisan::Ufo::Glyph>] (unused here;
         #   bbox is computed by the caller for performance)
         # @return [Fontisan::Tables::Head]
-        def self.build(font, glyphs:, units_per_em: nil, loca_format: LOCA_FORMAT_LONG)
+        def self.build(font, glyphs:, units_per_em: nil,
+loca_format: LOCA_FORMAT_LONG)
           bbox = font_bbox(font, glyphs)
           Fontisan::Tables::Head.new(
             version_raw: 0x00010000,

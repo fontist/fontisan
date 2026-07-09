@@ -19,7 +19,8 @@ RSpec.describe Fontisan::Ufo::Info, ".for_subfont" do
   end
 
   it "drops the patch component of semver versions" do
-    info = described_class.for_subfont(family: "F", subfont: :S, version: "1.2.3")
+    info = described_class.for_subfont(family: "F", subfont: :S,
+                                       version: "1.2.3")
     expect([info.version_major, info.version_minor]).to eq([1, 2])
   end
 

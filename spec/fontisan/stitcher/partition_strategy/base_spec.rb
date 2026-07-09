@@ -45,7 +45,10 @@ RSpec.describe Fontisan::Stitcher::PartitionStrategy::Base do
     end
 
     it "raises ArgumentError for unknown formats (delegated to GlyphLimit)" do
-      expect { described_class.cap_for(:woff) }.to raise_error(ArgumentError, /unknown format/)
+      expect do
+        described_class.cap_for(:woff)
+      end.to raise_error(ArgumentError,
+                         /unknown format/)
     end
   end
 

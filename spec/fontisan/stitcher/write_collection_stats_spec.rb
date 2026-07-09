@@ -18,8 +18,10 @@ RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
     g.add_unicode(cp)
     g.add_contour(ufo::Contour.new([
                                      ufo::Point.new(x: 0, y: 0, type: "line"),
-                                     ufo::Point.new(x: 100, y: 0,   type: "line"),
-                                     ufo::Point.new(x: 100, y: 100, type: "line"),
+                                     ufo::Point.new(x: 100, y: 0,
+                                                    type: "line"),
+                                     ufo::Point.new(x: 100, y: 100,
+                                                    type: "line"),
                                    ]))
     font.glyphs[name] = g
     font
@@ -68,7 +70,8 @@ RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
 
       # Stats must match what's actually on disk, not the in-memory target.
       result.subfonts.each do |stats|
-        face = Fontisan::FontLoader.load(path, font_index: result.subfonts.index(stats))
+        face = Fontisan::FontLoader.load(path,
+                                         font_index: result.subfonts.index(stats))
         expect(stats.glyph_count).to eq(face.table("maxp").num_glyphs)
         expect(stats.codepoint_count).to eq(face.table("cmap").unicode_mappings.size)
       end
@@ -98,7 +101,8 @@ RSpec.describe Fontisan::Stitcher, "#write_collection stats" do
     g.add_contour(ufo::Contour.new([
                                      ufo::Point.new(x: 0, y: 0, type: "line"),
                                      ufo::Point.new(x: 500, y: 0, type: "line"),
-                                     ufo::Point.new(x: 500, y: 100, type: "line"),
+                                     ufo::Point.new(x: 500, y: 100,
+                                                    type: "line"),
                                    ]))
     outline.glyphs["outline-emoji"] = g
 

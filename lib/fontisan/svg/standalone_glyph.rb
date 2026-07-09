@@ -118,7 +118,10 @@ module Fontisan
 
       def bounding_box(glyph)
         points = glyph.contours.flat_map(&:points)
-        return { x_min: 0, y_min: 0, x_max: @units_per_em, y_max: @units_per_em } if points.empty?
+        if points.empty?
+          return { x_min: 0, y_min: 0, x_max: @units_per_em,
+                   y_max: @units_per_em }
+        end
 
         xs = points.map(&:x)
         ys = points.map(&:y)

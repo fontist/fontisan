@@ -360,7 +360,8 @@ module Fontisan
 
       # Handle --show-options
       if options[:show_options]
-        show_recommended_options(source_format, options[:to].is_a?(Array) ? options[:to].first : options[:to])
+        show_recommended_options(source_format,
+                                 options[:to].is_a?(Array) ? options[:to].first : options[:to])
         return
       end
 

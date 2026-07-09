@@ -22,7 +22,9 @@ module Fontisan
           transforms = transform_string.scan(FUNCTION_RE).map do |name, args|
             build_transform(name, args)
           end
-          transforms.reduce(AffineTransform.identity) { |acc, t| acc.compose(t) }
+          transforms.reduce(AffineTransform.identity) do |acc, t|
+            acc.compose(t)
+          end
         end
 
         def self.build_transform(name, args_string)
@@ -35,7 +37,8 @@ module Fontisan
           when "skewX" then AffineTransform.skew_x_radians(degrees_to_radians(args.fetch(0)))
           when "skewY" then AffineTransform.skew_y_radians(degrees_to_radians(args.fetch(0)))
           else
-            raise ArgumentError, "unknown SVG transform function: #{name.inspect}"
+            raise ArgumentError,
+                  "unknown SVG transform function: #{name.inspect}"
           end
         end
 
@@ -59,9 +62,13 @@ module Fontisan
         end
 
         def self.build_matrix(args)
-          raise ArgumentError, "matrix() requires 6 arguments, got #{args.size}" if args.size != 6
+          if args.size != 6
+            raise ArgumentError,
+                  "matrix() requires 6 arguments, got #{args.size}"
+          end
 
-          AffineTransform.new(args[0], args[1], args[2], args[3], args[4], args[5])
+          AffineTransform.new(args[0], args[1], args[2], args[3], args[4],
+                              args[5])
         end
 
         # Rotate around a specific point: translate to origin, rotate,

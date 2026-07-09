@@ -67,9 +67,15 @@ RSpec.describe Fontisan::Woff2::SfntChecksum do
       modified_head = head_bytes.dup
       modified_head[16] = "\x01" # change flags
       new_tables = tables.map do |t|
-        t.tag == "head" ? described_class::Table.new(tag: "head", bytes: modified_head) : t
+        if t.tag == "head"
+          described_class::Table.new(tag: "head",
+                                     bytes: modified_head)
+        else
+          t
+        end
       end
-      adjustment_after = described_class.new(flavor:, tables: new_tables).adjustment
+      adjustment_after = described_class.new(flavor:,
+                                             tables: new_tables).adjustment
       expect(adjustment_after).not_to eq(adjustment_before)
     end
 
@@ -77,7 +83,12 @@ RSpec.describe Fontisan::Woff2::SfntChecksum do
       head_with_csa_set = head_bytes.byteslice(0, 8) + [0xDEADBEEF].pack("N") +
         head_bytes.byteslice(12..)
       tables_with_csa = tables.map do |t|
-        t.tag == "head" ? described_class::Table.new(tag: "head", bytes: head_with_csa_set) : t
+        if t.tag == "head"
+          described_class::Table.new(tag: "head",
+                                     bytes: head_with_csa_set)
+        else
+          t
+        end
       end
       expect(described_class.new(flavor:, tables: tables_with_csa).adjustment)
         .to eq(described_class.new(flavor:, tables:).adjustment)
@@ -94,11 +105,13 @@ RSpec.describe Fontisan::Woff2::SfntChecksum do
       input = fixture_path("fonttools/TestTTF.ttf")
       font = Fontisan::FontLoader.load(input)
       woff2 = described_class_end_to_end_encode(font)
-      expect(woff2.bytesize % 4).to eq(0), "encoded file should be 4-byte padded"
+      expect(woff2.bytesize % 4).to eq(0),
+                                    "encoded file should be 4-byte padded"
     end
 
     def described_class_end_to_end_encode(font)
-      Fontisan::Converters::Woff2Encoder.new.convert(font, brotli_quality: 11)[:woff2_binary]
+      Fontisan::Converters::Woff2Encoder.new.convert(font,
+                                                     brotli_quality: 11)[:woff2_binary]
     end
   end
 end

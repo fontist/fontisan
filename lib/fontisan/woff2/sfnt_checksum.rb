@@ -97,7 +97,8 @@ module Fontisan
       def per_table_checksum(table)
         data = table.bytes
         if table.tag == "head"
-          data = "#{data.byteslice(0, 8)}#{['00000000'].pack('H8')}#{data.byteslice(12..)}"
+          data = "#{data.byteslice(0,
+                                   8)}#{['00000000'].pack('H8')}#{data.byteslice(12..)}"
         end
         Utilities::ChecksumCalculator.calculate_table_checksum(data)
       end
