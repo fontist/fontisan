@@ -174,8 +174,31 @@ module FixtureFonts
       if use_octokit?(parsed)
         fetch_via_octokit(parsed)
       else
+        warn_github_octokit_missing_once(parsed)
         fetch_via_open_uri(parsed)
       end
+    end
+
+    # One-time-per-process informational message when the downloader
+    # takes the open-uri fallback for a GitHub URL. Surfaces the
+    # silent-degradation gap (open-uri loses the Authorization header
+    # on github.com -> raw.githubusercontent.com redirects, so the
+    # rate-limit fix from PR #109 only helps via retry, not via
+    # auth lift). Actionable: tells the user to run `bundle install`.
+    #
+    # Only fires when a GitHub URL + token are present but Octokit
+    # isn't loaded — the exact scenario where the user would benefit.
+    # Silent in the normal path (Octokit loaded, or non-GitHub URL,
+    # or anonymous download).
+    def warn_github_octokit_missing_once(parsed)
+      return unless github_token
+      return unless github_host?(parsed)
+      return if @octokit_warning_emitted
+
+      @octokit_warning_emitted = true
+      warn "[fixtures:download] Octokit not loaded; GitHub URLs fall back to " \
+           "open-uri (rate-limit-prone on redirects). Run `bundle install` " \
+           "to enable authenticated downloads via Octokit."
     end
 
     # Octokit handles auth, rate-limit resets, and addresses the right
