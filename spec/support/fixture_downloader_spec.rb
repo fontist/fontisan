@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "fontisan/tasks"
+require_relative "fixture_downloader"
 require "tmpdir"
 require "stringio"
 require "open-uri"
@@ -12,13 +12,10 @@ require "open-uri"
 # satisfies both without doubles.
 HttpStatusIo = Struct.new(:status, :meta)
 
-RSpec.describe Fontisan::Tasks::FixtureDownloader do
+RSpec.describe FixtureFonts::Downloader do
   let(:destination) { File.join(Dir.tmpdir, "fontisan-spec-#{Process.pid}-#{rand(10_000)}.dat") }
   let(:sleeps) { [] }
   let(:sleep_method) { ->(seconds) { sleeps << seconds } }
-  # Real URI instance used as the stub target. Stubbing .open on a
-  # real instance is not a "double" — the object is genuine, only
-  # its .open behavior is virtualized for the test.
   let(:parsed_uri) { URI.parse("https://example.com/font.ttf") }
 
   before do
@@ -34,6 +31,14 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
                            HttpStatusIo.new([code.to_s, message], meta))
   end
 
+  # Helper: stub a downloader so it always uses the open-uri path
+  # regardless of whether Octokit is actually installed. Lets the
+  # open-uri-specific tests run on dev machines where Octokit is
+  # loaded via the Gemfile.
+  def force_open_uri_path(downloader)
+    allow(downloader).to receive(:octokit_loaded?).and_return(false)
+  end
+
   describe "#call" do
     it "writes the response body to the destination on first try" do
       allow(parsed_uri).to receive(:open).and_yield(StringIO.new("hello world"))
@@ -43,6 +48,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         destination: destination,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(File.read(destination)).to eq("hello world")
@@ -58,6 +64,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         destination: nested,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       begin
         downloader.call
@@ -85,6 +92,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 0.001,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(File.read(destination)).to eq("late success")
@@ -101,6 +109,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 0.001,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect { downloader.call }.to raise_error(described_class::Error) do |err|
         expect(err.last_error).to be_a(Errno::ECONNRESET)
@@ -120,9 +129,9 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 1.0,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect { downloader.call }.to raise_error(described_class::Error)
-      # 3 sleeps for 4 attempts: base * 2**0, base * 2**1, base * 2**2
       expect(sleeps).to eq([1.0, 2.0, 4.0])
     end
 
@@ -135,6 +144,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         max_retries: 5,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect { downloader.call }.to raise_error(OpenURI::HTTPError)
       expect(sleeps.length).to eq(0)
@@ -158,6 +168,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 0.001,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(File.read(destination)).to eq("after 5xx recovery")
@@ -181,6 +192,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 0.001,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(File.read(destination)).to eq("after rate limit")
@@ -203,10 +215,11 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         url: "https://example.com/font.ttf",
         destination: destination,
         max_retries: 3,
-        base_backoff: 1.0, # would normally sleep 1.0 — Retry-After overrides
+        base_backoff: 1.0,
         sleep_method: sleep_method,
         github_token: nil,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(sleeps).to eq([7])
@@ -231,6 +244,7 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 0.001,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect(downloader.call).to eq(destination)
       expect(sleeps).to eq([described_class::MAX_RETRY_AFTER_SECONDS])
@@ -248,9 +262,9 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         base_backoff: 2.0,
         sleep_method: sleep_method,
       )
+      force_open_uri_path(downloader)
 
       expect { downloader.call }.to raise_error(described_class::Error)
-      # First retry sleeps base * 2**0 = 2.0; no Retry-After present.
       expect(sleeps).to eq([2.0])
     end
 
@@ -261,73 +275,57 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
         StringIO.new("ok")
       end
 
-      described_class.new(
+      downloader = described_class.new(
         url: "https://example.com/font.ttf",
         destination: destination,
         sleep_method: sleep_method,
         github_token: nil,
-      ).call
+      )
+      force_open_uri_path(downloader)
+      downloader.call
 
       expect(captured_options["User-Agent"]).to start_with("fontisan-fixtures/")
     end
 
     it "sends Bearer Authorization when github_token is set and URL is GitHub" do
       captured_options = nil
-      # Mutate the shared parsed_uri so its host is github.com — the
-      # before-block URI.parse stub makes a fresh URI.parse() return
-      # this same instance, so we can't construct a separate github
-      # URI inline (it would come back as the example.com one).
       parsed_uri.host = "github.com"
       allow(parsed_uri).to receive(:open) do |options|
         captured_options = options
         StringIO.new("ok")
       end
 
-      described_class.new(
-        url: "https://github.com/owner/repo/raw/main/font.ttf",
-        destination: destination,
-        sleep_method: sleep_method,
-        github_token: "ghs_test_token_123",
-      ).call
+      begin
+        downloader = described_class.new(
+          url: "https://github.com/owner/repo/raw/main/font.ttf",
+          destination: destination,
+          sleep_method: sleep_method,
+          github_token: "ghs_test_token_123",
+        )
+        force_open_uri_path(downloader)
+        downloader.call
+      ensure
+        parsed_uri.host = "example.com"
+      end
 
       expect(captured_options["Authorization"]).to eq("Bearer ghs_test_token_123")
-    ensure
-      parsed_uri.host = "example.com"
     end
 
     it "withholds Authorization from non-GitHub hosts even when token is set" do
-      # Credential-leak guard: an attacker who controls a third-party
-      # host must not be able to harvest the GITHUB_TOKEN. The downloader
-      # must only send it to known GitHub-owned hosts.
       captured_options = nil
       allow(parsed_uri).to receive(:open) do |options|
         captured_options = options
         StringIO.new("ok")
       end
 
-      described_class.new(
+      downloader = described_class.new(
         url: "https://evil.example.com/steal",
         destination: destination,
         sleep_method: sleep_method,
         github_token: "ghs_test_token_123",
-      ).call
-
-      expect(captured_options).not_to have_key("Authorization")
-    end
-
-    it "omits Authorization when github_token is nil" do
-      captured_options = nil
-      allow(parsed_uri).to receive(:open) do |options|
-        captured_options = options
-        StringIO.new("ok")
-      end
-
-      described_class.new(
-        url: "https://example.com/font.ttf",
-        destination: destination,
-        sleep_method: sleep_method,
-        github_token: nil,
-      ).call
+      )
+      force_open_uri_path(downloader)
+      downloader.call
 
       expect(captured_options).not_to have_key("Authorization")
     end
@@ -343,17 +341,90 @@ RSpec.describe Fontisan::Tasks::FixtureDownloader do
       previous = ENV["GITHUB_TOKEN"]
       ENV["GITHUB_TOKEN"] = "env_token_abc"
       begin
-        described_class.new(
+        downloader = described_class.new(
           url: "https://github.com/owner/repo/raw/main/font.ttf",
           destination: destination,
           sleep_method: sleep_method,
-        ).call
+        )
+        force_open_uri_path(downloader)
+        downloader.call
       ensure
         ENV["GITHUB_TOKEN"] = previous
         parsed_uri.host = "example.com"
       end
 
       expect(captured_options["Authorization"]).to eq("Bearer env_token_abc")
+    end
+  end
+
+  describe "Octokit routing" do
+    # The Octokit path is taken only when ALL THREE of: GitHub host,
+    # token present, Octokit gem loadable. Tests stub octokit_loaded?
+    # to force each path explicitly so the suite passes whether or
+    # not Octokit is installed in the dev environment.
+    #
+    # github_uri is built via URI::HTTPS.build (not URI.parse) so the
+    # outer before-block URI.parse stub doesn't contaminate it.
+    let(:github_uri) do
+      URI::HTTPS.build(host: "github.com",
+                       path: "/owner/repo/raw/main/font.ttf")
+    end
+
+    it "routes GitHub URLs through OctokitFetcher when token + Octokit present" do
+      downloader = described_class.new(
+        url: "https://github.com/owner/repo/raw/main/font.ttf",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token",
+      )
+      allow(URI).to receive(:parse).and_return(github_uri)
+      allow(downloader).to receive(:octokit_loaded?).and_return(true)
+      expect(FixtureFonts::OctokitFetcher).to receive(:bytes)
+        .with(url: github_uri, token: "ghs_test_token")
+        .and_return("fetched-via-octokit")
+
+      downloader.call
+
+      expect(File.read(destination)).to eq("fetched-via-octokit")
+    end
+
+    it "falls back to open-uri when Octokit gem is not installed" do
+      # Even with a GitHub URL + token, missing Octokit means the
+      # open-uri path runs (with Authorization header, subject to its
+      # redirect-stripping limitation).
+      downloader = described_class.new(
+        url: "https://github.com/owner/repo/raw/main/font.ttf",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token",
+      )
+      allow(URI).to receive(:parse).and_return(github_uri)
+      allow(downloader).to receive(:octokit_loaded?).and_return(false)
+      allow(github_uri).to receive(:open) do |options, &block|
+        expect(options["Authorization"]).to eq("Bearer ghs_test_token")
+        block.call(StringIO.new("via-open-uri"))
+      end
+
+      downloader.call
+
+      expect(File.read(destination)).to eq("via-open-uri")
+    end
+
+    it "does not route non-GitHub URLs through Octokit even when available" do
+      downloader = described_class.new(
+        url: "https://example.com/font.ttf",
+        destination: destination,
+        sleep_method: sleep_method,
+        github_token: "ghs_test_token",
+      )
+      allow(URI).to receive(:parse).and_return(parsed_uri)
+      allow(downloader).to receive(:octokit_loaded?).and_return(true)
+      expect(FixtureFonts::OctokitFetcher).not_to receive(:bytes)
+      allow(parsed_uri).to receive(:open).and_yield(StringIO.new("via-open-uri"))
+
+      downloader.call
+
+      expect(File.read(destination)).to eq("via-open-uri")
     end
   end
 

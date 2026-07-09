@@ -10,21 +10,24 @@ RuboCop::RakeTask.new
 
 # rubocop:disable Metrics/BlockLength
 namespace :fixtures do
-  # Load centralized fixture configuration
+  # Load centralized fixture configuration and the test-only downloader.
+  # The downloader lives under spec/support (not lib/) because it is
+  # purely test infrastructure — fontisan-the-gem never downloads
+  # fonts at runtime.
   require_relative "spec/support/fixture_fonts"
-  require "fontisan/tasks"
+  require_relative "spec/support/fixture_downloader"
 
   # Helper method to download a single file
   def download_single_file(name, url, target_path)
     puts "[fixtures:download] Downloading #{name}..."
 
-    Fontisan::Tasks::FixtureDownloader.new(
+    FixtureFonts::Downloader.new(
       url: url,
       destination: target_path,
     ).call
 
     puts "[fixtures:download] #{name} downloaded successfully"
-  rescue Fontisan::Tasks::FixtureDownloader::Error => e
+  rescue FixtureFonts::Downloader::Error => e
     warn "[fixtures:download] #{name} failed after retries: #{e.message}"
     raise
   end
@@ -41,7 +44,7 @@ namespace :fixtures do
                           "fontisan_#{name}_#{Process.pid}_#{rand(10000)}.zip")
 
     begin
-      Fontisan::Tasks::FixtureDownloader.new(
+      FixtureFonts::Downloader.new(
         url: url,
         destination: temp_path,
       ).call
@@ -89,7 +92,7 @@ namespace :fixtures do
     end
 
     puts "[fixtures:download] #{name} downloaded successfully"
-  rescue Fontisan::Tasks::FixtureDownloader::Error => e
+  rescue FixtureFonts::Downloader::Error => e
     warn "[fixtures:download] #{name} failed after retries: #{e.message}"
     raise
   rescue LoadError => e

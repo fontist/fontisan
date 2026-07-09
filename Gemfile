@@ -10,6 +10,12 @@ gem "benchmark"
 gem "bigdecimal"
 gem "canon", "~> 0.1.3"
 gem "get_process_mem", "~> 0.2"
+# Octokit provides authenticated GitHub API access for the test-only
+# fixture downloader (spec/support/fixture_downloader.rb). CI sets
+# GITHUB_TOKEN, the downloader auto-detects it and routes GitHub URLs
+# through Octokit to lift the 60/hr anonymous rate limit. NOT in
+# fontisan.gemspec — production installs never pull this in.
+gem "octokit", group: :test
 gem "openssl", "~> 3.0"
 gem "rake"
 gem "rspec"
