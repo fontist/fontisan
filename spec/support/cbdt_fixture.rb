@@ -84,7 +84,7 @@ module Fontisan
           lowest_rec_ppem: 8,
           font_direction_hint: 2,
           index_to_loc_format: 0,
-          glyph_data_format: 0,
+          glyph_data_format: 0
         ).to_binary_s
       end
 
