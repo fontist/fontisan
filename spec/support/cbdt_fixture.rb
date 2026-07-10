@@ -70,39 +70,40 @@ module Fontisan
       # ---- Table builders ------------------------------------------------
 
       def self.head_table
-        [
-          0x00010000, # version 1.0
-          0x00005000, # fontRevision 0.5
-          0x00000000, # checksumAdjustment (filled by FontWriter)
-          0x5F0F3CF5, # magicNumber
-          0x000B,     # flags
-          1000,       # unitsPerEm
-          0, 0,       # created, modified (LONGDATETIME)
-          0, 0, 0, 0, 0, 0, 0, 0, # xMin, yMin, xMax, yMax
-          0x0000,     # macStyle
-          8,          # lowestRecPPEM
-          2,          # fontDirectionHint
-          0,          # indexToLocFormat (no glyf/loca)
-          0 # glyphDataFormat
-        ].pack("NNNNnnNNnnnnnnnnnn")
+        Tables::Head.new(
+          version_raw: 0x00010000,
+          font_revision_raw: 0x00005000,
+          checksum_adjustment: 0,
+          magic_number: 0x5F0F3CF5,
+          flags: 0x000B,
+          units_per_em: 1000,
+          created_raw: 0,
+          modified_raw: 0,
+          x_min: 0, y_min: 0, x_max: 0, y_max: 0,
+          mac_style: 0,
+          lowest_rec_ppem: 8,
+          font_direction_hint: 2,
+          index_to_loc_format: 0,
+          glyph_data_format: 0,
+        ).to_binary_s
       end
 
       def self.hhea_table(num_glyphs)
-        [
-          0x00010000, # version 1.0
-          800,        # ascent
-          -200,       # descent
-          0,          # lineGap
-          1000,       # advanceWidthMax
-          0,          # minLeftSideBearing
-          0,          # minRightSideBearing
-          1000,       # xMaxExtent
-          1, 0,       # caretSlopeRise, caretSlopeRun
-          0,          # caretOffset
-          0, 0, 0, 0, # reserved * 4
-          0,          # metricDataFormat
-          num_glyphs # numberOfHMetrics
-        ].pack("Nnnnnnnnnnnnnnnn")
+        Tables::Hhea.new(
+          version_raw: 0x00010000,
+          ascent: 800,
+          descent: -200,
+          line_gap: 0,
+          advance_width_max: 1000,
+          min_left_side_bearing: 0,
+          min_right_side_bearing: 0,
+          x_max_extent: 1000,
+          caret_slope_rise: 1,
+          caret_slope_run: 0,
+          caret_offset: 0,
+          metric_data_format: 0,
+          number_of_h_metrics: num_glyphs,
+        ).to_binary_s
       end
 
       def self.maxp_table(num_glyphs)
@@ -165,7 +166,17 @@ module Fontisan
 
       def self.post_table
         # Version 3.0 (no glyph names), zeroed metrics.
-        [0x00030000, 0, -100, 50, 0, 0, 0, 0, 0].pack("NNnnNNNNN")
+        Tables::Post.new(
+          version_raw: 0x00030000,
+          italic_angle_raw: 0,
+          underline_position: -100,
+          underline_thickness: 50,
+          is_fixed_pitch: 0,
+          min_mem_type42: 0,
+          max_mem_type42: 0,
+          min_mem_type1: 0,
+          max_mem_type1: 0,
+        ).to_binary_s
       end
 
       def self.hmtx_table(num_glyphs)
