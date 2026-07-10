@@ -11,7 +11,7 @@ module Fontisan
     # The class is the read/write API; serialization is handled by
     # Fontisan::Ufo::Reader and Fontisan::Ufo::Writer.
     class Font
-      attr_accessor :path, :info, :features, :kerning, :lib, :ufo_version
+      attr_accessor :path, :info, :features, :kerning, :groups, :lib, :ufo_version
       attr_reader :layers, :data, :images
 
       def initialize
@@ -21,6 +21,7 @@ module Fontisan
         @layers = LayerSet.new
         @features = Features.new
         @kerning = Kerning.new
+        @groups = Groups.new
         @lib = Lib.new
         @data = nil # DataSet needs the Font ref, set by Reader
         @images = ImageSet.new

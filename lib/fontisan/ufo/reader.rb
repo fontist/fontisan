@@ -32,6 +32,7 @@ module Fontisan
         read_layercontents
         read_glyphs_contents
         read_kerning
+        read_groups
         read_features
         read_lib
         @font
@@ -121,6 +122,14 @@ module Fontisan
 
         data = Plist.parse(File.read(path))
         @font.kerning = Kerning.new(data)
+      end
+
+      def read_groups
+        path = join(@font.path, "groups.plist")
+        return unless File.exist?(path)
+
+        data = Plist.parse(File.read(path))
+        @font.groups = Groups.new(data)
       end
 
       def read_features
