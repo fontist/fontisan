@@ -15,8 +15,8 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md)
 
 ### P2 — Specialist feature parity
+- [x] ~~[07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)~~ ✓ Done
 - [06 — CFF2 blend/vsindex operators](06-cff2-blend-vsindex-operators.md)
-- [07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)
 - [08 — CFF standard string table](08-cff-standard-string-table.md)
 - [09 — Type 1 seac expansion](09-type1-seac-expansion.md)
 - [10 — UFO image set + feature writers](10-ufo-image-set-feature-writers.md)
