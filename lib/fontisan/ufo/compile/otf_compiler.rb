@@ -5,11 +5,8 @@ module Fontisan
     module Compile
       # UFO → OTF. Uses CFF outlines (instead of TrueType glyf/loca).
       # Maxp version 0.5 (no TrueType metrics); sfnt version OTTO.
-      #
-      # TODO.full/10: this currently emits a placeholder CFF table
-      # that satisfies the OTTO signature but does NOT yet encode
-      # real charstrings. Full CFF construction lands when TODO 10
-      # ships.
+      # The CFF table is built by Compile::Cff which encodes real
+      # Type 2 charstrings from UFO contours via CharStringBuilder.
       class OtfCompiler < BaseCompiler
         SFNT_VERSION = SFNT_VERSION_OPEN_TYPE
 
