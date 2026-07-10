@@ -213,6 +213,7 @@ module Fontisan
 
         hhea = @font.table("hhea")
         maxp = @font.table("maxp")
+        head = @font.table("head")
         num_h_metrics = hhea&.number_of_h_metrics || 1
         num_glyphs = maxp&.num_glyphs || 0
 
@@ -220,11 +221,22 @@ module Fontisan
           hmtx.parse_with_context(num_h_metrics, num_glyphs)
         end
 
+        # Fallback advance width when hmtx lookup fails for a GID.
+        # Per the OpenType spec, glyphs at GID >= numberOfHMetrics
+        # inherit the last LongHorMetric's advanceWidth. If the table
+        # is empty or corrupt, fall back to the font's unitsPerEm.
+        fallback_width = if hmtx.respond_to?(:h_metrics) && hmtx.h_metrics&.any?
+                           hmtx.h_metrics.last[:advance_width]
+                         else
+                           head&.units_per_em || 1000
+                         end
+
         num_glyphs.times do |gid|
           metric = hmtx.respond_to?(:metric_for) ? hmtx.metric_for(gid) : nil
-          widths[gid] = metric ? metric[:advance_width] : 0
+          aw = metric ? metric[:advance_width] : nil
+          widths[gid] = (aw && aw > 0) ? aw : fallback_width
         rescue StandardError
-          widths[gid] = 0
+          widths[gid] = fallback_width
         end
         widths
       end
@@ -278,10 +290,43 @@ module Fontisan
           flatten_compound_into(raw, glyph, cache, Set.new)
         end
 
+        normalize_glyph_metrics!(glyph, cache[:head])
         add_cmap_unicodes(gid, glyph)
         glyph
       rescue StandardError
         nil
+      end
+
+      # Fix glyphs whose contours extend far left of the origin
+      # (massively negative LSB) or whose advance width was lost
+      # during donor hmtx extraction. Without this, Egyptian
+      # Hieroglyphs and similar donor glyphs overflow into the
+      # preceding character cell.
+      #
+      # Shifts all x-coordinates so xMin >= 0, then ensures the
+      # advance width covers the glyph's full visual extent.
+      def normalize_glyph_metrics!(glyph, head)
+        return if glyph.contours.empty?
+
+        bbox = glyph.bbox
+        return unless bbox
+
+        upm = head&.units_per_em || 1000
+        threshold = -(upm * 0.1).to_i
+
+        # Shift contours right if the glyph extends past the origin
+        if bbox.x_min < threshold
+          shift = -bbox.x_min.to_i
+          glyph.contours.each do |contour|
+            contour.points.each { |pt| pt.x = pt.x + shift }
+          end
+        end
+
+        # Ensure advance width is positive and covers the glyph
+        visual_width = glyph.bbox&.x_max&.to_i || upm
+        if glyph.width.to_i <= 0 || glyph.width.to_i < visual_width
+          glyph.width = [visual_width, upm].max
+        end
       end
 
       # Copy a SimpleGlyph's contours + points into a Ufo::Glyph.

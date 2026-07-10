@@ -10,7 +10,8 @@ module Fontisan
     # "offcurve" is the UFO 1/2 name; UFO 3 uses "qcurve". Both are
     # accepted on read.
     class Point
-      attr_reader :x, :y, :type, :smooth
+      attr_accessor :x, :y
+      attr_reader :type, :smooth
 
       def initialize(x:, y:, type:, smooth: false)
         @x = x
