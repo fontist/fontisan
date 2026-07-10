@@ -93,9 +93,9 @@ The `--profile` option controls which font tables the subset retains. The right 
 
 | Profile | When to use | Notable tables dropped |
 |---------|-------------|------------------------|
-| `pdf` (default) | PDF embedding, smallest valid output | GSUB, GPOS, CBDT, CBLC |
-| `web` | Browser/web font, **retains color-emoji bitmaps** | nothing that browsers need |
-| `minimal` | Absolute smallest core that still renders | glyf/loca, CBDT/CBLC, GSUB/GPOS |
+| `pdf` (default) | PDF embedding, smallest valid output | GSUB, GPOS |
+| `web` | Browser/web font, **retains color-emoji bitmaps + CFF outlines** | nothing that browsers need |
+| `minimal` | Absolute smallest core that still renders | glyf/loca, CFF/CFF2, GSUB/GPOS |
 | `full` | Lossless re-export | (none) |
 
 ```bash
