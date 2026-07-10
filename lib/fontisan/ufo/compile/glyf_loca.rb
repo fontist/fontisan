@@ -162,24 +162,24 @@ module Fontisan
 
             t = comp.transformation
             if t && !t.identity?
-              if t.b.zero? && t.c.zero? && (t.a - t.d).abs < 1e-6
-                flags |= 0x0008 # WE_HAVE_A_SCALE
-              elsif t.b.zero? && t.c.zero?
-                flags |= 0x0040 # WE_HAVE_AN_X_AND_Y_SCALE
-              else
-                flags |= 0x0080 # WE_HAVE_A_TWO_BY_TWO
-              end
+              flags |= if t.b.zero? && t.c.zero? && (t.a - t.d).abs < 1e-6
+                0x0008 # WE_HAVE_A_SCALE
+                       elsif t.b.zero? && t.c.zero?
+                0x0040 # WE_HAVE_AN_X_AND_Y_SCALE
+                       else
+                0x0080 # WE_HAVE_A_TWO_BY_TWO
+                       end
             end
 
             flags |= 0x0020 if idx < components.size - 1 # MORE_COMPONENTS
 
             body << [flags, gid].pack("n*")
 
-            if flags & 0x0001 != 0
-              body << [dx, dy].pack("s>s>")
-            else
-              body << [dx, dy].pack("cc")
-            end
+            body << if (flags & 0x0001).zero?
+              [dx, dy].pack("cc")
+                    else
+              [dx, dy].pack("s>s>")
+                    end
 
             if flags & 0x0008 != 0
               body << [to_f2dot14(t.a)].pack("s>")
