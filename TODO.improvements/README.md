@@ -12,7 +12,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
-- [04 — UFO composite glyph encoding](04-ufo-composite-glyph-encoding.md)
+- [x] ~~[04 — UFO composite glyph encoding](04-ufo-composite-glyph-encoding.md)~~ ✓ Done
 - [x] ~~[05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md)~~ ✓ Already working (discovered in PR #117 — Cff.build produces real Type 2 charstrings; stale TODO marker removed)
 
 ### P2 — Specialist feature parity
