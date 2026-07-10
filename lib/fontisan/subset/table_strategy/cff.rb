@@ -57,32 +57,20 @@ module Fontisan
         def self.filter_ufo_glyphs!(ufo, mapping)
           retained_old_ids = Set.new(mapping.old_ids)
 
-          # Build the set of glyph names to keep by resolving old
-          # GIDs → names via the source's post table.
-          kept_names = []
-          ufo.glyphs.each_key do |name|
-            kept_names << name
-          end
-
-          # We need to filter by GID, but UFO is name-keyed.
-          # Resolve: walk the source post table to get GID → name,
-          # then keep only names whose GID is in the mapping.
-          source = ufo
-          post = nil
           # The UFO doesn't carry GID info after conversion; we rely
           # on the mapping's old_ids. Since the UFO was converted
           # from the same source font, the UFO glyph order matches
           # the source GID order. So GID N in the source = Nth glyph
           # added to the UFO default layer.
           all_names = ufo.glyphs.keys
-          names_to_keep = all_names.each_with_index.each_with_object(Set.new) do |(name, gid), keep|
+          names_to_keep = all_names.each_with_index.with_object(Set.new) do |(name, gid), keep|
             keep << name if retained_old_ids.include?(gid)
           end
 
           # Always keep .notdef
-          names_to_keep << ".notdef" if all_names.any? { |n| n == ".notdef" }
+          names_to_keep << ".notdef" if all_names.any?(".notdef")
 
-          ufo.glyphs.reject! { |name, _| !names_to_keep.include?(name) }
+          ufo.glyphs.select! { |name, _| names_to_keep.include?(name) }
         end
 
         # Ensure .notdef is present at GID 0. The CFF compiler
