@@ -215,16 +215,76 @@ module Fontisan
           end
         end
 
-        # OTF: extract outlines from CFF charstrings. TODO.full/10b —
-        # for now, stub with advance widths only (no contours).
+        # OTF: extract outlines from CFF charstrings.
         def self.extract_cff_glyphs(font, ufo, cmap, widths, num_glyphs)
+          cff = font.table("CFF ")
+          return extract_cff_glyphs_stub(font, ufo, cmap, widths, num_glyphs) unless cff
+
           num_glyphs.times do |gid|
-            glyph_name = glyph_name_for(font, gid) || "glyph#{gid}"
+            glyph_name = glyph_name_for(font, gid) || "gid#{gid}"
+            ufo_glyph = Ufo::Glyph.new(name: glyph_name)
+            ufo_glyph.width = widths.fetch(gid, 0).to_f
+            cmap.fetch(gid, []).each { |cp| ufo_glyph.add_unicode(cp) }
+
+            charstring = cff.charstring_for_glyph(gid)
+            convert_cff_path_to_ufo(charstring.path, ufo_glyph) if charstring
+
+            ufo.layers.default_layer.add(ufo_glyph)
+          end
+        end
+
+        # Fallback: widths only, no contours (used when CFF table can't
+        # be parsed — e.g., corrupted or unsupported variant).
+        def self.extract_cff_glyphs_stub(font, ufo, cmap, widths, num_glyphs)
+          num_glyphs.times do |gid|
+            glyph_name = glyph_name_for(font, gid) || "gid#{gid}"
             ufo_glyph = Ufo::Glyph.new(name: glyph_name)
             ufo_glyph.width = widths.fetch(gid, 0).to_f
             cmap.fetch(gid, []).each { |cp| ufo_glyph.add_unicode(cp) }
             ufo.layers.default_layer.add(ufo_glyph)
           end
+        end
+
+        # Convert a CFF CharString path (array of command hashes) to
+        # UFO contours. Each :move_to starts a new contour; :line_to
+        # and :curve_to append points to the current contour. Cubic
+        # bezier curves produce 2 offcurve + 1 curve points per
+        # segment (GLIF convention).
+        def self.convert_cff_path_to_ufo(path, glyph)
+          return if path.empty?
+
+          current_contour = nil
+
+          path.each do |cmd|
+            case cmd[:type]
+            when :move_to
+              glyph.add_contour(current_contour) if current_contour
+              current_contour = Ufo::Contour.new
+              current_contour.points << Ufo::Point.new(
+                x: cmd[:x].to_i, y: cmd[:y].to_i, type: "move",
+              )
+            when :line_to
+              next unless current_contour
+
+              current_contour.points << Ufo::Point.new(
+                x: cmd[:x].to_i, y: cmd[:y].to_i, type: "line",
+              )
+            when :curve_to
+              next unless current_contour
+
+              current_contour.points << Ufo::Point.new(
+                x: cmd[:x1].to_i, y: cmd[:y1].to_i, type: "offcurve",
+              )
+              current_contour.points << Ufo::Point.new(
+                x: cmd[:x2].to_i, y: cmd[:y2].to_i, type: "offcurve",
+              )
+              current_contour.points << Ufo::Point.new(
+                x: cmd[:x].to_i, y: cmd[:y].to_i, type: "curve",
+              )
+            end
+          end
+
+          glyph.add_contour(current_contour) if current_contour
         end
 
         # Look up a glyph name from the post table (v2.0) or synthesize.
