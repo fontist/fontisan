@@ -80,6 +80,8 @@ module Fontisan
       # @param source [Stitcher::Source] the CBDT source
       # @param target [Ufo::Font] target UFO font to receive placeholders
       def add_placeholder_glyphs(source, target)
+        @placeholder_names = {}
+
         ufo = source.font.is_a?(Ufo::Font) ? source.font : nil
         if ufo
           ufo.glyphs.each_value do |g|
@@ -104,43 +106,28 @@ module Fontisan
           glyph.width = 0
           gid_cps[gid].each { |cp| glyph.add_unicode(cp) }
           target.layers.default_layer.add(glyph)
+          @placeholder_names[gid] = name
         end
       end
 
-      # Propagate the raw CBDT/CBLC tables from the CBDT source into
-      # the compiled font at `path`, rewriting the file in place.
+      # Propagate CBDT/CBLC tables from the CBDT source into the
+      # compiled font at `path`, rewriting the file in place.
       #
       # Reads every table from the compiled font as raw bytes (bypassing
       # BinData #table because some tables — notably CFF2 — don't yet
-      # have round-trippable BinData models), splices in CBDT/CBLC,
-      # and rewrites the file.
+      # have round-trippable BinData models), splices in CBDT/CBLC
+      # rebuilt with compiled-font GIDs, and rewrites the file.
+      #
+      # The CBDT/CBLC rebuild uses Subset::TableStrategy::ColorBitmapSubsetter
+      # to remap every bitmap block from source GID to compiled GID.
+      # This ensures CBLC's IndexSubTableArray references the compiled
+      # font's actual GIDs, not the source's.
+      #
+      # Falls back to raw-byte copy when the GID mapping can't be
+      # resolved (no placeholder names recorded, or compiled post table
+      # is v3.0 with no glyph names).
       #
       # No-op when called with a non-CBDT source or nil.
-      #
-      # == Limitation: GID stability
-      #
-      # The propagation copies CBDT/CBLC bytes verbatim. CBLC indexes
-      # glyphs by SOURCE GID — the GIDs of the CBDT donor. The compiled
-      # font's GIDs may differ because:
-      #
-      #   1. +add_placeholder_glyphs+ renames CBDT placeholders via
-      #      UniqueGlyphName when their default "gid{N}" name collides
-      #      with outline glyphs sharing the same donor-gid scheme
-      #      (see Layer's naming contract).
-      #   2. The compiler assigns GIDs in target-namespace order, which
-      #      is not the same as source-GID order once renaming happens.
-      #
-      # The bitmaps line up correctly only when the CBDT source and
-      # every outline source cover disjoint codepoint ranges (the
-      # Essenfont TTC case: emoji vs CJK Ext G). When ranges overlap,
-      # CBLC's source-GID-indexed bitmaps may point at the wrong
-      # compiled glyphs and the colour rendering for affected
-      # codepoints will fall back to outlines.
-      #
-      # A proper fix requires a CBLC rebuild pass: walk the compiled
-      # font's cmap to find the new GID for every CBDT-covered source
-      # glyph, then rewrite CBLC's IndexSubTableArray + IndexSubTable
-      # offsets to match. Tracked as a follow-up.
       #
       # @param source [Stitcher::Source, nil] the CBDT source
       # @param path [String] compiled font file to rewrite
@@ -149,24 +136,76 @@ module Fontisan
 
         compiled = FontLoader.load(path)
 
-        # Read every table as raw bytes straight from the file's table
-        # directory. We deliberately bypass #table (which parses via
-        # BinData) because some tables — notably CFF2 — don't yet have
-        # round-trippable BinData models; calling #table on them returns
-        # nil and would silently drop them from the rewritten font.
         tables = {}
         compiled.table_names.each do |tag|
           raw = compiled.table_data[tag]
           tables[tag] = raw if raw
         end
 
-        cbdt_bytes = source.raw_table_bytes("CBDT")
-        cblc_bytes = source.raw_table_bytes("CBLC")
-        tables["CBDT"] = cbdt_bytes if cbdt_bytes
-        tables["CBLC"] = cblc_bytes if cblc_bytes
+        rebuilt = rebuild_color_tables(source, compiled)
+        tables["CBDT"] = rebuilt[:cbdt] if rebuilt[:cbdt]
+        tables["CBLC"] = rebuilt[:cblc] if rebuilt[:cblc]
 
         sfnt = tables.key?("CFF ") || tables.key?("CFF2") ? 0x4F54544F : 0x00010000
         FontWriter.write_to_file(tables, path, sfnt_version: sfnt)
+      end
+
+      private
+
+      # Rebuild CBDT/CBLC bytes with compiled-font GIDs instead of
+      # source GIDs. Delegates to Subset::TableStrategy::ColorBitmapSubsetter
+      # which already implements the offset-remap algorithm for the
+      # subsetter — the Stitcher case is the same algorithm with a
+      # different GID mapping (source → compiled instead of source →
+      # sequential subset GID).
+      #
+      # Falls back to raw-byte copy when the GID mapping can't be
+      # resolved (no placeholder names recorded, or compiled post/cmap
+      # can't reverse-map them).
+      def rebuild_color_tables(source, compiled)
+        source_cbdt = source.raw_table_bytes("CBDT")
+        source_cblc = source.raw_table_bytes("CBLC")
+        return {} unless source_cbdt && source_cblc
+
+        gid_map = resolve_gid_mapping(compiled)
+        return raw_bytes_fallback(source_cbdt, source_cblc) unless gid_map
+
+        mapping = Subset::GlyphMapping.new(mapping: gid_map)
+        subsetter = Subset::TableStrategy::ColorBitmapSubsetter.new(
+          font: source.font, mapping: mapping,
+        ).build
+
+        { cbdt: subsetter.cbdt_bytes, cblc: subsetter.cblc_bytes }
+      end
+
+      # Build {source_gid => compiled_gid} from the placeholder names
+      # recorded during add_placeholder_glyphs. Walks the compiled
+      # font's post table to find each placeholder's compiled GID.
+      # Returns nil when the mapping can't be resolved (e.g., no
+      # placeholders recorded, or post v3.0 with no names).
+      def resolve_gid_mapping(compiled)
+        return nil unless @placeholder_names && !@placeholder_names.empty?
+
+        post = compiled.table("post")
+        return nil unless post
+
+        names = post.glyph_names
+        return nil unless names
+
+        name_to_gid = {}
+        names.each_with_index { |name, gid| name_to_gid[name] = gid }
+
+        gid_map = {}
+        @placeholder_names.each do |source_gid, placeholder_name|
+          compiled_gid = name_to_gid[placeholder_name]
+          gid_map[source_gid] = compiled_gid if compiled_gid
+        end
+
+        gid_map.empty? ? nil : gid_map
+      end
+
+      def raw_bytes_fallback(cbdt_bytes, cblc_bytes)
+        { cbdt: cbdt_bytes, cblc: cblc_bytes }
       end
     end
   end

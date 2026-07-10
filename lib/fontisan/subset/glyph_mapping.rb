@@ -52,12 +52,17 @@ module Fontisan
       #
       # @example Create mapping that retains GIDs
       #   mapping = GlyphMapping.new([0, 3, 5, 10], retain_gids: true)
-      def initialize(old_glyph_ids, retain_gids: false)
+      def initialize(old_glyph_ids = [], retain_gids: false, mapping: nil)
         @old_to_new = {}
         @new_to_old = {}
         @retain_gids = retain_gids
 
-        build_mappings(old_glyph_ids)
+        if mapping
+          @old_to_new = mapping
+          @new_to_old = mapping.invert
+        else
+          build_mappings(old_glyph_ids)
+        end
       end
 
       # Get new glyph ID for an old glyph ID
