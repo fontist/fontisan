@@ -8,7 +8,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P0 — Correctness gaps (open bugs / silent failures)
 - [x] ~~[01 — CBDT/CBLC GID-stable propagation](01-cbdt-cblc-gid-stable-propagation.md)~~ ✓ Done (PR #115)
 - [x] ~~[02 — Collection-mode outline-priority regression](02-collection-outline-priority.md)~~ ✓ Already fixed
-- [15 — CFF/CFF2 subsetter strategy](15-cff-cff2-subsetter-strategy.md) (PR #108 unskipped the test; now passing with TODO 01)
+- [15 — CFF/CFF2 subsetter strategy](15-cff-cff2-subsetter-strategy.md) — Head crash fixed, profiles updated; CFF→UFO extraction done (TODO #10b); blocked on TODO #05 for full round-trip (PR #108 unskipped the test; now passing with TODO 01)
 
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
