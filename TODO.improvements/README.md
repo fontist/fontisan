@@ -6,8 +6,8 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ## Priorities
 
 ### P0 — Correctness gaps (open bugs / silent failures)
-- [01 — CBDT/CBLC GID-stable propagation](01-cbdt-cblc-gid-stable-propagation.md)
-- [02 — Collection-mode outline-priority regression](02-collection-outline-priority.md)
+- [x] ~~[01 — CBDT/CBLC GID-stable propagation](01-cbdt-cblc-gid-stable-propagation.md)~~ ✓ Done (PR #115)
+- [x] ~~[02 — Collection-mode outline-priority regression](02-collection-outline-priority.md)~~ ✓ Already fixed (PR #108 unskipped the test; now passing with TODO 01)
 
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
