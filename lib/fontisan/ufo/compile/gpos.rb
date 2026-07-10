@@ -40,7 +40,9 @@ module Fontisan
         # ---------- pair collection ----------
 
         # Collect kerning pairs from the UFO model. Each pair is
-        # (gid1, gid2, x_advance_delta).
+        # (gid1, gid2, x_advance_delta). Resolves class-based kerning
+        # keys (e.g. "@MMK_L_A @MMK_R_T") by expanding group members
+        # into individual glyph pairs via font.groups.
         # @return [Array<[Integer, Integer, Integer]>]
         def self.collect_kerning_pairs(font, glyphs)
           name_to_gid = {}
@@ -48,19 +50,38 @@ module Fontisan
 
           pairs = []
           font.kerning.each_pair do |key, value|
-            # UFO kerning key is "glyph1 glyph2" or a class name.
-            # We only handle individual glyph pairs (not classes).
             names = key.split
             next unless names.size == 2
 
-            gid1 = name_to_gid[names[0]]
-            gid2 = name_to_gid[names[1]]
-            next unless gid1 && gid2
+            left_names = resolve_kerning_side(names[0], font)
+            right_names = resolve_kerning_side(names[1], font)
 
-            pairs << [gid1, gid2, value.to_i]
+            left_names.each do |ln|
+              right_names.each do |rn|
+                gid1 = name_to_gid[ln]
+                gid2 = name_to_gid[rn]
+                next unless gid1 && gid2
+
+                pairs << [gid1, gid2, value.to_i]
+              end
+            end
           end
 
           pairs.sort_by { |a| [a[0], a[1]] }
+        end
+
+        # Resolve a kerning key side to individual glyph names. If
+        # +name+ is a group reference (starts with "@"), returns all
+        # group members. Otherwise returns +[name]+ for an individual
+        # glyph.
+        # @param name [String] glyph name or group reference
+        # @param font [Fontisan::Ufo::Font]
+        # @return [Array<String>] glyph names
+        def self.resolve_kerning_side(name, font)
+          return [name] unless name.start_with?("@")
+
+          members = font.groups.glyphs(name)
+          members.empty? ? [] : members
         end
 
         # ---------- GPOS binary assembly ----------
