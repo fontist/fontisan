@@ -25,21 +25,33 @@ Both registered in the REGISTRY. The `web` and `pdf` profiles updated to include
 
 ## Approach
 
-Each strategy:
+**Architecturally preferred path (TODO #05 + #10b dependency):**
 
-1. Parses the CFF/CFF2 table via `Tables::Cff`/`Tables::Cff2` BinData models.
-2. Filters the CharStrings INDEX to only the subset's glyph IDs.
-3. Rebuilds the INDEX with retained charstrings in subset order.
-4. Updates the charset (GID → SID mapping) to match the new GID ordering.
-5. Prunes unused GlobalSubrs + PrivateSubrs (subroutines referenced only by dropped charstrings).
-6. Rewrites the Top DICT offsets to match the new INDEX positions.
+If the CFF → UFO conversion (`Ufo::Convert::FromBinData#extract_cff_glyphs`, currently stubbed as TODO #10b) is fully implemented, AND the OTF compiler emits real CFF charstrings (TODO #05), then CFF subsetting is trivial:
 
-For CFF2, additionally:
-7. Filters FDSelect (per-glyph FD index) to the subset GIDs.
-8. Preserves the ItemVariationStore intact (it applies to all glyphs, not per-glyph).
-9. Preserves vsindex/blend operators in charstrings (they reference ItemVariationStore regions, not per-glyph data).
+```
+CFF font → Ufo::Convert::FromBinData → UFO (with contours)
+         → drop glyphs not in mapping
+         → Ufo::Compile::OtfCompiler → new CFF
+```
 
-fontisan already has the CFF/CFF2 BinData models for reading. The strategy adds write/filter capability.
+No standalone INDEX rebuilder needed. The UFO model is the canonical representation; CFF is a serialization. This is DRY, MECE, OCP-compliant.
+
+**Fallback path (standalone CFF INDEX rebuilder):**
+
+If TODO #05 + #10b are not yet done, a standalone strategy can work at the binary level:
+
+1. Parse CFF header → Name INDEX → Top DICT INDEX → String INDEX → Global Subr INDEX
+2. Decode Top DICT operators → get charset offset, CharStrings offset, Private offset
+3. Parse CharStrings INDEX → get byte range per charstring
+4. Filter to subset GIDs
+5. Rebuild CharStrings INDEX with retained charstrings
+6. Rebuild charset to match new GID ordering
+7. Optionally prune GlobalSubrs/PrivateSubrs
+8. Recompute all offsets in Top DICT
+9. Reassemble CFF bytes
+
+This is more work than the UFO round-trip path and duplicates logic the compile pipeline already has. Prefer the UFO path.
 
 ## Out of scope
 

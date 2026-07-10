@@ -13,7 +13,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
 - [04 — UFO composite glyph encoding](04-ufo-composite-glyph-encoding.md)
-- [05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md)
+- [05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md) ← blocks TODO #15
 
 ### P2 — Specialist feature parity
 - [x] ~~[07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)~~ ✓ Done (v0.4.25)
