@@ -16,6 +16,7 @@ module Fontisan
     module TableStrategy
       autoload :Cblc, "fontisan/subset/table_strategy/cblc"
       autoload :Cbdt, "fontisan/subset/table_strategy/cbdt"
+      autoload :Cff, "fontisan/subset/table_strategy/cff"
       autoload :Cmap, "fontisan/subset/table_strategy/cmap"
       autoload :ColorBitmapPlacement,
                "fontisan/subset/table_strategy/color_bitmap_placement"
@@ -55,6 +56,7 @@ module Fontisan
         "name" => :Name,
         "head" => :Head,
         "OS/2" => :Os2,
+        "CFF " => :Cff,
         "CBDT" => :Cbdt,
         "CBLC" => :Cblc,
       }.freeze
