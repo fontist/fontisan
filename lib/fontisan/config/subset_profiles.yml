@@ -38,7 +38,7 @@ pdf:
     - post
     - loca
     - glyf
-    - CFF
+    - "CFF "
     - CFF2
 
 # Web Profile: Tables required for web font usage
@@ -55,7 +55,7 @@ web:
     - post
     - loca
     - glyf
-    - CFF
+    - "CFF "
     - CFF2
     - GSUB
     - GPOS
@@ -98,7 +98,7 @@ full:
     - GDEF
     - BASE
     - JSTF
-    - CFF
+    - "CFF "
     - CFF2
     - VORG
     - kern
