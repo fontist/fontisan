@@ -45,21 +45,28 @@ ucode owns the Unicode-coverage axis (UCD parsing, block/script aggregation, per
 
 **The fontisan audit does NOT bundle UCDXML parsing.** Block aggregation is delegated: fontisan audit accepts an optional pre-built ucode index path, OR emits the codepoint list and lets the consumer (fontist-archive) run ucode separately.
 
-## Beyond ucode: font-health diagnostics
+## Beyond ucode: revised priority after self-debate
 
-Beyond identity + style + features, fontisan's domain expertise enables audit axes ucode cannot provide:
+A critical self-debate (see commit history) culled several "diagnostic" features that overlap with existing tools. The surviving axes:
 
-1. **OTS-rejection predictor** — walk the compiled font's tables and flag patterns known to trip Chrome's OpenType Sanitizer (e.g., `loca.origLength` mismatches, glyf without 4-byte alignment, missing magic number). Reuses the rule set already encoded in `spec/fontisan/converters/woff2_ots_rejection_spec.rb`.
+### Keep — high value, fontisan-unique
+- **Identity + Style + Features** — justified for archival format (one YAML per face, with provenance). NOT a general font inspector.
+- **Subset report** — when fontisan subsets, emit a structured report (glyph/codepoint/table breakdown). Web font engineers hit this daily; pyftsubset emits minimal output. fontisan has the subset infrastructure.
+- **Cross-format equivalence** — `fontisan equivalent font.ttf font.woff2` → true/false + diff. Catches CDN regeneration bugs from stale masters. fontTools diffs are too noisy.
+- **License/rights extraction** — OS/2 fsType embedding bits, name ID 13 license, head macStyle commercial-use hints. Compliance teams need this before redistribution. Currently buried.
+- **Collection integrity** — narrow (CJK foundries, Apple system fonts) but real for that audience. Cheap to add once identity extraction exists.
 
-2. **Format-round-trip report** — when converting TTF → WOFF2 → TTF, report what changed: tables dropped, glyph count, total bytes. Identifies which conversions are lossless vs lossy. Reuses `Converters::FormatConverter` instrumentation.
+### Drop — overlap with established tools
+- ~~**OTS-rejection predictor**~~ — Chromium ships `ots-sanitize`, the actual tool Chrome uses. Reimplementing in Ruby means we're always behind Chrome's evolving rule set. Better: wrap ots-sanitize as subprocess.
+- ~~**Format-round-trip report**~~ — WOFF2 is lossless by design; report would say "nothing changed" 99% of the time. TTF↔OTF outline-fidelity is a real check but it's one function, not an audit axis.
+- ~~**Variable-font readiness**~~ — **fontbakery** owns this space. Hundreds of mature checks, Google Fonts uses it for every submission. Don't compete; wrap if needed.
+- ~~**Hinting audit**~~ — audience is ~50 people worldwide. Modern web fonts ship largely unhinted. VF fonts don't use TT hints. Specialized tools (FontLab, ttfautohint) serve this niche better.
 
-3. **Variable-font readiness** — for fonts with `fvar`, check: axes within recommended ranges, named instances present, variation tables (`gvar`, `HVAR`, `MVAR`, `VVAR`) all present, no orphan deltas. Reuses `Variation::VariableFontProfile`.
+### Maybe later — niche but real
+- **Performance profile** — glyph count, table-level bytes, predicted parse time. Mobile/embedded niche. Apple has internal tools; nothing public.
+- **Identity hash** — canonical hash of (name + post + head + OS/2 identity) surviving lossless conversion. CDN/asset-pipeline use case.
 
-4. **Hinting audit** — TrueType: are `cvt`, `fpgm`, `prep` present and syntactically valid? CFF: are subroutines present and properly referenced? Reuses `Hinting` namespace.
-
-5. **Collection integrity** — for TTC/OTC: per-face identity, table deduplication stats (shared vs unique), cross-face PostScript name conflicts (which break font pickers).
-
-These are all font-structure concerns ucode has no visibility into. The audit command can grow into these incrementally — start with identity+style+features, layer on diagnostics over time.
+The headline correction: the original proposal positioned fontisan audit as a "font inspector" competing with commodity tools. The actually-valuable features are **workflow-specific reports** (subset, conversion equivalence, license) that leverage fontisan's unique subsetting + conversion infrastructure. ucode can't do any of these.
 
 ## Approach
 
