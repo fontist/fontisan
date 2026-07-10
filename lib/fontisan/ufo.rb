@@ -33,6 +33,7 @@ module Fontisan
     autoload :Kerning,     "fontisan/ufo/kerning"
     autoload :Features,    "fontisan/ufo/features"
     autoload :Lib,         "fontisan/ufo/lib"
+    autoload :Groups,      "fontisan/ufo/groups"
     autoload :DataSet,     "fontisan/ufo/data_set"
     autoload :ImageSet,    "fontisan/ufo/image_set"
     autoload :Plist,       "fontisan/ufo/plist"
