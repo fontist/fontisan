@@ -410,28 +410,132 @@ module Fontisan
 
       private
 
-      # Get a standard CFF string by SID
+      # Adobe Standard Encoding glyph names that map 1:1 to CFF SIDs
+      # 0..95. Source: Adobe CFF Specification 1.0 (TN 5176), Appendix A.
+      # These cover the printable ASCII range plus .notdef — the most
+      # common glyph names encountered in CFF fonts.
+      STANDARD_STRINGS_ASCII = [
+        ".notdef", # SID 0
+        "space", # SID 1 (code 32)
+        "exclam", # SID 2 (code 33)
+        "quotedbl", # SID 3 (code 34)
+        "numbersign", # SID 4 (code 35)
+        "dollar", # SID 5 (code 36)
+        "percent", # SID 6 (code 37)
+        "ampersand", # SID 7 (code 38)
+        "quoteright", # SID 8 (code 39)
+        "parenleft", # SID 9 (code 40)
+        "parenright", # SID 10 (code 41)
+        "asterisk", # SID 11 (code 42)
+        "plus", # SID 12 (code 43)
+        "comma", # SID 13 (code 44)
+        "hyphen", # SID 14 (code 45)
+        "period", # SID 15 (code 46)
+        "slash", # SID 16 (code 47)
+        "zero", # SID 17 (code 48)
+        "one", # SID 18 (code 49)
+        "two", # SID 19 (code 50)
+        "three", # SID 20 (code 51)
+        "four", # SID 21 (code 52)
+        "five", # SID 22 (code 53)
+        "six", # SID 23 (code 54)
+        "seven", # SID 24 (code 55)
+        "eight", # SID 25 (code 56)
+        "nine", # SID 26 (code 57)
+        "colon", # SID 27 (code 58)
+        "semicolon", # SID 28 (code 59)
+        "less", # SID 29 (code 60)
+        "equal", # SID 30 (code 61)
+        "greater", # SID 31 (code 62)
+        "question", # SID 32 (code 63)
+        "at", # SID 33 (code 64)
+        "A", # SID 34 (code 65)
+        "B", # SID 35 (code 66)
+        "C", # SID 36 (code 67)
+        "D", # SID 37 (code 68)
+        "E", # SID 38 (code 69)
+        "F", # SID 39 (code 70)
+        "G", # SID 40 (code 71)
+        "H", # SID 41 (code 72)
+        "I", # SID 42 (code 73)
+        "J", # SID 43 (code 74)
+        "K", # SID 44 (code 75)
+        "L", # SID 45 (code 76)
+        "M", # SID 46 (code 77)
+        "N", # SID 47 (code 78)
+        "O", # SID 48 (code 79)
+        "P", # SID 49 (code 80)
+        "Q", # SID 50 (code 81)
+        "R", # SID 51 (code 82)
+        "S", # SID 52 (code 83)
+        "T", # SID 53 (code 84)
+        "U", # SID 54 (code 85)
+        "V", # SID 55 (code 86)
+        "W", # SID 56 (code 87)
+        "X", # SID 57 (code 88)
+        "Y", # SID 58 (code 89)
+        "Z", # SID 59 (code 90)
+        "bracketleft", # SID 60 (code 91)
+        "backslash", # SID 61 (code 92)
+        "bracketright", # SID 62 (code 93)
+        "asciicircum", # SID 63 (code 94)
+        "underscore", # SID 64 (code 95)
+        "quoteleft", # SID 65 (code 96)
+        "a", # SID 66 (code 97)
+        "b", # SID 67 (code 98)
+        "c", # SID 68 (code 99)
+        "d", # SID 69 (code 100)
+        "e", # SID 70 (code 101)
+        "f", # SID 71 (code 102)
+        "g", # SID 72 (code 103)
+        "h", # SID 73 (code 104)
+        "i", # SID 74 (code 105)
+        "j", # SID 75 (code 106)
+        "k", # SID 76 (code 107)
+        "l", # SID 77 (code 108)
+        "m", # SID 78 (code 109)
+        "n", # SID 79 (code 110)
+        "o", # SID 80 (code 111)
+        "p", # SID 81 (code 112)
+        "q", # SID 82 (code 113)
+        "r", # SID 83 (code 114)
+        "s", # SID 84 (code 115)
+        "t", # SID 85 (code 116)
+        "u", # SID 86 (code 117)
+        "v", # SID 87 (code 118)
+        "w", # SID 88 (code 119)
+        "x", # SID 89 (code 120)
+        "y", # SID 90 (code 121)
+        "z", # SID 91 (code 122)
+        "braceleft", # SID 92 (code 123)
+        "bar", # SID 93 (code 124)
+        "braceright", # SID 94 (code 125)
+        "asciitilde", # SID 95 (code 126)
+      ].freeze
+
+      # First SID outside the ASCII subset. SIDs in
+      # EXTENDED_STRINGS_START..390 cover ligatures, currency symbols,
+      # Cyrillic (afii*), etc. Resolving those requires the full
+      # Adobe CFF spec Appendix A table; tracked as a follow-up to
+      # avoid embedding unverified data.
+      EXTENDED_STRINGS_START = STANDARD_STRINGS_ASCII.length
+
+      # Get a standard CFF string by SID (0-390).
       #
-      # This is a placeholder that returns a generic string.
-      # A complete implementation would include all 391 standard strings
-      # from CFF spec Appendix A.
-      #
-      # TODO: Implement complete standard string table in follow-up task
+      # The ASCII subset (SID 0-95) is fully covered. Extended SIDs
+      # (96-390) cover ligatures, currency, Cyrillic, etc., and
+      # require the full Adobe CFF spec Appendix A table to fill in
+      # correctly. Until that follow-up lands, extended SIDs return
+      # nil so callers can detect the gap and fall back to the
+      # custom string index.
       #
       # @param sid [Integer] String ID (0-390)
-      # @return [String] Standard string
+      # @return [String, nil] standard string, or nil for uncovered SIDs
       def standard_string(sid)
-        # Placeholder implementation
-        # Full implementation should include all standard strings
-        # from CFF specification Appendix A
-        case sid
-        when 0 then ".notdef"
-        when 1 then "space"
-        when 2 then "exclam"
-        # ... (388 more standard strings)
-        else
-          ".notdef" # Fallback
-        end
+        return nil if sid.negative?
+        return STANDARD_STRINGS_ASCII[sid] if sid < EXTENDED_STRINGS_START
+
+        nil
       end
 
       # Get the Charset for a specific font
