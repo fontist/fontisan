@@ -24,6 +24,7 @@ Gemfile.lock
 
 # Transient task / TODO / proposal scratch files (per-feature working notes)
 TODO.*
+!TODO.improvements/
 PROPOSAL.*
 REQ-*.md
 
