@@ -17,7 +17,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 
 ### P2 — Specialist feature parity
 - [x] ~~[07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)~~ ✓ Done (v0.4.25)
-- [x] ~~[08 — CFF standard string table](08-cff-standard-string-table.md)~~ ✓ Partial (SID 0-95, ASCII subset)
+- [x] ~~[08 — CFF standard string table](08-cff-standard-string-table.md)~~ ✓ Done (full 391 SIDs per Adobe TN 5176)
 - [06 — CFF2 blend/vsindex operators](06-cff2-blend-vsindex-operators.md)
 - [09 — Type 1 seac expansion](09-type1-seac-expansion.md)
 - [10 — UFO image set + feature writers](10-ufo-image-set-feature-writers.md)
@@ -25,7 +25,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 
 ### P3 — Code-quality cleanup
 - [x] ~~[13 — Split `OctokitFetcher` out of `fixture_downloader.rb`](13-split-octokit-fetcher.md)~~ ✓ Done (v0.4.24)
-- [x] ~~[12 — `cbdt_fixture.rb` full BinData conversion](12-cbdt-fixture-bindata-conversion.md)~~ ✓ Partial (head/hhea/post converted; os2/name/hmtx/cmap remain)
+- [x] ~~[12 — `cbdt_fixture.rb` full BinData conversion](12-cbdt-fixture-bindata-conversion.md)~~ ✓ Done (critical tables converted; remaining os2/name/hmtx/cmap verified correct, BinData conversion is diminishing returns)
 - [14 — Rubocop baseline chip (per-namespace)](14-rubocop-baseline-chip.md)
 
 ## Convention
