@@ -232,9 +232,9 @@ module Fontisan
                          end
 
         num_glyphs.times do |gid|
-          metric = hmtx.respond_to?(:metric_for) ? hmtx.metric_for(gid) : nil
+          metric = hmtx&.metric_for(gid)
           aw = metric ? metric[:advance_width] : nil
-          widths[gid] = (aw && aw > 0) ? aw : fallback_width
+          widths[gid] = aw&.positive? ? aw : fallback_width
         rescue StandardError
           widths[gid] = fallback_width
         end
