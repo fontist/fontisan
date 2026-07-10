@@ -334,4 +334,138 @@ RSpec.describe Fontisan::Tables::Cpal do
                          /Insufficient color records/)
     end
   end
+
+  describe "version 1 metadata" do
+    # Helper: build a CPAL v1 table with one palette, two entries,
+    # plus the three optional metadata arrays.
+    def build_v1_cpal(palette_types: nil, palette_labels: nil,
+                      palette_entry_labels: nil)
+      num_palettes = 1
+      num_entries = 2
+      num_records = num_palettes * num_entries
+
+      # Section layout:
+      #   +0   v1 header (24 bytes)
+      #   +24  palette indices (num_palettes × uint16)
+      #   +26  color records (num_records × 4 bytes)
+      #   +N   optional metadata arrays (each preceded by section
+      #        boundary; offsets recorded in header)
+      header_size = 24
+      indices_size = num_palettes * 2
+      colors_size = num_records * 4
+      colors_offset = header_size + indices_size
+
+      cursor = colors_offset + colors_size
+
+      types_offset = 0
+      types_bytes = +""
+      if palette_types
+        types_offset = cursor
+        types_bytes = palette_types.pack("N*")
+        cursor += types_bytes.bytesize
+      end
+
+      labels_offset = 0
+      labels_bytes = +""
+      if palette_labels
+        labels_offset = cursor
+        labels_bytes = palette_labels.pack("n*")
+        cursor += labels_bytes.bytesize
+      end
+
+      entry_labels_offset = 0
+      entry_labels_bytes = +""
+      if palette_entry_labels
+        entry_labels_offset = cursor
+        entry_labels_bytes = palette_entry_labels.pack("n*")
+        cursor += entry_labels_bytes.bytesize
+      end
+
+      header = [
+        1,                # version
+        num_entries,
+        num_palettes,
+        num_records,
+        colors_offset,
+        types_offset,
+        labels_offset,
+        entry_labels_offset,
+      ].pack("nnnnNNNN")
+
+      indices = [0].pack("n*") # palette 0 starts at color record 0
+      colors = ([255, 0, 0, 255] * num_records).pack("C*")
+
+      header + indices + colors + types_bytes + labels_bytes + entry_labels_bytes
+    end
+
+    it "parses v1 header fields (offsets to metadata arrays)" do
+      data = build_v1_cpal(palette_types: [0x01],
+                           palette_labels: [256],
+                           palette_entry_labels: [257, 258])
+      cpal = described_class.read(data)
+
+      expect(cpal.version).to eq(1)
+      expect(cpal.palette_types).to eq([0x01])
+      expect(cpal.palette_labels).to eq([256])
+      expect(cpal.palette_entry_labels).to eq([257, 258])
+    end
+
+    it "returns nil for metadata arrays when offsets are zero (absent)" do
+      data = build_v1_cpal
+      cpal = described_class.read(data)
+
+      expect(cpal.palette_types).to be_nil
+      expect(cpal.palette_labels).to be_nil
+      expect(cpal.palette_entry_labels).to be_nil
+    end
+
+    it "exposes palette_label nameID per palette" do
+      data = build_v1_cpal(palette_labels: [256])
+      cpal = described_class.read(data)
+
+      expect(cpal.palette_label(0)).to eq(256)
+      expect(cpal.palette_label(99)).to be_nil # out of range
+    end
+
+    it "returns nil from palette_label when v0 (no labels array)" do
+      # v0 fixture: 1 palette, 1 entry
+      header = [0, 1, 1, 1, 14].pack("nnnnN")
+      indices = [0].pack("n*")
+      colors = [0, 0, 0, 255].pack("C*")
+      cpal = described_class.read(header + indices + colors)
+
+      expect(cpal.palette_label(0)).to be_nil
+    end
+
+    it "exposes palette_entry_label nameID per entry" do
+      data = build_v1_cpal(palette_entry_labels: [257, 258])
+      cpal = described_class.read(data)
+
+      expect(cpal.palette_entry_label(0)).to eq(257)
+      expect(cpal.palette_entry_label(1)).to eq(258)
+      expect(cpal.palette_entry_label(99)).to be_nil
+    end
+
+    it "exposes palette type bits via light_on_dark? / dark_on_light?" do
+      data = build_v1_cpal(palette_types: [0x01])
+      cpal = described_class.read(data)
+
+      expect(cpal.light_on_dark?(0)).to be true
+      expect(cpal.dark_on_light?(0)).to be false
+    end
+
+    it "returns false from type predicates when no palette_types array" do
+      data = build_v1_cpal
+      cpal = described_class.read(data)
+
+      expect(cpal.light_on_dark?(0)).to be false
+      expect(cpal.dark_on_light?(0)).to be false
+    end
+
+    it "round-trips through valid? for v1 tables" do
+      data = build_v1_cpal(palette_types: [0x01])
+      cpal = described_class.read(data)
+      expect(cpal).to be_valid
+    end
+  end
 end
