@@ -408,8 +408,6 @@ module Fontisan
         true
       end
 
-      private
-
       # Adobe Standard Encoding glyph names that map 1:1 to CFF SIDs
       # 0..95. Source: Adobe CFF Specification 1.0 (TN 5176), Appendix A.
       # These cover the printable ASCII range plus .notdef — the most
@@ -519,6 +517,8 @@ module Fontisan
       # Adobe CFF spec Appendix A table; tracked as a follow-up to
       # avoid embedding unverified data.
       EXTENDED_STRINGS_START = STANDARD_STRINGS_ASCII.length
+
+      private
 
       # Get a standard CFF string by SID (0-390).
       #
