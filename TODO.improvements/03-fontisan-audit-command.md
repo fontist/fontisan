@@ -45,28 +45,58 @@ ucode owns the Unicode-coverage axis (UCD parsing, block/script aggregation, per
 
 **The fontisan audit does NOT bundle UCDXML parsing.** Block aggregation is delegated: fontisan audit accepts an optional pre-built ucode index path, OR emits the codepoint list and lets the consumer (fontist-archive) run ucode separately.
 
-## Beyond ucode: revised priority after self-debate
+## Beyond ucode: fontisan as the pure-Ruby replacement for ALL font validators
 
-A critical self-debate (see commit history) culled several "diagnostic" features that overlap with existing tools. The surviving axes:
+**Positioning correction (after self-debate):** fontisan's stated mission is *"replaces two tools: otfinfo and extract_ttc"*. The natural extension: `fontisan audit` should replace **every** non-Ruby font validator — `fontbakery`, `ots-sanitize`, MS Font Validator, Apple `ftxvalidator`, `ttfautohint`'s verify mode. Each of these is a non-Ruby dependency that fontisan can eliminate for any Ruby-based font workflow.
 
-### Keep — high value, fontisan-unique
-- **Identity + Style + Features** — justified for archival format (one YAML per face, with provenance). NOT a general font inspector.
-- **Subset report** — when fontisan subsets, emit a structured report (glyph/codepoint/table breakdown). Web font engineers hit this daily; pyftsubset emits minimal output. fontisan has the subset infrastructure.
-- **Cross-format equivalence** — `fontisan equivalent font.ttf font.woff2` → true/false + diff. Catches CDN regeneration bugs from stale masters. fontTools diffs are too noisy.
-- **License/rights extraction** — OS/2 fsType embedding bits, name ID 13 license, head macStyle commercial-use hints. Compliance teams need this before redistribution. Currently buried.
-- **Collection integrity** — narrow (CJK foundries, Apple system fonts) but real for that audience. Cheap to add once identity extraction exists.
+The first-draft of this TODO deferred to those tools ("fontbakery owns this; wrap it"). That was wrong — fontbakery being mature is exactly the reason fontisan should match it: eliminating Python from font toolchains is the value proposition. fontTools tracks the OT spec; fontisan tracks it the same way. The "always behind Chrome" concern is a maintenance discipline, not a reason not to build it.
 
-### Drop — overlap with established tools
-- ~~**OTS-rejection predictor**~~ — Chromium ships `ots-sanitize`, the actual tool Chrome uses. Reimplementing in Ruby means we're always behind Chrome's evolving rule set. Better: wrap ots-sanitize as subprocess.
-- ~~**Format-round-trip report**~~ — WOFF2 is lossless by design; report would say "nothing changed" 99% of the time. TTF↔OTF outline-fidelity is a real check but it's one function, not an audit axis.
-- ~~**Variable-font readiness**~~ — **fontbakery** owns this space. Hundreds of mature checks, Google Fonts uses it for every submission. Don't compete; wrap if needed.
-- ~~**Hinting audit**~~ — audience is ~50 people worldwide. Modern web fonts ship largely unhinted. VF fonts don't use TT hints. Specialized tools (FontLab, ttfautohint) serve this niche better.
+### The full audit axis inventory
 
-### Maybe later — niche but real
-- **Performance profile** — glyph count, table-level bytes, predicted parse time. Mobile/embedded niche. Apple has internal tools; nothing public.
-- **Identity hash** — canonical hash of (name + post + head + OS/2 identity) surviving lossless conversion. CDN/asset-pipeline use case.
+Each axis below is currently owned by a non-Ruby tool. fontisan's audit command should provide a pure-Ruby equivalent.
 
-The headline correction: the original proposal positioned fontisan audit as a "font inspector" competing with commodity tools. The actually-valuable features are **workflow-specific reports** (subset, conversion equivalence, license) that leverage fontisan's unique subsetting + conversion infrastructure. ucode can't do any of these.
+| Axis | Replaces | Why fontisan |
+|------|----------|--------------|
+| Identity + style + features | `otfinfo` (LCDF) | Already replaced; `audit` is the structured-report sibling of `info` |
+| Subset report | (no current tool) | fontisan-unique — leverages subset infrastructure |
+| Cross-format equivalence | `ttx` diff (fontTools) | Less noisy; first-class "is this the same font?" |
+| License/rights extraction | (manual OS/2 reading) | One-liner compliance check |
+| Collection integrity | (no current tool for TTC) | TTC is undertooled; CJK/Apple narrow but real |
+| **OTS-rejection predictor** | **`ots-sanitize` (C++)** | Pure-Ruby; no system dependency; cross-platform |
+| **Variable-font readiness** | **`fontbakery` (Python)** | Pure-Ruby replacement; eliminate Python from font toolchains |
+| **Hinting audit** | **`ftxvalidator` + FontLab** | Pure-Ruby; covers Windows/embedded use cases |
+| **Format-round-trip report** | **`ttx` diff** | Verifies fontisan's own conversions + cross-tool comparison |
+| **WOFF2 spec validation** | (informal) | fontisan has the encoder; expose validation |
+| **Glyph name validation** | (informal) | OT spec regex/length/reserved-name rules |
+| **cmap subtable validation** | (informal) | Format 4 segment mismatches, format 12 group ordering — common bugs |
+| **Table directory validation** | (informal) | Checksum, alignment, offset arithmetic |
+| **OpenType conformance** | **`fontbakery` + MS Font Validator** | Hundreds of OT spec "should"/"must" rules |
+
+### Build order (priority)
+
+Phase 1 (baseline + immediate-value workflow reports):
+1. Identity + style + features (archival format)
+2. Subset report
+3. Cross-format equivalence
+4. License/rights extraction
+
+Phase 2 (replace the validators — incremental):
+5. Table directory validation (checksums, alignment — easy, foundational)
+6. cmap subtable validation (common real-world bugs)
+7. OTS-rejection predictor (port `ots-sanitize` rule set)
+8. Glyph name validation (cheap OT spec rules)
+
+Phase 3 (broader scope):
+9. Variable-font readiness (port fontbakery's GF-VF check subset)
+10. Hinting audit
+11. WOFF2 spec validation
+12. Format-round-trip report
+13. Collection integrity
+14. Full OpenType conformance (long-running — tracks OT spec evolution)
+
+### Cross-language integration policy
+
+When fontisan reaches parity with fontbakery/ots-sanitize on a given check, it's the consumer's choice: use the pure-Ruby implementation (zero system deps) OR shell out to the established tool (mature, may have checks fontisan hasn't ported yet). fontisan shouldn't *force* the replacement — it should *earn* it by being correct and cross-platform.
 
 ## Approach
 
