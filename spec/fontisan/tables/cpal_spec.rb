@@ -378,11 +378,10 @@ RSpec.describe Fontisan::Tables::Cpal do
       if palette_entry_labels
         entry_labels_offset = cursor
         entry_labels_bytes = palette_entry_labels.pack("n*")
-        cursor += entry_labels_bytes.bytesize
       end
 
       header = [
-        1,                # version
+        1, # version
         num_entries,
         num_palettes,
         num_records,
