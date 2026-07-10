@@ -45,6 +45,22 @@ ucode owns the Unicode-coverage axis (UCD parsing, block/script aggregation, per
 
 **The fontisan audit does NOT bundle UCDXML parsing.** Block aggregation is delegated: fontisan audit accepts an optional pre-built ucode index path, OR emits the codepoint list and lets the consumer (fontist-archive) run ucode separately.
 
+## Beyond ucode: font-health diagnostics
+
+Beyond identity + style + features, fontisan's domain expertise enables audit axes ucode cannot provide:
+
+1. **OTS-rejection predictor** — walk the compiled font's tables and flag patterns known to trip Chrome's OpenType Sanitizer (e.g., `loca.origLength` mismatches, glyf without 4-byte alignment, missing magic number). Reuses the rule set already encoded in `spec/fontisan/converters/woff2_ots_rejection_spec.rb`.
+
+2. **Format-round-trip report** — when converting TTF → WOFF2 → TTF, report what changed: tables dropped, glyph count, total bytes. Identifies which conversions are lossless vs lossy. Reuses `Converters::FormatConverter` instrumentation.
+
+3. **Variable-font readiness** — for fonts with `fvar`, check: axes within recommended ranges, named instances present, variation tables (`gvar`, `HVAR`, `MVAR`, `VVAR`) all present, no orphan deltas. Reuses `Variation::VariableFontProfile`.
+
+4. **Hinting audit** — TrueType: are `cvt`, `fpgm`, `prep` present and syntactically valid? CFF: are subroutines present and properly referenced? Reuses `Hinting` namespace.
+
+5. **Collection integrity** — for TTC/OTC: per-face identity, table deduplication stats (shared vs unique), cross-face PostScript name conflicts (which break font pickers).
+
+These are all font-structure concerns ucode has no visibility into. The audit command can grow into these incrementally — start with identity+style+features, layer on diagnostics over time.
+
 ## Approach
 
 ### Models (`lib/fontisan/models/audit/`)
