@@ -38,6 +38,8 @@ pdf:
     - post
     - loca
     - glyf
+    - CFF
+    - CFF2
 
 # Web Profile: Tables required for web font usage
 web:
@@ -53,6 +55,8 @@ web:
     - post
     - loca
     - glyf
+    - CFF
+    - CFF2
     - GSUB
     - GPOS
     - CBDT

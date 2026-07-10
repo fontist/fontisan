@@ -28,6 +28,7 @@ module Fontisan
 
         def self.ensure_glyf_built!(context)
           return if context.state.glyf_data
+          return unless context.font.table_data["glyf"]
 
           builder = GlyfLocaBuilder.new(font: context.font,
                                         mapping: context.mapping).build
