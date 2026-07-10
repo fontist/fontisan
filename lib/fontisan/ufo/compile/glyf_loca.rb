@@ -23,11 +23,14 @@ module Fontisan
         # @param glyphs [Array<Fontisan::Ufo::Glyph>] in gid order
         # @return [Hash<String, String>] {"glyf" => bytes, "loca" => bytes}
         def self.build(_font, glyphs:)
+          name_to_gid = {}
+          glyphs.each_with_index { |g, i| name_to_gid[g.name] = i }
+
           glyf_bytes = +""
           offsets = [0]
 
           glyphs.each do |glyph|
-            glyf_bytes << encode_glyph(glyph)
+            glyf_bytes << encode_glyph(glyph, name_to_gid)
             glyf_bytes << "\x00" while glyf_bytes.bytesize.odd? # 2-byte align
             offsets << glyf_bytes.bytesize
           end
@@ -47,9 +50,9 @@ module Fontisan
 
         # Encode a single glyph into glyf bytes. Empty glyphs (no
         # contours, no components) produce zero bytes per spec.
-        def self.encode_glyph(glyph)
+        def self.encode_glyph(glyph, name_to_gid = {})
           return "" if glyph.contours.empty? && glyph.components.empty?
-          return encode_composite(glyph) if glyph.composite?
+          return encode_composite(glyph, name_to_gid) if glyph.composite?
 
           encode_simple(glyph)
         end
@@ -131,16 +134,72 @@ module Fontisan
           [flags, x_bytes, y_bytes]
         end
 
-        # Composite glyph encoding (component references with optional
-        # transformations). Out of scope for MVP — emits empty bytes.
-        def self.encode_composite(_glyph)
-          # TODO.full/07: implement composite glyph encoding when the
-          # spec needs it. For now, return empty (the glyph renders as
-          # nothing).
-          ""
+        # Composite glyph encoding per OpenType spec section 5.6.
+        # Emits a compound glyph record with one component entry per
+        # UFO component reference. Each component's base glyph name is
+        # resolved to a compiled GID via the name_to_gid map.
+        #
+        # Transform encoding:
+        #   - identity transform → no transform flags
+        #   - uniform scale (a=d, b=c=0) → WE_HAVE_A_SCALE (1 F2Dot14)
+        #   - non-uniform scale (b=c=0, a≠d) → WE_HAVE_AN_X_AND_Y_SCALE (2 F2Dot14)
+        #   - full 2×2 → WE_HAVE_A_TWO_BY_TWO (4 F2Dot14)
+        def self.encode_composite(glyph, name_to_gid)
+          header = [-1, 0, 0, 0, 0].pack("s>n4")
+
+          body = +""
+          components = glyph.components
+          components.each_with_index do |comp, idx|
+            gid = name_to_gid[comp.base_glyph]
+            next unless gid
+
+            flags = 0x0002 # ARGS_ARE_XY_VALUES (always for UFO)
+
+            dx = comp.transformation ? comp.transformation.e.to_i : 0
+            dy = comp.transformation ? comp.transformation.f.to_i : 0
+
+            flags |= 0x0001 if dx < -128 || dx > 127 || dy < -128 || dy > 127
+
+            t = comp.transformation
+            if t && !t.identity?
+              if t.b.zero? && t.c.zero? && (t.a - t.d).abs < 1e-6
+                flags |= 0x0008 # WE_HAVE_A_SCALE
+              elsif t.b.zero? && t.c.zero?
+                flags |= 0x0040 # WE_HAVE_AN_X_AND_Y_SCALE
+              else
+                flags |= 0x0080 # WE_HAVE_A_TWO_BY_TWO
+              end
+            end
+
+            flags |= 0x0020 if idx < components.size - 1 # MORE_COMPONENTS
+
+            body << [flags, gid].pack("n*")
+
+            if flags & 0x0001 != 0
+              body << [dx, dy].pack("s>s>")
+            else
+              body << [dx, dy].pack("cc")
+            end
+
+            if flags & 0x0008 != 0
+              body << [to_f2dot14(t.a)].pack("s>")
+            elsif flags & 0x0040 != 0
+              body << [to_f2dot14(t.a), to_f2dot14(t.d)].pack("s>s>")
+            elsif flags & 0x0080 != 0
+              body << [to_f2dot14(t.a), to_f2dot14(t.b),
+                       to_f2dot14(t.c), to_f2dot14(t.d)].pack("s>4")
+            end
+          end
+
+          header + body
+        end
+
+        # Encode a float as F2Dot14 (2 integer + 14 fractional bits).
+        def self.to_f2dot14(value)
+          (value * 16_384).round
         end
         private_class_method :encode_glyph, :encode_simple, :encode_points,
-                             :encode_composite
+                             :encode_composite, :to_f2dot14
       end
     end
   end
