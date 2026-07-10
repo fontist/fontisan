@@ -13,9 +13,8 @@ module Fontisan
         # omits the GPOS table entirely.
         #
         # Group-based kerning keys (e.g. +"@MMK_L_A @MMK_R_B"+) are
-        # emitted verbatim with +group: true+; the GPOS builder is
-        # responsible for resolving group references via the UFO's
-        # groups.plist data (TODO: groups.plist support is partial).
+        # resolved to individual glyph pairs by the GPOS builder via
+        # the UFO's groups.plist data (font.groups).
         class Kern < Base
           # GPOS lookup type 2 — PairPos (pair-positioning).
           LOOKUP_TYPE = 2

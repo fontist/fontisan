@@ -13,7 +13,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
 - [04 — UFO composite glyph encoding](04-ufo-composite-glyph-encoding.md)
-- [05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md) ← blocks TODO #15
+- [x] ~~[05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md)~~ ✓ Already working (discovered in PR #117 — Cff.build produces real Type 2 charstrings; stale TODO marker removed)
 
 ### P2 — Specialist feature parity
 - [x] ~~[07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)~~ ✓ Done (v0.4.25)
@@ -21,7 +21,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [06 — CFF2 blend/vsindex operators](06-cff2-blend-vsindex-operators.md)
 - [09 — Type 1 seac expansion](09-type1-seac-expansion.md)
 - [10 — UFO image set + feature writers](10-ufo-image-set-feature-writers.md)
-- [11 — kern groups.plist support](11-kern-groups-plist.md)
+- [x] ~~[11 — kern groups.plist support](11-kern-groups-plist.md)~~ ✓ Done (Groups model in PR #116 + GPOS group resolution in this PR)
 
 ### P3 — Code-quality cleanup
 - [x] ~~[13 — Split `OctokitFetcher` out of `fixture_downloader.rb`](13-split-octokit-fetcher.md)~~ ✓ Done (v0.4.24)
