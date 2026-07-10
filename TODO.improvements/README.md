@@ -23,8 +23,8 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [11 — kern groups.plist support](11-kern-groups-plist.md)
 
 ### P3 — Code-quality cleanup
+- [x] ~~[13 — Split `OctokitFetcher` out of `fixture_downloader.rb`](13-split-octokit-fetcher.md)~~ ✓ Done (commit `4c68f2a`)
 - [12 — `cbdt_fixture.rb` full BinData conversion](12-cbdt-fixture-bindata-conversion.md)
-- [13 — Split `OctokitFetcher` out of `fixture_downloader.rb`](13-split-octokit-fetcher.md)
 - [14 — Rubocop baseline chip (per-namespace)](14-rubocop-baseline-chip.md)
 
 ## Convention
