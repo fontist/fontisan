@@ -81,9 +81,9 @@ RSpec.describe "Audit usability enhancements" do
   end
 
   describe Fontisan::Audit::CheckRegistry do
-    it ".for(:default) includes all 20 checks" do
+    it ".for(:default) includes all 21 checks" do
       checks = described_class.for(:default)
-      expect(checks.size).to eq(20)
+      expect(checks.size).to eq(21)
     end
 
     it ".for(:per_table) includes all 10 per-table checks" do

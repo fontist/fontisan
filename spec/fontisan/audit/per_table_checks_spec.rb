@@ -110,14 +110,14 @@ RSpec.describe "Per-table OT conformance checks" do
   end
 
   describe Fontisan::Audit::CheckRegistry do
-    it ".for(:default) includes all 20 checks" do
+    it ".for(:default) includes all 21 checks" do
       checks = described_class.for(:default)
-      expect(checks.size).to eq(20)
+      expect(checks.size).to eq(21)
     end
 
     it ".for(:spec) includes conformance + per-table checks" do
       checks = described_class.for(:spec)
-      expect(checks.size).to eq(11)
+      expect(checks.size).to eq(12)
       expect(checks).to include(Fontisan::Audit::Checks::OpenTypeConformanceCheck)
       expect(checks).to include(Fontisan::Audit::Checks::HeadCheck)
       expect(checks).to include(Fontisan::Audit::Checks::HheaCheck)

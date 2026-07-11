@@ -802,7 +802,95 @@ module Fontisan
     end
 
     def serialize_audit(report)
-      options[:format] == "json" ? report.to_json : report.to_yaml
+      case options[:format]
+      when "json" then report.to_json
+      when "text", nil then format_audit_as_text(report)
+      else report.to_yaml
+      end
+    end
+
+    # Format an AuditReport as human-readable text for terminal use.
+    # Groups fields into sections: provenance, identity, style,
+    # coverage, layout, validation summary.
+    def format_audit_as_text(report)
+      lines = []
+      lines << "=== Font Audit Report ==="
+      lines.concat(format_audit_provenance(report))
+      lines.concat(format_audit_identity(report))
+      lines.concat(format_audit_style(report))
+      lines.concat(format_audit_coverage(report))
+      lines.concat(format_audit_layout(report))
+      lines.concat(format_audit_validation(report))
+      lines.join("\n")
+    end
+
+    def format_audit_provenance(report)
+      lines = []
+      lines << "  Source: #{report.source_file}"
+      lines << "  Format: #{report.source_format}"
+      lines << "  SHA256: #{report.source_sha256[0, 16]}..." if report.source_sha256
+      lines << "  Fontisan: #{report.fontisan_version}" if report.fontisan_version
+      lines << ""
+    end
+
+    def format_audit_identity(report)
+      lines = ["Identity:"]
+      lines << "  Family: #{report.family_name}"
+      lines << "  Subfamily: #{report.subfamily_name}"
+      lines << "  Full: #{report.full_name}"
+      lines << "  PostScript: #{report.postscript_name}"
+      lines << "  Version: #{report.version}"
+      lines << ""
+    end
+
+    def format_audit_style(report)
+      lines = ["Style:"]
+      lines << "  Weight: #{report.weight_class}"
+      lines << "  Width: #{report.width_class}"
+      lines << "  Italic: #{report.italic}"
+      lines << "  Bold: #{report.bold}"
+      lines << "  Variable: #{report.is_variable}"
+      report.axes&.each do |axis|
+        lines << "    #{axis.tag}: #{axis.min_value}–#{axis.max_value} " \
+                 "(default #{axis.default_value})"
+      end
+      lines << ""
+    end
+
+    def format_audit_coverage(report)
+      lines = ["Coverage:"]
+      lines << "  Glyphs: #{report.total_glyphs}"
+      lines << "  Codepoints: #{report.total_codepoints}"
+      lines << "  cmap subtables: #{report.cmap_subtables&.join(', ')}" if report.cmap_subtables&.any?
+      lines << ""
+    end
+
+    def format_audit_layout(report)
+      scripts = report.opentype_scripts
+      features = report.features
+      return [] unless scripts&.any? || features&.any?
+
+      lines = ["Layout:"]
+      lines << "  Scripts: #{scripts&.join(', ')}" if scripts&.any?
+      lines << "  Features: #{features&.join(', ')}" if features&.any?
+      lines << ""
+    end
+
+    def format_audit_validation(report)
+      summary = report.validation_summary
+      return [] unless summary
+
+      lines = ["Validation:"]
+      lines << "  Errors: #{summary.error_count}"
+      lines << "  Warnings: #{summary.warning_count}"
+      lines << "  Info: #{summary.info_count}"
+      result = summary.passed ? "PASSED" : "FAILED"
+      lines << "  Result: #{result}"
+      lines << ""
+      report.validation_issues&.each do |issue|
+        lines << "    [#{issue.severity.upcase}] #{issue.category}: #{issue.message}"
+      end
+      lines
     end
 
     def audit_face_filename(report)

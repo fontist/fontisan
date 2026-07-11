@@ -131,4 +131,11 @@ Naming/MethodParameterName:
 # to cross-reference.
 Naming/VariableNumber:
   AllowedIdentifiers: ["format0", "format4", "format6", "format12", "format14",
-                        "version1", "version2", "table1", "table2"]
+                        "version1", "version2", "table1", "table2",
+                        "os2", "type1", "scale_to_1000", "scale_10", "scale_01",
+                        "canonical_id_1", "canonical_id_2",
+                        "strike_offset_1", "strike_offset_2", "strike_offset_3",
+                        "plane_0", "to_signed_16", "strike1",
+                        "range_8", "range_16", "encoding_id_2",
+                        "subtable_1", "subtable_2", "b1", "c2",
+                        "x0", "y0", "x1", "y1", "x2", "y2", "x3", "y3"]

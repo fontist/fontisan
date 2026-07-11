@@ -26,7 +26,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P3 — Code-quality cleanup
 - [x] ~~[13 — Split `OctokitFetcher` out of `fixture_downloader.rb`](13-split-octokit-fetcher.md)~~ ✓ Done (v0.4.24)
 - [x] ~~[12 — `cbdt_fixture.rb` full BinData conversion](12-cbdt-fixture-bindata-conversion.md)~~ ✓ Done (critical tables converted; remaining os2/name/hmtx/cmap verified correct, BinData conversion is diminishing returns)
-- [x] ~~[14 — Rubocop baseline chip (per-namespace)](14-rubocop-baseline-chip.md)~~ ✓ Partially done — baseline reduced from 619 to 428 lines; all namespaces pass `rubocop` with 0 offenses; remaining baseline offenses are non-autocorrectable manual fixes (~7h total per TODO estimate)
+- [x] ~~[14 — Rubocop baseline chip (per-namespace)](14-rubocop-baseline-chip.md)~~ ✓ Partially done — all auto-correctable offenses fixed; all namespaces pass `rubocop` with 0 new offenses; Naming cops configured for font-domain conventions; remaining ~9800 baseline offenses are structural Metrics (MethodLength, AbcSize, LineLength) explicitly out of scope per TODO ("Refactoring architectural patterns — separate refactors"); estimated ~7h manual refactoring effort
 
 ## Convention
 
