@@ -2,12 +2,20 @@
 
 module Fontisan
   module Type1
+    # Error raised when a seac reference cannot be resolved (the referenced
+    # glyph is missing, or a cycle is detected in nested seac).
+    class SeacReferenceError < Fontisan::Error; end
+
     # Expands Type 1 seac composite glyphs into base + accent outlines
     #
     # [`SeacExpander`](lib/fontisan/type1/seac_expander.rb) handles the
     # decomposition of Type 1 composite glyphs that use the `seac` operator.
     # The seac operator combines two glyphs (a base character and an accent)
     # with a positioning offset, which must be decomposed for CFF conversion.
+    #
+    # Supports nested seac: if a base or accent glyph is itself a seac
+    # composite, it is recursively expanded. Cycles are detected and raise
+    # {SeacReferenceError}.
     #
     # The seac operator format is:
     # ```
@@ -28,6 +36,8 @@ module Fontisan
     #
     # @see https://www.adobe.com/devnet/font/pdfs/Type1.pdf
     class SeacExpander
+      MAX_DEPTH = 16
+
       # @return [CharStrings] Type 1 CharStrings dictionary
       attr_reader :charstrings
 
@@ -43,67 +53,15 @@ module Fontisan
         @private_dict = private_dict
       end
 
-      # Decompose a seac composite glyph into base + accent outlines
-      #
-      # This method:
-      # 1. Parses the seac operator to extract components
-      # 2. Gets CharStrings for base and accent glyphs
-      # 3. Parses both CharStrings into outline commands
-      # 4. Transforms the accent by (adx, ady) offset
-      # 5. Merges base and accent outlines into a single path
-      # 6. Returns the decomposed CharString data
+      # Decompose a seac composite glyph into base + accent outlines.
+      # Handles nested seac recursively.
       #
       # @param glyph_name [String] Name of the composite glyph to decompose
       # @return [String, nil] Decomposed CharString bytecode, or nil if not a seac composite
-      # @raise [Fontisan::Error] If base or accent glyphs are not found
-      #
-      # @example Decompose "Agrave" glyph
-      #   expander.decompose("Agrave")
+      # @raise [SeacReferenceError] If base or accent glyphs are not found,
+      #   or if a cycle is detected
       def decompose(glyph_name)
-        components = @charstrings.components_for(glyph_name)
-        return nil unless components
-
-        # Use the encoding map to lookup glyph names from character codes
-        base_glyph_name = @charstrings.encoding[components[:base]]
-        accent_glyph_name = @charstrings.encoding[components[:accent]]
-
-        if base_glyph_name.nil?
-          raise Fontisan::Error,
-                "Base glyph for char code #{components[:base]} not found"
-        end
-
-        if accent_glyph_name.nil?
-          raise Fontisan::Error,
-                "Accent glyph for char code #{components[:accent]} not found"
-        end
-
-        # Get CharStrings for base and accent
-        base_charstring = @charstrings[base_glyph_name]
-        accent_charstring = @charstrings[accent_glyph_name]
-
-        if base_charstring.nil?
-          raise Fontisan::Error,
-                "CharString not found for base glyph #{base_glyph_name}"
-        end
-
-        if accent_charstring.nil?
-          raise Fontisan::Error,
-                "CharString not found for accent glyph #{accent_glyph_name}"
-        end
-
-        # Parse both CharStrings into command sequences
-        base_commands = parse_charstring_to_commands(base_charstring)
-        accent_commands = parse_charstring_to_commands(accent_charstring)
-
-        # Transform accent by (adx, ady) offset
-        accent_commands = transform_commands(accent_commands, components[:adx],
-                                             components[:ady])
-
-        # Merge base and accent commands
-        merged_commands = merge_outline_commands(base_commands, accent_commands)
-
-        # Convert merged commands back to CharString bytecode
-        generate_charstring(merged_commands)
+        decompose_with_visited(glyph_name, Set.new)
       end
 
       # Check if a glyph is a seac composite
@@ -122,6 +80,59 @@ module Fontisan
       end
 
       private
+
+      # Recursive decomposition with cycle detection via +visited+ set.
+      def decompose_with_visited(glyph_name, visited)
+        return nil unless composite?(glyph_name)
+
+        if visited.include?(glyph_name)
+          raise SeacReferenceError,
+                "Cycle detected in seac references: #{visited.to_a.join(' → ')} → #{glyph_name}"
+        end
+
+        if visited.size >= MAX_DEPTH
+          raise SeacReferenceError,
+                "seac nesting depth exceeds #{MAX_DEPTH} at #{glyph_name}"
+        end
+
+        visited_next = visited.dup.add(glyph_name)
+        components = @charstrings.components_for(glyph_name)
+
+        base_name = resolve_char_code(components[:base], "base", glyph_name)
+        accent_name = resolve_char_code(components[:accent], "accent", glyph_name)
+
+        base_commands = resolve_glyph_commands(base_name, visited_next)
+        accent_commands = resolve_glyph_commands(accent_name, visited_next)
+        accent_commands = transform_commands(accent_commands, components[:adx],
+                                             components[:ady])
+        merged = merge_outline_commands(base_commands, accent_commands)
+        generate_charstring(merged)
+      end
+
+      # Resolve a char code to a glyph name via the font's encoding.
+      def resolve_char_code(char_code, role, parent)
+        name = @charstrings.encoding[char_code]
+        return name if name
+
+        raise SeacReferenceError,
+              "#{role} glyph for char code #{char_code} (in #{parent}) not found in encoding"
+      end
+
+      # Get outline commands for a glyph, recursively expanding nested seac.
+      def resolve_glyph_commands(glyph_name, visited)
+        charstring = @charstrings[glyph_name]
+        if charstring.nil?
+          raise SeacReferenceError,
+                "CharString not found for glyph #{glyph_name}"
+        end
+
+        if composite?(glyph_name)
+          nested = decompose_with_visited(glyph_name, visited)
+          parse_charstring_to_commands(nested)
+        else
+          parse_charstring_to_commands(charstring)
+        end
+      end
 
       # Parse Type 1 CharString into drawing commands
       #

@@ -42,6 +42,39 @@ module Fontisan
       def initialize(private_dict = nil)
         @private_dict = private_dict || PrivateDict.new
         @charstrings = {}
+        @encoding_override = nil
+      end
+
+      # Build a CharStrings from a pre-built glyph-name → charstring-bytecode
+      # hash. Useful for constructing test fixtures without parsing a full
+      # Type 1 font. Optionally accepts +encoding:+ to override the default
+      # Adobe Standard Encoding (char code → glyph name).
+      #
+      # @param charstrings_hash [Hash{String=>String}]
+      # @param encoding [Hash{Integer=>String}, nil]
+      # @param private_dict [PrivateDict, nil]
+      # @return [CharStrings]
+      def self.from_hash(charstrings_hash, encoding: nil, private_dict: nil)
+        cs = new(private_dict)
+        charstrings_hash.each { |name, data| cs.register(name, data) }
+        cs.set_encoding(encoding) if encoding
+        cs
+      end
+
+      # Register (or replace) a glyph's charstring data.
+      #
+      # @param glyph_name [String]
+      # @param charstring_data [String] binary charstring bytecode
+      def register(glyph_name, charstring_data)
+        @charstrings[glyph_name] = charstring_data
+      end
+
+      # Override the default Adobe Standard Encoding with a custom
+      # +char_code → glyph_name+ map.
+      #
+      # @param encoding [Hash{Integer=>String}]
+      def set_encoding(encoding)
+        @encoding_override = encoding
       end
 
       # Parse CharStrings dictionary from decrypted Type 1 font data
@@ -72,7 +105,7 @@ module Fontisan
       #
       # @return [Hash] Character code to glyph name mapping
       def encoding
-        @encoding ||= build_standard_encoding
+        @encoding_override || (@encoding ||= build_standard_encoding)
       end
 
       # Iterate over all charstrings
