@@ -332,7 +332,7 @@ module Fontisan
           transform = Ufo::Transformation.new(
             a: matrix[0], b: matrix[1],
             c: matrix[2], d: matrix[3],
-            e: matrix[4], f: matrix[5],
+            e: matrix[4], f: matrix[5]
           )
           num_contours = simple.end_pts_of_contours&.size || 0
           return if num_contours.zero?
