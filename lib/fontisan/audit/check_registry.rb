@@ -16,17 +16,24 @@ module Fontisan
     # @example Run a specific profile
     #   CheckRegistry.for(:ots)      # => [OtsCompatibilityCheck]
     class CheckRegistry
+      # Per-table OT conformance checks (axis 14 — full OT spec coverage).
+      OT_TABLE_CHECKS = %i[ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post
+                           ot_kern].freeze
+
       PROFILES = {
         default: %i[table_directory glyph_names cmap ots_compatibility
                     collection_integrity variable_font hinting woff2_validation
-                    format_round_trip opentype_conformance],
+                    format_round_trip opentype_conformance
+                    ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post ot_kern],
         structural: %i[table_directory collection_integrity opentype_conformance],
         ots: %i[ots_compatibility],
         layout: %i[glyph_names cmap],
         variable: %i[variable_font],
         hinting: %i[hinting],
         web: %i[ots_compatibility woff2_validation],
-        spec: %i[opentype_conformance],
+        spec: %i[opentype_conformance ot_head ot_hhea ot_maxp ot_os2
+                 ot_name ot_post ot_kern],
+        per_table: OT_TABLE_CHECKS,
       }.freeze
 
       # @param profile [Symbol]
@@ -50,6 +57,13 @@ module Fontisan
         when :woff2_validation then Checks::Woff2ValidationCheck
         when :format_round_trip then Checks::FormatRoundTripCheck
         when :opentype_conformance then Checks::OpenTypeConformanceCheck
+        when :ot_head then Checks::HeadCheck
+        when :ot_hhea then Checks::HheaCheck
+        when :ot_maxp then Checks::MaxpCheck
+        when :ot_os2 then Checks::Os2Check
+        when :ot_name then Checks::NameTableCheck
+        when :ot_post then Checks::PostCheck
+        when :ot_kern then Checks::KernCheck
         end
       end
     end

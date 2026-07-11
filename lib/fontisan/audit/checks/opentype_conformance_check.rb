@@ -3,44 +3,25 @@
 module Fontisan
   module Audit
     module Checks
-      # Foundational OpenType spec conformance checks. Covers the
-      # most commonly-violated "MUST" and "SHOULD" rules from the OT
-      # spec that other check domains don't already cover.
+      # Foundational cross-table OpenType spec conformance checks.
+      # Per-table rules live in their own check modules
+      # ({HeadCheck}, {HheaCheck}, {Os2Check}, {NameTableCheck},
+      # {PostCheck}, {KernCheck}) to keep each concern MECE.
       #
-      # This check is intentionally a growing foundation — new OT spec
-      # rules are added incrementally as real-world fonts surface them.
-      # Full OT conformance is a long-running effort that tracks the
-      # spec's evolution (axis 14 per TODO #03).
-      #
-      # Current checks:
+      # This check owns the rules that span multiple tables:
       #
       #   - Required tables for each sfnt flavor (TTF vs CFF vs variable)
-      #   - head.indexToLocFormat consistency with loca table size
-      #   - name table must have at least family (1), subfamily (2),
-      #     full (4), PostScript (6) name IDs
-      #   - OS/2 fsSelection must not use reserved bits
+      #   - head.indexToLocFormat consistency with loca table byte size
       #   - hhea.numberOfHMetrics must be ≤ maxp.numGlyphs
-      #   - post table version must be valid
-      #   - cmap must have at least one Unicode subtable (already
-      #     covered by CmapCheck — skipped here to avoid duplicate issues)
       #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/otff
       class OpenTypeConformanceCheck < Check
-        REQUIRED_NAME_IDS = {
-          1 => "Family",
-          2 => "Subfamily",
-          4 => "Full",
-          6 => "PostScript",
-        }.freeze
-
         # @param font [SfntFont]
         # @return [Array<Models::ValidationReport::Issue>]
         def self.call(font)
           issues = []
           issues.concat(validate_required_tables(font))
           issues.concat(validate_loca_format(font))
-          issues.concat(validate_name_coverage(font))
-          issues.concat(validate_os2_fsselection(font))
           issues.concat(validate_hhea_metrics(font))
           issues
         end
@@ -102,41 +83,6 @@ module Fontisan
                  location: "head.index_to_loc_format")]
         end
         private_class_method :validate_loca_format
-
-        # ---------- name table coverage ----------
-
-        def self.validate_name_coverage(font)
-          return [] unless font.has_table?("name")
-
-          name = font.table("name")
-          REQUIRED_NAME_IDS.each_with_object([]) do |(id, label), issues|
-            val = name.english_name(id).to_s
-            next unless val.empty?
-
-            issues << issue(severity: :error,
-                            message: "Required name ID #{id} (#{label}) is " \
-                                     "missing from the name table",
-                            location: "name.nameID.#{id}")
-          end
-        end
-        private_class_method :validate_name_coverage
-
-        # ---------- OS/2 fsSelection reserved bits ----------
-
-        def self.validate_os2_fsselection(font)
-          return [] unless font.has_table?("OS/2")
-
-          os2 = font.table("OS/2")
-          fs = os2.fs_selection.to_i
-          reserved_mask = 0xFC00 # bits 10-15 are reserved
-          return [] if (fs & reserved_mask).zero?
-
-          [issue(severity: :warning,
-                 message: "OS/2 fsSelection uses reserved bits " \
-                          "(value 0x#{fs.to_s(16)}, bits 10-15 must be 0)",
-                 location: "os2.fs_selection")]
-        end
-        private_class_method :validate_os2_fsselection
 
         # ---------- hhea.numberOfHMetrics ----------
 
