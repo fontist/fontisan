@@ -312,10 +312,10 @@ module Fontisan
             next unless component.respond_to?(:args_are_xy?) ? component.args_are_xy? : true
 
             raw = begin
-                    glyf.glyph_for(component.glyph_index, loca, head)
-                  rescue StandardError
-                    nil
-                  end
+              glyf.glyph_for(component.glyph_index, loca, head)
+            rescue StandardError
+              nil
+            end
             next unless raw
 
             matrix = component.transformation_matrix
