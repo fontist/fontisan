@@ -11,7 +11,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [x] ~~[15 — CFF/CFF2 subsetter strategy](15-cff-cff2-subsetter-strategy.md)~~ ✓ Done — CFF via UFO round-trip, CFF2 via standalone INDEX filter with VStore preservation
 
 ### P1 — High-value features
-- [x] ~~[03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)~~ ✓ Done (Phase 1: identity, style, coverage, layout, provenance; Phase 2 axes: table directory validation, glyph name validation, cmap validation, OTS compatibility predictor, collection integrity; Phase 3 axes: variable-font readiness, hinting audit, WOFF2 spec validation, format-round-trip report; CLI `fontisan audit --validate` with profiles: default, structural, ots, layout, variable, hinting, web)
+- [x] ~~[03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)~~ ✓ Done (Phase 1: identity, style, coverage, layout, provenance; Phase 2 axes: table directory, glyph names, cmap, OTS, collection integrity; Phase 3 axes: variable-font, hinting, WOFF2, format-round-trip, OpenType conformance foundation; CLI `fontisan audit --validate` with profiles: default, structural, ots, layout, variable, hinting, web, spec)
 - [x] ~~[04 — UFO composite glyph encoding](04-ufo-composite-glyph-encoding.md)~~ ✓ Done
 - [x] ~~[05 — OTF compiler real CFF charstrings](05-otf-compiler-real-cff.md)~~ ✓ Already working (discovered in PR #117 — Cff.build produces real Type 2 charstrings; stale TODO marker removed)
 

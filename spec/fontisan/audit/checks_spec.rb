@@ -87,11 +87,12 @@ RSpec.describe "Audit validation checks" do
       expect(checks).to eq([Fontisan::Audit::Checks::OtsCompatibilityCheck])
     end
 
-    it ".for(:structural) returns directory + collection checks" do
+    it ".for(:structural) returns directory + collection + conformance checks" do
       checks = described_class.for(:structural)
       expect(checks).to contain_exactly(
         Fontisan::Audit::Checks::TableDirectoryCheck,
         Fontisan::Audit::Checks::CollectionIntegrityCheck,
+        Fontisan::Audit::Checks::OpenTypeConformanceCheck,
       )
     end
 

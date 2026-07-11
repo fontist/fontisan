@@ -23,6 +23,8 @@ module Fontisan
                "fontisan/audit/checks/woff2_validation_check"
       autoload :FormatRoundTripCheck,
                "fontisan/audit/checks/format_round_trip_check"
+      autoload :OpenTypeConformanceCheck,
+               "fontisan/audit/checks/opentype_conformance_check"
     end
   end
 end
