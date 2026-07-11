@@ -25,6 +25,13 @@ module Fontisan
                "fontisan/audit/checks/format_round_trip_check"
       autoload :OpenTypeConformanceCheck,
                "fontisan/audit/checks/opentype_conformance_check"
+      autoload :HeadCheck, "fontisan/audit/checks/head_check"
+      autoload :HheaCheck, "fontisan/audit/checks/hhea_check"
+      autoload :MaxpCheck, "fontisan/audit/checks/maxp_check"
+      autoload :Os2Check, "fontisan/audit/checks/os2_check"
+      autoload :NameTableCheck, "fontisan/audit/checks/name_table_check"
+      autoload :PostCheck, "fontisan/audit/checks/post_check"
+      autoload :KernCheck, "fontisan/audit/checks/kern_check"
     end
   end
 end

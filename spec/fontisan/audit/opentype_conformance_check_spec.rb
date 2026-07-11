@@ -16,16 +16,22 @@ RSpec.describe Fontisan::Audit::Checks::OpenTypeConformanceCheck do
       end
     end
 
-    it "validates required name IDs (1, 2, 4, 6)" do
+    it "validates hhea.numberOfHMetrics ≤ numGlyphs" do
+      issues = described_class.call(font)
+      hhea_issues = issues.select { |i| i.location&.include?("number_of_h_metrics") }
+      expect(hhea_issues).to be_empty
+    end
+
+    it "does not produce name-table issues (owned by NameTableCheck)" do
       issues = described_class.call(font)
       name_issues = issues.select { |i| i.location&.include?("nameID") }
       expect(name_issues).to be_empty
     end
 
-    it "validates hhea.numberOfHMetrics ≤ numGlyphs" do
+    it "does not produce fsSelection issues (owned by Os2Check)" do
       issues = described_class.call(font)
-      hhea_issues = issues.select { |i| i.location&.include?("number_of_h_metrics") }
-      expect(hhea_issues).to be_empty
+      fs_issues = issues.select { |i| i.location&.include?("fs_selection") }
+      expect(fs_issues).to be_empty
     end
   end
 
@@ -41,9 +47,9 @@ RSpec.describe Fontisan::Audit::Checks::OpenTypeConformanceCheck do
       expect(checks).to include(described_class)
     end
 
-    it "is the sole check in the :spec profile" do
+    it "is included in the :spec profile" do
       checks = Fontisan::Audit::CheckRegistry.for(:spec)
-      expect(checks).to eq([described_class])
+      expect(checks).to include(described_class)
     end
 
     it "is included in the :structural profile" do
