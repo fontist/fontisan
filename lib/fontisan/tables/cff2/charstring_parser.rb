@@ -244,9 +244,9 @@ local_subrs = nil, vsindex = 0)
             vhcurveto
           when 14 # endchar
             endchar
-            return
+            break
           when 11 # return (end of subroutine)
-            return
+            break
           when 1, 3, 18, 23 # hstem, vstem, hstemhm, vstemhm
             hint_operator
           when 19, 20 # hintmask, cntrmask
