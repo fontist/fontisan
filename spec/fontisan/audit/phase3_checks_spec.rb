@@ -69,9 +69,9 @@ RSpec.describe "Audit Phase 3 validation checks" do
   end
 
   describe Fontisan::Audit::CheckRegistry do
-    it ".for(:default) includes all 17 checks" do
+    it ".for(:default) includes all 20 checks" do
       checks = described_class.for(:default)
-      expect(checks.size).to eq(17)
+      expect(checks.size).to eq(20)
       expect(checks).to include(Fontisan::Audit::Checks::VariableFontCheck)
       expect(checks).to include(Fontisan::Audit::Checks::HintingCheck)
       expect(checks).to include(Fontisan::Audit::Checks::Woff2ValidationCheck)

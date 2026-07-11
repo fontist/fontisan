@@ -40,15 +40,26 @@ module Fontisan
                         desc: "Audit only the given face of a collection"
     option :validate, type: :string, default: nil,
                       desc: "Run validation checks. Use 'true' for all, or a " \
-                            "profile name: default, structural, ots, layout"
+                            "profile name: default, structural, ots, layout, " \
+                            "variable, hinting, web, spec, per_table"
+    option :list_profiles, type: :boolean, default: false,
+                           desc: "List available validation profiles and exit"
+    option :fail_on_error, type: :boolean, default: true,
+                           desc: "Exit with code 1 if validation finds errors " \
+                                 "(only applies with --validate)"
     # Produce a structured font audit report (YAML or JSON).
-    def audit(font_file)
+    def audit(font_file = nil)
+      return list_audit_profiles if options[:list_profiles]
+
+      raise Thor::Error, "FONT_FILE is required" if font_file.nil?
+
       cmd_options = options.dup
       cmd_options[:include_codepoints] = !options[:no_codepoints]
       cmd_options[:validate] = parse_validate_option(options[:validate])
       command = Commands::AuditCommand.new(font_file, cmd_options)
       result = command.run
       write_audit_result(result, options[:output])
+      exit_on_validation_errors(result) if options[:validate] && options[:fail_on_error]
     rescue Errno::ENOENT
       warn "File not found: #{font_file}" unless options[:quiet]
       exit 1
@@ -808,6 +819,34 @@ module Fontisan
       return true if raw == "true"
 
       raw.to_sym
+    end
+
+    # Print available validation profiles with their check counts.
+    def list_audit_profiles
+      puts "Available validation profiles for --validate:"
+      puts ""
+      Audit::CheckRegistry::PROFILES.each do |name, codes|
+        puts "  #{name.to_s.ljust(15)} #{codes.size} checks"
+      end
+      puts ""
+      puts "Usage: fontisan audit font.ttf --validate <profile>"
+      puts "       fontisan audit font.ttf --validate true  (all checks)"
+    end
+
+    # Exit with code 1 if the audit found error-level issues.
+    # For collections, aggregates across all faces.
+    def exit_on_validation_errors(result)
+      issues = if result.is_a?(Array)
+                 result.flat_map(&:validation_issues)
+               else
+                 result.validation_issues || []
+               end
+      has_errors = issues.any? { |i| %w[error fatal].include?(i.severity) }
+      return unless has_errors
+
+      error_count = issues.count { |i| %w[error fatal].include?(i.severity) }
+      warn "Audit found #{error_count} error(s) — exiting with code 1"
+      exit 1
     end
 
     def serialize_report(report, format)
