@@ -17,6 +17,12 @@ module Fontisan
                "fontisan/audit/checks/ots_compatibility_check"
       autoload :CollectionIntegrityCheck,
                "fontisan/audit/checks/collection_integrity_check"
+      autoload :VariableFontCheck, "fontisan/audit/checks/variable_font_check"
+      autoload :HintingCheck, "fontisan/audit/checks/hinting_check"
+      autoload :Woff2ValidationCheck,
+               "fontisan/audit/checks/woff2_validation_check"
+      autoload :FormatRoundTripCheck,
+               "fontisan/audit/checks/format_round_trip_check"
     end
   end
 end

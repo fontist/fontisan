@@ -18,10 +18,14 @@ module Fontisan
     class CheckRegistry
       PROFILES = {
         default: %i[table_directory glyph_names cmap ots_compatibility
-                    collection_integrity],
+                    collection_integrity variable_font hinting woff2_validation
+                    format_round_trip],
         structural: %i[table_directory collection_integrity],
         ots: %i[ots_compatibility],
         layout: %i[glyph_names cmap],
+        variable: %i[variable_font],
+        hinting: %i[hinting],
+        web: %i[ots_compatibility woff2_validation],
       }.freeze
 
       # @param profile [Symbol]
@@ -40,6 +44,10 @@ module Fontisan
         when :cmap then Checks::CmapCheck
         when :ots_compatibility then Checks::OtsCompatibilityCheck
         when :collection_integrity then Checks::CollectionIntegrityCheck
+        when :variable_font then Checks::VariableFontCheck
+        when :hinting then Checks::HintingCheck
+        when :woff2_validation then Checks::Woff2ValidationCheck
+        when :format_round_trip then Checks::FormatRoundTripCheck
         end
       end
     end
