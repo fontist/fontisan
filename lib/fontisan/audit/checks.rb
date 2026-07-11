@@ -35,6 +35,8 @@ module Fontisan
       autoload :CffTableCheck, "fontisan/audit/checks/cff_table_check"
       autoload :GlyfTableCheck, "fontisan/audit/checks/glyf_table_check"
       autoload :LayoutTableCheck, "fontisan/audit/checks/layout_table_check"
+      autoload :NamingConsistencyCheck,
+               "fontisan/audit/checks/naming_consistency_check"
     end
   end
 end

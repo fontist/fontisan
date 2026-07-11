@@ -96,12 +96,13 @@ RSpec.describe "Audit validation checks" do
       )
     end
 
-    it ".for(:layout) returns glyph name + cmap + ot_layout checks" do
+    it ".for(:layout) returns glyph name + cmap + ot_layout + naming checks" do
       checks = described_class.for(:layout)
       expect(checks).to contain_exactly(
         Fontisan::Audit::Checks::GlyphNameCheck,
         Fontisan::Audit::Checks::CmapCheck,
         Fontisan::Audit::Checks::LayoutTableCheck,
+        Fontisan::Audit::Checks::NamingConsistencyCheck,
       )
     end
 

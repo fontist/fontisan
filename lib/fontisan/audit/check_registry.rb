@@ -23,17 +23,18 @@ module Fontisan
       PROFILES = {
         default: %i[table_directory glyph_names cmap ots_compatibility
                     collection_integrity variable_font hinting woff2_validation
-                    format_round_trip opentype_conformance
+                    format_round_trip opentype_conformance naming_consistency
                     ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post ot_kern
                     ot_cff ot_glyf ot_layout],
         structural: %i[table_directory collection_integrity opentype_conformance],
         ots: %i[ots_compatibility],
-        layout: %i[glyph_names cmap ot_layout],
+        layout: %i[glyph_names cmap ot_layout naming_consistency],
         variable: %i[variable_font],
         hinting: %i[hinting],
         web: %i[ots_compatibility woff2_validation],
         spec: %i[opentype_conformance ot_head ot_hhea ot_maxp ot_os2
-                 ot_name ot_post ot_kern ot_cff ot_glyf ot_layout],
+                 ot_name ot_post ot_kern ot_cff ot_glyf ot_layout
+                 naming_consistency],
         per_table: OT_TABLE_CHECKS,
       }.freeze
 
@@ -58,6 +59,7 @@ module Fontisan
         when :woff2_validation then Checks::Woff2ValidationCheck
         when :format_round_trip then Checks::FormatRoundTripCheck
         when :opentype_conformance then Checks::OpenTypeConformanceCheck
+        when :naming_consistency then Checks::NamingConsistencyCheck
         when :ot_head then Checks::HeadCheck
         when :ot_hhea then Checks::HheaCheck
         when :ot_maxp then Checks::MaxpCheck
