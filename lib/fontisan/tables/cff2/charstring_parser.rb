@@ -244,6 +244,9 @@ local_subrs = nil, vsindex = 0)
             vhcurveto
           when 14 # endchar
             endchar
+            return
+          when 11 # return (end of subroutine)
+            return
           when 1, 3, 18, 23 # hstem, vstem, hstemhm, vstemhm
             hint_operator
           when 19, 20 # hintmask, cntrmask
@@ -577,17 +580,43 @@ local_subrs = nil, vsindex = 0)
         def callsubr
           return if @local_subrs.nil? || @stack.empty?
 
-          @stack.pop
-          # Implement subroutine call (placeholder)
-          @stack.clear
+          subr_num = @stack.pop.to_i
+          bias = calc_subr_bias(@local_subrs.count)
+          subr_data = @local_subrs[subr_num + bias]
+          return unless subr_data
+
+          execute_subroutine(subr_data)
         end
 
         def callgsubr
           return if @global_subrs.nil? || @stack.empty?
 
-          @stack.pop
-          # Implement global subroutine call (placeholder)
-          @stack.clear
+          subr_num = @stack.pop.to_i
+          bias = calc_subr_bias(@global_subrs.count)
+          subr_data = @global_subrs[subr_num + bias]
+          return unless subr_data
+
+          execute_subroutine(subr_data)
+        end
+
+        # CFF/CFF2 subroutine bias per spec: depends on INDEX count.
+        def calc_subr_bias(count)
+          return 107 if count < 1240
+          return 1131 if count < 33800
+
+          32768
+        end
+
+        # Parse a subroutine's bytecode, then restore the parent IO.
+        # The subroutine may contain further subroutine calls (recursion)
+        # and ends with either `return` (operator 11) or data exhaustion.
+        def execute_subroutine(subr_data)
+          saved_io = @io
+          @io = StringIO.new(subr_data)
+          @io.set_encoding(Encoding::BINARY)
+          parse_charstring_program
+        ensure
+          @io = saved_io
         end
       end
     end

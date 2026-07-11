@@ -23,6 +23,8 @@ module Fontisan
         # @return [String] the path
         def compile(output_path:)
           tables = build_tables
+          bitmap = build_bitmap_tables(glyphs_with_notdef)
+          tables.merge!(bitmap) if bitmap
           write(tables, output_path)
           output_path
         end
@@ -60,6 +62,53 @@ module Fontisan
           tables["GPOS"] = gpos if gpos
 
           tables.merge(build_outline_tables)
+        end
+
+        # Build CBDT/CBLC bitmap tables when the UFO source has image
+        # glyphs (UFO 3 image data). Returns nil if no images present.
+        # @param glyphs [Array<Ufo::Glyph>] in GID order
+        # @return [Hash<String,String>, nil] {"CBDT" => ..., "CBLC" => ...}
+        def build_bitmap_tables(glyphs)
+          return nil if font.images.nil? || font.images.empty?
+
+          image_entries = glyphs.each_with_object([]) do |glyph, entries|
+            next unless glyph.images&.any?
+
+            gid = glyphs.index(glyph)
+            glyph.images.each do |img|
+              image = font.images.find(img.file_name)
+              next unless image&.bytes
+
+              entries << { gid: gid, image: image }
+            end
+          end
+          return nil if image_entries.empty?
+
+          strikes = build_bitmap_strikes(image_entries)
+          result = CbdtCblc.build(strikes: strikes)
+          return nil unless result
+
+          result
+        end
+
+        # Build strike data for CBDT/CBLC from image entries.
+        # All images go into a single strike at a default ppem.
+        def build_bitmap_strikes(image_entries)
+          glyphs_data = image_entries.map do |entry|
+            image = entry[:image]
+            {
+              gid: entry[:gid],
+              origin_x: 0,
+              origin_y: 0,
+              data: image.bytes,
+            }
+          end
+
+          [{
+            ppem: 128,
+            resolution: 72,
+            glyphs: glyphs_data,
+          }]
         end
 
         # OpenType requires GID 0 to be `.notdef`. Normalize the source

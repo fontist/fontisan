@@ -55,6 +55,7 @@ module Fontisan
       autoload :Dict, "fontisan/tables/cff/dict"
       autoload :DictBuilder, "fontisan/tables/cff/dict_builder"
       autoload :Encoding, "fontisan/tables/cff/encoding"
+      autoload :ExpertCharsets, "fontisan/tables/cff/expert_charsets"
       autoload :Header, "fontisan/tables/cff/header"
       autoload :HintOperationInjector,
                "fontisan/tables/cff/hint_operation_injector"
@@ -104,13 +105,12 @@ module Fontisan
         cff
       end
 
-      # Parse the CFF table structure
+      # Parse the CFF table structure.
       #
-      # This parses the foundational CFF structures: Header, Name INDEX,
-      # Top DICT INDEX, String INDEX, and Global Subr INDEX.
-      #
-      # Additional structures (CharStrings, Charset, Encoding, Private DICT)
-      # will be implemented in follow-up tasks.
+      # Parses: Header, Name INDEX, Top DICT INDEX, String INDEX,
+      # Global Subr INDEX. Deferred structures (CharStrings, Charset,
+      # Encoding, Private DICT) are parsed on demand via their
+      # accessor methods.
       #
       # @param data [String] Binary data for the CFF table
       # @raise [CorruptedTableError] If CFF structure is invalid

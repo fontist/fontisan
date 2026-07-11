@@ -40,7 +40,10 @@ module Fontisan
         end
 
         def compile(output_path:)
-          write(build_tables, output_path)
+          tables = build_tables
+          bitmap = build_bitmap_tables(glyphs_with_notdef)
+          tables.merge!(bitmap) if bitmap
+          write(tables, output_path)
           output_path
         end
 
