@@ -38,10 +38,14 @@ module Fontisan
                            desc: "Omit the codepoint list from the report"
     option :font_index, type: :numeric, default: nil,
                         desc: "Audit only the given face of a collection"
+    option :validate, type: :string, default: nil,
+                      desc: "Run validation checks. Use 'true' for all, or a " \
+                            "profile name: default, structural, ots, layout"
     # Produce a structured font audit report (YAML or JSON).
     def audit(font_file)
       cmd_options = options.dup
       cmd_options[:include_codepoints] = !options[:no_codepoints]
+      cmd_options[:validate] = parse_validate_option(options[:validate])
       command = Commands::AuditCommand.new(font_file, cmd_options)
       result = command.run
       write_audit_result(result, options[:output])
@@ -795,6 +799,15 @@ module Fontisan
       suffix = options[:format] == "json" ? "json" : "yaml"
       idx = report.font_index || 0
       format("%<idx>02d-%<name>s.%<suffix>s", idx: idx, name: safe_name, suffix: suffix)
+    end
+
+    # The --validate option is either nil (no validation), "true" (run all
+    # checks), or a profile name (e.g. "ots", "structural").
+    def parse_validate_option(raw)
+      return nil if raw.nil? || raw.empty?
+      return true if raw == "true"
+
+      raw.to_sym
     end
 
     def serialize_report(report, format)
