@@ -335,7 +335,7 @@ module Fontisan
           short_delta_count = read_u16(io)
           region_index_count = read_u16(io)
           long_count = region_index_count - short_delta_count
-          delta_set_size = (short_delta_count * 2) + (long_count * 1)
+          delta_set_size = (short_delta_count * 2) + long_count
           abs_off + 6 + (region_index_count * 2) + (item_count * delta_set_size)
         end
 
