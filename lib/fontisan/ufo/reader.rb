@@ -35,6 +35,7 @@ module Fontisan
         read_groups
         read_features
         read_lib
+        read_images
         @font
       end
 
@@ -145,6 +146,13 @@ module Fontisan
 
         data = Plist.parse(File.read(path))
         @font.lib = Lib.new(data)
+      end
+
+      def read_images
+        dir = join(@font.path, "images")
+        return unless File.directory?(dir)
+
+        @font.images = ImageSet.load_from_dir(dir)
       end
 
       def join(*parts)
