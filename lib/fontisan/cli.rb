@@ -31,6 +31,25 @@ module Fontisan
     desc "stitch", "Stitch glyphs from multiple source fonts into one output"
     subcommand "stitch", StitcherCli
 
+    desc "audit FONT_FILE", "Produce a structured audit report (identity, style, coverage, layout)"
+    option :output, type: :string,
+                    desc: "Output file path. For collections, use a directory path."
+    option :no_codepoints, type: :boolean, default: false,
+                           desc: "Omit the codepoint list from the report"
+    option :font_index, type: :numeric, default: nil,
+                        desc: "Audit only the given face of a collection"
+    # Produce a structured font audit report (YAML or JSON).
+    def audit(font_file)
+      cmd_options = options.dup
+      cmd_options[:include_codepoints] = !options[:no_codepoints]
+      command = Commands::AuditCommand.new(font_file, cmd_options)
+      result = command.run
+      write_audit_result(result, options[:output])
+    rescue Errno::ENOENT
+      warn "File not found: #{font_file}" unless options[:quiet]
+      exit 1
+    end
+
     desc "info PATH", "Display font information"
     option :brief, type: :boolean, default: false,
                    desc: "Brief mode - only essential info (5x faster, uses metadata loading)",
@@ -730,6 +749,52 @@ module Fontisan
                end
 
       puts output unless options[:quiet]
+    end
+
+    # Write the audit result to stdout or a file. For a single report,
+    # the output path (if given) is the file path. For a collection,
+    # the output path is a directory; each face is written as
+    # `{font_index:02d}-{postscript_name}.yaml`.
+    def write_audit_result(result, output_path)
+      if result.is_a?(Array)
+        write_audit_collection(result, output_path)
+      else
+        write_audit_single(result, output_path)
+      end
+    end
+
+    def write_audit_single(report, output_path)
+      content = serialize_audit(report)
+      if output_path
+        FileUtils.mkpath(File.dirname(output_path)) unless File.dirname(output_path) == "."
+        File.write(output_path, content)
+      else
+        puts content unless options[:quiet]
+      end
+    end
+
+    def write_audit_collection(reports, output_path)
+      if output_path
+        FileUtils.mkpath(output_path)
+        reports.each do |report|
+          name = audit_face_filename(report)
+          File.write(File.join(output_path, name), serialize_audit(report))
+        end
+        say("Wrote #{reports.size} reports to #{output_path}") unless options[:quiet]
+      else
+        puts serialize_audit(reports) unless options[:quiet]
+      end
+    end
+
+    def serialize_audit(report)
+      options[:format] == "json" ? report.to_json : report.to_yaml
+    end
+
+    def audit_face_filename(report)
+      safe_name = report.postscript_name&.gsub(%r{[^A-Za-z0-9._-]}, "_") || "font"
+      suffix = options[:format] == "json" ? "json" : "yaml"
+      idx = report.font_index || 0
+      format("%<idx>02d-%<name>s.%<suffix>s", idx: idx, name: safe_name, suffix: suffix)
     end
 
     def serialize_report(report, format)
