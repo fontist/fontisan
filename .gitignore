@@ -43,6 +43,7 @@ REQ-*.md
 /spec/fixtures/fonts/SourceSans3/
 /spec/fixtures/fonts/TwemojiMozilla/
 /spec/fixtures/fonts/TwitterColorEmoji/
+/spec/fixtures/fonts/long_loca/
 /spec/fixtures/fonts/tamsyn/
 /spec/fixtures/fonts/type1/urw/urw-base35-fonts/
 /spec/fixtures/fonts/unifontex/
@@ -50,3 +51,6 @@ REQ-*.md
 CLAUDE.md
 
 .rubocop-remote*
+
+# Transient browser-based font verification scripts
+/scripts/test-*.mjs
