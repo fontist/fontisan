@@ -5,6 +5,7 @@
 module Fontisan
   module Commands
     autoload :BaseCommand, "fontisan/commands/base_command"
+    autoload :AuditCommand, "fontisan/commands/audit_command"
     autoload :ConvertCommand, "fontisan/commands/convert_command"
     autoload :DumpTableCommand, "fontisan/commands/dump_table_command"
     autoload :ExportCommand, "fontisan/commands/export_command"

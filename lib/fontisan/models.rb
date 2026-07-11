@@ -6,6 +6,8 @@ module Fontisan
   module Models
     autoload :AllScriptsFeaturesInfo,
              "fontisan/models/all_scripts_features_info"
+    autoload :AuditAxis, "fontisan/models/audit_report"
+    autoload :AuditReport, "fontisan/models/audit_report"
     autoload :AxisInfo, "fontisan/models/variable_font_info"
     autoload :BitmapGlyph, "fontisan/models/bitmap_glyph"
     autoload :BitmapStrike, "fontisan/models/bitmap_strike"
