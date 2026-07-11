@@ -213,28 +213,23 @@ module Fontisan
           end
         end
 
-        # Load Expert charset
-        #
-        # This is a special charset for expert fonts with additional glyphs
+        # Load Expert charset (predefined charset format 1).
+        # Uses the fixed glyph-name list from Adobe TN 5176 Section 19.
         def load_expert_charset
-          # Expert charset contains specific SIDs for expert glyphs
-          # This is a placeholder - a full implementation would include the
-          # complete expert charset SID list from the CFF specification
-          (@num_glyphs - 1).times do |i|
-            @glyph_names << sid_to_glyph_name(i + 1)
-          end
+          names = ExpertCharsets::EXPERT
+          available = [@num_glyphs, names.size].min
+          @glyph_names.concat(names[1, available - 1])
+          # Fill any remaining glyphs beyond the predefined list with fallback names
+          (@num_glyphs - available).times { |i| @glyph_names << "gid#{available + i}" }
         end
 
-        # Load Expert Subset charset
-        #
-        # This is a subset of the Expert charset
+        # Load ExpertSubset charset (predefined charset format 2).
+        # Uses the fixed glyph-name list from Adobe TN 5176 Section 19.
         def load_expert_subset_charset
-          # Expert Subset contains a subset of expert glyphs
-          # This is a placeholder - a full implementation would include the
-          # complete expert subset charset SID list from the CFF specification
-          (@num_glyphs - 1).times do |i|
-            @glyph_names << sid_to_glyph_name(i + 1)
-          end
+          names = ExpertCharsets::EXPERT_SUBSET
+          available = [@num_glyphs, names.size].min
+          @glyph_names.concat(names[1, available - 1])
+          (@num_glyphs - available).times { |i| @glyph_names << "gid#{available + i}" }
         end
 
         # Convert SID to glyph name
