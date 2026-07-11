@@ -116,7 +116,19 @@ Style/BitwisePredicate:
   Enabled: false
 
 # Allow short math-conventional parameter names in font geometry code.
-# Point#x / Point#y are domain-standard coordinate names; renaming to
-# x_coord/y_coord adds noise without aiding readers.
+# Font geometry / binary parsing uses single-letter variables by domain
+# convention: affine matrix (a,b,c,d,e,f), loop indices (i,j,k,m,n),
+# coordinates (x,y,z), deltas (dx,dy). Renaming to 3+ chars adds noise
+# without aiding readers familiar with the math.
 Naming/MethodParameterName:
-  AllowedNames: ["x", "y", "cp", "gid", "n"]
+  AllowedNames: ["a", "b", "c", "d", "e", "f", "i", "j", "k", "m", "n",
+                 "p", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+                 "cp", "gid", "dx", "dy", "fd", "io", "id"]
+
+# Allow spec-format identifiers that match OpenType spec terminology:
+# cmap format4, format6, format12, format14 are the official names.
+# Renaming to format_4 diverges from the spec and makes docs harder
+# to cross-reference.
+Naming/VariableNumber:
+  AllowedIdentifiers: ["format0", "format4", "format6", "format12", "format14",
+                        "version1", "version2", "table1", "table2"]
