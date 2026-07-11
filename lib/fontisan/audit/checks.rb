@@ -32,6 +32,9 @@ module Fontisan
       autoload :NameTableCheck, "fontisan/audit/checks/name_table_check"
       autoload :PostCheck, "fontisan/audit/checks/post_check"
       autoload :KernCheck, "fontisan/audit/checks/kern_check"
+      autoload :CffTableCheck, "fontisan/audit/checks/cff_table_check"
+      autoload :GlyfTableCheck, "fontisan/audit/checks/glyf_table_check"
+      autoload :LayoutTableCheck, "fontisan/audit/checks/layout_table_check"
     end
   end
 end

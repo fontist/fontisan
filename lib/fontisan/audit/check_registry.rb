@@ -18,21 +18,22 @@ module Fontisan
     class CheckRegistry
       # Per-table OT conformance checks (axis 14 — full OT spec coverage).
       OT_TABLE_CHECKS = %i[ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post
-                           ot_kern].freeze
+                           ot_kern ot_cff ot_glyf ot_layout].freeze
 
       PROFILES = {
         default: %i[table_directory glyph_names cmap ots_compatibility
                     collection_integrity variable_font hinting woff2_validation
                     format_round_trip opentype_conformance
-                    ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post ot_kern],
+                    ot_head ot_hhea ot_maxp ot_os2 ot_name ot_post ot_kern
+                    ot_cff ot_glyf ot_layout],
         structural: %i[table_directory collection_integrity opentype_conformance],
         ots: %i[ots_compatibility],
-        layout: %i[glyph_names cmap],
+        layout: %i[glyph_names cmap ot_layout],
         variable: %i[variable_font],
         hinting: %i[hinting],
         web: %i[ots_compatibility woff2_validation],
         spec: %i[opentype_conformance ot_head ot_hhea ot_maxp ot_os2
-                 ot_name ot_post ot_kern],
+                 ot_name ot_post ot_kern ot_cff ot_glyf ot_layout],
         per_table: OT_TABLE_CHECKS,
       }.freeze
 
@@ -64,6 +65,9 @@ module Fontisan
         when :ot_name then Checks::NameTableCheck
         when :ot_post then Checks::PostCheck
         when :ot_kern then Checks::KernCheck
+        when :ot_cff then Checks::CffTableCheck
+        when :ot_glyf then Checks::GlyfTableCheck
+        when :ot_layout then Checks::LayoutTableCheck
         end
       end
     end

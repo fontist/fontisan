@@ -257,7 +257,9 @@ module Fontisan
       # ------------------------------------------------------------------
 
       def populate_validation(report, face)
-        report.validation_issues = run_validation_checks(face)
+        issues = run_validation_checks(face)
+        report.validation_issues = issues
+        report.validation_summary = Models::AuditSummary.from_issues(issues)
       end
 
       def run_validation_checks(face)

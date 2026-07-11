@@ -4,6 +4,51 @@ require "lutaml/model"
 
 module Fontisan
   module Models
+    # Summary of validation issues by severity. Used by CI pipelines
+    # to decide pass/fail and by humans to gauge font health at a
+    # glance.
+    class AuditSummary < Lutaml::Model::Serializable
+      attribute :error_count, :integer, default: 0
+      attribute :warning_count, :integer, default: 0
+      attribute :info_count, :integer, default: 0
+      attribute :fatal_count, :integer, default: 0
+      attribute :total, :integer, default: 0
+      attribute :passed, Lutaml::Model::Type::Boolean, default: true
+
+      json do
+        map "error_count", to: :error_count
+        map "warning_count", to: :warning_count
+        map "info_count", to: :info_count
+        map "fatal_count", to: :fatal_count
+        map "total", to: :total
+        map "passed", to: :passed
+      end
+
+      yaml do
+        map "error_count", to: :error_count
+        map "warning_count", to: :warning_count
+        map "info_count", to: :info_count
+        map "fatal_count", to: :fatal_count
+        map "total", to: :total
+        map "passed", to: :passed
+      end
+
+      # Build a summary from an array of ValidationReport::Issue records.
+      # @param issues [Array<ValidationReport::Issue>]
+      # @return [AuditSummary]
+      def self.from_issues(issues)
+        counts = issues.group_by(&:severity).transform_values(&:size)
+        new(
+          error_count: counts["error"].to_i,
+          warning_count: counts["warning"].to_i,
+          info_count: counts["info"].to_i,
+          fatal_count: counts["fatal"].to_i,
+          total: issues.size,
+          passed: counts["error"].to_i.zero? && counts["fatal"].to_i.zero?,
+        )
+      end
+    end
+
     # Variable-font axis descriptor for the audit report.
     class AuditAxis < Lutaml::Model::Serializable
       attribute :tag, :string
@@ -75,6 +120,7 @@ module Fontisan
 
       # Validation (populated only with --validate)
       attribute :validation_issues, Models::ValidationReport::Issue, collection: true
+      attribute :validation_summary, AuditSummary
 
       json do
         map "generated_at", to: :generated_at
@@ -108,6 +154,7 @@ module Fontisan
         map "opentype_scripts", to: :opentype_scripts
         map "features", to: :features
         map "validation_issues", to: :validation_issues
+        map "validation_summary", to: :validation_summary
       end
 
       yaml do
@@ -142,6 +189,7 @@ module Fontisan
         map "opentype_scripts", to: :opentype_scripts
         map "features", to: :features
         map "validation_issues", to: :validation_issues
+        map "validation_summary", to: :validation_summary
       end
     end
   end
