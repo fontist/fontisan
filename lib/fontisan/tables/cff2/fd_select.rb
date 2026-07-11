@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 module Fontisan
   module Tables
     class Cff2
@@ -17,10 +19,81 @@ module Fontisan
       #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/cff2
       class FdSelect
+        # Read an FDSelect subtable and return the flat FD-index array
+        # (one entry per glyph).
+        #
+        # @param raw_data [String] full CFF2 table bytes
+        # @param offset [Integer] byte offset of the FDSelect
+        # @param num_glyphs [Integer] glyph count (from maxp)
+        # @return [Array<Integer>] FD index per glyph
+        def self.read(raw_data, offset, num_glyphs)
+          io = StringIO.new(raw_data)
+          io.seek(offset)
+          format = io.read(1).unpack1("C")
+
+          case format
+          when 0 then read_format0(io, num_glyphs)
+          when 3 then read_format3(io, num_glyphs)
+          when 4 then read_format4(io, num_glyphs)
+          else
+            raise CorruptedTableError, "unsupported FDSelect format: #{format}"
+          end
+        end
+
+        # Format 0: uint8 fd_index[numGlyphs]
+        def self.read_format0(io, num_glyphs)
+          io.read(num_glyphs).unpack("C*")
+        end
+        private_class_method :read_format0
+
+        # Format 3: uint16 numRanges, Range3[], uint16 sentinel
+        def self.read_format3(io, num_glyphs)
+          num_ranges = io.read(2).unpack1("n")
+          assignments = Array.new(num_glyphs, 0)
+          ranges = Array.new(num_ranges) do
+            first = io.read(2).unpack1("n")
+            fd = io.read(1).unpack1("C")
+            [first, fd]
+          end
+          sentinel = io.read(2).unpack1("n")
+
+          ranges.each_cons(2) do |(first, fd), (next_first, _)|
+            assignments.fill(fd, first, next_first - first)
+          end
+          if ranges.any?
+            last_first, last_fd = ranges.last
+            assignments.fill(last_fd, last_first, sentinel - last_first)
+          end
+          assignments
+        end
+        private_class_method :read_format3
+
+        # Format 4: uint32 numRanges, Range4[], uint32 sentinel
+        def self.read_format4(io, num_glyphs)
+          num_ranges = io.read(4).unpack1("N")
+          assignments = Array.new(num_glyphs, 0)
+          ranges = Array.new(num_ranges) do
+            first = io.read(4).unpack1("N")
+            fd = io.read(2).unpack1("n")
+            [first, fd]
+          end
+          sentinel = io.read(4).unpack1("N")
+
+          ranges.each_cons(2) do |(first, fd), (next_first, _)|
+            assignments.fill(fd, first, next_first - first)
+          end
+          if ranges.any?
+            last_first, last_fd = ranges.last
+            assignments.fill(last_fd, last_first, sentinel - last_first)
+          end
+          assignments
+        end
+        private_class_method :read_format4
+
         # @param assignments [Array<Integer>] FD index per glyph (length = numGlyphs)
         # @return [String] FDSelect bytes in the most compact format
         def self.build(assignments)
-          return 0.to_s if assignments.empty?
+          return [0].pack("C").to_s + "".b if assignments.empty?
 
           format0_bytes(assignments)
         end

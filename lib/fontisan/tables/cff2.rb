@@ -26,6 +26,7 @@ module Fontisan
       autoload :CharstringParser, "fontisan/tables/cff2/charstring_parser"
       autoload :FdSelect, "fontisan/tables/cff2/fd_select"
       autoload :Header, "fontisan/tables/cff2/header"
+      autoload :Index, "fontisan/tables/cff2/index"
       autoload :IndexBuilder, "fontisan/tables/cff2/index_builder"
       autoload :DictEncoder, "fontisan/tables/cff2/dict_encoder"
       autoload :OperandStack, "fontisan/tables/cff2/operand_stack"

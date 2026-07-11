@@ -17,6 +17,7 @@ module Fontisan
       autoload :Cblc, "fontisan/subset/table_strategy/cblc"
       autoload :Cbdt, "fontisan/subset/table_strategy/cbdt"
       autoload :Cff, "fontisan/subset/table_strategy/cff"
+      autoload :Cff2, "fontisan/subset/table_strategy/cff2"
       autoload :Cmap, "fontisan/subset/table_strategy/cmap"
       autoload :ColorBitmapPlacement,
                "fontisan/subset/table_strategy/color_bitmap_placement"
@@ -57,6 +58,7 @@ module Fontisan
         "head" => :Head,
         "OS/2" => :Os2,
         "CFF " => :Cff,
+        "CFF2" => :Cff2,
         "CBDT" => :Cbdt,
         "CBLC" => :Cblc,
       }.freeze
