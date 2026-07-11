@@ -75,6 +75,7 @@ module Fontisan
           populate_style(r, face)
           populate_coverage(r, face)
           populate_layout(r, face)
+          populate_validation(r, face) if validate?
         end
       end
 
@@ -246,11 +247,44 @@ module Fontisan
       end
 
       def features_for_script(layout_table, script)
-        
           layout_table.features(script_tag: script)
       rescue StandardError
           []
-        
+      end
+
+      # ------------------------------------------------------------------
+      # Validation (audit checks)
+      # ------------------------------------------------------------------
+
+      def populate_validation(report, face)
+        report.validation_issues = run_validation_checks(face)
+      end
+
+      def run_validation_checks(face)
+        checks = Audit::CheckRegistry.for(validation_profile)
+        checks.flat_map { |check| safe_run_check(check, face) }
+      end
+
+      def safe_run_check(check, face)
+        check.call(face)
+      rescue StandardError => e
+        [Models::ValidationReport::Issue.new(
+          severity: "fatal",
+          category: check.code.to_s,
+          message: "Check #{check.code} failed to execute: #{e.class}: #{e.message}",
+          location: nil,
+        )]
+      end
+
+      def validate?
+        @options.fetch(:validate, false)
+      end
+
+      def validation_profile
+        profile = @options[:validate]
+        return :default if profile == true
+
+        profile&.to_sym || :default
       end
     end
   end

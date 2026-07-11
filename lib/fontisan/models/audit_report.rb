@@ -73,6 +73,9 @@ module Fontisan
       attribute :opentype_scripts, :string, collection: true
       attribute :features, :string, collection: true
 
+      # Validation (populated only with --validate)
+      attribute :validation_issues, Models::ValidationReport::Issue, collection: true
+
       json do
         map "generated_at", to: :generated_at
         map "fontisan_version", to: :fontisan_version
@@ -104,6 +107,7 @@ module Fontisan
 
         map "opentype_scripts", to: :opentype_scripts
         map "features", to: :features
+        map "validation_issues", to: :validation_issues
       end
 
       yaml do
@@ -137,6 +141,7 @@ module Fontisan
 
         map "opentype_scripts", to: :opentype_scripts
         map "features", to: :features
+        map "validation_issues", to: :validation_issues
       end
     end
   end

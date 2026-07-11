@@ -77,6 +77,7 @@ module Fontisan
 
   # Namespace hubs (each hub declares its own child autoloads)
   autoload :Binary, "fontisan/binary"
+  autoload :Audit, "fontisan/audit"
   autoload :Collection, "fontisan/collection"
   autoload :Commands, "fontisan/commands"
   autoload :Converters, "fontisan/converters"
