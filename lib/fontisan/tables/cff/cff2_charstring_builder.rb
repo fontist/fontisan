@@ -73,8 +73,11 @@ width: nil)
           @num_regions = num_regions
           @has_blend = false
 
-          outline.commands.each_with_index do |cmd, i|
-            master_cmds = master_outlines.map { |mo| mo.commands[i] }
+          commands = outline.to_cff_commands
+          master_commands = master_outlines.map(&:to_cff_commands)
+
+          commands.each_with_index do |cmd, i|
+            master_cmds = master_commands.map { |mc| mc[i] }
             encode_variable_command(cmd, master_cmds)
           end
 

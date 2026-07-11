@@ -57,6 +57,64 @@ RSpec.describe "CFF2 table builder and Otf2Compiler" do
     end
   end
 
+  describe "variable CFF2 build (TODO #06)" do
+    let(:master_font) do
+      f = Fontisan::Ufo::Font.new
+      f.info.family_name = "Test"
+      f.info.units_per_em = 1000
+      f.glyphs[".notdef"] = Fontisan::Ufo::Glyph.new(name: ".notdef")
+
+      a = Fontisan::Ufo::Glyph.new(name: "A")
+      a.add_unicode(0x41)
+      a.width = 600
+      a.add_contour(Fontisan::Ufo::Contour.new([
+                                                 Fontisan::Ufo::Point.new(x: 120, y: 0, type: "line"),
+                                                 Fontisan::Ufo::Point.new(x: 120, y: 120, type: "offcurve"),
+                                                 Fontisan::Ufo::Point.new(x: 520, y: 120, type: "offcurve"),
+                                                 Fontisan::Ufo::Point.new(x: 520, y: 0, type: "curve"),
+                                               ]))
+      f.glyphs["A"] = a
+      f
+    end
+
+    let(:axes) do
+      [{ tag: "wght", min: 400, default: 400, max: 700, name_id: 256 }]
+    end
+
+    let(:builder) { Fontisan::Ufo::Compile::Cff2 }
+
+    it "embeds a VariationStore when masters are supplied" do
+      bytes = builder.build(
+        font, glyphs: font.glyphs.values,
+        masters: [{ font: master_font, axes: axes }], axis_count: 1
+      )
+      reader = Fontisan::Tables::Cff2::TableReader.new(bytes)
+      reader.read_top_dict
+      expect(reader.top_dict[24]).to be_positive # vstore offset
+    end
+
+    it "emits blend operators in charstrings for varying coordinates" do
+      bytes = builder.build(
+        font, glyphs: font.glyphs.values,
+        masters: [{ font: master_font, axes: axes }], axis_count: 1
+      )
+      reader = Fontisan::Tables::Cff2::TableReader.new(bytes)
+      reader.read_top_dict
+      cs_offset = reader.top_dict[17]
+      cs_index = Fontisan::Tables::Cff2::Index.read(bytes, cs_offset)
+      # GID 1 is "A" — it has varying contours, so should contain blend
+      a_charstring = cs_index[1]
+      expect(a_charstring).to include(23.chr) # blend operator = byte 23
+    end
+
+    it "produces a static CFF2 when masters is nil" do
+      static = builder.build(font, glyphs: font.glyphs.values)
+      reader = Fontisan::Tables::Cff2::TableReader.new(static)
+      reader.read_top_dict
+      expect(reader.top_dict[24]).to be_nil # no vstore
+    end
+  end
+
   describe "Otf2Compiler end-to-end" do
     it "compiles a UFO font to OTF (CFF2) and reopens it" do
       Dir.mktmpdir do |dir|
