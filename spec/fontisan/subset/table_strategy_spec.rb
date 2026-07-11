@@ -17,6 +17,7 @@ RSpec.describe Fontisan::Subset::TableStrategy do
       expect(described_class.for("OS/2")).to eq(described_class::Os2)
       expect(described_class.for("CBDT")).to eq(described_class::Cbdt)
       expect(described_class.for("CBLC")).to eq(described_class::Cblc)
+      expect(described_class.for("CFF2")).to eq(described_class::Cff2)
     end
 
     it "falls back to PassThrough for unknown tags" do

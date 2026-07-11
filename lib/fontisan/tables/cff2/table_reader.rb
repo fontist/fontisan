@@ -235,25 +235,7 @@ module Fontisan
           Cff::Index.new(@io, start_offset: offset)
         end
 
-        private
-
-        # Read bytes safely with EOF checking
-        #
-        # @param bytes [Integer] Number of bytes to read
-        # @param description [String] Description for error messages
-        # @return [String] Binary data
-        # @raise [EOFError] If not enough bytes available
-        def read_safely(bytes, description)
-          data = @io.read(bytes)
-          if data.nil? || data.bytesize < bytes
-            raise EOFError,
-                  "Unexpected EOF while reading #{description}"
-          end
-
-          data
-        end
-
-        # Parse DICT structure
+        # Parse a DICT structure (public: reused by the CFF2 subsetter).
         #
         # @param data [String] DICT binary data
         # @return [Hash] Parsed operators and values
@@ -281,20 +263,37 @@ module Fontisan
           dict
         end
 
+        private
+
+        # Read bytes safely with EOF checking
+        #
+        # @param bytes [Integer] Number of bytes to read
+        # @param description [String] Description for error messages
+        # @return [String] Binary data
+        # @raise [EOFError] If not enough bytes available
+        def read_safely(bytes, description)
+          data = @io.read(bytes)
+          if data.nil? || data.bytesize < bytes
+            raise EOFError,
+                  "Unexpected EOF while reading #{description}"
+          end
+
+          data
+        end
+
         # Check if byte is an operator
         #
-        # CFF2 extends the operator range to include operator 24 (vstore)
+        # CFF/CFF2 DICT operator bytes are 0-21 (with 12 as the two-byte
+        # escape prefix) and 24 (vstore, CFF2-specific). Number encoding
+        # prefixes (28, 29, 30) and ranges (32-254) are NOT operators.
         #
         # @param byte [Integer] Byte value
         # @return [Boolean] True if operator
         def operator_byte?(byte)
-          # Standard DICT operators (0-21, excluding number markers)
-          return true if byte <= 21 && ![12, 28, 29, 30, 31].include?(byte)
+          return false if (28..30).cover?(byte) # number prefixes
+          return false if (32..254).cover?(byte) # number ranges
 
-          # CFF2-specific operators
-          return true if byte == VSTORE_OPERATOR
-
-          false
+          true # 0-27 (incl. 12 escape), 31, 255 — treat as operator
         end
 
         # Read DICT operator
