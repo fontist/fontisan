@@ -8,7 +8,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P0 — Correctness gaps (open bugs / silent failures)
 - [x] ~~[01 — CBDT/CBLC GID-stable propagation](01-cbdt-cblc-gid-stable-propagation.md)~~ ✓ Done (PR #115)
 - [x] ~~[02 — Collection-mode outline-priority regression](02-collection-outline-priority.md)~~ ✓ Already fixed
-- [15 — CFF/CFF2 subsetter strategy](15-cff-cff2-subsetter-strategy.md) — Head crash fixed, profiles updated; CFF→UFO extraction done (TODO #10b); blocked on TODO #05 for full round-trip (PR #108 unskipped the test; now passing with TODO 01)
+- [x] ~~[15 — CFF/CFF2 subsetter strategy](15-cff-cff2-subsetter-strategy.md)~~ ✓ Done — CFF via UFO round-trip, CFF2 via standalone INDEX filter with VStore preservation
 
 ### P1 — High-value features
 - [03 — `fontisan audit` command (identity+style+features lens)](03-fontisan-audit-command.md)
@@ -18,7 +18,7 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P2 — Specialist feature parity
 - [x] ~~[07 — CPAL v1 header fields](07-cpal-v1-header-fields.md)~~ ✓ Done (v0.4.25)
 - [x] ~~[08 — CFF standard string table](08-cff-standard-string-table.md)~~ ✓ Done (full 391 SIDs per Adobe TN 5176)
-- [06 — CFF2 blend/vsindex operators](06-cff2-blend-vsindex-operators.md)
+- [x] ~~[06 — CFF2 blend/vsindex operators](06-cff2-blend-vsindex-operators.md)~~ ✓ Done — `Cff2.build_variable` emits blend operators in charstrings; `VariableOtf` passes masters through; VStore embedded with regions
 - [09 — Type 1 seac expansion](09-type1-seac-expansion.md)
 - [10 — UFO image set + feature writers](10-ufo-image-set-feature-writers.md)
 - [x] ~~[11 — kern groups.plist support](11-kern-groups-plist.md)~~ ✓ Done (Groups model in PR #116 + GPOS group resolution in this PR)
