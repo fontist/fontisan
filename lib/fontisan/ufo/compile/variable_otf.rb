@@ -9,15 +9,12 @@ module Fontisan
       #
       # The orchestrator assembles a default-master UFO plus variation
       # masters into a variable OpenType font with:
-      #   - CFF2 outlines (static — blend/vsindex operators are TODO 07/18)
+      #   - CFF2 outlines with blend operators for each varying coordinate
+      #   - ItemVariationStore embedded in the CFF2 table (regions only;
+      #     deltas live in charstring blend operands)
       #   - fvar (axes + instances)
       #   - STAT (style attributes)
       #   - avar (axis remapping, when maps are provided)
-      #
-      # NOTE: the CFF2 table currently contains static outlines (no
-      # VariationStore, no blend operators). Full variable CFF2 requires
-      # TODO 07 (blend/vsindex) and TODO 18 (blend integration) to be
-      # wired into the charstring builder.
       #
       # @see https://learn.microsoft.com/en-us/typography/opentype/spec/cff2
       class VariableOtf
@@ -59,7 +56,7 @@ module Fontisan
             "post" => Post.build(@default),
             "hmtx" => Hmtx.build(@default, glyphs: glyphs),
             "cmap" => Cmap.build(@default, glyphs: glyphs),
-            "CFF2" => Cff2.build(@default, glyphs: glyphs),
+            "CFF2" => build_cff2(glyphs),
             "fvar" => Fvar.build(@default, axes: @axes, instances: @instances),
             "STAT" => Stat.build(axes: @axes),
           }
@@ -68,6 +65,18 @@ module Fontisan
           tables["avar"] = avar_bytes if avar_bytes
 
           tables
+        end
+
+        private
+
+        # Build the CFF2 table. When masters are supplied, variable
+        # charstrings with blend operators are emitted; otherwise a static
+        # CFF2 table is produced.
+        def build_cff2(glyphs)
+          masters = @masters.map { |mf| { font: mf, axes: @axes } }
+          Cff2.build(@default, glyphs: glyphs,
+                     masters: masters.any? ? masters : nil,
+                     axis_count: @axes.size)
         end
       end
     end
