@@ -19,13 +19,14 @@ module Fontisan
       PROFILES = {
         default: %i[table_directory glyph_names cmap ots_compatibility
                     collection_integrity variable_font hinting woff2_validation
-                    format_round_trip],
-        structural: %i[table_directory collection_integrity],
+                    format_round_trip opentype_conformance],
+        structural: %i[table_directory collection_integrity opentype_conformance],
         ots: %i[ots_compatibility],
         layout: %i[glyph_names cmap],
         variable: %i[variable_font],
         hinting: %i[hinting],
         web: %i[ots_compatibility woff2_validation],
+        spec: %i[opentype_conformance],
       }.freeze
 
       # @param profile [Symbol]
@@ -48,6 +49,7 @@ module Fontisan
         when :hinting then Checks::HintingCheck
         when :woff2_validation then Checks::Woff2ValidationCheck
         when :format_round_trip then Checks::FormatRoundTripCheck
+        when :opentype_conformance then Checks::OpenTypeConformanceCheck
         end
       end
     end
