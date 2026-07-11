@@ -10,8 +10,11 @@ module Fontisan
       # Reads each BinData table, extracts per-glyph data, and builds
       # Ufo::Glyph objects in the default layer.
       #
-      # Composite glyphs are preserved as UFO Components (not decomposed).
-      # This keeps the round-trip faithful to the source.
+      # Composite (compound) glyphs are decomposed into contours — each
+      # component's base glyph is resolved recursively, the 2×3 affine
+      # transform is applied, and the transformed points are merged as
+      # contours on the UFO glyph. This makes the glyph self-contained
+      # (no dependency on component glyphs being present in the output).
       module FromBinData
         # @param font [Fontisan::SfntFont] loaded TTF or OTF
         # @return [Fontisan::Ufo::Font] typed UFO model
@@ -186,6 +189,8 @@ module Fontisan
 
             if simple.is_a?(Fontisan::Tables::SimpleGlyph)
               extract_simple_contours(simple, ufo_glyph)
+            elsif simple.respond_to?(:compound?) && simple.compound?
+              extract_compound_contours(simple, ufo_glyph, glyf, loca, head)
             end
 
             # Always add the glyph, even if it has no contours. This
@@ -287,6 +292,67 @@ module Fontisan
           glyph.add_contour(current_contour) if current_contour
         end
 
+        # Compound (composite) glyph: recursively flatten into UFO contours.
+        # Mirrors Stitcher::Source#flatten_compound_into — resolves each
+        # component's base glyph, applies the 2x3 affine transform, and
+        # merges the result as contours on the UFO glyph.
+        MAX_COMPOUND_DEPTH = 32
+
+        def self.extract_compound_contours(compound, ufo_glyph, glyf, loca, head)
+          flatten_compound(compound, ufo_glyph, glyf, loca, head, Set.new, 0)
+        end
+
+        def self.flatten_compound(compound, ufo_glyph, glyf, loca, head, visited, depth)
+          return if depth > MAX_COMPOUND_DEPTH
+          return if visited.include?(compound.glyph_id)
+
+          visited = visited.dup.add(compound.glyph_id)
+
+          compound.components.each do |component|
+            next unless component.respond_to?(:args_are_xy?) ? component.args_are_xy? : true
+
+            raw = begin
+                    glyf.glyph_for(component.glyph_index, loca, head)
+                  rescue StandardError
+                    nil
+                  end
+            next unless raw
+
+            matrix = component.transformation_matrix
+
+            if raw.respond_to?(:simple?) && raw.simple?
+              flatten_simple_component(raw, ufo_glyph, matrix)
+            elsif raw.respond_to?(:compound?) && raw.compound?
+              flatten_compound(raw, ufo_glyph, glyf, loca, head, visited, depth + 1)
+            end
+          end
+        end
+
+        def self.flatten_simple_component(simple, ufo_glyph, matrix)
+          transform = Ufo::Transformation.new(
+            a: matrix[0], b: matrix[1],
+            c: matrix[2], d: matrix[3],
+            e: matrix[4], f: matrix[5],
+          )
+          num_contours = simple.end_pts_of_contours&.size || 0
+          return if num_contours.zero?
+
+          num_contours.times do |ci|
+            points = simple.points_for_contour(ci)
+            next unless points && !points.empty?
+
+            ufo_points = points.map do |pt|
+              x = (pt[:x] || pt["x"]).to_f
+              y = (pt[:y] || pt["y"]).to_f
+              tx, ty = transform.apply(x, y)
+              on_curve = pt[:on_curve].nil? || pt[:on_curve]
+              type = on_curve ? "line" : "offcurve"
+              Ufo::Point.new(x: tx, y: ty, type: type)
+            end
+            ufo_glyph.add_contour(Ufo::Contour.new(ufo_points))
+          end
+        end
+
         # Look up a glyph name from the post table (v2.0) or synthesize.
         def self.glyph_name_for(font, gid)
           post = font.table("post")
@@ -305,8 +371,9 @@ module Fontisan
         private_class_method :extract_info, :extract_name_records, :decode_name_value,
                              :extract_post, :extract_glyphs, :build_cmap_lookup,
                              :build_width_lookup, :extract_truetype_glyphs,
-                             :extract_simple_contours, :extract_cff_glyphs,
-                             :glyph_name_for
+                             :extract_simple_contours, :extract_compound_contours,
+                             :flatten_compound, :flatten_simple_component,
+                             :extract_cff_glyphs, :glyph_name_for
       end
     end
   end
