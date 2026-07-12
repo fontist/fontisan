@@ -38,7 +38,7 @@ module Fontisan
           instance = super(io)
         end
 
-        instance.instance_variable_set(:@raw_data, data)
+        instance.raw_data = data
         instance
       end
 
@@ -48,6 +48,9 @@ module Fontisan
       def raw_data
         @raw_data || to_binary_s
       end
+
+      # Set the raw binary data read from the source.
+      attr_writer :raw_data
 
       # Check if the record is valid
       #

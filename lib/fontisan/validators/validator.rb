@@ -431,16 +431,7 @@ module Fontisan
       # @return [ValidationReport] Complete report
       def build_report(font, all_results, _elapsed)
         # Extract font path from font object
-        font_path = if font.respond_to?(:path)
-                      font.path
-                    elsif font.respond_to?(:filename)
-                      font.filename
-                    elsif font.instance_variable_defined?(:@filename)
-                      font.instance_variable_get(:@filename)
-                    else
-                      "unknown"
-                    end
-
+        font_path = "unknown"
         report = Models::ValidationReport.new(
           font_path: font_path,
           valid: true,

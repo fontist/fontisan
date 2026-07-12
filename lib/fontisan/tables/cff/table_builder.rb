@@ -99,7 +99,7 @@ module Fontisan
         def extract_index(index)
           return [0].pack("n") if index.nil? || index.count.zero?
 
-          start = index.instance_variable_get(:@start_offset)
+          start = index.start_offset
           io = StringIO.new(@source.raw_data)
           io.seek(start)
 

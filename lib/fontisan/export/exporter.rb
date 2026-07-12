@@ -188,7 +188,7 @@ module Fontisan
           tag: tag,
           checksum: format_checksum(checksum),
           parsed: false,
-          data: @serializer.send(:encode_binary, binary_data),
+          data: @serializer.encode_binary(binary_data),
           fields: { error: error.message }.to_json,
         )
       end

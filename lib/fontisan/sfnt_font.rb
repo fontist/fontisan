@@ -624,7 +624,7 @@ module Fontisan
     # @param tag [String] The tag to normalize
     # @return [String] UTF-8 encoded tag
     def normalize_tag(tag)
-      @tag_encoding_cache[tag] ||= tag.dup.force_encoding("UTF-8")
+      (@tag_encoding_cache ||= {})[tag] ||= tag.dup.force_encoding("UTF-8")
     end
 
     # Load a single table's data on demand

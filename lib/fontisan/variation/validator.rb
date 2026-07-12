@@ -290,13 +290,16 @@ module Fontisan
             next unless reg_axis
 
             # Check coordinates are in valid range [-1, 1]
-            %i[start_coord peak_coord end_coord].each do |coord_method|
-              next unless reg_axis.respond_to?(coord_method)
+            coords = {
+              start_coord: reg_axis.start_coord,
+              peak_coord: reg_axis.peak_coord,
+              end_coord: reg_axis.end_coord,
+            }
+            coords.each do |name, coord|
+              next unless coord
+              next unless coord < -1.0 || coord > 1.0
 
-              coord = reg_axis.send(coord_method)
-              if coord < -1.0 || coord > 1.0
-                @warnings << "#{table_tag} region #{idx} axis #{axis_idx} #{coord_method} out of range: #{coord}"
-              end
+              @warnings << "#{table_tag} region #{idx} axis #{axis_idx} #{name} out of range: #{coord}"
             end
           end
         end

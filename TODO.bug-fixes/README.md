@@ -12,7 +12,11 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 ### P1 — Feature gaps (non-functional code paths)
 - [x] ~~[03 — Variation subsetter placeholders](03-variation-subsetter-placeholders.md)~~ ✓ Done (v0.4.40)
 - [x] ~~[04 — UFO image compile round-trip](04-ufo-image-compile-roundtrip.md)~~ ✓ Done (v0.4.40)
-- [06 — Variable font instance WOFF2 output](06-instance-woff2-output.md)
+- [x] ~~[06 — Variable font instance WOFF2 output](06-instance-woff2-output.md)~~ ✓ Done (v0.4.41)
 
 ### P2 — Documentation cleanup
 - [x] ~~[05 — Stale CFF comment](05-stale-cff-comment.md)~~ ✓ Done (v0.4.40)
+
+### P3 — Code quality violations
+- [07 — Encapsulation violations (instance_variable_get/set, send to private)](07-encapsulation-violations.md)
+- [08 — respond_to? duck typing violations](08-respond-to-violations.md)
