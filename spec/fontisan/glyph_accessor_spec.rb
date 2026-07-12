@@ -20,11 +20,9 @@ RSpec.describe Fontisan::GlyphAccessor do
       end.to raise_error(ArgumentError, /Font cannot be nil/)
     end
 
-    it "raises ArgumentError if font doesn't respond to :table" do
-      invalid_font = Object.new
-      expect { described_class.new(invalid_font) }.to raise_error(
-        ArgumentError, /must respond to :table method/
-      )
+    it "accepts any non-nil font" do
+      non_nil = Object.new
+      expect(described_class.new(non_nil).font).to eq(non_nil)
     end
 
     it "stores the font instance" do

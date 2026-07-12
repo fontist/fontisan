@@ -55,10 +55,6 @@ module Fontisan
     def initialize(font)
       raise ArgumentError, "Font cannot be nil" if font.nil?
 
-      unless font.respond_to?(:table)
-        raise ArgumentError, "Font must respond to :table method"
-      end
-
       @font = font
       @glyph_cache = {}
       @closure_cache = {}
@@ -353,10 +349,10 @@ module Fontisan
         # Get glyph and check if it's compound
         glyph = glyph_for_id(glyph_id)
         next unless glyph
-        next unless glyph.respond_to?(:compound?) && glyph.compound?
+        next unless glyph&.compound? && glyph.compound?
 
         # Add component glyph IDs
-        if glyph.respond_to?(:components)
+        if glyph&.components
           glyph.components.each do |component|
             component_id = component[:glyph_index]
             next unless glyph_exists?(component_id)
@@ -384,7 +380,7 @@ module Fontisan
 
       # Also clear glyf table cache if present
       glyf = font.table("glyf")
-      glyf&.clear_cache if glyf.respond_to?(:clear_cache)
+      glyf&.clear_cache
     end
 
     private

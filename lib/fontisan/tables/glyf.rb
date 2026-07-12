@@ -215,7 +215,7 @@ module Fontisan
           next true if glyph.nil? # Empty glyphs are OK
 
           # Simple glyphs have instructions
-          if glyph.respond_to?(:instruction_length)
+          unless glyph.nil?
             inst_len = glyph.instruction_length
             # If instructions present, length should be reasonable
             inst_len.nil? || inst_len >= 0

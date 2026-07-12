@@ -41,10 +41,6 @@ module Fontisan
     def initialize(font)
       raise ArgumentError, "Font cannot be nil" if font.nil?
 
-      unless font.respond_to?(:table)
-        raise ArgumentError, "Font must respond to :table method"
-      end
-
       @font = font
     end
 
@@ -130,7 +126,7 @@ module Fontisan
       return nil unless glyph
 
       # Handle empty glyphs (space, etc.)
-      return nil if glyph.respond_to?(:empty?) && glyph.empty?
+      return nil if glyph.nil? || glyph.empty?
 
       if glyph.simple?
         extract_simple_outline(glyph)

@@ -355,9 +355,7 @@ module Fontisan
     # @return [Boolean] true if the font format is valid, false otherwise
     def valid?
       return false unless header
-      return false unless tables.respond_to?(:length)
-      return false unless @table_data.is_a?(Hash)
-      return false if tables.length != header.num_tables
+      return false unless tables.length == header.num_tables
       return false unless head_table
 
       true
