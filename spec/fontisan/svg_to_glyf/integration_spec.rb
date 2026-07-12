@@ -75,6 +75,33 @@ RSpec.describe "SvgToGlyf integration" do
         expect(types).to include("offcurve")
         expect(types).to include("curve")
       end
+
+      it "scales coordinates exceeding the viewBox to fit the em-square" do
+        glyph = described_class.convert(
+          "M 0 0 L 5000 0 L 5000 5000 L 0 5000 Z",
+          upm: 1000,
+          codepoint: 0x41,
+          viewbox: { width: 1000, height: 1000 },
+        )
+        pts = glyph.contours.first.points
+        all_x = pts.map(&:x)
+        all_y = pts.map(&:y)
+        expect(all_x.max).to be <= 1000
+        expect(all_y.max).to be <= 1000
+        expect(all_x.min).to be >= 0
+        expect(all_y.min).to be >= 0
+      end
+
+      it "preserves coordinates when they are within the viewBox" do
+        glyph = described_class.convert(
+          "M 0 0 L 500 0 L 500 700 L 0 700 Z",
+          upm: 1000,
+          codepoint: 0x41,
+          viewbox: { width: 1000, height: 1000 },
+        )
+        pts = glyph.contours.first.points
+        expect(pts.map { |p| [p.x, p.y] }).to eq([[0, 1000], [500, 1000], [500, 300], [0, 300]])
+      end
     end
 
     describe ".from_svg_file" do
