@@ -79,10 +79,6 @@ module Fontisan
       def validate_parameters!(font, glyph_data)
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.nil?
-          raise ArgumentError, "Font must respond to :table method"
-        end
-
         unless glyph_data.is_a?(Hash)
           raise ArgumentError,
                 "glyph_data must be a Hash, got: #{glyph_data.class}"
