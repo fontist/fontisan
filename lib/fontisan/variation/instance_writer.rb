@@ -105,8 +105,7 @@ module Fontisan
         when :woff
           write_woff(output_tables, output_path, source_format)
         when :woff2
-          raise Fontisan::Error,
-                "WOFF2 output not yet implemented (planned for Phase 6)"
+          write_woff2(output_tables, output_path, source_format)
         end
       end
 
@@ -322,6 +321,29 @@ module Fontisan
       rescue StandardError => e
         raise Fontisan::Error,
               "Failed to write WOFF output: #{e.message}"
+      end
+
+      # Write WOFF2 format
+      #
+      # @param tables [Hash<String, String>] Output tables
+      # @param output_path [String] Output file path
+      # @param source_format [Symbol] Source format (for flavor detection)
+      # @return [Integer] Number of bytes written
+      def write_woff2(tables, output_path, source_format)
+        require "tmpdir"
+        sfnt_version = sfnt_version_for_format(source_format)
+
+        Dir.mktmpdir("fontisan-woff2-") do |dir|
+          temp_ttf = File.join(dir, "instance.ttf")
+          FontWriter.write_to_file(tables, temp_ttf, sfnt_version: sfnt_version)
+
+          font = FontLoader.load(temp_ttf)
+          woff2_data = Converters::Woff2Encoder.new.convert(font)
+          File.binwrite(output_path, woff2_data)
+        end
+      rescue StandardError => e
+        raise Fontisan::Error,
+              "Failed to write WOFF2 output: #{e.message}"
       end
 
       # Get SFNT version for output format

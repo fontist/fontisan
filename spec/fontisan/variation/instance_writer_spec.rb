@@ -231,13 +231,14 @@ RSpec.describe Fontisan::Variation::InstanceWriter do
   end
 
   describe "WOFF2 output" do
-    it "raises error for WOFF2 (not yet implemented)" do
-      writer = described_class.new(minimal_tables)
+    it "writes a valid WOFF2 file from real font tables" do
+      real_font = Fontisan::FontLoader.load("spec/fixtures/fonttools/TestTTF.ttf")
+      tables = real_font.table_data.transform_values { |t| t.is_a?(String) ? t : t.to_binary_s }
+      writer = described_class.new(tables)
       Tempfile.create(["test", ".woff2"]) do |file|
-        expect { writer.write(file.path) }.to raise_error(
-          Fontisan::Error,
-          /WOFF2 output not yet implemented/,
-        )
+        writer.write(file.path)
+        expect(File.exist?(file.path)).to be(true)
+        expect(File.size(file.path)).to be_positive
       end
     end
   end
