@@ -230,7 +230,7 @@ module Fontisan
         font = font_class.new
 
         # Set table data
-        font.instance_variable_set(:@table_data, tables)
+        font.table_data = tables
 
         # Define required methods
         font.define_singleton_method(:table_data) { tables }

@@ -422,7 +422,7 @@ module Fontisan
         else
           # Create temporary font with instance tables
           temp_font = font.class.new
-          temp_font.instance_variable_set(:@table_data, instance_tables)
+          temp_font.table_data = instance_tables
 
           # Convert outline format
           case [source_format, target_format]

@@ -80,7 +80,7 @@ module Fontisan
         return nil unless charstring
 
         # Parse CharString to extract blend data
-        charstring.parse unless charstring.instance_variable_get(:@parsed)
+        charstring.parse
         blend_data = charstring.blend_data
         return nil if blend_data.nil? || blend_data.empty?
 

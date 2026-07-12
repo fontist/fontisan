@@ -185,7 +185,7 @@ module Fontisan
       def extract_font_program(font)
         return "" unless font.has_table?("fpgm")
 
-        font_program_data = font.instance_variable_get(:@table_data)["fpgm"]
+        font_program_data = font.table_data["fpgm"]
         return "" unless font_program_data
 
         # Return as binary string
@@ -202,7 +202,7 @@ module Fontisan
       def extract_control_value_program(font)
         return "" unless font.has_table?("prep")
 
-        prep_data = font.instance_variable_get(:@table_data)["prep"]
+        prep_data = font.table_data["prep"]
         return "" unless prep_data
 
         # Return as binary string
@@ -219,7 +219,7 @@ module Fontisan
       def extract_control_values(font)
         return [] unless font.has_table?("cvt ")
 
-        cvt_data = font.instance_variable_get(:@table_data)["cvt "]
+        cvt_data = font.table_data["cvt "]
         return [] unless cvt_data
 
         # CVT table is an array of 16-bit signed integers (FWord values)

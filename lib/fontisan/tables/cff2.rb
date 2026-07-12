@@ -340,8 +340,8 @@ module Fontisan
 
         # count (2) + offSize (1) + offsets + data
         count = index.count
-        data_size = index.instance_variable_get(:@data_size) || 0
-        off_size = index.instance_variable_get(:@off_size) || 4
+        data_size = index.data&.bytesize || 0
+        off_size = index.off_size || 4
 
         2 + 1 + ((count + 1) * off_size) + data_size
       end

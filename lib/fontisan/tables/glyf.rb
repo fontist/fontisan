@@ -43,7 +43,7 @@ module Fontisan
 
       # Cache for parsed glyphs
       # @return [Hash<Integer, SimpleGlyph|CompoundGlyph>]
-      attr_reader :glyphs_cache
+      attr_accessor :glyphs_cache
 
       # Override read to capture raw data
       #
@@ -53,7 +53,7 @@ module Fontisan
         instance = new
 
         # Initialize cache
-        instance.instance_variable_set(:@glyphs_cache, {})
+        instance.glyphs_cache = {}
 
         # Handle nil or empty data gracefully
         instance.raw_data = if io.nil?

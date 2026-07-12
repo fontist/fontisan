@@ -32,7 +32,7 @@ module Fontisan
         end
 
         # Get raw table data
-        table_data = @font.instance_variable_get(:@table_data)
+        table_data = @font.table_data
         raw_data = table_data[@table_tag]
 
         unless raw_data

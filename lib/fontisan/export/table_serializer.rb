@@ -226,6 +226,8 @@ module Fontisan
         }
       end
 
+      public
+
       # Encode binary data based on format
       #
       # @param data [String] Binary data

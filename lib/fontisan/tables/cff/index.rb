@@ -48,6 +48,9 @@ module Fontisan
         # @return [String] Binary string containing all data
         attr_reader :data
 
+        # @return [Integer] Byte offset where this INDEX starts in the source data
+        attr_reader :start_offset
+
         # Initialize an INDEX from binary data
         #
         # @param io [IO, StringIO, String] Binary data to parse
