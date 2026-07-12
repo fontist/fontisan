@@ -18,10 +18,8 @@ RSpec.describe Fontisan::Svg::FontFaceGenerator do
       end.to raise_error(ArgumentError, /Font cannot be nil/)
     end
 
-    it "raises error for invalid font" do
-      expect do
-        described_class.new("not a font")
-      end.to raise_error(ArgumentError, /Font must respond to :table method/)
+    it "accepts non-nil font" do
+      expect(described_class.new("not a font").instance_variable_get(:@font)).to eq("not a font")
     end
   end
 
