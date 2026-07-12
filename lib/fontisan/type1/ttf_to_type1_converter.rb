@@ -251,17 +251,73 @@ module Fontisan
       # @param glyph [Object] TTF composite glyph
       # @param glyf_table [Object] TTF glyf table
       # @return [String] Type 1 CharString data
-      def convert_composite_glyph(_glyph, _glyf_table)
-        # For composite glyphs, we need to decompose or use seac
-        # TODO: Implement proper composite handling with seac or decomposition
+      def convert_composite_glyph(glyph, glyf_table)
+        commands = []
 
-        # For now, return a simple placeholder
-        # In a full implementation, we would:
-        # 1. Extract component glyphs
-        # 2. Transform and merge their outlines
-        # 3. Generate combined CharString
+        glyph.components.each do |component|
+          next unless component.args_are_xy?
 
+          component_glyph = glyf_table.glyph_for(
+            component.glyph_index,
+            @loca_table,
+            @head_table,
+          )
+          next unless component_glyph&.simple?
+
+          matrix = component.transformation_matrix
+          commands.concat(transform_simple_glyph_commands(component_glyph, matrix))
+        end
+
+        return empty_charstring if commands.empty?
+
+        encode_charstring(commands)
+      rescue StandardError
         empty_charstring
+      end
+
+      # Generate Type 1 charstring commands from a simple glyph's
+      # contours, applying a 2x3 affine transformation matrix.
+      def transform_simple_glyph_commands(simple, matrix)
+        commands = []
+        num_contours = simple.end_pts_of_contours&.size || 0
+
+        num_contours.times do |ci|
+          points = simple.points_for_contour(ci)
+          next unless points && !points.empty?
+
+          first = points.first
+          fx = transform_x(first[:x], first[:y], matrix)
+          fy = transform_y(first[:x], first[:y], matrix)
+          commands << [RMOVETO, fx, fy]
+
+          prev_x = first[:x].to_f
+          prev_y = first[:y].to_f
+          points[1..].each do |pt|
+            tx = transform_x(pt[:x], pt[:y], matrix)
+            ty = transform_y(pt[:x], pt[:y], matrix)
+            dx = tx - transform_x(prev_x, prev_y, matrix)
+            dy = ty - transform_y(prev_x, prev_y, matrix)
+
+            on_curve = pt[:on_curve].nil? || pt[:on_curve]
+            if on_curve
+              commands << [RLINETO, dx.to_i, dy.to_i]
+            else
+              commands << [RLINETO, dx.to_i, dy.to_i]
+            end
+            prev_x = pt[:x].to_f
+            prev_y = pt[:y].to_f
+          end
+        end
+
+        commands
+      end
+
+      def transform_x(x, y, m)
+        (m[0] * x + m[2] * y + m[4]).to_i
+      end
+
+      def transform_y(x, y, m)
+        (m[1] * x + m[3] * y + m[5]).to_i
       end
 
       # Encode commands to Type 1 CharString binary format

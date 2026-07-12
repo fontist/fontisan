@@ -33,7 +33,7 @@ module Fontisan
       def initialize(font)
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.respond_to?(:table)
+        unless font.nil?
           raise ArgumentError, "Font must respond to :table method"
         end
 

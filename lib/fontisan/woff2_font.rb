@@ -185,7 +185,7 @@ module Fontisan
       # If no tag provided, return all tables
       if tag.nil?
         # First try underlying font's table data if available
-        if @underlying_font.respond_to?(:table_data)
+        if @underlying_font.is_a?(SfntFont)
           return @underlying_font.table_data
         end
 
@@ -195,7 +195,7 @@ module Fontisan
 
       # Tag provided - return specific table
       # First try underlying font's table data if available
-      if @underlying_font.respond_to?(:table_data)
+      if @underlying_font.is_a?(SfntFont)
         underlying_data = @underlying_font.table_data[tag]
         return underlying_data if underlying_data
       end

@@ -359,7 +359,6 @@ module Fontisan
     def valid?
       return false unless header
       return false unless header.signature == WOFF_SIGNATURE
-      return false unless table_entries.respond_to?(:length)
       return false if table_entries.length != header.num_tables
       return false unless has_table?(Constants::HEAD_TAG)
 

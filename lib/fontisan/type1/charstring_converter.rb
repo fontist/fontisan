@@ -136,29 +136,27 @@ module Fontisan
       # @param seac_data [Hash] seac component data
       # @return [String] CFF CharString bytecode with expanded seac
       def expand_seac(seac_data)
-        # seac format: adx ady bchar achar seac
-        # adx, ady: accent offset
-        # bchar: base character code
-        # achar: accent character code
-        # The accent is positioned at (adx, ady) relative to the base
+        return encode_cff_operator(TYPE1_TO_CFF[:endchar]) unless @charstrings
 
-        seac_data[:base]
-        seac_data[:accent]
-        seac_data[:adx]
-        seac_data[:ady]
+        base_name = @charstrings.encoding[seac_data[:base]]
+        accent_name = @charstrings.encoding[seac_data[:accent]]
+        return encode_cff_operator(TYPE1_TO_CFF[:endchar]) unless base_name && accent_name
 
-        # For now, we'll create a simple placeholder that indicates seac expansion
-        # In a full implementation, we would:
-        # 1. Parse the base glyph's CharString
-        # 2. Parse the accent glyph's CharString
-        # 3. Merge them with the appropriate offset
-        # 4. Convert to CFF format
+        base_cs = @charstrings[base_name]
+        accent_cs = @charstrings[accent_name]
+        return encode_cff_operator(TYPE1_TO_CFF[:endchar]) unless base_cs && accent_cs
 
-        # This is a simplified implementation that creates a composite reference
-        # CFF doesn't have native seac, so we need to actually merge the outlines
+        base_cff = convert(base_cs)
+        accent_cff = convert(accent_cs)
+        return base_cff unless accent_cff
 
-        # For now, return endchar as placeholder
-        # TODO: Implement full seac expansion by merging glyph outlines
+        io = String.new(encoding: Encoding::ASCII_8BIT)
+        io << base_cff.sub(/\x0e\z/, "")
+        io << encode_cff_number(seac_data[:adx].to_i) if seac_data[:adx].to_i != 0
+        io << encode_cff_number(seac_data[:ady].to_i) if seac_data[:ady].to_i != 0
+        io << accent_cff.sub(/\x0e\z/, "")
+        io << encode_cff_operator(TYPE1_TO_CFF[:endchar])
+      rescue StandardError
         encode_cff_operator(TYPE1_TO_CFF[:endchar])
       end
 

@@ -76,7 +76,7 @@ module Fontisan
         glyph = glyph_for(glyph_id)
         return false if glyph.nil?
 
-        glyph.respond_to?(:num_contours) && glyph.num_contours >= 0
+        !glyph.nil? && glyph.num_contours >= 0
       end
 
       # Check if a glyph is compound
@@ -87,7 +87,7 @@ module Fontisan
         glyph = glyph_for(glyph_id)
         return false if glyph.nil?
 
-        glyph.respond_to?(:num_contours) && glyph.num_contours == -1
+        !glyph.nil? && glyph.num_contours == -1
       end
 
       # Check if a glyph is empty
@@ -117,7 +117,7 @@ module Fontisan
         glyph = glyph_for(glyph_id)
         return nil if glyph.nil?
 
-        glyph.num_contours if glyph.respond_to?(:num_contours)
+        glyph.num_contours unless glyph.nil?
       end
 
       # Get number of points for a simple glyph
@@ -126,7 +126,7 @@ module Fontisan
       # @return [Integer, nil] Number of points, or nil
       def glyph_point_count(glyph_id)
         glyph = glyph_for(glyph_id)
-        return nil if glyph.nil? || !glyph.respond_to?(:num_points)
+        return nil if glyph.nil? || glyph.num_points.nil?
 
         glyph.num_points
       end

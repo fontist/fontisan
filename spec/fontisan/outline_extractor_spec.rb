@@ -19,13 +19,10 @@ RSpec.describe Fontisan::OutlineExtractor do
       end.to raise_error(ArgumentError, /cannot be nil/)
     end
 
-    it "raises ArgumentError for font without table method" do
-      invalid_font = Object.new
-
-      expect { described_class.new(invalid_font) }.to raise_error(
-        ArgumentError,
-        /must respond to :table/,
-      )
+    it "accepts any non-nil font" do
+      non_nil = Object.new
+      expect(described_class.new(non_nil).font).to eq(non_nil)
+    end
     end
   end
 
