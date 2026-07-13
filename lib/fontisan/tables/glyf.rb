@@ -215,13 +215,13 @@ module Fontisan
           next true if glyph.nil? # Empty glyphs are OK
 
           # Simple glyphs have instructions
-          unless glyph.nil?
+          if glyph.nil?
+            # Compound glyphs may have instructions too
+            true
+          else
             inst_len = glyph.instruction_length
             # If instructions present, length should be reasonable
             inst_len.nil? || inst_len >= 0
-          else
-            # Compound glyphs may have instructions too
-            true
           end
         end
       rescue StandardError
@@ -240,7 +240,8 @@ module Fontisan
 
         # Simple glyphs: contours should be >= 0
         # Compound glyphs: numberOfContours = -1
-        if glyph.respond_to?(:num_contours)
+        case glyph
+        when SimpleGlyph, CompoundGlyph
           glyph.num_contours >= -1
         else
           true
@@ -277,9 +278,9 @@ module Fontisan
       # @param glyph_id [Integer] Glyph ID
       # @raise [ArgumentError] If validation fails
       def validate_context!(loca, head, glyph_id)
-        unless loca.respond_to?(:offset_for) && loca.respond_to?(:size_of)
+        unless loca.is_a?(Loca)
           raise ArgumentError,
-                "loca must be a parsed Loca table with offset_for and size_of methods"
+                "loca must be a parsed Loca table"
         end
 
         unless loca.parsed?
@@ -287,7 +288,7 @@ module Fontisan
                 "loca table must be parsed with parse_with_context before use"
         end
 
-        unless head.respond_to?(:units_per_em)
+        unless head.is_a?(Head)
           raise ArgumentError,
                 "head must be a parsed Head table"
         end

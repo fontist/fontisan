@@ -117,7 +117,7 @@ module Fontisan
         glyph = glyph_for(glyph_id)
         return nil if glyph.nil?
 
-        glyph.num_contours unless glyph.nil?
+        glyph&.num_contours
       end
 
       # Get number of points for a simple glyph

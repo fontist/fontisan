@@ -9,7 +9,7 @@ module Fontisan
     # transforms apply to which paths and what coordinate space the
     # SVG defines (via viewBox).
     class Document
-      attr_reader :viewbox_width, :viewbox_height, :source
+      attr_reader :viewbox, :source
 
       # @param xml [String] raw SVG XML
       def self.from_xml(xml)
@@ -25,7 +25,7 @@ module Fontisan
       def initialize(doc)
         @doc = doc
         @source = doc
-        extract_viewbox
+        @viewbox = extract_viewbox
       end
 
       # Yield each <path> element's d= string along with the accumulated
@@ -41,17 +41,36 @@ module Fontisan
 
       private
 
+      # Parse the SVG viewBox attribute. The SVG spec allows either
+      # whitespace- or comma-separated values: "0 0 1000 1000" or
+      # "0,0,1000,1000". The four components are min_x, min_y, width,
+      # height — all are significant for normalization.
+      #
+      # Falls back to the root element's width/height attributes (origin
+      # assumed to be 0,0). Returns nil if no geometry can be derived.
+      #
+      # @return [Ufo::Bounds, nil]
       def extract_viewbox
         root = @doc.root
-        vb = root&.attribute("viewBox")&.value
+        return unless root
+
+        vb = root.attribute("viewBox")&.value
         if vb
-          _, _, w, h = vb.split(/\s+/).map(&:to_f)
-          @viewbox_width = w
-          @viewbox_height = h
-        else
-          @viewbox_width = (root&.attribute("width")&.value || DEFAULT_UPM).to_f
-          @viewbox_height = (root&.attribute("height")&.value || DEFAULT_UPM).to_f
+          parts = vb.split(/[\s,]+/).map(&:to_f)
+          return if parts.length != 4
+
+          min_x, min_y, w, h = parts
+          return if w.zero? || h.zero?
+
+          return Ufo::Bounds.new(min_x: min_x, min_y: min_y,
+                                 max_x: min_x + w, max_y: min_y + h)
         end
+
+        w = root.attribute("width")&.value&.to_f
+        h = root.attribute("height")&.value&.to_f
+        return if w.nil? || h.nil? || w.zero? || h.zero?
+
+        Ufo::Bounds.new(min_x: 0, min_y: 0, max_x: w, max_y: h)
       end
 
       # Recursively walk the XML tree. When a <g> has a transform=,

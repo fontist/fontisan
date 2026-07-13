@@ -13,6 +13,7 @@ module Fontisan
     autoload :DeltaParser, "fontisan/variation/delta_parser"
     autoload :Inspector, "fontisan/variation/inspector"
     autoload :InstanceGenerator, "fontisan/variation/instance_generator"
+    autoload :InstanceFontWrapper, "fontisan/variation/instance_font_wrapper"
     autoload :InstanceWriter, "fontisan/variation/instance_writer"
     autoload :Interpolator, "fontisan/variation/interpolator"
     autoload :MetricsAdjuster, "fontisan/variation/metrics_adjuster"

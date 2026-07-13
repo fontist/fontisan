@@ -128,6 +128,12 @@ module Fontisan
 
       # Extract points from a simple glyph
       #
+      # TODO: SimpleGlyph has no `points` method — this path has never
+      # executed against a real glyph. The fix requires either exposing
+      # a points iterator on SimpleGlyph or rewriting against the
+      # points_for_contour API. Tracked separately from the encapsulation
+      # audit; left as-is to avoid silently masking the bug.
+      #
       # @param glyph [Object] TTF simple glyph
       # @return [Array<Hash>] Array of points with on_curve flag
       def extract_points(glyph)
@@ -298,12 +304,7 @@ module Fontisan
             dx = tx - transform_x(prev_x, prev_y, matrix)
             dy = ty - transform_y(prev_x, prev_y, matrix)
 
-            on_curve = pt[:on_curve].nil? || pt[:on_curve]
-            if on_curve
-              commands << [RLINETO, dx.to_i, dy.to_i]
-            else
-              commands << [RLINETO, dx.to_i, dy.to_i]
-            end
+            commands << [RLINETO, dx.to_i, dy.to_i]
             prev_x = pt[:x].to_f
             prev_y = pt[:y].to_f
           end

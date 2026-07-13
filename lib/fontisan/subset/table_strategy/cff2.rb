@@ -55,13 +55,12 @@ module Fontisan
         end
 
         def self.raw_bytes_from_font(font)
-          t = font.table("CFF2") if font.respond_to?(:table)
-          t&.raw_data
+          font.table("CFF2")&.raw_data
         end
         private_class_method :raw_bytes_from_font
 
         def self.raw_bytes_from_table(table)
-          table&.raw_data if table.respond_to?(:raw_data)
+          table&.raw_data
         end
         private_class_method :raw_bytes_from_table
 

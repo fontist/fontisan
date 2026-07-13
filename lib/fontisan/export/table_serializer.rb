@@ -5,44 +5,46 @@ require "json"
 
 module Fontisan
   module Export
-    # TableSerializer handles serialization of individual font tables
+    # Serializes individual font tables for export.
     #
-    # Uses strategy pattern to serialize different table types:
-    # - Fully parsed tables: Use Lutaml::Model serialization
-    # - Binary tables: Encode as hex or base64
-    # - Special tables: Custom serialization logic
+    # Tables fall into three categories:
+    # - Fully parsed: BinData records whose `snapshot` hash is exported
+    #   as JSON fields.
+    # - Binary-only: opaque blobs encoded as hex or base64.
+    # - Mixed: tables with a small typed summary alongside the binary
+    #   payload (glyf, loca, cmap, CFF).
     #
-    # @example Serializing a parsed table
-    #   serializer = TableSerializer.new(binary_format: :hex)
-    #   data = serializer.serialize(head_table, "head")
-    #
-    # @example Serializing binary table
-    #   data = serializer.serialize_binary(raw_data, "DSIG")
+    # All table objects are BinData::Record subclasses; we trust that
+    # interface rather than duck-typing each field.
     class TableSerializer
-      # Tables that have full Lutaml::Model parsing support
+      # Tables whose BinData fields are exported as JSON.
       FULLY_PARSED_TABLES = %w[
         head hhea maxp post OS/2 name
         fvar HVAR VVAR MVAR cvar gvar
       ].freeze
 
-      # Tables that should be stored as binary
+      # Tables stored as opaque binary with no field extraction.
       BINARY_ONLY_TABLES = %w[
         cvt fpgm prep gasp DSIG GDEF GPOS GSUB
       ].freeze
 
-      # Initialize table serializer
-      #
-      # @param binary_format [Symbol] Format for binary data (:hex or :base64)
+      # Tables that ship a summary alongside the raw binary.
+      MIXED_SUMMARIES = {
+        "glyf" => GlyphSummary,
+        "loca" => LocaSummary,
+        "cmap" => CmapSummary,
+        "CFF" => CffSummary,
+      }.freeze
+
+      # @param binary_format [Symbol] :hex or :base64
       def initialize(binary_format: :hex)
         @binary_format = binary_format
         validate_binary_format!
       end
 
-      # Serialize a table to exportable format
-      #
-      # @param table [Object] The table object
-      # @param tag [String] The table tag
-      # @return [Hash] Serialized table data
+      # @param table [BinData::Record] the table object
+      # @param tag [String] table tag
+      # @return [Hash] serialized payload
       def serialize(table, tag)
         if fully_parsed?(tag)
           serialize_parsed(table, tag)
@@ -53,185 +55,41 @@ module Fontisan
         end
       end
 
-      # Serialize a parsed table
-      #
-      # @param table [Object] The table object with Lutaml::Model
-      # @param tag [String] The table tag
-      # @return [Hash] Serialized data with parsed flag
-      def serialize_parsed(table, tag)
-        fields = extract_fields(table)
-        {
-          tag: tag,
-          parsed: true,
-          fields: fields.to_json,
-          data: nil,
-        }
-      end
-
-      # Serialize a binary-only table
-      #
-      # @param data [String] Binary data
-      # @param tag [String] The table tag
-      # @return [Hash] Serialized data with binary content
+      # @param data [String] binary bytes
+      # @param tag [String] table tag
+      # @return [Hash]
       def serialize_binary(data, tag)
-        encoded = encode_binary(data)
-        {
-          tag: tag,
-          parsed: false,
-          data: encoded,
-          fields: nil,
-        }
-      end
-
-      # Serialize tables with mixed content (summary + binary)
-      #
-      # @param table [Object] The table object
-      # @param tag [String] The table tag
-      # @return [Hash] Serialized data with both fields and binary
-      def serialize_mixed(table, tag)
-        summary = create_summary(table, tag)
-        binary = table.respond_to?(:to_binary_s) ? table.to_binary_s : ""
-
-        {
-          tag: tag,
-          parsed: true,
-          fields: summary.to_json,
-          data: encode_binary(binary),
-        }
+        { tag: tag, parsed: false, data: encode_binary(data), fields: nil }
       end
 
       private
 
-      # Check if table is fully parsed
-      #
-      # @param tag [String] Table tag
-      # @return [Boolean]
       def fully_parsed?(tag)
         FULLY_PARSED_TABLES.include?(tag)
       end
 
-      # Check if table is binary-only
-      #
-      # @param tag [String] Table tag
-      # @return [Boolean]
       def binary_only?(tag)
         BINARY_ONLY_TABLES.include?(tag)
       end
 
-      # Extract fields from a parsed table
-      #
-      # @param table [Object] The table object
-      # @return [Hash] Field names and values
-      def extract_fields(table)
-        fields = {}
-
-        # Get all instance variables
-        table.instance_variables.each do |var|
-          name = var.to_s.delete("@")
-          value = table.instance_variable_get(var)
-          fields[name] = serialize_value(value)
-        end
-
-        fields
+      def serialize_parsed(table, tag)
+        { tag: tag, parsed: true, fields: table.snapshot.to_json, data: nil }
       end
 
-      # Serialize individual field value
-      #
-      # @param value [Object] The value to serialize
-      # @return [Object] Serialized value
-      def serialize_value(value)
-        case value
-        when Integer, Float, String, TrueClass, FalseClass, NilClass
-          value
-        when Array
-          value.map { |v| serialize_value(v) }
-        when Hash
-          value.transform_values { |v| serialize_value(v) }
-        when Time
-          value.iso8601
-        else
-          # For complex objects, try to extract fields
-          if value.respond_to?(:instance_variables)
-            extract_fields(value)
-          else
-            value.to_s
-          end
-        end
+      def serialize_mixed(table, tag)
+        summary = summary_for(table, tag)
+        { tag: tag, parsed: true,
+          fields: summary.to_json,
+          data: encode_binary(table.to_binary_s) }
       end
 
-      # Create summary for mixed-content tables
-      #
-      # @param table [Object] The table object
-      # @param tag [String] Table tag
-      # @return [Hash] Summary information
-      def create_summary(table, tag)
-        case tag
-        when "glyf"
-          create_glyf_summary(table)
-        when "loca"
-          create_loca_summary(table)
-        when "cmap"
-          create_cmap_summary(table)
-        when "CFF"
-          create_cff_summary(table)
-        else
-          { type: "binary", size: table.to_binary_s.bytesize }
-        end
+      def summary_for(table, tag)
+        builder = MIXED_SUMMARIES[tag]
+        return { type: "binary", size: table.to_binary_s.bytesize } unless builder
+
+        builder.call(table)
       end
 
-      # Create glyf table summary
-      #
-      # @param table [Object] glyf table
-      # @return [Hash] Summary
-      def create_glyf_summary(table)
-        {
-          type: "glyf",
-          num_glyphs: table.respond_to?(:glyphs) ? table.glyphs.length : 0,
-          note: "Outline data stored as binary",
-        }
-      end
-
-      # Create loca table summary
-      #
-      # @param table [Object] loca table
-      # @return [Hash] Summary
-      def create_loca_summary(table)
-        {
-          type: "loca",
-          num_offsets: table.respond_to?(:offsets) ? table.offsets.length : 0,
-          format: table.respond_to?(:format) ? table.format : nil,
-        }
-      end
-
-      # Create cmap table summary
-      #
-      # @param table [Object] cmap table
-      # @return [Hash] Summary
-      def create_cmap_summary(table)
-        {
-          type: "cmap",
-          version: table.respond_to?(:version) ? table.version : 0,
-          note: "Character mappings stored as binary",
-        }
-      end
-
-      # Create CFF table summary
-      #
-      # @param table [Object] CFF table
-      # @return [Hash] Summary
-      def create_cff_summary(_table)
-        {
-          type: "CFF",
-          note: "CharString data stored as binary",
-        }
-      end
-
-      public
-
-      # Encode binary data based on format
-      #
-      # @param data [String] Binary data
-      # @return [String] Encoded data
       def encode_binary(data)
         case @binary_format
         when :hex
@@ -241,16 +99,43 @@ module Fontisan
         end
       end
 
-      # Validate binary format option
-      #
-      # @raise [ArgumentError] if format is invalid
       def validate_binary_format!
-        valid_formats = %i[hex base64]
-        return if valid_formats.include?(@binary_format)
+        valid = %i[hex base64]
+        return if valid.include?(@binary_format)
 
         raise ArgumentError,
               "Invalid binary format: #{@binary_format}. " \
-              "Must be one of: #{valid_formats.join(', ')}"
+              "Must be one of: #{valid.join(', ')}"
+      end
+
+      # Summary builders for mixed-content tables. Each is a callable
+      # that receives the typed table and returns a JSON-able Hash.
+
+      module GlyphSummary
+        def self.call(table)
+          { type: "glyf", num_glyphs: table.glyphs.length,
+            note: "Outline data stored as binary" }
+        end
+      end
+
+      module LocaSummary
+        def self.call(table)
+          { type: "loca", num_offsets: table.offsets.length,
+            format: table.format }
+        end
+      end
+
+      module CmapSummary
+        def self.call(table)
+          { type: "cmap", version: table.version,
+            note: "Character mappings stored as binary" }
+        end
+      end
+
+      module CffSummary
+        def self.call(_table)
+          { type: "CFF", note: "CharString data stored as binary" }
+        end
       end
     end
   end

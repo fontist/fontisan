@@ -3,32 +3,49 @@
 module Fontisan
   module SvgToGlyf
     module Geometry
-      # Computes the affine transform that maps SVG viewBox coordinates
-      # (Y-down, origin at top-left) into font coordinates (Y-up, origin
-      # at bottom-left, scaled to UPM).
+      # Computes the affine transform that maps SVG coordinate space
+      # (Y-down, arbitrary origin) into font coordinate space (Y-up,
+      # origin at the bottom-left of the em-square, scaled to UPM).
       #
-      # The normalization combines a Y-flip across the viewBox midline
-      # with a uniform scale from viewBox units to font units. The
-      # resulting matrix is then composed with the SVG document's
+      # The normalization accepts a Ufo::Bounds describing the SVG
+      # coordinate extent to map into the em-square. That bounds may
+      # be the SVG viewBox, the actual content extents, or the union
+      # of both — Assembler decides which.
+      #
+      # The transform is:
+      #
+      #   1. Translate the source origin (min_x, min_y) to (0, 0).
+      #   2. Scale uniformly to font units: (upm/w, upm/h).
+      #   3. Flip Y across the half-height of the scaled space.
+      #   4. Translate up by upm so the top of the source maps to the
+      #      top of the em-square.
+      #
+      # The resulting matrix is composed with the SVG document's
       # accumulated group transform to produce the final per-point
       # transform.
       class Normalizer
-        attr_reader :viewbox_width, :viewbox_height, :upm
+        attr_reader :bounds, :upm
 
-        # @param viewbox_width [Float] SVG viewBox width
-        # @param viewbox_height [Float] SVG viewBox height
-        # @param upm [Integer] font units-per-em
-        def initialize(viewbox_width:, viewbox_height:, upm:)
-          @viewbox_width = viewbox_width.to_f
-          @viewbox_height = viewbox_height.to_f
+        # @param bounds [Ufo::Bounds] source coordinate extents
+        # @param upm [Integer, Float] font units-per-em
+        def initialize(bounds:, upm:)
+          @bounds = bounds
           @upm = upm.to_f
         end
 
-        # @return [AffineTransform] the viewBox→font normalization
+        # @return [AffineTransform] the source→font normalization
         def matrix
-          sx = @upm / @viewbox_width
-          sy = @upm / @viewbox_height
-          AffineTransform.new(sx, 0, 0, -sy, 0, @upm)
+          w = @bounds.width
+          h = @bounds.height
+          return AffineTransform.identity if w.zero? || h.zero?
+
+          sx = @upm / w
+          sy = @upm / h
+          # x' = sx * (x - min_x)
+          # y' = -sy * (y - min_y) + upm
+          AffineTransform.new(sx, 0, 0, -sy,
+                              -sx * @bounds.min_x,
+                              sy * @bounds.min_y + @upm)
         end
 
         # Compose the normalization with an SVG group transform,

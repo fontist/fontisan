@@ -9,7 +9,6 @@ module Fontisan
       autoload :Parser, "fontisan/svg_to_glyf/path/parser"
       autoload :State, "fontisan/svg_to_glyf/path/state"
       autoload :ContourBuilder, "fontisan/svg_to_glyf/path/contour_builder"
-      autoload :Bounds, "fontisan/svg_to_glyf/path/bounds"
     end
   end
 end

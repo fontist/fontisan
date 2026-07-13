@@ -7,9 +7,10 @@ module Fontisan
     #   path data + transforms
     #     → Path::Parser.parse → [Command]
     #     → Path::ContourBuilder.build → [Ufo::Contour]
-    #     → measure actual bounds (Path::Bounds)
-    #     → normalize using max(viewBox, actual bounds)
-    #     → apply final transform (normalizer · group transform)
+    #     → measure content bounds (Ufo::Bounds)
+    #     → union content bounds with the SVG viewBox bounds
+    #     → Normalizer maps the unioned space into the em-square
+    #     → compose with the accumulated group transform
     #     → round to Integer
     #     → Ufo::Glyph
     #
@@ -18,6 +19,8 @@ module Fontisan
     # composes the normalizer with the group transform and runs the
     # pipeline once per path.
     class Assembler
+      DEFAULT_VIEWBOX = Ufo::Bounds.new(min_x: 0, min_y: 0, max_x: DEFAULT_UPM, max_y: DEFAULT_UPM)
+
       attr_reader :upm
 
       # @param upm [Integer] font units-per-em
@@ -30,18 +33,16 @@ module Fontisan
       # @param path_data [String] SVG path d= attribute
       # @param codepoint [Integer, nil] Unicode codepoint
       # @param name [String, nil] glyph name
-      # @param viewbox [Hash{Symbol=>Float}, nil] :width, :height
+      # @param viewbox [Ufo::Bounds, Hash{Symbol=>Float}, nil] SVG viewbox
       # @param transform [Geometry::AffineTransform, nil] group transform
       # @return [Fontisan::Ufo::Glyph]
       def build_from_path_data(path_data, codepoint: nil, name: nil,
                                viewbox: nil, transform: nil)
-        viewbox ||= { width: @upm, height: @upm }
-        commands = Path::Parser.parse(path_data)
-        contours = Path::ContourBuilder.new.build(commands)
-        norm_dims = normalization_dimensions(contours, **viewbox)
-        final = normalizer_for(**norm_dims).final_transform(transform || Geometry::AffineTransform.identity)
-        transformed = contours.map { |c| transform_contour(c, final) }
-        assemble_glyph(name || glyph_name_for(codepoint), transformed, codepoint)
+        assemble(path_data: path_data,
+                 viewbox: resolve_viewbox(viewbox),
+                 group_transform: transform || Geometry::AffineTransform.identity,
+                 codepoint: codepoint,
+                 name: name)
       end
 
       # Build a glyph from an SVG file.
@@ -54,7 +55,11 @@ module Fontisan
         codepoint ||= codepoint_from_filename(File.basename(file_path))
 
         doc.each_path.with_object(nil) do |(data, transform), _|
-          return build_from_doc_path(data, transform, doc, codepoint)
+          return assemble(path_data: data,
+                          viewbox: doc.viewbox || default_viewbox,
+                          group_transform: transform,
+                          codepoint: codepoint,
+                          name: nil)
         end
 
         empty_glyph(codepoint)
@@ -78,33 +83,33 @@ module Fontisan
 
       private
 
-      def build_from_doc_path(data, group_transform, doc, codepoint)
-        commands = Path::Parser.parse(data)
+      # Shared pipeline used by every entry point. Parses the d-string,
+      # builds contours, computes the normalization bounds as the union
+      # of the actual content bounds and the declared viewBox bounds,
+      # applies the normalizer composed with the group transform, and
+      # assembles the result into a Ufo::Glyph.
+      def assemble(path_data:, viewbox:, group_transform:, codepoint:, name:)
+        commands = Path::Parser.parse(path_data)
         contours = Path::ContourBuilder.new.build(commands)
-        norm_dims = normalization_dimensions(
-          contours,
-          width: doc.viewbox_width,
-          height: doc.viewbox_height,
-        )
-        final = normalizer_for(**norm_dims).final_transform(group_transform)
+        norm_bounds = normalization_bounds(contours, viewbox)
+        final = normalizer_for(norm_bounds).final_transform(group_transform)
         transformed = contours.map { |c| transform_contour(c, final) }
-        assemble_glyph(glyph_name_for(codepoint), transformed, codepoint)
+        assemble_glyph(name || glyph_name_for(codepoint), transformed, codepoint)
       end
 
-      # Compute the normalization dimensions from both the declared
-      # viewBox and the actual contour bounds. Uses the max of each
-      # so coordinates outside the viewBox are scaled correctly.
+      # Union the actual content bounds with the SVG viewBox bounds.
+      # Content outside the viewBox is preserved (not clipped) by
+      # expanding the normalization space to contain it; content inside
+      # a larger viewBox keeps its relative scale.
       #
       # @param contours [Array<Ufo::Contour>]
-      # @param width [Float] declared viewBox width
-      # @param height [Float] declared viewBox height
-      # @return [Hash{Symbol=>Float}] :width, :height for the Normalizer
-      def normalization_dimensions(contours, width:, height:)
-        bounds = Path::Bounds.measure(contours)
-        {
-          width: [bounds.max_x, width.to_f].max,
-          height: [bounds.max_y, height.to_f].max,
-        }
+      # @param viewbox [Ufo::Bounds]
+      # @return [Ufo::Bounds]
+      def normalization_bounds(contours, viewbox)
+        content = Ufo::Bounds.measure(contours)
+        return viewbox if content.empty?
+
+        content.union(viewbox)
       end
 
       def transform_contour(contour, transform)
@@ -116,9 +121,23 @@ module Fontisan
         Fontisan::Ufo::Contour.new(points)
       end
 
-      def normalizer_for(width:, height:)
-        Geometry::Normalizer.new(viewbox_width: width, viewbox_height: height,
-                                 upm: @upm)
+      def normalizer_for(bounds)
+        Geometry::Normalizer.new(bounds: bounds, upm: @upm)
+      end
+
+      # Accept either a Ufo::Bounds (preferred) or a legacy hash with
+      # :width, :height (treated as origin 0,0). Returns a Bounds.
+      def resolve_viewbox(viewbox)
+        return default_viewbox unless viewbox
+        return viewbox if viewbox.is_a?(Ufo::Bounds)
+
+        Ufo::Bounds.new(min_x: 0, min_y: 0,
+                        max_x: viewbox[:width].to_f,
+                        max_y: viewbox[:height].to_f)
+      end
+
+      def default_viewbox
+        self.class.const_get(:DEFAULT_VIEWBOX)
       end
 
       def assemble_glyph(name, contours, codepoint)

@@ -178,8 +178,6 @@ module Fontisan
       # @param tables [Hash<String, String>] Font tables
       # @return [Object] Font-like object
       def build_font_from_tables(tables)
-        # Create a simple font wrapper that implements the minimal
-        # interface needed by SvgGenerator
         InstanceFontWrapper.new(@font, tables)
       end
 
@@ -213,52 +211,6 @@ module Fontisan
           coords[axis.axis_tag] = value
         end
         coords
-      end
-
-      # Wrapper class for instance font tables
-      #
-      # Provides minimal interface needed by SvgGenerator while using
-      # instance tables instead of original font tables.
-      class InstanceFontWrapper
-        # @return [Hash<String, String>] Font tables
-        attr_reader :table_data
-
-        # Initialize wrapper
-        #
-        # @param original_font [Object] Original variable font
-        # @param instance_tables [Hash<String, String>] Instance tables
-        def initialize(original_font, instance_tables)
-          @original_font = original_font
-          @table_data = instance_tables
-        end
-
-        # Get table by tag
-        #
-        # @param tag [String] Table tag
-        # @return [Object, nil] Table or nil
-        def table(tag)
-          # Use instance table if available, otherwise fall back to original
-          if @table_data.key?(tag)
-          end
-          @original_font.table(tag)
-        end
-
-        # Check if table exists
-        #
-        # @param tag [String] Table tag
-        # @return [Boolean] True if table exists
-        def has_table?(tag)
-          @table_data.key?(tag) || @original_font.has_table?(tag)
-        end
-
-        # Forward other methods to original font
-        def method_missing(method, ...)
-          @original_font.send(method, ...)
-        end
-
-        def respond_to_missing?(method, include_private = false)
-          @original_font.respond_to?(method, include_private) || super
-        end
       end
     end
   end
