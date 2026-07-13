@@ -151,10 +151,10 @@ module Fontisan
         return base_cff unless accent_cff
 
         io = String.new(encoding: Encoding::ASCII_8BIT)
-        io << base_cff.sub(/\x0e\z/, "")
+        io << base_cff.delete_suffix("\u000E")
         io << encode_cff_number(seac_data[:adx].to_i) if seac_data[:adx].to_i != 0
         io << encode_cff_number(seac_data[:ady].to_i) if seac_data[:ady].to_i != 0
-        io << accent_cff.sub(/\x0e\z/, "")
+        io << accent_cff.delete_suffix("\u000E")
         io << encode_cff_operator(TYPE1_TO_CFF[:endchar])
       rescue StandardError
         encode_cff_operator(TYPE1_TO_CFF[:endchar])

@@ -24,6 +24,7 @@ module Fontisan
     autoload :LayerSet,    "fontisan/ufo/layer_set"
     autoload :Glyph,       "fontisan/ufo/glyph"
     autoload :Contour,     "fontisan/ufo/contour"
+    autoload :Bounds,      "fontisan/ufo/bounds"
     autoload :Point,       "fontisan/ufo/point"
     autoload :Component,   "fontisan/ufo/component"
     autoload :Anchor,      "fontisan/ufo/anchor"

@@ -2,6 +2,53 @@
 
 require "spec_helper"
 
+# Lightweight stand-ins for the Loca and Head tables. These subclass
+# the real BinData record types so is_a? checks in production code
+# accept them, while exposing just the surface the glyf parser
+# consults during testing.
+module GlyfSpecFakes
+  class FakeHead < Fontisan::Tables::Head
+    attr_accessor :units_per_em_value, :index_to_loc_format_value
+
+    def self.build(units_per_em: 2048, index_to_loc_format: 1)
+      allocate.tap do |inst|
+        inst.units_per_em_value = units_per_em
+        inst.index_to_loc_format_value = index_to_loc_format
+      end
+    end
+
+    def units_per_em = units_per_em_value
+    def index_to_loc_format = index_to_loc_format_value
+  end
+
+  class FakeLoca < Fontisan::Tables::Loca
+    attr_reader :offsets, :num_glyphs, :parsed_flag
+
+    def self.build(offsets)
+      allocate.tap do |inst|
+        inst.instance_variable_set(:@offsets, offsets)
+        inst.instance_variable_set(:@num_glyphs, offsets.length - 1)
+        inst.instance_variable_set(:@parsed_flag, true)
+      end
+    end
+
+    def offset_for(id) = offsets[id]
+
+    def size_of(id)
+      return nil if id >= offsets.length - 1
+
+      offsets[id + 1] - offsets[id]
+    end
+
+    def parsed? = parsed_flag
+
+    def unparsed!
+      @parsed_flag = false
+      self
+    end
+  end
+end
+
 RSpec.describe Fontisan::Tables::Glyf do
   # Test fixtures acknowledgment:
   # Using Libertinus fonts (OFL licensed) from:
@@ -155,23 +202,12 @@ y_coords:)
 
   # Helper to create mock Head table
   def mock_head_table
-    double("Head", units_per_em: 2048, index_to_loc_format: 1)
+    GlyfSpecFakes::FakeHead.build
   end
 
   # Helper to create mock Loca table
   def mock_loca_table(offsets)
-    loca = double("Loca")
-    allow(loca).to receive(:offset_for) { |id| offsets[id] }
-    allow(loca).to receive(:size_of) do |id|
-      next nil if id >= offsets.length - 1
-
-      offsets[id + 1] - offsets[id]
-    end
-    allow(loca).to receive_messages(parsed?: true,
-                                    num_glyphs: offsets.length - 1)
-    allow(loca).to receive(:respond_to?).with(:offset_for).and_return(true)
-    allow(loca).to receive(:respond_to?).with(:size_of).and_return(true)
-    loca
+    GlyfSpecFakes::FakeLoca.build(offsets)
   end
 
   describe ".read" do
@@ -293,7 +329,7 @@ y_coords:)
 
     context "with validation" do
       it "validates loca table" do
-        invalid_loca = double("Invalid")
+        invalid_loca = Object.new
 
         expect do
           glyf.glyph_for(0, invalid_loca, head)
@@ -301,8 +337,7 @@ y_coords:)
       end
 
       it "requires parsed loca table" do
-        unparsed_loca = mock_loca_table([0, 100])
-        allow(unparsed_loca).to receive(:parsed?).and_return(false)
+        unparsed_loca = mock_loca_table([0, 100]).unparsed!
 
         expect do
           glyf.glyph_for(0, unparsed_loca, head)
@@ -310,7 +345,7 @@ y_coords:)
       end
 
       it "validates head table" do
-        invalid_head = double("Invalid")
+        invalid_head = Object.new
 
         expect do
           glyf.glyph_for(0, loca, invalid_head)

@@ -76,7 +76,7 @@ RSpec.describe "SvgToGlyf integration" do
         expect(types).to include("curve")
       end
 
-      it "scales coordinates exceeding the viewBox to fit the em-square" do
+      it "scales coordinates exceeding the viewBox to fit the em-square, preserving aspect ratio" do
         glyph = described_class.convert(
           "M 0 0 L 5000 0 L 5000 5000 L 0 5000 Z",
           upm: 1000,
@@ -86,10 +86,14 @@ RSpec.describe "SvgToGlyf integration" do
         pts = glyph.contours.first.points
         all_x = pts.map(&:x)
         all_y = pts.map(&:y)
-        expect(all_x.max).to be <= 1000
-        expect(all_y.max).to be <= 1000
-        expect(all_x.min).to be >= 0
-        expect(all_y.min).to be >= 0
+
+        # Content extends 5× beyond the viewBox in both axes; normalization
+        # expands to the union of content and viewBox (5000×5000) and scales
+        # to UPM, so the glyph fills the em-square exactly.
+        expect(all_x.max - all_x.min).to eq(1000)
+        expect(all_y.max - all_y.min).to eq(1000)
+        expect(all_x.min).to eq(0)
+        expect(all_y.min).to eq(0)
       end
 
       it "preserves coordinates when they are within the viewBox" do
@@ -101,6 +105,43 @@ RSpec.describe "SvgToGlyf integration" do
         )
         pts = glyph.contours.first.points
         expect(pts.map { |p| [p.x, p.y] }).to eq([[0, 1000], [500, 1000], [500, 300], [0, 300]])
+      end
+
+      it "handles content with negative coordinates outside the viewBox" do
+        # Path extends to x=-2000, well outside the 0..1000 viewBox on the
+        # low side. Union of content (-2000..1000) and viewBox (0..1000) is
+        # (-2000..1000), width 3000 → scales 3× down.
+        glyph = described_class.convert(
+          "M -2000 0 L 1000 0 L 1000 1000 L -2000 1000 Z",
+          upm: 1000,
+          viewbox: { width: 1000, height: 1000 },
+        )
+        pts = glyph.contours.first.points
+        xs = pts.map(&:x)
+        # The leftmost content point (-2000) should map to font x=0.
+        expect(xs.min).to eq(0)
+        # The rightmost point (1000) should map to font x=upm.
+        expect(xs.max).to eq(1000)
+        # Span should equal UPM (the content spanned 3000 source units → 1000 font units).
+        expect(xs.max - xs.min).to eq(1000)
+      end
+
+      it "maps a non-origin viewBox into the em-square" do
+        glyph = described_class.convert(
+          "M 100 100 L 900 100 L 900 900 L 100 900 Z",
+          upm: 1000,
+          codepoint: 0x41,
+          viewbox: Fontisan::Ufo::Bounds.new(min_x: 100, min_y: 100,
+                                             max_x: 900, max_y: 900),
+        )
+        pts = glyph.contours.first.points
+        xs = pts.map(&:x)
+        ys = pts.map(&:y)
+        # The viewBox (100,100)-(900,900) should map to the full em-square.
+        expect(xs.min).to eq(0)
+        expect(xs.max).to eq(1000)
+        expect(ys.min).to eq(0)
+        expect(ys.max).to eq(1000)
       end
     end
 

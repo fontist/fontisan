@@ -24,6 +24,11 @@ module Fontisan
       def point_count
         @points.size
       end
+
+      # @return [Bounds] extents of this contour's points
+      def bounds
+        Bounds.measure([self])
+      end
     end
   end
 end

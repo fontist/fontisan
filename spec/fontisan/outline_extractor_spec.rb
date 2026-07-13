@@ -2,14 +2,80 @@
 
 require "spec_helper"
 
+module OutlineExtractorFakes
+  # Lightweight fakes for the table-shaped objects OutlineExtractor
+  # consumes. These are real Ruby objects with the same surface the
+  # extractor calls into — no mock framework methods, no stubs that
+  # bypass the type system.
+  class FakeFont
+    attr_reader :tables
+
+    def initialize(tables = {})
+      @tables = tables
+    end
+
+    def table(tag)
+      tables[tag]
+    end
+
+    def has_table?(tag)
+      tables.key?(tag)
+    end
+  end
+
+  FakeMaxp = Struct.new(:num_glyphs, keyword_init: true)
+
+  FakeLoca = Struct.new(:parsed_flag, keyword_init: true) do
+    def parsed?
+      parsed_flag
+    end
+  end
+
+  FakeHead = Struct.new(:index_to_loc_format, keyword_init: true)
+
+  FakeGlyf = Struct.new(:glyphs_by_id, keyword_init: true) do
+    def glyph_for(id, _loca, _head)
+      glyphs_by_id[id]
+    end
+  end
+
+  FakeSimpleGlyph = Struct.new(:glyph_id, :num_contours, :x_min, :y_min,
+                               :x_max, :y_max, :contours, keyword_init: true) do
+    def simple? = true
+    def compound? = false
+    def empty? = contours.empty?
+
+    def points_for_contour(idx)
+      contours[idx]
+    end
+  end
+
+  FakeCompoundGlyph = Struct.new(:glyph_id, :components, :x_min, :y_min,
+                                 :x_max, :y_max, keyword_init: true) do
+    def simple? = false
+    def compound? = true
+    def empty? = components.empty?
+  end
+
+  FakeComponent = Struct.new(:glyph_index, :transformation_matrix)
+
+  FakeCff = Struct.new(:charstrings_by_id, keyword_init: true) do
+    def charstring_for_glyph(id)
+      charstrings_by_id[id]
+    end
+  end
+
+  FakeCharstring = Struct.new(:path, :bounding_box, keyword_init: true)
+end
+
 RSpec.describe Fontisan::OutlineExtractor do
+  let(:num_glyphs) { 100 }
+  let(:maxp) { OutlineExtractorFakes::FakeMaxp.new(num_glyphs: num_glyphs) }
+
   describe "#initialize" do
     it "creates an extractor with a valid font" do
-      font = instance_double(Fontisan::TrueTypeFont)
-      allow(font).to receive(:respond_to?).with(:table).and_return(true)
-
+      font = OutlineExtractorFakes::FakeFont.new("maxp" => maxp)
       extractor = described_class.new(font)
-
       expect(extractor.font).to eq(font)
     end
 
@@ -23,18 +89,11 @@ RSpec.describe Fontisan::OutlineExtractor do
       non_nil = Object.new
       expect(described_class.new(non_nil).font).to eq(non_nil)
     end
-    end
   end
 
   describe "#extract" do
-    let(:font) { instance_double(Fontisan::TrueTypeFont) }
+    let(:font) { OutlineExtractorFakes::FakeFont.new("maxp" => maxp) }
     let(:extractor) { described_class.new(font) }
-    let(:maxp) { double("Maxp", num_glyphs: 100) }
-
-    before do
-      allow(font).to receive(:respond_to?).with(:table).and_return(true)
-      allow(font).to receive(:table).with("maxp").and_return(maxp)
-    end
 
     context "with invalid glyph_id" do
       it "raises ArgumentError for nil glyph_id" do
@@ -58,47 +117,27 @@ RSpec.describe Fontisan::OutlineExtractor do
     end
 
     context "with TrueType font" do
-      let(:glyf) { double("Glyf") }
-      let(:loca) { double("Loca", parsed?: true) }
-      let(:head) { double("Head", index_to_loc_format: 0) }
+      let(:loca) { OutlineExtractorFakes::FakeLoca.new(parsed_flag: true) }
+      let(:head) { OutlineExtractorFakes::FakeHead.new(index_to_loc_format: 0) }
+      let(:glyf) { OutlineExtractorFakes::FakeGlyf.new(glyphs_by_id: {}) }
 
       before do
-        allow(font).to receive(:has_table?).with("glyf").and_return(true)
-        allow(font).to receive(:has_table?).with(Fontisan::Constants::CFF_TAG).and_return(false)
-        allow(font).to receive(:table).with("glyf").and_return(glyf)
-        allow(font).to receive(:table).with("loca").and_return(loca)
-        allow(font).to receive(:table).with("head").and_return(head)
-        allow(font).to receive(:table).with(Fontisan::Constants::CFF_TAG).and_return(nil)
+        font.tables["glyf"] = glyf
+        font.tables["loca"] = loca
+        font.tables["head"] = head
       end
 
       it "extracts a simple glyph outline" do
-        simple_glyph = double(
-          "SimpleGlyph",
-          glyph_id: 65,
-          simple?: true,
-          compound?: false,
-          empty?: false,
-          num_contours: 1,
-          x_min: 100,
-          y_min: 0,
-          x_max: 300,
-          y_max: 700,
+        simple_glyph = OutlineExtractorFakes::FakeSimpleGlyph.new(
+          glyph_id: 65, num_contours: 1,
+          x_min: 100, y_min: 0, x_max: 300, y_max: 700,
+          contours: [[
+            { x: 100, y: 0, on_curve: true },
+            { x: 200, y: 700, on_curve: true },
+            { x: 300, y: 0, on_curve: true },
+          ]]
         )
-
-        allow(simple_glyph).to receive(:points_for_contour).with(0).and_return([
-                                                                                 {
-                                                                                   x: 100, y: 0, on_curve: true
-                                                                                 },
-                                                                                 {
-                                                                                   x: 200, y: 700, on_curve: true
-                                                                                 },
-                                                                                 {
-                                                                                   x: 300, y: 0, on_curve: true
-                                                                                 },
-                                                                               ])
-
-        allow(glyf).to receive(:glyph_for).with(65, loca,
-                                                head).and_return(simple_glyph)
+        glyf.glyphs_by_id[65] = simple_glyph
 
         outline = extractor.extract(65)
 
@@ -111,29 +150,24 @@ RSpec.describe Fontisan::OutlineExtractor do
       end
 
       it "returns nil for empty glyphs" do
-        empty_glyph = double(
-          "SimpleGlyph",
-          empty?: true,
+        empty_glyph = OutlineExtractorFakes::FakeSimpleGlyph.new(
+          glyph_id: 32, num_contours: 0,
+          x_min: 0, y_min: 0, x_max: 0, y_max: 0,
+          contours: []
         )
+        glyf.glyphs_by_id[32] = empty_glyph
 
-        allow(glyf).to receive(:glyph_for).with(32, loca,
-                                                head).and_return(empty_glyph)
-
-        outline = extractor.extract(32)
-
-        expect(outline).to be_nil
+        expect(extractor.extract(32)).to be_nil
       end
 
       it "returns nil when glyph is nil" do
-        allow(glyf).to receive(:glyph_for).with(0, loca, head).and_return(nil)
+        glyf.glyphs_by_id[0] = nil
 
-        outline = extractor.extract(0)
-
-        expect(outline).to be_nil
+        expect(extractor.extract(0)).to be_nil
       end
 
       it "raises MissingTableError when glyf table is missing" do
-        allow(font).to receive(:table).with("glyf").and_return(nil)
+        font.tables.delete("glyf")
 
         expect { extractor.extract(65) }.to raise_error(
           Fontisan::MissingTableError,
@@ -142,7 +176,7 @@ RSpec.describe Fontisan::OutlineExtractor do
       end
 
       it "raises MissingTableError when loca table is missing" do
-        allow(font).to receive(:table).with("loca").and_return(nil)
+        font.tables.delete("loca")
 
         expect { extractor.extract(65) }.to raise_error(
           Fontisan::MissingTableError,
@@ -151,7 +185,7 @@ RSpec.describe Fontisan::OutlineExtractor do
       end
 
       it "raises MissingTableError when head table is missing" do
-        allow(font).to receive(:table).with("head").and_return(nil)
+        font.tables.delete("head")
 
         expect { extractor.extract(65) }.to raise_error(
           Fontisan::MissingTableError,
@@ -160,56 +194,22 @@ RSpec.describe Fontisan::OutlineExtractor do
       end
 
       context "with compound glyphs" do
-        let(:component) do
-          double(
-            "Component",
-            glyph_index: 66,
-            transformation_matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-          )
-        end
-
         it "extracts compound glyph by resolving components" do
-          # Component glyph (simple)
-          component_glyph = double(
-            "SimpleGlyph",
-            glyph_id: 66,
-            simple?: true,
-            compound?: false,
-            empty?: false,
-            num_contours: 1,
-            x_min: 0,
-            y_min: 0,
-            x_max: 100,
-            y_max: 100,
+          component_glyph = OutlineExtractorFakes::FakeSimpleGlyph.new(
+            glyph_id: 66, num_contours: 1,
+            x_min: 0, y_min: 0, x_max: 100, y_max: 100,
+            contours: [[
+              { x: 0, y: 0, on_curve: true },
+              { x: 100, y: 100, on_curve: true },
+            ]]
           )
-
-          allow(component_glyph).to receive(:points_for_contour).with(0).and_return([
-                                                                                      {
-                                                                                        x: 0, y: 0, on_curve: true
-                                                                                      },
-                                                                                      {
-                                                                                        x: 100, y: 100, on_curve: true
-                                                                                      },
-                                                                                    ])
-
-          # Compound glyph
-          compound_glyph = double(
-            "CompoundGlyph",
-            glyph_id: 65,
-            simple?: false,
-            compound?: true,
-            empty?: false,
-            components: [component],
-            x_min: 0,
-            y_min: 0,
-            x_max: 100,
-            y_max: 100,
+          component = OutlineExtractorFakes::FakeComponent.new(66, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+          compound_glyph = OutlineExtractorFakes::FakeCompoundGlyph.new(
+            glyph_id: 65, components: [component],
+            x_min: 0, y_min: 0, x_max: 100, y_max: 100
           )
-
-          allow(glyf).to receive(:glyph_for).with(65, loca,
-                                                  head).and_return(compound_glyph)
-          allow(glyf).to receive(:glyph_for).with(66, loca,
-                                                  head).and_return(component_glyph)
+          glyf.glyphs_by_id[65] = compound_glyph
+          glyf.glyphs_by_id[66] = component_glyph
 
           outline = extractor.extract(65)
 
@@ -219,57 +219,25 @@ RSpec.describe Fontisan::OutlineExtractor do
         end
 
         it "applies transformations to component outlines" do
-          # Component with scaling transformation
-          scaled_component = double(
-            "Component",
-            glyph_index: 66,
-            transformation_matrix: [2.0, 0.0, 0.0, 2.0, 10.0, 20.0], # scale 2x + offset
+          scaled_component = OutlineExtractorFakes::FakeComponent.new(66, [2.0, 0.0, 0.0, 2.0, 10.0, 20.0])
+          component_glyph = OutlineExtractorFakes::FakeSimpleGlyph.new(
+            glyph_id: 66, num_contours: 1,
+            x_min: 0, y_min: 0, x_max: 50, y_max: 50,
+            contours: [[
+              { x: 0, y: 0, on_curve: true },
+              { x: 50, y: 50, on_curve: true },
+            ]]
           )
-
-          component_glyph = double(
-            "SimpleGlyph",
-            glyph_id: 66,
-            simple?: true,
-            compound?: false,
-            empty?: false,
-            num_contours: 1,
-            x_min: 0,
-            y_min: 0,
-            x_max: 50,
-            y_max: 50,
+          compound_glyph = OutlineExtractorFakes::FakeCompoundGlyph.new(
+            glyph_id: 65, components: [scaled_component],
+            x_min: 10, y_min: 20, x_max: 110, y_max: 120
           )
-
-          allow(component_glyph).to receive(:points_for_contour).with(0).and_return([
-                                                                                      {
-                                                                                        x: 0, y: 0, on_curve: true
-                                                                                      },
-                                                                                      {
-                                                                                        x: 50, y: 50, on_curve: true
-                                                                                      },
-                                                                                    ])
-
-          compound_glyph = double(
-            "CompoundGlyph",
-            glyph_id: 65,
-            simple?: false,
-            compound?: true,
-            empty?: false,
-            components: [scaled_component],
-            x_min: 10,
-            y_min: 20,
-            x_max: 110,
-            y_max: 120,
-          )
-
-          allow(glyf).to receive(:glyph_for).with(65, loca,
-                                                  head).and_return(compound_glyph)
-          allow(glyf).to receive(:glyph_for).with(66, loca,
-                                                  head).and_return(component_glyph)
+          glyf.glyphs_by_id[65] = compound_glyph
+          glyf.glyphs_by_id[66] = component_glyph
 
           outline = extractor.extract(65)
 
           expect(outline).to be_a(Fontisan::Models::GlyphOutline)
-          # Check that transformation was applied
           first_point = outline.points.first
           expect(first_point[:x]).to eq(10) # 0*2 + 10
           expect(first_point[:y]).to eq(20) # 0*2 + 20
@@ -278,10 +246,15 @@ RSpec.describe Fontisan::OutlineExtractor do
     end
 
     context "with CFF font" do
-      let(:cff) { double("Cff") }
-      let(:charstring) do
-        double(
-          "Charstring",
+      let(:cff) { OutlineExtractorFakes::FakeCff.new(charstrings_by_id: {}) }
+
+      before do
+        font.tables["CFF "] = cff
+        font.tables.delete("glyf") if font.tables.key?("glyf")
+      end
+
+      it "extracts CFF glyph outline" do
+        cff.charstrings_by_id[65] = OutlineExtractorFakes::FakeCharstring.new(
           path: [
             { type: :move_to, x: 100.0, y: 0.0 },
             { type: :line_to, x: 200.0, y: 700.0 },
@@ -289,17 +262,6 @@ RSpec.describe Fontisan::OutlineExtractor do
           ],
           bounding_box: [100.0, 0.0, 300.0, 700.0],
         )
-      end
-
-      before do
-        allow(font).to receive(:has_table?).with("glyf").and_return(false)
-        allow(font).to receive(:has_table?).with(Fontisan::Constants::CFF_TAG).and_return(true)
-        allow(font).to receive(:table).with(Fontisan::Constants::CFF_TAG).and_return(cff)
-        allow(font).to receive(:table).with("glyf").and_return(nil)
-      end
-
-      it "extracts CFF glyph outline" do
-        allow(cff).to receive(:charstring_for_glyph).with(65).and_return(charstring)
 
         outline = extractor.extract(65)
 
@@ -310,25 +272,19 @@ RSpec.describe Fontisan::OutlineExtractor do
       end
 
       it "returns nil for empty CFF glyphs" do
-        empty_charstring = double("Charstring", path: [])
-        allow(cff).to receive(:charstring_for_glyph).with(32).and_return(empty_charstring)
+        cff.charstrings_by_id[32] = OutlineExtractorFakes::FakeCharstring.new(path: [], bounding_box: nil)
 
-        outline = extractor.extract(32)
-
-        expect(outline).to be_nil
+        expect(extractor.extract(32)).to be_nil
       end
 
       it "returns nil when charstring is nil" do
-        allow(cff).to receive(:charstring_for_glyph).with(0).and_return(nil)
+        cff.charstrings_by_id[0] = nil
 
-        outline = extractor.extract(0)
-
-        expect(outline).to be_nil
+        expect(extractor.extract(0)).to be_nil
       end
 
       it "handles CFF curve commands" do
-        curve_charstring = double(
-          "Charstring",
+        cff.charstrings_by_id[65] = OutlineExtractorFakes::FakeCharstring.new(
           path: [
             { type: :move_to, x: 100.0, y: 0.0 },
             { type: :curve_to, x1: 120.0, y1: 50.0, x2: 180.0, y2: 50.0,
@@ -337,17 +293,14 @@ RSpec.describe Fontisan::OutlineExtractor do
           bounding_box: [100.0, 0.0, 200.0, 50.0],
         )
 
-        allow(cff).to receive(:charstring_for_glyph).with(65).and_return(curve_charstring)
-
         outline = extractor.extract(65)
 
         expect(outline).to be_a(Fontisan::Models::GlyphOutline)
-        # CFF curves are converted to contour points
         expect(outline.point_count).to be >= 2
       end
 
       it "raises MissingTableError when CFF table is missing" do
-        allow(font).to receive(:table).with(Fontisan::Constants::CFF_TAG).and_return(nil)
+        font.tables.delete("CFF ")
 
         expect { extractor.extract(65) }.to raise_error(
           Fontisan::MissingTableError,
@@ -357,13 +310,6 @@ RSpec.describe Fontisan::OutlineExtractor do
     end
 
     context "with neither glyf nor CFF table" do
-      before do
-        allow(font).to receive(:has_table?).with("glyf").and_return(false)
-        allow(font).to receive(:has_table?).with(Fontisan::Constants::CFF_TAG).and_return(false)
-        allow(font).to receive(:table).with("glyf").and_return(nil)
-        allow(font).to receive(:table).with(Fontisan::Constants::CFF_TAG).and_return(nil)
-      end
-
       it "raises MissingTableError" do
         expect { extractor.extract(65) }.to raise_error(
           Fontisan::MissingTableError,

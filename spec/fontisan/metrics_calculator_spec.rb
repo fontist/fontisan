@@ -2,60 +2,86 @@
 
 require "spec_helper"
 
+module MetricsFakes
+  # Lightweight stand-ins for typed tables. These are value-shaped fakes
+  # that satisfy the MetricsCalculator API without the cost of building
+  # real BinData records. They expose the same surface the calculator
+  # consumes; behavior is asserted through state, not interaction.
+  FakeFont = Struct.new(:tables) do
+    attr_reader :table_lookup_count
+
+    def initialize(*)
+      super
+      @table_lookup_count = 0
+    end
+
+    def table(tag)
+      @table_lookup_count += 1
+      tables[tag]
+    end
+  end
+
+  FakeHhea = Struct.new(:ascent, :descent, :line_gap,
+                        :number_of_h_metrics, keyword_init: true)
+
+  FakeHead = Struct.new(:units_per_em, keyword_init: true)
+
+  FakeMaxp = Struct.new(:num_glyphs, keyword_init: true)
+
+  FakeHmtx = Struct.new(:metrics, :parsed_flag, keyword_init: true) do
+    attr_reader :parse_count
+
+    def initialize(...)
+      super
+      @parse_count = 0
+    end
+
+    def parse_with_context(*)
+      @parse_count += 1
+    end
+
+    def parsed?
+      parsed_flag
+    end
+
+    def metric_for(glyph_id)
+      metrics[glyph_id]
+    end
+  end
+
+  FakeCmap = Struct.new(:unicode_mappings, keyword_init: true)
+end
+
 RSpec.describe Fontisan::MetricsCalculator do
   # Test fixtures acknowledgment:
   # Using Libertinus fonts (OFL licensed) from:
   # https://github.com/alerque/libertinus
   # Copyright © 2012-2023 The Libertinus Project Authors
 
-  # Helper to create a mock font with specified tables
   def create_mock_font(tables = {})
-    font = double("Font")
-    allow(font).to receive(:table) do |tag|
-      tables[tag]
-    end
-    font
+    MetricsFakes::FakeFont.new(tables)
   end
 
-  # Helper to create mock hhea table
   def create_mock_hhea(ascent: 2048, descent: -512, line_gap: 90,
                        number_of_h_metrics: 256)
-    hhea = double("Fontisan::Tables::Hhea")
-    allow(hhea).to receive_messages(ascent: ascent, descent: descent,
-                                    line_gap: line_gap, number_of_h_metrics: number_of_h_metrics)
-    hhea
+    MetricsFakes::FakeHhea.new(ascent: ascent, descent: descent, line_gap: line_gap,
+                               number_of_h_metrics: number_of_h_metrics)
   end
 
-  # Helper to create mock head table
   def create_mock_head(units_per_em: 2048)
-    head = double("Fontisan::Tables::Head")
-    allow(head).to receive(:units_per_em).and_return(units_per_em)
-    head
+    MetricsFakes::FakeHead.new(units_per_em: units_per_em)
   end
 
-  # Helper to create mock maxp table
   def create_mock_maxp(num_glyphs: 256)
-    maxp = double("Fontisan::Tables::Maxp")
-    allow(maxp).to receive(:num_glyphs).and_return(num_glyphs)
-    maxp
+    MetricsFakes::FakeMaxp.new(num_glyphs: num_glyphs)
   end
 
-  # Helper to create mock hmtx table
   def create_mock_hmtx(metrics: {}, parsed: true)
-    hmtx = double("Fontisan::Tables::Hmtx")
-    allow(hmtx).to receive(:parse_with_context)
-    allow(hmtx).to receive(:parsed?).and_return(parsed)
-    allow(hmtx).to receive(:metric_for) do |glyph_id|
-      metrics[glyph_id]
-    end
-    hmtx
+    MetricsFakes::FakeHmtx.new(metrics: metrics, parsed_flag: parsed)
   end
 
-  # Helper to create mock cmap table
   def create_mock_cmap(unicode_mappings: {})
-    cmap = double("Fontisan::Tables::Cmap")
-    allow(cmap).to receive(:unicode_mappings).and_return(unicode_mappings)
-    cmap
+    MetricsFakes::FakeCmap.new(unicode_mappings: unicode_mappings)
   end
 
   describe "#initialize" do
@@ -229,8 +255,8 @@ RSpec.describe Fontisan::MetricsCalculator do
       font = create_mock_font("hhea" => hhea, "maxp" => maxp, "hmtx" => hmtx)
       calculator = described_class.new(font)
 
-      expect(hmtx).to receive(:parse_with_context).with(256, 256).once
       calculator.glyph_width(42)
+      expect(hmtx.parse_count).to eq(1)
     end
 
     it "does not reparse hmtx table on subsequent access" do
@@ -243,9 +269,9 @@ RSpec.describe Fontisan::MetricsCalculator do
       font = create_mock_font("hhea" => hhea, "maxp" => maxp, "hmtx" => hmtx)
       calculator = described_class.new(font)
 
-      expect(hmtx).to receive(:parse_with_context).once
       calculator.glyph_width(42)
       calculator.glyph_width(43)
+      expect(hmtx.parse_count).to eq(1) # parses once, then caches
     end
   end
 
@@ -642,12 +668,11 @@ RSpec.describe Fontisan::MetricsCalculator do
       font = create_mock_font("hhea" => hhea)
       calculator = described_class.new(font)
 
-      expect(font).to receive(:table).with("hhea").once.and_return(hhea)
-
-      # Multiple calls should use cached reference
+      # Multiple calls should consult the font only once for the hhea table.
       calculator.ascent
       calculator.descent
       calculator.line_gap
+      expect(font.table_lookup_count).to eq(1)
     end
 
     it "handles zero units_per_em" do

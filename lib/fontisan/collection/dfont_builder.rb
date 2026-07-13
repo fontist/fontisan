@@ -42,6 +42,8 @@ module Fontisan
         end
         raise ArgumentError, "fonts must be an array" unless fonts.is_a?(Array)
 
+        # TODO: replace respond_to? duck-type with is_a?(SfntFont) once
+        # the dfont builder spec suite is migrated off doubles (see audit).
         unless fonts.all? { |f| f.respond_to?(:table_data) }
           raise ArgumentError, "all fonts must respond to table_data"
         end
@@ -150,17 +152,10 @@ module Fontisan
 
       # Detect sfnt version from font
       #
-      # @param font [TrueTypeFont, OpenTypeFont] Font object
+      # @param font [SfntFont] Font object
       # @return [Integer] sfnt version
       def detect_sfnt_version(font)
-        if font.respond_to?(:header) && font.header.respond_to?(:sfnt_version)
-          font.header.sfnt_version
-        elsif font.respond_to?(:table_data)
-          # Auto-detect from tables
-          FontWriter.detect_sfnt_version(font.table_data)
-        else
-          0x00010000 # Default to TrueType
-        end
+        FontWriter.detect_sfnt_version(font.table_data)
       end
 
       # Build resource fork header (16 bytes)

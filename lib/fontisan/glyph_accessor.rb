@@ -352,15 +352,13 @@ module Fontisan
         next unless glyph&.compound? && glyph.compound?
 
         # Add component glyph IDs
-        if glyph&.components
-          glyph.components.each do |component|
-            component_id = component[:glyph_index]
-            next unless glyph_exists?(component_id)
+        glyph&.components&.each do |component|
+          component_id = component[:glyph_index]
+          next unless glyph_exists?(component_id)
 
-            unless result.include?(component_id)
-              result.add(component_id)
-              to_process << component_id
-            end
+          unless result.include?(component_id)
+            result.add(component_id)
+            to_process << component_id
           end
         end
       end
