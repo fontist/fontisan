@@ -10,6 +10,9 @@ module Fontisan
     # across nine call sites before extraction; this module is the
     # single source of truth.
     #
+    # All public methods take an Integer size. Callers with a String
+    # compute `.bytesize` first.
+    #
     # @example Get padding length
     #   Padding.boundary(13)              # => 3
     #   Padding.boundary(13, boundary: 4) # => 3
@@ -21,14 +24,13 @@ module Fontisan
     module Padding
       # Count of trailing pad bytes needed to align `size` to `boundary`.
       #
-      # @param size [Integer, #bytesize] Either an Integer size, or any
-      #   object responding to `#bytesize` (e.g. a String).
+      # @param size [Integer] Size in bytes (callers with a String
+      #   compute `.bytesize` first).
       # @param boundary [Integer] Alignment boundary in bytes (default
       #   `Constants::TABLE_ALIGNMENT`).
       # @return [Integer] Number of pad bytes in 0...boundary-1
       def self.boundary(size, boundary: Constants::TABLE_ALIGNMENT)
-        length = size.respond_to?(:bytesize) ? size.bytesize : size
-        (boundary - (length % boundary)) % boundary
+        (boundary - (size % boundary)) % boundary
       end
 
       # Return `bytes` followed by null padding to the requested boundary.
@@ -38,7 +40,7 @@ module Fontisan
       # @return [String] The original string if already aligned, else a
       #   new binary string with trailing nulls.
       def self.pad(bytes, boundary: Constants::TABLE_ALIGNMENT)
-        pad_count = boundary(bytes, boundary:)
+        pad_count = boundary(bytes.bytesize, boundary:)
         return bytes if pad_count.zero?
 
         out = bytes.dup.force_encoding(Encoding::BINARY)
@@ -48,12 +50,11 @@ module Fontisan
 
       # Aligned size of `size` after padding to `boundary`.
       #
-      # @param size [Integer, #bytesize] Original size or bytes-like.
+      # @param size [Integer] Original size in bytes.
       # @param boundary [Integer] Alignment boundary in bytes.
       # @return [Integer] Size after alignment (multiple of `boundary`).
       def self.aligned_size(size, boundary: Constants::TABLE_ALIGNMENT)
-        length = size.respond_to?(:bytesize) ? size.bytesize : size
-        length + boundary(length, boundary:)
+        size + boundary(size, boundary:)
       end
     end
   end

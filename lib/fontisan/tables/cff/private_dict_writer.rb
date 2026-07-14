@@ -72,7 +72,7 @@ module Fontisan
           return unless source_dict.is_a?(Tables::Cff::Dict)
 
           # Extract only non-hint params (subrs, widths)
-          @params = source_dict.to_h.select do |k, _|
+          @params = source_dict.raw_hash.select do |k, _|
             %i[subrs default_width_x nominal_width_x].include?(k)
           end
         end

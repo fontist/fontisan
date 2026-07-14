@@ -416,7 +416,7 @@ module Fontisan
         size += 16 if glyf_transform # synthetic loca directory entry
 
         table_data.each_value do |data|
-          size += Utilities::Padding.aligned_size(data)
+          size += Utilities::Padding.aligned_size(data.bytesize)
         end
 
         if glyf_transform
@@ -504,7 +504,7 @@ module Fontisan
         # font block MUST be padded with null bytes so the total file
         # length is a multiple of 4. fontTools' WOFF2Writer does the
         # same: `pad(directory + compressedFont, size=4)`.
-        pad = Utilities::Padding.boundary(woff2_data)
+        pad = Utilities::Padding.boundary(woff2_data.bytesize)
         woff2_data << ("\x00" * pad) if pad.positive?
         update_woff2_length!(woff2_data)
         woff2_data

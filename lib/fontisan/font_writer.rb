@@ -165,7 +165,7 @@ module Fontisan
         checksum = calculate_table_checksum(data)
 
         # Calculate padding to 4-byte boundary
-        padding_length = Utilities::Padding.boundary(data)
+        padding_length = Utilities::Padding.boundary(data.bytesize)
         padding = "\0" * padding_length
 
         entries << {

@@ -22,21 +22,22 @@ module Fontisan
     class BaseRecord < BinData::Record
       endian :big # OpenType uses big-endian byte order
 
-      # Override read to handle nil data gracefully
+      # Override read to handle nil/empty/String inputs gracefully.
+      #
+      # String inputs are wrapped in a StringIO so the rest of the
+      # read path always works against an IO-like object.
+      #
+      # @param io [String, IO, StringIO, nil] binary data or IO source
       def self.read(io)
-        return new if io.nil? || (io.respond_to?(:empty?) && io.empty?)
+        return new if io.nil?
+
+        io = StringIO.new(io) if io.is_a?(String)
+        return new if io.is_a?(StringIO) && io.eof?
 
         # Store the original data for later parsing
-        # Convert IO to string if needed
-        if io.is_a?(String)
-          data = io
-          instance = super(StringIO.new(data))
-        else
-          # For IO objects, read to string first
-          data = io.read
-          io.rewind if io.respond_to?(:rewind)
-          instance = super(io)
-        end
+        data = io.read
+        io.rewind
+        instance = super(io)
 
         instance.raw_data = data
         instance

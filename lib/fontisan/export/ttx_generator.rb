@@ -294,7 +294,7 @@ module Fontisan
       # @return [void]
       def generate_binary_table(xml, tag, table)
         binary_data = table.to_binary_s
-        xml.send(tag.to_sym) do
+        xml.public_send(tag.to_sym) do
           xml.hexdata do
             xml.text("\n    #{format_hex_data(binary_data)}\n  ")
           end
@@ -310,7 +310,7 @@ module Fontisan
       def generate_binary_table_from_data(xml, tag, data)
         # Remove trailing space from tag for XML element name
         clean_tag = tag.strip
-        xml.send(clean_tag.to_sym) do
+        xml.public_send(clean_tag.to_sym) do
           xml.hexdata do
             xml.text("\n    #{format_hex_data(data)}\n  ")
           end

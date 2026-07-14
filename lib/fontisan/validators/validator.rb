@@ -290,10 +290,10 @@ module Fontisan
           }
         end
 
-        # Get field value
-        value = if table.respond_to?(field_key)
-                  table.public_send(field_key)
-                end
+        # Get field value via the table's snapshot hash (BinData records
+        # expose all declared fields through #snapshot).
+        snapshot = table.is_a?(BinData::Record) ? table.snapshot : {}
+        value = snapshot[field_key.to_s] || snapshot[field_key.to_sym]
 
         result = check_def[:block].call(table, value)
         passed = result != false && !result.nil?

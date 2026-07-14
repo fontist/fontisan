@@ -227,9 +227,9 @@ RSpec.describe Fontisan::Tables::Cff::Dict do
       end
     end
 
-    describe "#to_h" do
-      it "converts to hash" do
-        hash = dict.to_h
+    describe "#raw_hash" do
+      it "exposes the dictionary pairs as a hash" do
+        hash = dict.raw_hash
         expect(hash).to be_a(Hash)
         expect(hash[:version]).to eq(100)
       end

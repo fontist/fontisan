@@ -103,11 +103,9 @@ module Fontisan
         # Check CFF2 if present
         if @font.has_table?("CFF2")
           cff2 = @font.table("CFF2")
-          if cff2.respond_to?(:num_axes)
-            cff2_axes = cff2.num_axes || 0
-            if cff2_axes != axis_count && cff2_axes.positive?
-              @errors << "CFF2 axis count (#{cff2_axes}) doesn't match fvar (#{axis_count})"
-            end
+          cff2_axes = cff2&.num_axes || 0
+          if cff2_axes != axis_count && cff2_axes.positive?
+            @errors << "CFF2 axis count (#{cff2_axes}) doesn't match fvar (#{axis_count})"
           end
         end
 
@@ -133,20 +131,17 @@ module Fontisan
         return unless @font.has_table?(table_tag)
 
         table = @font.table(table_tag)
-        return unless table.respond_to?(:item_variation_store)
-
-        store = table.item_variation_store
+        store = table&.item_variation_store
         return unless store
 
-        # Check region list axis count
-        if store.respond_to?(:region_list) && store.region_list
-          region_list = store.region_list
-          if region_list.respond_to?(:axis_count)
-            region_axes = region_list.axis_count
-            if region_axes != expected_axes
-              @errors << "#{table_tag} region axis count (#{region_axes}) doesn't match fvar (#{expected_axes})"
-            end
-          end
+        region_list = store.variation_region_list
+        return unless region_list
+
+        region_axes = region_list.axis_count
+        return unless region_axes
+
+        if region_axes != expected_axes
+          @errors << "#{table_tag} region axis count (#{region_axes}) doesn't match fvar (#{expected_axes})"
         end
       end
 
@@ -195,24 +190,15 @@ module Fontisan
         hvar = @font.table("HVAR")
         return unless hvar
 
-        # Check for item_variation_store
-        unless hvar.respond_to?(:item_variation_store)
-          @warnings << "HVAR table doesn't support item_variation_store"
-          return
-        end
-
         store = hvar.item_variation_store
         unless store
           @warnings << "HVAR has no item variation store"
           return
         end
 
-        # Check that variation data exists
-        if store.respond_to?(:item_variation_data)
-          data = store.item_variation_data
-          if data.nil? || data.empty?
-            @warnings << "HVAR has no variation data"
-          end
+        data = store.item_variation_data_entries
+        if data.nil? || data.empty?
+          @warnings << "HVAR has no variation data"
         end
       rescue StandardError => e
         @warnings << "Failed to check HVAR delta integrity: #{e.message}"
@@ -272,24 +258,26 @@ module Fontisan
       # @param axes [Array] Variation axes
       def check_metrics_region_coverage(table_tag, axes)
         table = @font.table(table_tag)
-        return unless table.respond_to?(:item_variation_store)
+        return unless table
 
         store = table.item_variation_store
-        return unless store.respond_to?(:region_list)
+        return unless store
 
-        region_list = store.region_list
-        return unless region_list.respond_to?(:regions)
+        region_list = store.variation_region_list
+        return unless region_list
 
-        # Check each region
         regions = region_list.regions
-        regions.each_with_index do |region, idx|
-          next unless region.respond_to?(:region_axes)
+        return unless regions
 
-          region.region_axes.each_with_index do |reg_axis, axis_idx|
+        # Each region is an Array<RegionAxisCoordinates>; check coords
+        # are within the valid [-1, 1] normalized range.
+        regions.each_with_index do |region_axis_coords, idx|
+          next unless region_axis_coords.is_a?(Array)
+
+          region_axis_coords.each_with_index do |reg_axis, axis_idx|
             next if axis_idx >= axes.length
             next unless reg_axis
 
-            # Check coordinates are in valid range [-1, 1]
             coords = {
               start_coord: reg_axis.start_coord,
               peak_coord: reg_axis.peak_coord,

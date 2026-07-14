@@ -18,7 +18,7 @@ module Fontisan
           # based on table tag
           def to_xml(options = {})
             builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
-              xml.send(tag.to_sym) do
+              xml.public_send(tag.to_sym) do
                 xml.hexdata do
                   xml.text("\n    #{format_hexdata(hexdata)}\n  ")
                 end
