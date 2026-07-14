@@ -79,7 +79,7 @@ module Fontisan
         offsets = {}
         @tables.each do |t|
           offsets[t.tag] = cursor
-          cursor += Utilities::Padding.aligned_size(t.bytes)
+          cursor += Utilities::Padding.aligned_size(t.bytes.bytesize)
         end
 
         bytes = String.new(encoding: Encoding::BINARY)

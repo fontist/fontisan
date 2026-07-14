@@ -139,32 +139,37 @@ module Fontisan
       def generate
         result = {}
 
+        opts = options_hash
+
         # Always generate AFM
-        result[:afm] = AFMGenerator.generate(@font, to_hash)
+        result[:afm] = AFMGenerator.generate(@font, opts)
 
         # Always generate PFM (for Windows compatibility)
-        result[:pfm] = PFMGenerator.generate(@font, to_hash)
+        result[:pfm] = PFMGenerator.generate(@font, opts)
 
         # Generate PFB or PFA based on format option
         format = @options.format || :pfb
         if format == :pfa
-          result[:pfa] = PFAGenerator.generate(@font, to_hash)
+          result[:pfa] = PFAGenerator.generate(@font, opts)
         else
-          result[:pfb] = PFBGenerator.generate(@font, to_hash)
+          result[:pfb] = PFBGenerator.generate(@font, opts)
         end
 
         # Generate INF for Windows installation
-        result[:inf] = INFGenerator.generate(@font, to_hash)
+        result[:inf] = INFGenerator.generate(@font, opts)
 
         result
       end
 
       private
 
-      # Convert options to hash
+      # Build the options hash forwarded to the per-format generators.
+      # This is an internal adapter — ConversionOptions exposes typed
+      # accessors; the per-format generators accept a Hash for historical
+      # reasons.
       #
       # @return [Hash] Options as hash
-      def to_hash
+      def options_hash
         {
           upm_scale: @options.upm_scale || 1000,
           encoding: @options.encoding || Encodings::AdobeStandard,

@@ -168,7 +168,7 @@ module Fontisan
         #
         # @return [Hash] Top DICT parameters
         def extract_top_dict_data
-          @source.top_dict(0).to_h
+          @source.top_dict(0).raw_hash
         end
 
         # Rebuild Top DICT INDEX with updated data

@@ -208,7 +208,7 @@ RSpec.describe Fontisan::Variation::Validator do
       fvar = create_mock_fvar(axis_count: 2)
 
       region_list = double("RegionList", axis_count: 3)
-      store = double("ItemVariationStore", region_list: region_list)
+      store = double("ItemVariationStore", variation_region_list: region_list)
       hvar = double("HVAR", item_variation_store: store)
 
       font = create_mock_font(
@@ -225,7 +225,8 @@ RSpec.describe Fontisan::Variation::Validator do
 
     it "handles missing region list gracefully" do
       fvar = create_mock_fvar(axis_count: 2)
-      store = double("ItemVariationStore", region_list: nil)
+      store = double("ItemVariationStore", variation_region_list: nil,
+                                           item_variation_data_entries: [])
       hvar = double("HVAR", item_variation_store: store)
 
       font = create_mock_font(
@@ -312,7 +313,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
       it "warns when HVAR has no variation data" do
         fvar = create_mock_fvar
-        store = double("ItemVariationStore", item_variation_data: [])
+        store = double("ItemVariationStore", item_variation_data_entries: [], variation_region_list: nil)
         hvar = double("HVAR", item_variation_store: store)
 
         font = create_mock_font(
@@ -376,13 +377,16 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when HVAR region coordinates are out of range" do
         fvar = create_mock_fvar(axis_count: 1)
 
-        region_axis = double("RegionAxis",
-                             start_coord: -1.5,
-                             peak_coord: 0.0,
-                             end_coord: 1.0)
-        region = double("Region", region_axes: [region_axis])
+        double("RegionAxis",
+               start_coord: -1.5,
+               peak_coord: 0.0,
+               end_coord: 1.0)
+        region_axis = double("RegionAxisCoordinates",
+                             start_coord: -1.0, peak_coord: 2.0, end_coord: 1.0)
+        region = [region_axis] # regions are Array<RegionAxisCoordinates>
         region_list = double("RegionList", axis_count: 1, regions: [region])
-        store = double("ItemVariationStore", region_list: region_list)
+        store = double("ItemVariationStore", variation_region_list: region_list,
+                                             item_variation_data_entries: [])
         hvar = double("HVAR", item_variation_store: store)
 
         font = create_mock_font(
@@ -393,7 +397,7 @@ RSpec.describe Fontisan::Variation::Validator do
 
         result = validator.validate
 
-        expect(result[:warnings]).to include(/HVAR region.*start_coord out of range/)
+        expect(result[:warnings]).to include(/HVAR region.*peak_coord out of range/)
       end
     end
   end

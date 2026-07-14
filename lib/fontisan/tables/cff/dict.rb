@@ -106,10 +106,13 @@ module Fontisan
           @dict.values
         end
 
-        # Convert DICT to Hash
+        # Expose the raw key/value pairs as a Hash. This is an accessor
+        # for the DICT's internal hash, NOT wire-format serialization —
+        # CFF DICT wire format is the binary operand/operator stream
+        # produced by to_binary_s.
         #
-        # @return [Hash] Dictionary as hash
-        def to_h
+        # @return [Hash] Dictionary as hash (dup of internal storage)
+        def raw_hash
           @dict.dup
         end
 

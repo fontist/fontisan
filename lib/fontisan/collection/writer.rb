@@ -213,7 +213,7 @@ module Fontisan
           binary << table_info[:data]
 
           # Pad to 4-byte boundary
-          padding = Utilities::Padding.boundary(table_info[:data])
+          padding = Utilities::Padding.boundary(table_info[:data].bytesize)
           binary << ("\x00" * padding) if padding.positive?
         end
       end

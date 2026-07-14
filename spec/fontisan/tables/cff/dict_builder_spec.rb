@@ -300,7 +300,7 @@ RSpec.describe Fontisan::Tables::Cff::DictBuilder do
 
         # Parse back
         dict = Fontisan::Tables::Cff::Dict.new(dict_data1)
-        parsed_hash = dict.to_h
+        parsed_hash = dict.raw_hash
 
         # Build again from parsed hash
         dict_data2 = described_class.build(parsed_hash)

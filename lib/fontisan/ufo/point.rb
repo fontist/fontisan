@@ -27,13 +27,6 @@ module Fontisan
       def off_curve?
         @type == "offcurve" || @type == "qcurve"
       end
-
-      # @return [Hash] suitable for `to_glif` output
-      def to_h
-        h = { x: @x, y: @y, type: @type }
-        h[:smooth] = true if @smooth
-        h
-      end
     end
   end
 end

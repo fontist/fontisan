@@ -34,7 +34,7 @@ module Fontisan
           glyf_data << glyph_data
 
           # Add padding to 4-byte boundary
-          padding = Utilities::Padding.boundary(glyf_data)
+          padding = Utilities::Padding.boundary(glyf_data.bytesize)
           glyf_data << ("\x00" * padding) if padding.positive?
         end
 

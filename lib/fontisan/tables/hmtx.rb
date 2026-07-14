@@ -47,13 +47,6 @@ module Fontisan
       class LongHorMetric < Binary::BaseRecord
         uint16 :advance_width
         int16 :lsb
-
-        # Convert to hash for convenience
-        #
-        # @return [Hash] Hash with :advance_width and :lsb keys
-        def to_h
-          { advance_width: advance_width, lsb: lsb }
-        end
       end
 
       # Store the raw data for deferred parsing

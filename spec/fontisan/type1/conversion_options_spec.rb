@@ -137,7 +137,7 @@ RSpec.describe Fontisan::Type1::ConversionOptions do
         format: :pfa,
       )
 
-      hash = options.to_hash
+      hash = options.options_hash
 
       expect(hash[:upm_scale]).to eq(1000)
       expect(hash[:encoding]).to eq(Fontisan::Type1::Encodings::Unicode)

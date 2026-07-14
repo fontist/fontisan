@@ -99,10 +99,11 @@ module Fontisan
         @autohint
       end
 
-      # Convert to hash
+      # Expose the options as a Hash. Internal accessor for code that
+      # passes options as a plain Hash (e.g., to legacy generators).
       #
       # @return [Hash] Options as hash
-      def to_hash
+      def options_hash
         {
           upm_scale: @upm_scale,
           encoding: @encoding,

@@ -36,6 +36,9 @@ module Fontisan
       #   puts charstring.path   # => array of path commands
       #   bbox = charstring.bounding_box  # => [xMin, yMin, xMax, yMax]
       class CharString
+        # @return [String, Array<Integer>] Raw charstring data/bytes
+        attr_reader :data
+
         # @return [Integer, nil] Glyph width (nil if using default width)
         attr_reader :width
 

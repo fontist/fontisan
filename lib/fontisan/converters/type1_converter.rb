@@ -156,10 +156,9 @@ module Fontisan
           decompose_seac_glyphs(font)
         end
 
-        # Read all font dictionary records if requested
-        if conv_options.opening_option?(:read_all_records) && font.font_dictionary.respond_to?(:reload)
-          # Ensure full font dictionary is loaded
-          font.font_dictionary.reload
+        # Read all font dictionary records if requested.
+        if conv_options.opening_option?(:read_all_records) && font.font_dictionary
+          font.font_dictionary.parse(font.font_dictionary.raw_data)
         end
       end
 
@@ -720,37 +719,13 @@ module Fontisan
 
         # Extract font names with fallbacks
         font_name = font.font_name || font_dict&.font_name || "Unnamed"
-        family_name = if font_info.respond_to?(:family_name)
-                        font_info.family_name || font_dict&.family_name || font_name
-                      else
-                        font_dict&.family_name || font_name
-                      end
-        full_name = if font_info.respond_to?(:full_name)
-                      font_info.full_name || font_dict&.full_name || family_name
-                    else
-                      font_dict&.full_name || family_name
-                    end
-        version = if font_info.respond_to?(:version)
-                    font_info.version || font.version || "001.000"
-                  else
-                    font.version || "001.000"
-                  end
-        copyright = if font_info.respond_to?(:copyright)
-                      font_info.copyright || font_dict&.raw_data&.dig(:copyright) || ""
-                    else
-                      font_dict&.raw_data&.dig(:copyright) || ""
-                    end
+        family_name = font_info&.family_name || font_dict&.family_name || font_name
+        full_name = font_info&.full_name || font_dict&.full_name || family_name
+        version = font_info&.version || font.version || "001.000"
+        copyright = font_info&.copyright || font_dict&.raw_data&.dig(:copyright) || ""
         postscript_name = font_name
-        weight = if font_info.respond_to?(:weight)
-                   font_info.weight
-                 else
-                   "Regular"
-                 end
-        notice = if font_info.respond_to?(:notice)
-                   font_info.notice
-                 else
-                   ""
-                 end
+        weight = font_info&.weight || "Regular"
+        notice = font_info&.notice || ""
 
         # Build name records (Windows Unicode, English US)
         # Platform ID 3 (Windows), Encoding ID 1 (Unicode BMP), Language ID 0x0409 (US English)

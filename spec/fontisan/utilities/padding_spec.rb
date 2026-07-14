@@ -22,10 +22,10 @@ RSpec.describe Fontisan::Utilities::Padding do
       expect(described_class.boundary(8, boundary: 8)).to eq(0)
     end
 
-    it "accepts a String-like input (uses #bytesize)" do
-      expect(described_class.boundary("abc")).to eq(1)
-      expect(described_class.boundary("abcd")).to eq(0)
-      expect(described_class.boundary("")).to eq(0)
+    it "accepts an Integer bytesize" do
+      expect(described_class.boundary(3)).to eq(1)
+      expect(described_class.boundary(4)).to eq(0)
+      expect(described_class.boundary(0)).to eq(0)
     end
   end
 
@@ -66,9 +66,9 @@ RSpec.describe Fontisan::Utilities::Padding do
       expect(described_class.aligned_size(13)).to eq(16)
     end
 
-    it "accepts a String-like input" do
-      expect(described_class.aligned_size("abc")).to eq(4)
-      expect(described_class.aligned_size("abcd")).to eq(4)
+    it "accepts an Integer bytesize" do
+      expect(described_class.aligned_size(3)).to eq(4)
+      expect(described_class.aligned_size(4)).to eq(4)
     end
   end
 end

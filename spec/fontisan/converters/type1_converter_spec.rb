@@ -34,7 +34,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
   describe "#apply_opening_options" do
     let(:mock_charstrings) { instance_double(Fontisan::Type1::CharStrings) }
-    let(:mock_font_dictionary) { instance_double(Object) }
+    let(:mock_font_dictionary) { double("FontDictionary", raw_data: "", parse: nil) }
     let(:mock_font) do
       instance_double(Fontisan::Type1Font,
                       charstrings: mock_charstrings,
@@ -46,6 +46,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       # Stub the methods to call the original (no-op) implementation
       allow(converter).to receive_messages(generate_unicode_mappings: nil,
                                            decompose_seac_glyphs: nil)
+      # FontDictionary#parse is called when read_all_records option is set
+      allow(mock_font_dictionary).to receive(:parse)
     end
 
     it "applies generate_unicode option when set" do

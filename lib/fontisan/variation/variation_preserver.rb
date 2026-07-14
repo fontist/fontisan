@@ -148,12 +148,9 @@ module Fontisan
       def validate_source!
         raise ArgumentError, "Source font cannot be nil" if @source_font.nil?
 
-        # TODO: replace respond_to? duck-type with is_a?(SfntSource) once
-        # the variation_preserver spec suite is migrated off instance_double.
-        unless @source_font.respond_to?(:has_table?) &&
-            @source_font.respond_to?(:table_data)
+        unless @source_font.is_a?(SfntSource)
           raise ArgumentError,
-                "Source font must respond to :has_table? and :table_data"
+                "Source font must be an SfntSource instance"
         end
 
         if @target_tables.nil?
