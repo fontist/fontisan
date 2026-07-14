@@ -129,13 +129,11 @@ module Fontisan
         # @param data [String] Data to validate
         # @raise [ArgumentError] If data is invalid
         def validate_data!(data)
-          if data.nil?
-            raise ArgumentError, "Data cannot be nil"
-          end
+          raise ArgumentError, "Data cannot be nil" if data.nil?
 
-          unless data.respond_to?(:bytesize)
+          unless data.is_a?(String)
             raise ArgumentError,
-                  "Data must be a String-like object, got #{data.class}"
+                  "Data must be a String, got #{data.class}"
           end
         end
       end

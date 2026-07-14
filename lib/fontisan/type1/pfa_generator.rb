@@ -134,15 +134,11 @@ module Fontisan
 
         # Font info
         if name_table
-          if name_table.respond_to?(:version_string)
-            version = name_table.version_string(1) || name_table.version_string(3)
-            dict << "/Version (#{version}) def" if version
-          end
+          version = name_table.english_name(Tables::Name::VERSION)
+          dict << "/Version (#{version}) def" if version
 
-          if name_table.respond_to?(:copyright)
-            copyright = name_table.copyright(1) || name_table.copyright(3)
-            dict << "/Notice (#{copyright}) def" if copyright
-          end
+          copyright = name_table.english_name(Tables::Name::COPYRIGHT)
+          dict << "/Notice (#{copyright}) def" if copyright
         end
 
         dict << "currentdict end"
@@ -161,12 +157,12 @@ module Fontisan
         # Blue values (for hinting)
         # These are typically derived from the font's alignment zones
         os2 = @font.table(Constants::OS2_TAG)
-        if os2.respond_to?(:typo_ascender) && os2.typo_ascender
+        if os2&.s_typo_ascender
           blue_values = [
-            @scaler.scale(os2.typo_descender || -200),
-            @scaler.scale(os2.typo_descender || -200) + 20,
-            @scaler.scale(os2.typo_ascender),
-            @scaler.scale(os2.typo_ascender) + 10,
+            @scaler.scale(os2.s_typo_descender || -200),
+            @scaler.scale(os2.s_typo_descender || -200) + 20,
+            @scaler.scale(os2.s_typo_ascender),
+            @scaler.scale(os2.s_typo_ascender) + 10,
           ]
           dict << "/BlueValues {#{blue_values.join(' ')}} def"
         else
@@ -178,15 +174,15 @@ module Fontisan
         dict << "/BlueFuzz 1 def"
 
         # Stem snap hints
-        if os2.respond_to?(:weight_class) && os2.weight_class
+        if os2&.us_weight_class
           stem_width = @scaler.scale([100, 80,
-                                      90][os2.weight_class / 100] || 80)
+                                      90][os2.us_weight_class / 100] || 80)
           dict << "/StemSnapH [#{stem_width}] def"
           dict << "/StemSnapV [#{stem_width}] def"
         end
 
         # Force bold flag
-        dict << if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
+        dict << if os2&.us_weight_class && os2.us_weight_class >= 700
                   "/ForceBold true def"
                 else
                   "/ForceBold false def"
@@ -286,33 +282,33 @@ module Fontisan
 
       # Generate a simple CharString for a glyph
       #
-      # @param glyf_table [Object] TTF glyf table
+      # @param glyf_table [Tables::Glyf] TTF glyf table
       # @param gid [Integer] Glyph ID
       # @return [String] Type 1 CharString data
       def simple_charstring(glyf_table, gid)
         glyph = glyf_table.glyph(gid)
 
         # Empty or compound glyph
-        if glyph.nil? || glyph.contour_count.zero? || glyph.compound?
+        if glyph.nil? || glyph.num_contours.zero? || glyph.compound?
           # Return empty charstring (hsbw + endchar)
           return [0, 500, 14].pack("C*")
         end
 
         # For simple glyphs without curve conversion, generate minimal charstring
-        lsb = @scaler.scale(glyph.left_side_bearing || 0)
-        width = @scaler.scale(glyph.advance_width || 500)
-        bytes = [13, lsb, width] # hsbw command (13)
+        lsb, width = hmtx_metrics_for(gid)
+        bytes = [13, @scaler.scale(lsb), @scaler.scale(width)] # hsbw command (13)
 
         # Add simple line commands (very basic)
-        if glyph.respond_to?(:points) && glyph.points && !glyph.points.empty?
+        points = glyph.points
+        unless points.empty?
           # Just draw lines between consecutive on-curve points
           prev_point = nil
-          glyph.points.each do |point|
-            next unless point.on_curve?
+          points.each do |point|
+            next unless point[:on_curve]
 
             if prev_point
-              dx = @scaler.scale(point.x) - @scaler.scale(prev_point.x)
-              dy = @scaler.scale(point.y) - @scaler.scale(prev_point.y)
+              dx = @scaler.scale(point[:x]) - @scaler.scale(prev_point[:x])
+              dy = @scaler.scale(point[:y]) - @scaler.scale(prev_point[:y])
               bytes << 5 # rlineto
               bytes.concat(encode_number(dx))
               bytes.concat(encode_number(dy))
@@ -323,6 +319,20 @@ module Fontisan
 
         bytes << 14 # endchar
         bytes.pack("C*")
+      end
+
+      # Look up LSB and advance width from hmtx for a glyph.
+      #
+      # @param gid [Integer] Glyph ID
+      # @return [Array(Integer, Integer)] [lsb, advance_width]
+      def hmtx_metrics_for(gid)
+        hmtx = @font.table(Constants::HMTX_TAG)
+        return [0, 500] unless hmtx
+
+        metric = hmtx.metric_for(gid)
+        return [0, 500] unless metric
+
+        [metric[:lsb] || 0, metric[:advance_width] || 500]
       end
 
       # Encode a number for Type 1 CharString

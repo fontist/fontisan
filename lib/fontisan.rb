@@ -116,6 +116,7 @@ module Fontisan
   autoload :OpenTypeFontExtensions, "fontisan/open_type_font_extensions"
   autoload :OutlineExtractor, "fontisan/outline_extractor"
   autoload :SfntFont, "fontisan/sfnt_font"
+  autoload :SfntSource, "fontisan/sfnt_source"
   autoload :SfntTable, "fontisan/sfnt_table"
   autoload :SfntBuilder, "fontisan/sfnt_builder"
   autoload :Stitcher, "fontisan/stitcher"

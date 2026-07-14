@@ -73,11 +73,11 @@ RSpec.describe Fontisan::Subset::Builder do
         end.to raise_error(ArgumentError, /Font cannot be nil/)
       end
 
-      it "raises error for font without table method" do
-        invalid_font = double("InvalidFont")
+      it "raises error for font that isn't SfntSource" do
+        invalid_font = Object.new
         expect do
           described_class.new(invalid_font, glyph_ids, options).build
-        end.to raise_error(ArgumentError, /must respond to :table/)
+        end.to raise_error(ArgumentError, /must be an SfntSource/)
       end
 
       it "raises error for empty glyph_ids" do

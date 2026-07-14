@@ -112,9 +112,9 @@ module Fontisan
       def validate(font, target_format)
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.respond_to?(:font_dictionary) || font.respond_to?(:tables)
+        unless font.is_a?(Type1Font) || font.is_a?(SfntSource)
           raise ArgumentError,
-                "Font must be Type1Font or have :tables method"
+                "Font must be a Type1Font or SfntSource instance"
         end
 
         source_format = detect_format(font)
@@ -219,7 +219,7 @@ module Fontisan
           :otf
         else
           # Try to detect from tables
-          if font.respond_to?(:tables)
+          if font.is_a?(SfntSource)
             if font.tables.key?("glyf")
               :ttf
             elsif font.tables.key?("CFF ") || font.tables.key?("CFF2")

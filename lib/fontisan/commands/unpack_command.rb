@@ -207,7 +207,7 @@ module Fontisan
       def generate_filename(font, index)
         # Try to get font name from name table
         base_name = nil
-        if font.respond_to?(:table) && font.table("name")
+        if font.is_a?(SfntSource) && font.table("name")
           name_table = font.table("name")
           # Try to get PostScript name, then family name
           base_name = name_table.english_name(Tables::Name::POSTSCRIPT_NAME) ||

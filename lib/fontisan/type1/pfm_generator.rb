@@ -145,7 +145,7 @@ module Fontisan
         return widths unless cmap
 
         # Get Unicode mappings
-        mappings = if cmap.respond_to?(:unicode_mappings)
+        mappings = if cmap
                      cmap.unicode_mappings || {}
                    else
                      {}
@@ -369,18 +369,14 @@ module Fontisan
         metrics << [0].pack("V")
 
         # etmCapHeight (4 bytes)
-        cap_height = if os2.respond_to?(:cap_height) && os2.cap_height
-                       os2.cap_height
-                     elsif os2.respond_to?(:s_typo_ascender) && os2.s_typo_ascender
-                       os2.s_typo_ascender
-                     else
-                       @metrics.ascent || 1000
-                     end
+        cap_height = os2.s_cap_height ||
+          os2.s_typo_ascender ||
+          @metrics.ascent || 1000
         metrics << [@scaler.scale(cap_height)].pack("V")
 
         # etmXHeight (4 bytes)
-        x_height = if os2.respond_to?(:x_height) && os2.x_height&.positive?
-                     os2.x_height
+        x_height = if os2.sx_height&.positive?
+                     os2.sx_height
                    else
                      # Fallback: use roughly half the ascent for x-height
                      (@metrics.ascent / 2) || 500
@@ -503,11 +499,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return "" unless name_table
 
-        if name_table.respond_to?(:copyright)
-          name_table.copyright(1) || name_table.copyright(3) || ""
-        else
-          ""
-        end
+        name_table.english_name(Tables::Name::COPYRIGHT) || ""
       end
 
       # Extract face name from font
@@ -515,18 +507,13 @@ module Fontisan
       # @return [String] Face name
       def extract_face_name
         name_table = @font.table(Constants::NAME_TAG)
-        return "" unless name_table
+        return @font.post_script_name.to_s unless name_table
 
         # Try full font name first, then font family, then postscript name
-        face_name = if name_table.respond_to?(:full_font_name)
-                      name_table.full_font_name(1) || name_table.full_font_name(3) || ""
-                    elsif name_table.respond_to?(:font_family)
-                      name_table.font_family(1) || name_table.font_family(3) || ""
-                    elsif name_table.respond_to?(:postscript_name)
-                      name_table.postscript_name(1) || name_table.postscript_name(3) || ""
-                    else
-                      @font.post_script_name || ""
-                    end
+        face_name = name_table.english_name(Tables::Name::FULL_NAME) ||
+          name_table.english_name(Tables::Name::FAMILY) ||
+          name_table.english_name(Tables::Name::POSTSCRIPT_NAME) ||
+          @font.post_script_name
 
         face_name.to_s
       end
@@ -538,11 +525,7 @@ module Fontisan
         os2 = @font.table(Constants::OS2_TAG)
         return 400 unless os2
 
-        weight_class = if os2.respond_to?(:us_weight_class)
-                         os2.us_weight_class
-                       elsif os2.respond_to?(:weight_class)
-                         os2.weight_class
-                       end
+        weight_class = os2.us_weight_class
         return 400 unless weight_class
 
         # Map OS/2 weight class to PFM weight
@@ -564,7 +547,7 @@ module Fontisan
       # @return [Integer] Pitch and family byte
       def pitch_and_family_value
         post = @font.table(Constants::POST_TAG)
-        is_fixed = post.respond_to?(:is_fixed_pitch) ? post.is_fixed_pitch : false
+        is_fixed = post&.is_fixed_pitch || false
 
         pitch = is_fixed ? FIXED_PITCH : VARIABLE_PITCH
 

@@ -56,23 +56,22 @@ module Fontisan
       def extract(charstring)
         return [] if charstring.nil?
 
-        # Get CharString bytes
-        bytes = if charstring.respond_to?(:data)
-                  charstring.data
-                elsif charstring.respond_to?(:bytes)
-                  charstring.bytes
-                elsif charstring.is_a?(String)
-                  charstring.bytes
-                else
-                  return []
-                end
-
-        return [] if bytes.empty?
+        bytes = charstring_to_bytes(charstring)
+        return [] if bytes.nil? || bytes.empty?
 
         parse_charstring(bytes)
       end
 
       private
+
+      # Coerce a CharString input to an Array<Integer> of bytes.
+      # Accepts a String (raw bytes) or a CFF::CharString.
+      def charstring_to_bytes(charstring)
+        return charstring.bytes if charstring.is_a?(String)
+        return charstring.data if charstring.is_a?(Tables::Cff::CharString)
+
+        raise TypeError, "Unsupported charstring type: #{charstring.class}"
+      end
 
       # Parse CharString bytes to extract hints
       #
@@ -289,58 +288,19 @@ module Fontisan
 
         # Extract hint-related parameters from Private DICT
         # These are the key hinting parameters in CFF
-        if private_dict.respond_to?(:blue_values)
-          hints[:blue_values] =
-            private_dict.blue_values
-        end
-        if private_dict.respond_to?(:other_blues)
-          hints[:other_blues] =
-            private_dict.other_blues
-        end
-        if private_dict.respond_to?(:family_blues)
-          hints[:family_blues] =
-            private_dict.family_blues
-        end
-        if private_dict.respond_to?(:family_other_blues)
-          hints[:family_other_blues] =
-            private_dict.family_other_blues
-        end
-        if private_dict.respond_to?(:blue_scale)
-          hints[:blue_scale] =
-            private_dict.blue_scale
-        end
-        if private_dict.respond_to?(:blue_shift)
-          hints[:blue_shift] =
-            private_dict.blue_shift
-        end
-        if private_dict.respond_to?(:blue_fuzz)
-          hints[:blue_fuzz] =
-            private_dict.blue_fuzz
-        end
-        if private_dict.respond_to?(:std_hw)
-          hints[:std_hw] =
-            private_dict.std_hw
-        end
-        if private_dict.respond_to?(:std_vw)
-          hints[:std_vw] =
-            private_dict.std_vw
-        end
-        if private_dict.respond_to?(:stem_snap_h)
-          hints[:stem_snap_h] =
-            private_dict.stem_snap_h
-        end
-        if private_dict.respond_to?(:stem_snap_v)
-          hints[:stem_snap_v] =
-            private_dict.stem_snap_v
-        end
-        if private_dict.respond_to?(:force_bold)
-          hints[:force_bold] =
-            private_dict.force_bold
-        end
-        if private_dict.respond_to?(:language_group)
-          hints[:language_group] =
-            private_dict.language_group
-        end
+        hints[:blue_values] = private_dict.blue_values
+        hints[:other_blues] = private_dict.other_blues
+        hints[:family_blues] = private_dict.family_blues
+        hints[:family_other_blues] = private_dict.family_other_blues
+        hints[:blue_scale] = private_dict.blue_scale
+        hints[:blue_shift] = private_dict.blue_shift
+        hints[:blue_fuzz] = private_dict.blue_fuzz
+        hints[:std_hw] = private_dict.std_hw
+        hints[:std_vw] = private_dict.std_vw
+        hints[:stem_snap_h] = private_dict.stem_snap_h
+        hints[:stem_snap_v] = private_dict.stem_snap_v
+        hints[:force_bold] = private_dict.force_bold?
+        hints[:language_group] = private_dict.language_group
 
         hints.compact
       rescue StandardError => e

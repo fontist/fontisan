@@ -80,7 +80,7 @@ module Fontisan
       # @return [Symbol]
       def bitmap_mode
         return :none if @font.is_a?(Fontisan::Ufo::Font)
-        return :none unless @font.respond_to?(:has_table?)
+        return :none unless @font.is_a?(SfntSource)
 
         has_cbdt = @font.has_table?("CBDT") && @font.has_table?("CBLC")
         has_glyf = @font.has_table?("glyf") || @font.has_table?("CFF ")
@@ -190,7 +190,7 @@ module Fontisan
           cache[:loca] = @font.table("loca")
           cache[:glyf] = @font.table("glyf")
           # loca needs head's index_to_loc_format to size its offsets
-          if cache[:loca].respond_to?(:parse_with_context) && cache[:head]
+          if cache[:head]
             cache[:loca].parse_with_context(
               cache[:head].index_to_loc_format,
               @font.table("maxp")&.num_glyphs || 0,
@@ -217,15 +217,13 @@ module Fontisan
         num_h_metrics = hhea&.number_of_h_metrics || 1
         num_glyphs = maxp&.num_glyphs || 0
 
-        if hmtx.respond_to?(:parse_with_context)
-          hmtx.parse_with_context(num_h_metrics, num_glyphs)
-        end
+        hmtx.parse_with_context(num_h_metrics, num_glyphs)
 
         # Fallback advance width when hmtx lookup fails for a GID.
         # Per the OpenType spec, glyphs at GID >= numberOfHMetrics
         # inherit the last LongHorMetric's advanceWidth. If the table
         # is empty or corrupt, fall back to the font's unitsPerEm.
-        fallback_width = if hmtx.respond_to?(:h_metrics) && hmtx.h_metrics&.any?
+        fallback_width = if hmtx.h_metrics&.any?
                            hmtx.h_metrics.last[:advance_width]
                          else
                            head&.units_per_em || 1000
@@ -284,9 +282,9 @@ module Fontisan
         glyph = Fontisan::Ufo::Glyph.new(name: name)
         glyph.width = glyph_width(gid)
 
-        if raw.respond_to?(:simple?) && raw.simple?
+        if raw.is_a?(Fontisan::Tables::SimpleGlyph) && raw.simple?
           copy_simple_contours(raw, glyph)
-        elsif raw.respond_to?(:compound?) && raw.compound?
+        elsif raw.is_a?(Fontisan::Tables::CompoundGlyph) && raw.compound?
           flatten_compound_into(raw, glyph, cache, Set.new)
         end
 
@@ -372,9 +370,9 @@ module Fontisan
 
           matrix = component.transformation_matrix
 
-          if raw.respond_to?(:simple?) && raw.simple?
+          if raw.is_a?(Fontisan::Tables::SimpleGlyph) && raw.simple?
             flatten_simple_component(raw, ufo_glyph, matrix)
-          elsif raw.respond_to?(:compound?) && raw.compound?
+          elsif raw.is_a?(Fontisan::Tables::CompoundGlyph) && raw.compound?
             flatten_compound_into(raw, ufo_glyph, cache, visited, depth + 1)
           end
         end

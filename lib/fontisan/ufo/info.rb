@@ -26,6 +26,10 @@ module Fontisan
 
       attr_accessor(*STANDARD_FIELDS)
 
+      # Variation font metadata. Populated by UFO 3 extensions or by
+      # explicit compiler configuration; nil when not set.
+      attr_accessor :axes, :named_instances
+
       # Catch-all for non-standard (vendor-specific) fields.
       attr_accessor :extras
 

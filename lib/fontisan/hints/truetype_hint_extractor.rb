@@ -63,7 +63,7 @@ module Fontisan
       # @return [Array<Hint>] Extracted hints
       def extract(glyph)
         return [] if glyph.nil? || glyph.empty?
-        return [] unless glyph.respond_to?(:instructions)
+        return [] unless glyph.is_a?(Fontisan::Tables::SimpleGlyph)
 
         instructions = glyph.instructions || []
         return [] if instructions.empty?

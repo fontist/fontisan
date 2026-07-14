@@ -110,10 +110,8 @@ module Fontisan
       def validate_input!
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        # TODO: replace respond_to? duck-type with is_a?(SfntFont) once
-        # the subset builder spec suite is migrated off doubles (see audit).
-        unless font.respond_to?(:table)
-          raise ArgumentError, "Font must respond to :table method"
+        unless font.is_a?(SfntSource)
+          raise ArgumentError, "Font must be an SfntSource instance"
         end
 
         # Validate options

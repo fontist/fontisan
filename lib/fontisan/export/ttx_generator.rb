@@ -64,7 +64,7 @@ module Fontisan
       # @param value [Object] BinData value or integer
       # @return [Integer] Native integer
       def to_int(value)
-        value.respond_to?(:to_i) ? value.to_i : value
+        Integer(value)
       end
 
       # Generate GlyphOrder section (required first)
@@ -293,7 +293,7 @@ module Fontisan
       # @param table [Object] Table object
       # @return [void]
       def generate_binary_table(xml, tag, table)
-        binary_data = table.respond_to?(:to_binary_s) ? table.to_binary_s : ""
+        binary_data = table.to_binary_s
         xml.send(tag.to_sym) do
           xml.hexdata do
             xml.text("\n    #{format_hex_data(binary_data)}\n  ")
@@ -432,7 +432,7 @@ module Fontisan
       # @return [String] Glyph name
       def get_glyph_name(glyph_id)
         post = @font.table("post")
-        if post.respond_to?(:glyph_names) && post.glyph_names
+        if post.is_a?(Tables::Post) && post.glyph_names
           post.glyph_names[glyph_id] || ".notdef"
         elsif glyph_id.zero?
           ".notdef"
@@ -471,7 +471,7 @@ module Fontisan
       # @param width [Integer] Minimum hex width
       # @return [String] Hex string (e.g., "0x1234")
       def format_hex(value, width: 8)
-        int_value = value.respond_to?(:to_i) ? value.to_i : value
+        int_value = Integer(value)
         "0x#{int_value.to_s(16).rjust(width, '0')}"
       end
 

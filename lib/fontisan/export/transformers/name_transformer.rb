@@ -44,7 +44,7 @@ module Fontisan
         # @param value [Object] BinData value or integer
         # @return [Integer] Native integer
         def self.to_int(value)
-          value.respond_to?(:to_i) ? value.to_i : value
+          Integer(value)
         end
 
         # Format hex value

@@ -103,7 +103,7 @@ module Fontisan
         # @param table [Object] Table object
         # @return [Models::Ttx::Tables::BinaryTable, nil] Binary table model
         def transform_binary_table(tag, table)
-          binary_data = table.respond_to?(:to_binary_s) ? table.to_binary_s : ""
+          binary_data = table ? table.to_binary_s : ""
           return nil if binary_data.empty?
 
           Models::Ttx::Tables::BinaryTable.new.tap do |bin_table|
@@ -140,7 +140,7 @@ module Fontisan
         # @return [String] Glyph name
         def get_glyph_name(glyph_id)
           post = @font.table("post")
-          if post.respond_to?(:glyph_names) && post.glyph_names
+          if post.is_a?(Tables::Post) && post.glyph_names
             post.glyph_names[glyph_id] || ".notdef"
           elsif glyph_id.zero?
             ".notdef"

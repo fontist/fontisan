@@ -20,8 +20,8 @@ module Fontisan
         # @param instances [Array<Hash>] named instance definitions
         # @return [String, nil] fvar table bytes, or nil if no axes
         def self.build(font, axes: nil, instances: nil)
-          axes ||= font.info.respond_to?(:axes) ? font.info.axes : nil
-          instances ||= font.info.respond_to?(:named_instances) ? font.info.named_instances : nil
+          axes ||= font.info.axes
+          instances ||= font.info.named_instances
 
           axes ||= []
           return nil if axes.empty?

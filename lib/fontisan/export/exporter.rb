@@ -181,7 +181,7 @@ module Fontisan
       # @return [void]
       def export_binary_fallback(export_model, tag, error)
         table = @font.table(tag)
-        binary_data = table.respond_to?(:to_binary_s) ? table.to_binary_s : ""
+        binary_data = table ? table.to_binary_s : ""
         checksum = calculate_table_checksum(tag)
 
         export_model.add_table(
@@ -201,14 +201,13 @@ module Fontisan
         table_entry = @font.tables.find { |entry| entry.tag == tag }
         return 0 unless table_entry
 
-        if table_entry.respond_to?(:checksum)
-          table_entry.checksum.to_i
-        else
-          # Calculate from binary data
-          table = @font.table(tag)
-          data = table.respond_to?(:to_binary_s) ? table.to_binary_s : ""
-          Utilities::ChecksumCalculator.calculate(data)
-        end
+        checksum = table_entry.checksum
+        return checksum.to_i if checksum
+
+        # Calculate from binary data
+        table = @font.table(tag)
+        data = table ? table.to_binary_s : ""
+        Utilities::ChecksumCalculator.calculate(data)
       end
 
       # Format checksum as hex string

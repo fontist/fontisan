@@ -52,6 +52,8 @@ module Fontisan
   # @example Writing a font
   #   ttf.to_file("output.ttf")
   class SfntFont < BinData::Record
+    include SfntSource
+
     endian :big
 
     offset_table :header

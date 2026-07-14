@@ -200,8 +200,8 @@ module Fontisan
       # @return [String] Base filename
       def self.extract_base_name(font)
         name_table = font.table(Constants::NAME_TAG)
-        if name_table.respond_to?(:postscript_name)
-          name = name_table.postscript_name(1) || name_table.postscript_name(3)
+        if name_table
+          name = name_table.english_name(Tables::Name::POSTSCRIPT_NAME)
           return name if name
         end
 

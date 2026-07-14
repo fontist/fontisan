@@ -412,9 +412,9 @@ _options)
         # rather than the SFNT table interface
         is_type1 = font.is_a?(Type1Font)
 
-        unless is_type1 || font.respond_to?(:table)
+        unless is_type1 || font.is_a?(SfntSource)
           raise ArgumentError,
-                "Font must respond to :table method or be a Type1Font"
+                "Font must be an SfntSource instance or a Type1Font"
         end
 
         unless target_format.is_a?(Symbol)

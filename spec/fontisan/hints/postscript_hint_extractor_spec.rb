@@ -61,8 +61,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
           50 + 139,  # width = 50
           1, # hstem operator
         ]
-        charstring = double("charstring", data: charstring_bytes,
-                                          bytes: charstring_bytes)
+        charstring = charstring_bytes.pack("C*")
 
         hints = extractor.extract(charstring)
         expect(hints).not_to be_empty
@@ -77,8 +76,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
           50 + 139,  # width = 50
           3, # vstem operator
         ]
-        charstring = double("charstring", data: charstring_bytes,
-                                          bytes: charstring_bytes)
+        charstring = charstring_bytes.pack("C*")
 
         hints = extractor.extract(charstring)
         expect(hints).not_to be_empty
@@ -92,7 +90,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
       end
 
       it "returns empty array for empty charstring" do
-        charstring = double("charstring", data: "", bytes: [])
+        charstring = ""
         hints = extractor.extract(charstring)
         expect(hints).to be_empty
       end
@@ -114,7 +112,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
         end
         # Set up actual methods
         allow(private_dict).to receive_messages(blue_values: [-20, 0, 450,
-                                                              470], std_hw: 68, std_vw: 88, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil)
+                                                              470], std_hw: 68, std_vw: 88, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold?: nil, language_group: nil)
 
         cff_table = double("cff_table")
         allow(cff_table).to receive(:private_dict).with(0).and_return(private_dict)

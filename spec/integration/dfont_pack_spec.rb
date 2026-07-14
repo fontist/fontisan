@@ -251,12 +251,12 @@ RSpec.describe "Dfont Pack Integration", :integration do
       end.to raise_error(ArgumentError, /must be an array/)
     end
 
-    it "rejects fonts without table_data method" do
-      invalid_font = double("invalid font")
+    it "rejects fonts that aren't SfntSource" do
+      invalid_font = Object.new
 
       expect do
         Fontisan::Collection::DfontBuilder.new([invalid_font])
-      end.to raise_error(ArgumentError, /must respond to table_data/)
+      end.to raise_error(ArgumentError, /must be SfntSource/)
     end
   end
 end

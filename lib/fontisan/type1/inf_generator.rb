@@ -181,15 +181,10 @@ module Fontisan
       # @return [String] Font name
       def extract_font_name
         name_table = @font.table(Constants::NAME_TAG)
-        return "" unless name_table
+        return extract_postscript_name unless name_table
 
-        # Try full font name first, then postscript name
-        if name_table.respond_to?(:full_font_name)
-          name_table.full_font_name(1) || name_table.full_font_name(3) ||
-            extract_postscript_name
-        else
+        name_table.english_name(Tables::Name::FULL_NAME) ||
           extract_postscript_name
-        end
       end
 
       # Extract PostScript name
@@ -199,12 +194,8 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return @font.post_script_name || "Unknown" unless name_table
 
-        if name_table.respond_to?(:postscript_name)
-          name_table.postscript_name(1) || name_table.postscript_name(3) ||
-            @font.post_script_name || "Unknown"
-        else
+        name_table.english_name(Tables::Name::POSTSCRIPT_NAME) ||
           @font.post_script_name || "Unknown"
-        end
       end
 
       # Extract family name
@@ -214,9 +205,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:font_family)
-          name_table.font_family(1) || name_table.font_family(3)
-        end
+        name_table.english_name(Tables::Name::FAMILY)
       end
 
       # Extract weight
@@ -226,11 +215,7 @@ module Fontisan
         os2 = @font.table(Constants::OS2_TAG)
         return nil unless os2
 
-        weight_class = if os2.respond_to?(:us_weight_class)
-                         os2.us_weight_class
-                       elsif os2.respond_to?(:weight_class)
-                         os2.weight_class
-                       end
+        weight_class = os2.us_weight_class
         return nil unless weight_class
 
         case weight_class
@@ -254,9 +239,7 @@ module Fontisan
         post = @font.table(Constants::POST_TAG)
         return nil unless post
 
-        if post.respond_to?(:italic_angle)
-          post.italic_angle
-        end
+        post.italic_angle
       end
 
       # Extract version
@@ -266,9 +249,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:version_string)
-          name_table.version_string(1) || name_table.version_string(3)
-        end
+        name_table.english_name(Tables::Name::VERSION)
       end
 
       # Extract copyright
@@ -278,9 +259,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:copyright)
-          name_table.copyright(1) || name_table.copyright(3)
-        end
+        name_table.english_name(Tables::Name::COPYRIGHT)
       end
 
       # Extract vendor/manufacturer
@@ -290,9 +269,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:manufacturer)
-          name_table.manufacturer(1) || name_table.manufacturer(3)
-        end
+        name_table.english_name(Tables::Name::MANUFACTURER)
       end
 
       # Extract license information
@@ -302,9 +279,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:license)
-          name_table.license(1) || name_table.license(3)
-        end
+        name_table.english_name(Tables::Name::LICENSE_DESCRIPTION)
       end
 
       # Get default PFB filename

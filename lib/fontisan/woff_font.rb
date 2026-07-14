@@ -53,6 +53,8 @@ module Fontisan
   #   woff.to_ttf("output.ttf")  # if TrueType flavored
   #   woff.to_otf("output.otf")  # if CFF flavored
   class WoffFont < BinData::Record
+    include SfntSource
+
     # High-level pipeline format identifier. Owned by the font class so the
     # conversion pipeline can dispatch without case statements (OCP).
     #

@@ -213,7 +213,7 @@ module Fontisan
       # @param index [Integer] Font index (fallback)
       # @return [String] Font name
       def extract_font_name(font, index)
-        return "Font #{index}" unless font.respond_to?(:table)
+        return "Font #{index}" unless font.is_a?(SfntSource)
 
         name_table = font.table("name")
         return "Font #{index}" unless name_table

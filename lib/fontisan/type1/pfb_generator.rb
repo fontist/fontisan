@@ -159,15 +159,15 @@ module Fontisan
 
         # Stem snap hints
         os2 = @font.table(Constants::OS2_TAG)
-        if os2.respond_to?(:weight_class)
+        if os2&.us_weight_class
           stem_width = @scaler.scale([100, 80,
-                                      90][os2.weight_class / 100] || 80)
+                                      90][os2.us_weight_class / 100] || 80)
           dict << "/StemSnapH [#{stem_width}] def"
           dict << "/StemSnapV [#{stem_width}] def"
         end
 
         # Force bold flag
-        dict << if os2.respond_to?(:weight_class) && os2.weight_class && os2.weight_class >= 700
+        dict << if os2&.us_weight_class && os2.us_weight_class >= 700
                   "/ForceBold true def"
                 else
                   "/ForceBold false def"
@@ -261,28 +261,40 @@ module Fontisan
         glyph = glyf_table.glyph(gid)
 
         # Empty or compound glyph
-        if glyph.nil? || glyph.contour_count.zero? || glyph.compound?
+        if glyph.nil? || glyph.num_contours.zero? || glyph.compound?
           # Return empty charstring (hsbw + endchar)
           return [0, 500, 14].pack("C*")
         end
 
         # For simple glyphs without curve conversion, generate line-based charstring
         # This is a simplified implementation
-        lsb = @scaler.scale(glyph.left_side_bearing || 0)
-        width = @scaler.scale(glyph.advance_width || 500)
-        bytes = [0, lsb, width] # hsbw
+        lsb, width = hmtx_metrics_for(gid)
+        bytes = [0, @scaler.scale(lsb), @scaler.scale(width)] # hsbw
 
         # Add lines between points (simplified)
-        if glyph.respond_to?(:points) && glyph.points && !glyph.points.empty?
-          glyph.points.each do |point|
-            next unless point.on_curve?
+        points = glyph.points
+        points.each do |point|
+          next unless point[:on_curve]
 
-            # This is very simplified - proper implementation would handle curves
-          end
+          # This is very simplified - proper implementation would handle curves
         end
 
         bytes << 14 # endchar
         bytes.pack("C*")
+      end
+
+      # Look up LSB and advance width from hmtx for a glyph.
+      #
+      # @param gid [Integer] Glyph ID
+      # @return [Array(Integer, Integer)] [lsb, advance_width]
+      def hmtx_metrics_for(gid)
+        hmtx = @font.table(Constants::HMTX_TAG)
+        return [0, 500] unless hmtx
+
+        metric = hmtx.metric_for(gid)
+        return [0, 500] unless metric
+
+        [metric[:lsb] || 0, metric[:advance_width] || 500]
       end
 
       # Build second ASCII segment (trailer)

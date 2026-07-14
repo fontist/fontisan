@@ -8,11 +8,7 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
   describe "variable font detection" do
     context "with variable fonts" do
       it "detects variable fonts in collection" do
-        # Create mock variable font
-        font = instance_double(Fontisan::TrueTypeFont)
-        allow(font).to receive(:has_table?).with("fvar").and_return(true)
-        allow(font).to receive(:table_data).and_return({})
-        allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
+        font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "" })
 
         builder = described_class.new([font, font])
         expect(builder.variable_fonts_in_collection?).to be true
@@ -21,10 +17,7 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
 
     context "without variable fonts" do
       it "returns false for static fonts" do
-        font = instance_double(Fontisan::TrueTypeFont)
-        allow(font).to receive(:has_table?).with("fvar").and_return(false)
-        allow(font).to receive(:table_data).and_return({})
-        allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
+        font = Fontisan::SpecHelpers::FakeFont.new({ "head" => "" })
 
         builder = described_class.new([font, font])
         expect(builder.variable_fonts_in_collection?).to be false
@@ -74,11 +67,8 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
           double(axis_tag: "wght"),
           double(axis_tag: "wdth"),
         ]
-        fvar1 = double(axes: axes)
-        fvar2 = double(axes: axes)
-
-        font1 = create_variable_font_mock_with_fvar(fvar1)
-        font2 = create_variable_font_mock_with_fvar(fvar2)
+        font1 = create_variable_font_mock_with_fvar(double("fvar", axes: axes))
+        font2 = create_variable_font_mock_with_fvar(double("fvar", axes: axes))
 
         builder = described_class.new([font1, font2])
         expect { builder.validate_variation_compatibility! }.not_to raise_error
@@ -87,13 +77,12 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
 
     context "with different axes" do
       it "raises error" do
-        axes1 = [double(axis_tag: "wght"), double(axis_tag: "wdth")]
-        axes2 = [double(axis_tag: "wght"), double(axis_tag: "slnt")]
-        fvar1 = double(axes: axes1)
-        fvar2 = double(axes: axes2)
-
-        font1 = create_variable_font_mock_with_fvar(fvar1)
-        font2 = create_variable_font_mock_with_fvar(fvar2)
+        font1 = create_variable_font_mock_with_fvar(
+          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "wdth")]),
+        )
+        font2 = create_variable_font_mock_with_fvar(
+          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "slnt")]),
+        )
 
         builder = described_class.new([font1, font2])
         expect { builder.validate_variation_compatibility! }.to raise_error(
@@ -105,13 +94,12 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
 
     context "with different number of axes" do
       it "raises error" do
-        axes1 = [double(axis_tag: "wght")]
-        axes2 = [double(axis_tag: "wght"), double(axis_tag: "wdth")]
-        fvar1 = double(axes: axes1)
-        fvar2 = double(axes: axes2)
-
-        font1 = create_variable_font_mock_with_fvar(fvar1)
-        font2 = create_variable_font_mock_with_fvar(fvar2)
+        font1 = create_variable_font_mock_with_fvar(
+          double("fvar", axes: [double(axis_tag: "wght")]),
+        )
+        font2 = create_variable_font_mock_with_fvar(
+          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "wdth")]),
+        )
 
         builder = described_class.new([font1, font2])
         expect { builder.validate_variation_compatibility! }.to raise_error(
@@ -122,71 +110,48 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     end
   end
 
-  describe "validate! with variable fonts" do
-    it "calls variation compatibility validation" do
-      font1 = create_variable_ttf_mock_complete
-      font2 = create_variable_ttf_mock_complete
+  describe "validate!" do
+    context "with variable fonts" do
+      it "calls variation compatibility validation" do
+        font1 = create_variable_ttf_mock_complete
+        font2 = create_variable_ttf_mock_complete
 
-      builder = described_class.new([font1, font2])
-      expect(builder).to receive(:validate_variation_compatibility!)
-      builder.validate!
+        builder = described_class.new([font1, font2])
+        expect(builder).to receive(:validate_variation_compatibility!)
+        builder.validate!
+      end
     end
 
-    it "skips variation validation for static fonts" do
-      font1 = create_static_font_mock
-      font2 = create_static_font_mock
+    context "with static fonts" do
+      it "skips variation validation for static fonts" do
+        font1 = create_static_font_mock
+        font2 = create_static_font_mock
 
-      builder = described_class.new([font1, font2])
-      expect(builder).not_to receive(:validate_variation_compatibility!)
-      builder.validate!
+        builder = described_class.new([font1, font2])
+        expect(builder).not_to receive(:validate_variation_compatibility!)
+        builder.validate!
+      end
     end
   end
 
   # Helper methods
   def create_variable_ttf_mock
     fvar_table = double("fvar", axes: [])
-    font = instance_double(Fontisan::TrueTypeFont)
-    allow(font).to receive(:has_table?) do |tag|
-      case tag
-      when "fvar", "glyf" then true
-      when "CFF2" then false
-      else false
-      end
-    end
+    font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "glyf" => "" })
     allow(font).to receive(:table).with("fvar").and_return(fvar_table)
-    allow(font).to receive(:table_data).and_return({})
-    allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
     font
   end
 
   def create_variable_otf_mock
     fvar_table = double("fvar", axes: [])
-    font = instance_double(Fontisan::OpenTypeFont)
-    allow(font).to receive(:has_table?) do |tag|
-      case tag
-      when "fvar", "CFF2" then true
-      when "glyf" then false
-      else false
-      end
-    end
+    font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "CFF2" => "" })
     allow(font).to receive(:table).with("fvar").and_return(fvar_table)
-    allow(font).to receive(:table_data).and_return({})
-    allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
     font
   end
 
   def create_variable_font_mock_with_fvar(fvar_table)
-    font = instance_double(Fontisan::TrueTypeFont)
-    allow(font).to receive(:has_table?) do |tag|
-      case tag
-      when "fvar", "glyf" then true
-      when "CFF2" then false
-      else false
-      end
-    end
+    font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "glyf" => "" })
     allow(font).to receive(:table).with("fvar").and_return(fvar_table)
-    allow(font).to receive(:table_data).and_return({})
-    allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
     font
   end
 
@@ -194,29 +159,18 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     axes = [double(axis_tag: "wght"), double(axis_tag: "wdth")]
     fvar = double(axes: axes)
 
-    header = double(sfnt_version: 0x00010000)
-    font = double("TrueTypeFont")
-
-    allow(font).to receive(:has_table?) do |tag|
-      %w[fvar glyf head hhea maxp].include?(tag)
+    Fontisan::SpecHelpers::FakeFont.new(
+      { "fvar" => "", "glyf" => "", "head" => "", "hhea" => "", "maxp" => "" },
+      sfnt_version: 0x00010000,
+    ).tap do |font|
+      allow(font).to receive(:table).with("fvar").and_return(fvar)
     end
-    allow(font).to receive(:table).with("fvar").and_return(fvar)
-    allow(font).to receive_messages(header: header, table_data: {})
-    allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
-
-    font
   end
 
   def create_static_font_mock
-    header = double(sfnt_version: 0x00010000)
-    font = double("TrueTypeFont")
-
-    allow(font).to receive(:has_table?) do |tag|
-      %w[head hhea maxp].include?(tag) && tag != "fvar"
-    end
-    allow(font).to receive_messages(header: header, table_data: {})
-    allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
-
-    font
+    Fontisan::SpecHelpers::FakeFont.new(
+      { "head" => "", "hhea" => "", "maxp" => "" },
+      sfnt_version: 0x00010000,
+    )
   end
 end

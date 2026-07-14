@@ -246,7 +246,7 @@ module Fontisan
       # @param font [Object] Font object
       # @return [Boolean] true if TrueType
       def truetype_font?(font)
-        return false unless font.respond_to?(:has_table?)
+        return false unless font.is_a?(SfntSource)
 
         font.has_table?("glyf")
       end
@@ -256,7 +256,7 @@ module Fontisan
       # @param font [Object] Font object
       # @return [Boolean] true if CFF
       def cff_font?(font)
-        return false unless font.respond_to?(:has_table?)
+        return false unless font.is_a?(SfntSource)
 
         font.has_table?("CFF ") || font.has_table?("CFF2")
       end

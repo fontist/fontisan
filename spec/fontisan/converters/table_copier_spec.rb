@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Converters::TableCopier do
   let(:copier) { described_class.new }
-  let(:ttf_font) { double("TrueTypeFont") }
-  let(:otf_font) { double("OpenTypeFont") }
+  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "head" => double, "hhea" => double, "maxp" => double, "glyf" => double, "loca" => double }) }
+  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "head" => double, "hhea" => double, "maxp" => double, "CFF " => double }) }
 
   before do
     # Setup TTF font mock
@@ -94,23 +94,12 @@ RSpec.describe Fontisan::Converters::TableCopier do
         end.to raise_error(ArgumentError, /Font cannot be nil/)
       end
 
-      it "raises error for font without tables method" do
-        invalid_font = double("InvalidFont")
-        allow(invalid_font).to receive(:table).and_return(double)
+      it "raises error for font that isn't SfntSource" do
+        invalid_font = Object.new
 
         expect do
           copier.convert(invalid_font)
-        end.to raise_error(ArgumentError, /must respond to :tables/)
-      end
-
-      it "raises error for font without read_table_data method" do
-        invalid_font = double("InvalidFont")
-        allow(invalid_font).to receive_messages(table: double, tables: {},
-                                                has_table?: false)
-
-        expect do
-          copier.convert(invalid_font)
-        end.to raise_error(ArgumentError, /must respond to :table_data/)
+        end.to raise_error(ArgumentError, /must be an SfntSource/)
       end
     end
   end
@@ -189,10 +178,7 @@ RSpec.describe Fontisan::Converters::TableCopier do
     end
 
     it "raises error for ambiguous format" do
-      ambiguous_font = double("AmbiguousFont")
-      allow(ambiguous_font).to receive(:has_table?).and_return(false)
-      allow(ambiguous_font).to receive_messages(table: nil, tables: {},
-                                                table_data: {})
+      ambiguous_font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
         copier.convert(ambiguous_font)

@@ -127,7 +127,7 @@ module Fontisan
         replacements = []
 
         patterns.each do |pattern|
-          if glyph_id && pattern.respond_to?(:positions) && pattern.positions.is_a?(Hash)
+          if glyph_id && pattern.is_a?(PatternAnalyzer::Pattern) && pattern.positions.is_a?(Hash)
             # Use exact positions from pattern analysis for this glyph
             glyph_positions = pattern.positions[glyph_id] || []
 

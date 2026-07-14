@@ -70,6 +70,7 @@ require "tempfile"
 
 # Load centralized fixture configuration
 require_relative "support/fixture_fonts"
+require_relative "support/fake_font"
 
 # Define the fixtures directory constant for test files
 FIXTURES_DIR = File.join(__dir__, "fixtures")

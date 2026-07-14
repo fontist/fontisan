@@ -61,8 +61,7 @@ module Fontisan
           name_table = font.table("name")
           return unless name_table
 
-          records = name_table.respond_to?(:name_records) ? name_table.name_records : []
-          records.each do |record|
+          name_table.name_records.each do |record|
             next unless record.platform_id == 3 && record.encoding_id == 1 # Windows Unicode BMP
 
             value = decode_name_value(record, name_table)
@@ -79,9 +78,7 @@ module Fontisan
         end
 
         def self.decode_name_value(record, name_table)
-          raw = if name_table.respond_to?(:string_for_record)
-                  name_table.string_for_record(record)
-                end
+          raw = name_table.string_for_record(record)
 
           if raw && raw.encoding == Encoding::UTF_16BE
             raw.encode("UTF-8")
@@ -100,12 +97,7 @@ module Fontisan
           post = font.table("post")
           return unless post
 
-          if post.respond_to?(:italic_angle)
-            info.italic_angle = post.italic_angle
-          elsif post.respond_to?(:italic_angle_raw)
-            raw = post.italic_angle_raw
-            info.italic_angle = raw.to_i / 65536.0
-          end
+          info.italic_angle = post.italic_angle
         rescue NoMethodError
           # post table may not have italic_angle
         end
@@ -128,7 +120,7 @@ module Fontisan
           cmap_table = font.table("cmap")
           return {} unless cmap_table
 
-          mappings = cmap_table.respond_to?(:unicode_mappings) ? cmap_table.unicode_mappings : {}
+          mappings = cmap_table.unicode_mappings || {}
           # Invert: gid → [codepoints]
           inverted = Hash.new { |h, k| h[k] = [] }
           mappings.each { |cp, gid| inverted[gid] << cp }
@@ -146,13 +138,11 @@ module Fontisan
           num_glyphs = maxp&.num_glyphs || 0
 
           # Hmtx requires context-aware parsing before metric_for works.
-          if hmtx.respond_to?(:parse_with_context)
-            hmtx.parse_with_context(num_h_metrics, num_glyphs)
-          end
+          hmtx.parse_with_context(num_h_metrics, num_glyphs)
 
           widths = {}
           num_glyphs.times do |gid|
-            metric = hmtx.respond_to?(:metric_for) ? hmtx.metric_for(gid) : nil
+            metric = hmtx.metric_for(gid)
             widths[gid] = metric ? metric[:advance_width] : 0
           end
           widths
@@ -169,10 +159,8 @@ module Fontisan
           return unless glyf && loca && head
 
           # Tables need context-aware initialization before per-glyph access.
-          if loca.respond_to?(:parse_with_context)
-            loca.parse_with_context(head.index_to_loc_format,
-                                    num_glyphs)
-          end
+          loca.parse_with_context(head.index_to_loc_format,
+                                  num_glyphs)
 
           num_glyphs.times do |gid|
             glyph_name = glyph_name_for(font, gid) || "glyph#{gid}"
@@ -189,7 +177,7 @@ module Fontisan
 
             if simple.is_a?(Fontisan::Tables::SimpleGlyph)
               extract_simple_contours(simple, ufo_glyph)
-            elsif simple.respond_to?(:compound?) && simple.compound?
+            elsif simple.is_a?(Fontisan::Tables::CompoundGlyph) && simple.compound?
               extract_compound_contours(simple, ufo_glyph, glyf, loca, head)
             end
 
@@ -309,7 +297,7 @@ module Fontisan
           visited = visited.dup.add(compound.glyph_id)
 
           compound.components.each do |component|
-            next unless component.respond_to?(:args_are_xy?) ? component.args_are_xy? : true
+            next unless component.args_are_xy?
 
             raw = begin
               glyf.glyph_for(component.glyph_index, loca, head)
@@ -320,9 +308,9 @@ module Fontisan
 
             matrix = component.transformation_matrix
 
-            if raw.respond_to?(:simple?) && raw.simple?
+            if raw.is_a?(Fontisan::Tables::SimpleGlyph) && raw.simple?
               flatten_simple_component(raw, ufo_glyph, matrix)
-            elsif raw.respond_to?(:compound?) && raw.compound?
+            elsif raw.is_a?(Fontisan::Tables::CompoundGlyph) && raw.compound?
               flatten_compound(raw, ufo_glyph, glyf, loca, head, visited, depth + 1)
             end
           end
@@ -358,12 +346,10 @@ module Fontisan
           post = font.table("post")
           return nil unless post
 
-          if post.respond_to?(:glyph_name)
-            name = post.glyph_name(gid)
-            return name unless name.nil? || name.empty?
-          end
+          name = post.glyph_name(gid)
+          return nil if name.nil? || name.empty?
 
-          nil
+          name
         rescue NoMethodError
           nil
         end

@@ -73,6 +73,8 @@ module Fontisan
   #   puts font.header.flavor
   #   puts font.table_names
   class Woff2Font
+    include SfntSource
+
     # High-level pipeline format identifier. Owned by the font class so the
     # conversion pipeline can dispatch without case statements (OCP).
     #

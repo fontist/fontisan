@@ -97,23 +97,23 @@ module Fontisan
         end
 
         # Convert simple glyph
-        convert_simple_glyph(glyph)
+        convert_simple_glyph(glyph, gid)
       end
 
       # Convert a simple glyph to CharString
       #
-      # @param glyph [Object] TTF simple glyph
+      # @param glyph [Tables::SimpleGlyph] TTF simple glyph
+      # @param gid [Integer] Glyph ID (for hmtx lookup)
       # @return [String] Type 1 CharString data
-      def convert_simple_glyph(glyph)
+      def convert_simple_glyph(glyph, gid)
         commands = []
         points = extract_points(glyph)
 
         return empty_charstring if points.empty?
 
         # Start with hsbw (horizontal side bearing and width)
-        lsb = @scaler.scale(glyph.left_side_bearing || 0)
-        width = @scaler.scale(glyph.advance_width || 500)
-        commands << [HSBW, lsb, width]
+        lsb, width = hmtx_metrics_for(gid)
+        commands << [HSBW, @scaler.scale(lsb), @scaler.scale(width)]
 
         # Convert contours to Type 1 commands
         contour_commands = convert_contours(points)
@@ -126,29 +126,34 @@ module Fontisan
         encode_charstring(commands)
       end
 
-      # Extract points from a simple glyph
+      # Extract points from a simple glyph, scaled to target UPM.
       #
-      # TODO: SimpleGlyph has no `points` method — this path has never
-      # executed against a real glyph. The fix requires either exposing
-      # a points iterator on SimpleGlyph or rewriting against the
-      # points_for_contour API. Tracked separately from the encapsulation
-      # audit; left as-is to avoid silently masking the bug.
-      #
-      # @param glyph [Object] TTF simple glyph
-      # @return [Array<Hash>] Array of points with on_curve flag
+      # @param glyph [Tables::SimpleGlyph] TTF simple glyph
+      # @return [Array<Hash>] Array of {x:, y:, on_curve:} hashes
       def extract_points(glyph)
-        return [] unless glyph.respond_to?(:points)
+        return [] unless glyph.is_a?(Tables::SimpleGlyph)
 
-        points = []
-        glyph.points.each do |point|
-          points << {
-            x: @scaler.scale(point.x),
-            y: @scaler.scale(point.y),
-            on_curve: point.on_curve?,
+        glyph.points.map do |point|
+          {
+            x: @scaler.scale(point[:x]),
+            y: @scaler.scale(point[:y]),
+            on_curve: point[:on_curve],
           }
         end
+      end
 
-        points
+      # Look up LSB and advance width from hmtx for a glyph.
+      #
+      # @param gid [Integer] Glyph ID
+      # @return [Array(Integer, Integer)] [lsb, advance_width]
+      def hmtx_metrics_for(gid)
+        hmtx = @font.table(Constants::HMTX_TAG)
+        return [0, 500] unless hmtx
+
+        metric = hmtx.metric_for(gid)
+        return [0, 500] unless metric
+
+        [metric[:lsb] || 0, metric[:advance_width] || 500]
       end
 
       # Convert contours to Type 1 commands

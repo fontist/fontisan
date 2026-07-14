@@ -369,11 +369,11 @@ RSpec.describe "Outline Conversion Integration" do
     let(:converter) { Fontisan::Converters::OutlineConverter.new }
 
     it "validates font has required methods" do
-      invalid_font = double("InvalidFont")
+      invalid_font = Object.new
 
       expect do
         converter.validate(invalid_font, :otf)
-      end.to raise_error(ArgumentError, /must respond to/)
+      end.to raise_error(ArgumentError, /must be an SfntSource/)
     end
 
     it "rejects nil font" do
@@ -383,8 +383,7 @@ RSpec.describe "Outline Conversion Integration" do
     end
 
     it "detects missing required tables" do
-      font = double("Font")
-      allow(font).to receive_messages(has_table?: false, table: nil, tables: {})
+      font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
         converter.validate(font, :otf)
