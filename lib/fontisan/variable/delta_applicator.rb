@@ -260,7 +260,7 @@ module Fontisan
       # @param tag [String] Table tag
       # @return [Object, nil] Table object or nil
       def load_table(tag)
-        return nil unless @font.respond_to?(:table_data)
+        return nil unless @font.is_a?(SfntSource)
 
         data = @font.table_data(tag)
         return nil if data.nil? || data.empty?
@@ -293,7 +293,7 @@ module Fontisan
         end
 
         # Try VVAR
-        if @vvar.respond_to?(:item_variation_store) && @vvar.item_variation_store
+        if @vvar.is_a?(Tables::Vvar) && @vvar.item_variation_store
           return @vvar.item_variation_store.variation_region_list
         end
 

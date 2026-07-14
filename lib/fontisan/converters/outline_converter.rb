@@ -275,12 +275,8 @@ module Fontisan
       def validate(font, target_format)
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.respond_to?(:tables)
-          raise ArgumentError, "Font must respond to :tables"
-        end
-
-        unless font.respond_to?(:table)
-          raise ArgumentError, "Font must respond to :table"
+        unless font.is_a?(SfntSource)
+          raise ArgumentError, "Font must be an SfntSource instance"
         end
 
         source_format = detect_format(font)

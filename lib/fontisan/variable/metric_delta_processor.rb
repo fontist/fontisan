@@ -221,17 +221,17 @@ module Fontisan
 
         # Similar to HVAR but for vertical metrics
         # VVAR has the same structure as HVAR
-        if @vvar.respond_to?(:advance_height_delta_set) && (delta_set = @vvar.advance_height_delta_set(glyph_id))
+        if (delta_set = @vvar.advance_height_delta_set(glyph_id))
           accumulated = calculate_accumulated_delta(delta_set, region_scalars)
           result[:advance_height] = apply_rounding(accumulated)
         end
 
-        if @vvar.respond_to?(:tsb_delta_set) && (delta_set = @vvar.tsb_delta_set(glyph_id))
+        if (delta_set = @vvar.tsb_delta_set(glyph_id))
           accumulated = calculate_accumulated_delta(delta_set, region_scalars)
           result[:tsb] = apply_rounding(accumulated)
         end
 
-        if @vvar.respond_to?(:bsb_delta_set) && (delta_set = @vvar.bsb_delta_set(glyph_id))
+        if (delta_set = @vvar.bsb_delta_set(glyph_id))
           accumulated = calculate_accumulated_delta(delta_set, region_scalars)
           result[:bsb] = apply_rounding(accumulated)
         end

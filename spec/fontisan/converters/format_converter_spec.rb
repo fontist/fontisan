@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Converters::FormatConverter do
   let(:converter) { described_class.new }
-  let(:ttf_font) { double("TrueTypeFont") }
-  let(:otf_font) { double("OpenTypeFont") }
+  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "head" => double }) }
+  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "head" => double }) }
 
   # Mock tables for detecting format
   before do
@@ -135,11 +135,11 @@ RSpec.describe Fontisan::Converters::FormatConverter do
         end.to raise_error(ArgumentError, /Font cannot be nil/)
       end
 
-      it "raises ArgumentError for font without table method" do
-        invalid_font = double("InvalidFont")
+      it "raises ArgumentError for font that isn't SfntSource" do
+        invalid_font = Object.new
         expect do
           converter.convert(invalid_font, :otf)
-        end.to raise_error(ArgumentError, /must respond to :table/)
+        end.to raise_error(ArgumentError, /must be an SfntSource/)
       end
 
       it "raises ArgumentError for non-symbol target format" do
@@ -152,9 +152,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     context "with unsupported conversions" do
       it "raises error for unsupported conversion with helpful message" do
         # Create test font without proper format
-        unknown_font = double("UnknownFont")
-        allow(unknown_font).to receive(:has_table?).and_return(false)
-        allow(unknown_font).to receive_messages(table: nil, tables: {})
+        unknown_font = Fontisan::SpecHelpers::FakeFont.new({})
 
         expect do
           converter.convert(unknown_font, :woff2)
@@ -276,9 +274,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     end
 
     it "raises error for font without glyf or CFF" do
-      unknown_font = double("UnknownFont")
-      allow(unknown_font).to receive(:has_table?).and_return(false)
-      allow(unknown_font).to receive_messages(table: nil, tables: {})
+      unknown_font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
         converter.convert(unknown_font, :ttf)
@@ -330,8 +326,8 @@ RSpec.describe Fontisan::Converters::FormatConverter do
   end
 
   describe "variable font preservation" do
-    let(:variable_ttf_font) { double("VariableTrueTypeFont") }
-    let(:variable_otf_font) { double("VariableOpenTypeFont") }
+    let(:variable_ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "fvar" => double, "gvar" => double, "loca" => double, "head" => double, "hhea" => double, "maxp" => double }) }
+    let(:variable_otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "fvar" => double, "head" => double, "hhea" => double, "maxp" => double }) }
 
     before do
       # Setup variable TTF font

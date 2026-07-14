@@ -155,6 +155,15 @@ module Fontisan
         end
       end
 
+      # All points across every contour, in contour order.
+      #
+      # @return [Array<Hash>] Array of {x:, y:, on_curve:} hashes
+      def points
+        return [] if empty?
+
+        num_contours.times.flat_map { |c| points_for_contour(c) }
+      end
+
       private
 
       # Parse glyph header (10 bytes)

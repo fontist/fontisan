@@ -6,17 +6,12 @@ require "fontisan/variable/delta_applicator"
 RSpec.describe Fontisan::Variable::DeltaApplicator do
   # Create a mock font object with necessary tables
   let(:mock_font) do
-    font = double("Font")
+    font = Fontisan::SpecHelpers::FakeFont.new({})
 
     # fvar table data
     fvar_data = build_fvar_data
-    allow(font).to receive(:table_data).with("fvar").and_return(fvar_data)
-
-    # Other tables return nil (not present)
-    allow(font).to receive(:table_data).with("gvar").and_return(nil)
-    allow(font).to receive(:table_data).with("HVAR").and_return(build_hvar_data)
-    allow(font).to receive(:table_data).with("VVAR").and_return(nil)
-    allow(font).to receive(:table_data).with("MVAR").and_return(nil)
+    font.tables_hash["fvar"] = fvar_data
+    font.tables_hash["HVAR"] = build_hvar_data
 
     font
   end
@@ -91,7 +86,7 @@ RSpec.describe Fontisan::Variable::DeltaApplicator do
     end
 
     it "raises error for non-variable font" do
-      non_var_font = double("Font")
+      non_var_font = Fontisan::SpecHelpers::FakeFont.new({})
       allow(non_var_font).to receive(:table_data).and_return(nil)
 
       applicator_non_var = described_class.new(non_var_font)
@@ -107,7 +102,7 @@ RSpec.describe Fontisan::Variable::DeltaApplicator do
     end
 
     it "returns false when fvar is not present" do
-      non_var_font = double("Font")
+      non_var_font = Fontisan::SpecHelpers::FakeFont.new({})
       allow(non_var_font).to receive(:table_data).and_return(nil)
 
       applicator_non_var = described_class.new(non_var_font)

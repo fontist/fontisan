@@ -113,8 +113,8 @@ module Fontisan
 
         raise ArgumentError, "Font cannot be nil" if font.nil?
 
-        unless font.respond_to?(:tables) && font.respond_to?(:table_data)
-          raise ArgumentError, "Font must respond to :tables and :table_data"
+        unless font.is_a?(SfntSource)
+          raise ArgumentError, "Font must be an SfntSource instance"
         end
       end
 
@@ -302,7 +302,7 @@ module Fontisan
       def write_woff_header(io, font, total_size, total_sfnt_size, num_tables,
                            compressed_metadata, metadata_offset, metadata_size,
                            private_offset, private_size)
-        flavor = if font.respond_to?(:cff?) && font.cff?
+        flavor = if font.is_a?(SfntSource) && font.cff?
                    Constants::SFNT_VERSION_OTTO
                  else
                    Constants::SFNT_VERSION_TRUETYPE

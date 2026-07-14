@@ -167,10 +167,10 @@ module Fontisan
 
         # Underline properties
         post = @font.table(Constants::POST_TAG)
-        underline_position = post&.underline_position if post.respond_to?(:underline_position)
+        underline_position = post&.underline_position
         afm_lines << "UnderlinePosition #{underline_position}" if underline_position
 
-        underline_thickness = post&.underline_thickness if post.respond_to?(:underline_thickness)
+        underline_thickness = post&.underline_thickness
         afm_lines << "UnderlineThickness #{underline_thickness}" if underline_thickness
       end
 
@@ -252,11 +252,7 @@ module Fontisan
         os2 = @font.table(Constants::OS2_TAG)
         return "Regular" unless os2
 
-        weight_class = if os2.respond_to?(:us_weight_class)
-                         os2.us_weight_class
-                       elsif os2.respond_to?(:weight_class)
-                         os2.weight_class
-                       end
+        weight_class = os2.us_weight_class
         return "Regular" unless weight_class
 
         case weight_class
@@ -280,11 +276,7 @@ module Fontisan
         post = @font.table(Constants::POST_TAG)
         return 0.0 unless post
 
-        if post.respond_to?(:italic_angle)
-          post.italic_angle
-        else
-          0.0
-        end
+        post.italic_angle
       end
 
       # Check if font is monospace
@@ -294,11 +286,7 @@ module Fontisan
         post = @font.table(Constants::POST_TAG)
         return false unless post
 
-        if post.respond_to?(:is_fixed_pitch)
-          post.is_fixed_pitch
-        else
-          false
-        end
+        post.is_fixed_pitch
       end
 
       # Extract version from name table
@@ -308,9 +296,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:version_string)
-          name_table.version_string(1) || name_table.version_string(3)
-        end
+        name_table.english_name(Tables::Name::VERSION)
       end
 
       # Extract copyright from name table
@@ -320,9 +306,7 @@ module Fontisan
         name_table = @font.table(Constants::NAME_TAG)
         return nil unless name_table
 
-        if name_table.respond_to?(:copyright)
-          name_table.copyright(1) || name_table.copyright(3)
-        end
+        name_table.english_name(Tables::Name::COPYRIGHT)
       end
 
       # Extract character mappings from cmap table
@@ -332,30 +316,7 @@ module Fontisan
         cmap = @font.table(Constants::CMAP_TAG)
         return {} unless cmap
 
-        @extract_character_mappings ||= begin
-          mappings = {}
-
-          # Try to get Unicode mappings (most reliable method)
-          if cmap.respond_to?(:unicode_mappings)
-            mappings = cmap.unicode_mappings || {}
-          elsif cmap.respond_to?(:unicode_bmp_mapping)
-            mappings = cmap.unicode_bmp_mapping || {}
-          elsif cmap.respond_to?(:subtables)
-            # Look for Unicode BMP subtable
-            unicode_subtable = cmap.subtables.find do |subtable|
-              subtable.respond_to?(:platform_id) &&
-                subtable.platform_id == 3 &&
-                subtable.respond_to?(:encoding_id) &&
-                subtable.encoding_id == 1
-            end
-
-            if unicode_subtable.respond_to?(:glyph_index_map)
-              mappings = unicode_subtable.glyph_index_map
-            end
-          end
-
-          mappings
-        end
+        @extract_character_mappings ||= cmap.unicode_mappings || {}
       end
 
       # Extract font bounding box
@@ -365,12 +326,7 @@ module Fontisan
         head = @font.table(Constants::HEAD_TAG)
         return nil unless head
 
-        if head.respond_to?(:font_bounding_box)
-          head.font_bounding_box
-        elsif head.respond_to?(:x_min) && head.respond_to?(:y_min) &&
-            head.respond_to?(:x_max) && head.respond_to?(:y_max)
-          [head.x_min, head.y_min, head.x_max, head.y_max]
-        end
+        [head.x_min, head.y_min, head.x_max, head.y_max]
       end
 
       # Extract glyph bounding box
@@ -390,7 +346,7 @@ module Fontisan
         return nil unless head_table
 
         # Ensure loca is parsed with context
-        if loca_table.respond_to?(:parse_with_context) && !loca_table.parsed?
+        if loca_table.is_a?(Tables::Loca) && !loca_table.parsed?
           maxp = @font.table(Constants::MAXP_TAG)
           if maxp
             loca_table.parse_with_context(head_table.index_to_loc_format,
@@ -398,17 +354,8 @@ module Fontisan
           end
         end
 
-        if glyf_table.respond_to?(:glyph_for)
-          glyph = glyf_table.glyph_for(glyph_id, loca_table, head_table)
-          return nil unless glyph
-
-          if glyph.respond_to?(:bounding_box)
-            glyph.bounding_box
-          elsif glyph.respond_to?(:x_min) && glyph.respond_to?(:y_min) &&
-              glyph.respond_to?(:x_max) && glyph.respond_to?(:y_max)
-            [glyph.x_min, glyph.y_min, glyph.x_max, glyph.y_max]
-          end
-        end
+        glyph = glyf_table.glyph_for(glyph_id, loca_table, head_table)
+        glyph&.bounding_box
       end
 
       # Extract kerning pairs from GPOS table

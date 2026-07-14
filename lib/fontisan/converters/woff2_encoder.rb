@@ -218,7 +218,7 @@ module Fontisan
       # are applied by `Woff2::EncoderRules`, not here — this method is a
       # pure reader.
       def collect_tables(font, _options = {})
-        table_names = if font.respond_to?(:table_names)
+        table_names = if font.is_a?(SfntSource)
                         font.table_names
                       else
                         %w[head hhea maxp OS/2 name cmap post hmtx glyf loca
@@ -247,7 +247,7 @@ module Fontisan
       #
       # @return [Hash{Symbol => Object}, nil]
       def apply_glyf_loca_transform!(table_data, font)
-        return nil unless font.respond_to?(:has_table?)
+        return nil unless font.is_a?(SfntSource)
         return nil unless font.has_table?("glyf") && font.has_table?("loca")
 
         glyf_data = table_data["glyf"]
@@ -310,12 +310,10 @@ module Fontisan
       end
 
       def get_table_data(font, tag)
-        if font.respond_to?(:table_data)
-          font.table_data[tag]
-        elsif font.respond_to?(:table)
-          table = font.table(tag)
-          table&.to_binary_s if table.respond_to?(:to_binary_s)
-        end
+        return font.table_data[tag] if font.is_a?(SfntSource)
+
+        table = font.table(tag)
+        table&.to_binary_s
       end
 
       # Build table directory entries.

@@ -112,7 +112,7 @@ module Fontisan
         return "" if data.nil? || data.empty?
 
         # Ensure binary encoding before concatenation
-        data = data.b if data.respond_to?(:b)
+        data = data.b
 
         # Prepend lenIV random bytes
         if len_iv.positive?

@@ -161,9 +161,7 @@ module Fontisan
         # @return [Integer] Total stem count (hstem + vstem)
         def calculate_stem_count
           return 0 unless @hint_set
-
-          # Get font-level hints (from private_dict_hints JSON)
-          return 0 unless @hint_set.respond_to?(:private_dict_hints)
+          return 0 unless @hint_set.is_a?(Models::HintSet)
 
           begin
             font_hints = JSON.parse(@hint_set.private_dict_hints || "{}")
@@ -194,7 +192,7 @@ module Fontisan
         #
         # @return [Boolean] True if private_dict_hints are present
         def has_font_level_hints?
-          return false unless @hint_set.respond_to?(:private_dict_hints)
+          return false unless @hint_set.is_a?(Models::HintSet)
 
           hints = JSON.parse(@hint_set.private_dict_hints || "{}")
           !hints.empty?

@@ -58,7 +58,7 @@ module Fontisan
         def initialize(io, start_offset: 0)
           @io = io.is_a?(String) ? StringIO.new(io) : io
           @start_offset = start_offset
-          @io.seek(start_offset) if @io.respond_to?(:seek)
+          @io.seek(start_offset)
 
           parse!
         end

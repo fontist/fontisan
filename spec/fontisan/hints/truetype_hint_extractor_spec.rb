@@ -77,6 +77,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
           instructions: [0x30], # IUP_Y
           empty?: false,
         )
+        allow(glyph).to receive(:is_a?).with(Fontisan::Tables::SimpleGlyph).and_return(true)
 
         hints = extractor.extract(glyph)
         expect(hints).not_to be_empty
@@ -90,6 +91,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
           instructions: [0x31], # IUP_X
           empty?: false,
         )
+        allow(glyph).to receive(:is_a?).with(Fontisan::Tables::SimpleGlyph).and_return(true)
 
         hints = extractor.extract(glyph)
         expect(hints).not_to be_empty

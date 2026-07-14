@@ -77,7 +77,7 @@ options = {})
         tables = {}
 
         # Get all table tags from font
-        table_tags = @font.respond_to?(:tables) ? @font.tables.keys : []
+        table_tags = @font.is_a?(SfntSource) ? @font.table_names : []
 
         table_tags.each do |tag|
           # Skip variation tables

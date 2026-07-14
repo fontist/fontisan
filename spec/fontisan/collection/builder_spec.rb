@@ -2,43 +2,61 @@
 
 require "spec_helper"
 
+module CollectionBuilderFakes
+  # FakeFont includes SfntSource so Collection::Builder's is_a?(SfntSource)
+  # check accepts it. We override only the surface the builder consults.
+  class FakeFont
+    include Fontisan::SfntSource
+
+    attr_reader :tables_hash, :sfnt_version_value, :header_value
+
+    def initialize(tables, sfnt_version: 0x00010000)
+      @tables_hash = tables
+      @sfnt_version_value = sfnt_version
+      @header_value = Struct.new(:sfnt_version).new(sfnt_version)
+    end
+
+    def table_data(_tag = nil)
+      tables_hash
+    end
+
+    def table_names
+      tables_hash.keys
+    end
+
+    def table(tag)
+      tables_hash[tag]
+    end
+
+    def has_table?(tag)
+      tables_hash.key?(tag)
+    end
+
+    def sfnt_version
+      sfnt_version_value
+    end
+
+    def header
+      header_value
+    end
+  end
+end
+
 RSpec.describe Fontisan::Collection::Builder do
   let(:font1) do
-    double(
-      "font1",
-      table_names: %w[head hhea maxp],
-      table_data: {
-        "head" => "head_1",
-        "hhea" => "shared",
-        "maxp" => "maxp_1",
-      },
-      header: double("header", sfnt_version: 0x00010000),
-      respond_to?: true,
-    ).tap do |f|
-      allow(f).to receive(:has_table?).with("head").and_return(true)
-      allow(f).to receive(:has_table?).with("hhea").and_return(true)
-      allow(f).to receive(:has_table?).with("maxp").and_return(true)
-      allow(f).to receive(:has_table?).with("fvar").and_return(false)
-    end
+    CollectionBuilderFakes::FakeFont.new({
+                                           "head" => "head_1",
+                                           "hhea" => "shared",
+                                           "maxp" => "maxp_1",
+                                         })
   end
 
   let(:font2) do
-    double(
-      "font2",
-      table_names: %w[head hhea maxp],
-      table_data: {
-        "head" => "head_2",
-        "hhea" => "shared",
-        "maxp" => "maxp_2",
-      },
-      header: double("header", sfnt_version: 0x00010000),
-      respond_to?: true,
-    ).tap do |f|
-      allow(f).to receive(:has_table?).with("head").and_return(true)
-      allow(f).to receive(:has_table?).with("hhea").and_return(true)
-      allow(f).to receive(:has_table?).with("maxp").and_return(true)
-      allow(f).to receive(:has_table?).with("fvar").and_return(false)
-    end
+    CollectionBuilderFakes::FakeFont.new({
+                                           "head" => "head_2",
+                                           "hhea" => "shared",
+                                           "maxp" => "maxp_2",
+                                         })
   end
 
   let(:fonts) { [font1, font2] }
@@ -88,11 +106,11 @@ RSpec.describe Fontisan::Collection::Builder do
       end.to raise_error(ArgumentError, "fonts must be an array")
     end
 
-    it "raises error when fonts don't respond to table_data" do
+    it "raises error when fonts aren't SfntSource instances" do
       bad_fonts = [Object.new, Object.new]
       expect do
         described_class.new(bad_fonts)
-      end.to raise_error(ArgumentError, /must respond to table_data/)
+      end.to raise_error(ArgumentError, /must be SfntSource instances/)
     end
   end
 

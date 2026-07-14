@@ -64,7 +64,7 @@ RSpec.describe Fontisan::Utilities::BrotliWrapper do
     it "raises error for invalid data type" do
       expect do
         described_class.compress(12345)
-      end.to raise_error(ArgumentError, /Data must be a String-like object/)
+      end.to raise_error(ArgumentError, /Data must be a String/)
     end
 
     it "handles empty string" do

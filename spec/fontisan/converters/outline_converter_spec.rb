@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Converters::OutlineConverter do
   let(:converter) { described_class.new }
-  let(:ttf_font) { double("TrueTypeFont") }
-  let(:otf_font) { double("OpenTypeFont") }
+  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "loca" => double, "head" => double, "hhea" => double, "maxp" => double }) }
+  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "head" => double, "hhea" => double, "maxp" => double }) }
 
   before do
     # Setup TTF font mock with dynamic has_table? response
@@ -49,13 +49,12 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         end.to raise_error(ArgumentError, /Font cannot be nil/)
       end
 
-      it "raises ArgumentError for font without tables method" do
-        invalid_font = double("InvalidFont")
-        allow(invalid_font).to receive(:table).and_return(double)
+      it "raises ArgumentError for font that isn't SfntSource" do
+        invalid_font = Object.new
 
         expect do
           converter.convert(invalid_font, target_format: :otf)
-        end.to raise_error(ArgumentError, /must respond to :tables/)
+        end.to raise_error(ArgumentError, /must be an SfntSource/)
       end
     end
   end
@@ -194,8 +193,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
     end
 
     it "raises error for unknown format" do
-      unknown_font = double("UnknownFont")
-      allow(unknown_font).to receive_messages(has_table?: false, table: nil)
+      unknown_font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
         converter.send(:detect_format, unknown_font)

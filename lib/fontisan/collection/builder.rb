@@ -56,11 +56,9 @@ module Fontisan
         end
         raise ArgumentError, "fonts must be an array" unless fonts.is_a?(Array)
 
-        # TODO: replace respond_to? duck-type with is_a?(SfntFont) once
-        # the builder spec suite is migrated off doubles (see audit).
-        unless fonts.all? { |f| f.respond_to?(:table_data) }
+        unless fonts.all?(SfntSource)
           raise ArgumentError,
-                "all fonts must respond to table_data"
+                "all fonts must be SfntSource instances (TrueTypeFont, OpenTypeFont, WoffFont, Woff2Font)"
         end
 
         @fonts = fonts

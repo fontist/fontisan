@@ -23,3 +23,13 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [x] ~~[07 — Encapsulation violations (instance_variable_get/set, send to private)](07-encapsulation-violations.md)~~ ✓ Done (v0.4.42)
 - [x] ~~[08 — respond_to? duck typing violations](08-respond-to-violations.md)~~ ✓ Done (v0.4.42)
 - [x] ~~[11 — Remaining respond_to? violations](11-remaining-respond-to.md)~~ ✓ Done
+
+### P3 — Encapsulation and architecture cleanup (post-#135 audit)
+- [ ] [12 — Type 1 generators duck-typing](12-type1-generators-duck-typing.md)
+- [ ] [13 — Hint extractor duck-typing](13-hint-extractor-duck-typing.md)
+- [ ] [14 — Font interface type checks](14-font-interface-type-checks.md)
+- [ ] [15 — Glyph type checks + SimpleGlyph#points bug](15-glyph-type-checks-and-simple-glyph-points-bug.md)
+- [ ] [16 — Variation table checks](16-variation-table-checks.md)
+- [ ] [17 — UFO and Stitcher cleanup](17-ufo-and-stitcher-cleanup.md)
+- [ ] [18 — Generic value and IO checks](18-generic-value-and-io-checks.md)
+- [ ] [19 — Hand-rolled serialization migration to lutaml-model](19-serialization-migration.md)

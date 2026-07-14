@@ -226,11 +226,9 @@ module Fontisan
         when "hlgp"
           variation_table("hhea")&.line_gap
         when "xhgt"
-          os2 = variation_table("OS/2")
-          os2&.s_x_height if os2.respond_to?(:s_x_height)
+          variation_table("OS/2")&.sx_height
         when "cpht"
-          os2 = variation_table("OS/2")
-          os2&.s_cap_height if os2.respond_to?(:s_cap_height)
+          variation_table("OS/2")&.s_cap_height
           # Add more metrics as needed
         end
       end
@@ -307,7 +305,7 @@ module Fontisan
         return unless hhea
 
         # Update the field if hhea supports it
-        hhea.number_of_h_metrics = count if hhea.respond_to?(:number_of_h_metrics=)
+        hhea.number_of_h_metrics = count
       end
     end
   end

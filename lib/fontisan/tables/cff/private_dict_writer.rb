@@ -69,7 +69,7 @@ module Fontisan
         #
         # @param source_dict [PrivateDict] Source dictionary
         def parse_source(source_dict)
-          return unless source_dict.respond_to?(:to_h)
+          return unless source_dict.is_a?(Tables::Cff::Dict)
 
           # Extract only non-hint params (subrs, widths)
           @params = source_dict.to_h.select do |k, _|

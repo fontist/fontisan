@@ -4,7 +4,7 @@ require "spec_helper"
 require "fontisan/woff2/table_transformer"
 
 RSpec.describe Fontisan::Woff2::TableTransformer do
-  let(:font) { double("Font") }
+  let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
   let(:transformer) { described_class.new(font) }
 
   describe "#initialize" do
@@ -62,8 +62,7 @@ RSpec.describe Fontisan::Woff2::TableTransformer do
     context "with non-transformable table" do
       it "returns original table data" do
         table_data = "head table data"
-        allow(font).to receive(:respond_to?).with(:table_data).and_return(true)
-        allow(font).to receive(:table_data).and_return({ "head" => table_data })
+        font.tables_hash["head"] = table_data
 
         result = transformer.transform_table("head")
         expect(result).to eq(table_data)
@@ -71,7 +70,7 @@ RSpec.describe Fontisan::Woff2::TableTransformer do
     end
 
     context "when font doesn't respond to table_data" do
-      let(:font) { double("Font") }
+      let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
 
       it "returns nil" do
         allow(font).to receive(:respond_to?).with(:table_data).and_return(false)

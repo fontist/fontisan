@@ -150,7 +150,7 @@ module Fontisan
       # @param tag [String] Table tag
       # @return [String, nil] Table data or nil if not found
       def get_table_data(tag)
-        return nil unless font.respond_to?(:table_data)
+        return nil unless font.is_a?(SfntSource)
 
         font.table_data[tag]
       end

@@ -174,9 +174,9 @@ module Fontisan
       # @param font [Object] Font object
       # @return [Boolean]
       def truetype_font?(font)
-        return false unless font.respond_to?(:header)
+        return false unless font.is_a?(SfntSource)
 
-        sfnt = font.header.sfnt_version
+        sfnt = font.sfnt_version
         [0x00010000, 0x74727565].include?(sfnt) # 0x74727565 = 'true'
       end
 
@@ -185,9 +185,9 @@ module Fontisan
       # @param font [Object] Font object
       # @return [Boolean]
       def opentype_font?(font)
-        return false unless font.respond_to?(:header)
+        return false unless font.is_a?(SfntSource)
 
-        sfnt = font.header.sfnt_version
+        sfnt = font.sfnt_version
         sfnt == 0x4F54544F # 'OTTO'
       end
 
