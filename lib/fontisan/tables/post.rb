@@ -10,6 +10,9 @@ module Fontisan
     #
     # Reference: OpenType specification, post table
     class Post < Binary::BaseRecord
+      extend Registered
+
+      register_tag "post"
       # Standard Mac glyph names for version 1.0 (258 glyphs)
       # rubocop:disable Metrics/CollectionLiteralLength
       STANDARD_NAMES = %w[

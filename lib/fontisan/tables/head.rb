@@ -15,6 +15,9 @@ module Fontisan
     #   puts head.units_per_em  # => 2048
     #   puts head.version_number  # => 1.0
     class Head < Binary::BaseRecord
+      extend Registered
+
+      register_tag "head"
       # Magic number that must be present in the head table
       MAGIC_NUMBER = 0x5F0F3CF5
 

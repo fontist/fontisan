@@ -27,6 +27,9 @@ module Fontisan
     #   puts maxp.version          # => 1.0 or 0.5
     #   puts maxp.truetype?        # => true or false
     class Maxp < Binary::BaseRecord
+      extend Registered
+
+      register_tag "maxp"
       # Version 0.5 constant (CFF fonts)
       VERSION_0_5 = 0x00005000
 

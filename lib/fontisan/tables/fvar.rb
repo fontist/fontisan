@@ -71,6 +71,9 @@ module Fontisan
     #     puts "#{axis.axis_tag}: #{axis.min_value} - #{axis.max_value}"
     #   end
     class Fvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "fvar"
       uint16 :major_version
       uint16 :minor_version
       uint16 :axes_array_offset

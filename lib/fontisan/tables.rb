@@ -57,6 +57,8 @@ module Fontisan
     autoload :Os2Table, "fontisan/tables/os2_table"
     autoload :Post, "fontisan/tables/post"
     autoload :PostTable, "fontisan/tables/post_table"
+    autoload :Registered, "fontisan/tables/registry"
+    autoload :Registry, "fontisan/tables/registry"
     autoload :Sbix, "fontisan/tables/sbix"
     autoload :SimpleGlyph, "fontisan/tables/glyf/simple_glyph"
     autoload :Svg, "fontisan/tables/svg"

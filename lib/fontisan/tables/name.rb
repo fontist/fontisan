@@ -64,6 +64,9 @@ module Fontisan
     #   name = Fontisan::Tables::Name.read(data)
     #   puts name.english_name(Fontisan::Tables::Name::FAMILY)
     class Name < Binary::BaseRecord
+      extend Registered
+
+      register_tag "name"
       # Name ID constants for common name records
       COPYRIGHT = 0
       FAMILY = 1

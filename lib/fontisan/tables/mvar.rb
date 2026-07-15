@@ -21,6 +21,9 @@ module Fontisan
     #   mvar = Fontisan::Tables::Mvar.read(data)
     #   hasc_deltas = mvar.metric_deltas("hasc")
     class Mvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "MVAR"
       uint16 :major_version
       uint16 :minor_version
       uint16 :reserved

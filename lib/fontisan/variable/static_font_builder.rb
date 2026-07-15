@@ -182,12 +182,8 @@ options = {})
         data = @font.table_data(tag)
         return nil if data.nil? || data.empty?
 
-        table_class = case tag
-                      when "hhea" then Tables::Hhea
-                      when "maxp" then Tables::Maxp
-                      when "head" then Tables::Head
-                      else return nil
-                      end
+        table_class = Tables::Registry.for(tag)
+        return nil unless table_class
 
         table_class.read(data)
       rescue StandardError
