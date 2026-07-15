@@ -18,6 +18,9 @@ module Fontisan
     #   puts hhea.descent          # => -512
     #   puts hhea.version_number   # => 1.0
     class Hhea < Binary::BaseRecord
+      extend Registered
+
+      register_tag "hhea"
       # Table size in bytes (fixed size)
       TABLE_SIZE = 36
 

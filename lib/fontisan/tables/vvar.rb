@@ -18,6 +18,9 @@ module Fontisan
     #   vvar = Fontisan::Tables::Vvar.read(data)
     #   advance_deltas = vvar.advance_height_deltas(glyph_id, coordinates)
     class Vvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "VVAR"
       uint16 :major_version
       uint16 :minor_version
       uint32 :item_variation_store_offset

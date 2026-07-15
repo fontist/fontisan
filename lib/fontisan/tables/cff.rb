@@ -41,6 +41,9 @@ module Fontisan
     #   puts cff.font_count  # => 1
     #   puts cff.header.version  # => "1.0"
     class Cff < Binary::BaseRecord
+      extend Registered
+
+      register_tag "CFF "
       # Inner namespace autoloads — declared here so Cff::* constants
       # resolve on first reference without require_relative.
       autoload :CFFGlyph, "fontisan/tables/cff/cff_glyph"

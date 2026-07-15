@@ -20,6 +20,9 @@ module Fontisan
     #   cvar = Fontisan::Tables::Cvar.read(data)
     #   cvt_deltas = cvar.cvt_variations
     class Cvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "cvar"
       uint16 :major_version
       uint16 :minor_version
       uint16 :tuple_variation_count

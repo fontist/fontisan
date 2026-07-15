@@ -20,6 +20,9 @@ module Fontisan
     #   cff2 = Fontisan::Tables::Cff2.read(data)
     #   num_glyphs = cff2.glyph_count
     class Cff2 < Binary::BaseRecord
+      extend Registered
+
+      register_tag "CFF2"
       # Inner namespace autoloads — declared here so Cff2::* constants
       # resolve on first reference without require_relative.
       autoload :BlendOperator, "fontisan/tables/cff2/blend_operator"

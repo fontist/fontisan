@@ -14,6 +14,9 @@ module Fontisan
     #
     # Reference: OpenType specification, OS/2 table
     class Os2 < Binary::BaseRecord
+      extend Registered
+
+      register_tag "OS/2"
       endian :big
 
       # Version 0 fields (all versions have these)

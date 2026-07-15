@@ -265,15 +265,8 @@ module Fontisan
         data = @font.table_data(tag)
         return nil if data.nil? || data.empty?
 
-        # Map tag to table class
-        table_class = case tag
-                      when "fvar" then Tables::Fvar
-                      when "gvar" then Tables::Gvar
-                      when "HVAR" then Tables::Hvar
-                      when "VVAR" then Tables::Vvar
-                      when "MVAR" then Tables::Mvar
-                      else return nil
-                      end
+        table_class = Tables::Registry.for(tag)
+        return nil unless table_class
 
         table_class.read(data)
       rescue StandardError => e

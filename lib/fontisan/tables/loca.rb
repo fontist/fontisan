@@ -42,6 +42,9 @@ module Fontisan
     #   size = loca.size_of(42)
     #   is_empty = loca.empty?(42)
     class Loca < Binary::BaseRecord
+      extend Registered
+
+      register_tag "loca"
       # Short format constant (from head.indexToLocFormat)
       FORMAT_SHORT = 0
 

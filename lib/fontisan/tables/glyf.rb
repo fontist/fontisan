@@ -38,6 +38,9 @@ module Fontisan
     #   puts glyph.simple? ? "Simple glyph" : "Compound glyph"
     #   puts glyph.bounding_box  # => [xMin, yMin, xMax, yMax]
     class Glyf < Binary::BaseRecord
+      extend Registered
+
+      register_tag "glyf"
       # Store the raw data for deferred parsing
       attr_accessor :raw_data
 

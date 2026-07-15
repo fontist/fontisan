@@ -20,6 +20,9 @@ module Fontisan
     #   gvar = Fontisan::Tables::Gvar.read(data)
     #   deltas = gvar.glyph_variations(glyph_id)
     class Gvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "gvar"
       uint16 :major_version
       uint16 :minor_version
       uint16 :axis_count

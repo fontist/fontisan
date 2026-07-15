@@ -38,6 +38,9 @@ module Fontisan
     #   puts "Advance width: #{metric[:advance_width]}"
     #   puts "LSB: #{metric[:lsb]}"
     class Hmtx < Binary::BaseRecord
+      extend Registered
+
+      register_tag "hmtx"
       # LongHorMetric record structure
       #
       # @!attribute advance_width

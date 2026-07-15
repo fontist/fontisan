@@ -14,6 +14,9 @@ module Fontisan
     #
     # Reference: OpenType specification, cmap table
     class Cmap < Binary::BaseRecord
+      extend Registered
+
+      register_tag "cmap"
       # Platform IDs
       PLATFORM_UNICODE = 0
       PLATFORM_MACINTOSH = 1

@@ -18,6 +18,10 @@ module Fontisan
     #   hvar = Fontisan::Tables::Hvar.read(data)
     #   advance_deltas = hvar.advance_width_deltas(glyph_id, coordinates)
     class Hvar < Binary::BaseRecord
+      extend Registered
+
+      register_tag "HVAR"
+
       uint16 :major_version
       uint16 :minor_version
       uint32 :item_variation_store_offset
