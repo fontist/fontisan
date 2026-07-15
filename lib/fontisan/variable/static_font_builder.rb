@@ -65,14 +65,17 @@ options = {})
         File.binwrite(output_path, binary)
       end
 
+      # Per-tag table update dispatch. Each entry maps a tag to
+      # [method_name, context_key] for looking up the right args.
+      TABLE_UPDATERS = {
+        "hmtx" => %i[update_hmtx_table varied_metrics],
+        "hhea" => %i[update_hhea_table font_metrics],
+        "OS/2" => %i[update_os2_table font_metrics],
+        "head" => %i[update_head_table options],
+      }.freeze
+
       private
 
-      # Collect all tables for static font
-      #
-      # @param varied_metrics [Hash] Varied glyph metrics
-      # @param font_metrics [Hash] Varied font metrics
-      # @param options [Hash] Build options
-      # @return [Hash<String, String>] Map of table tag to binary data
       def collect_tables(varied_metrics, font_metrics, options)
         tables = {}
 
@@ -88,17 +91,14 @@ options = {})
           next if original_data.nil? || original_data.empty?
 
           # Update specific tables with varied data
-          tables[tag] = case tag
-                        when "hmtx"
-                          update_hmtx_table(original_data, varied_metrics)
-                        when "hhea"
-                          update_hhea_table(original_data, font_metrics)
-                        when "OS/2"
-                          update_os2_table(original_data, font_metrics)
-                        when "head"
-                          update_head_table(original_data, options)
+          updater = TABLE_UPDATERS[tag]
+          tables[tag] = if updater
+                          method_name, ctx_key = updater
+                          ctx = { varied_metrics: varied_metrics,
+                                  font_metrics: font_metrics,
+                                  options: options }
+                          method(method_name).call(original_data, ctx[ctx_key])
                         else
-                          # Copy unchanged
                           original_data
                         end
         end

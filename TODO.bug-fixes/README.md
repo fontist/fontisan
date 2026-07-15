@@ -44,5 +44,6 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 - [x] ~~[26 — Variation preserver spec migration](26-variation-preserver-spec-migration.md)~~ ✓ Done (#137)
 
 ### P3 — Architecture polish (post-#137 audit)
-- [ ] [27 — Table class registry (OCP: eliminate case/when tag dispatch)](27-table-class-registry.md)
+- [x] ~~[27 — Table class registry (OCP: eliminate case/when tag dispatch)](27-table-class-registry.md)~~ ✓ Done (#138)
 - [ ] [28 — Spec doubles cleanup](28-spec-doubles-cleanup.md)
+- [x] ~~[29 — Strategy registries for per-tag dispatch](29-strategy-registries.md)~~ ✓ Done

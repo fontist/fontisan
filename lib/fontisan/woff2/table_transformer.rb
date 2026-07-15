@@ -32,41 +32,34 @@ module Fontisan
       #
       # @param tag [String] Table tag
       # @return [String, nil] Transformed table data
+      # Per-tag transform method dispatch.
+      TRANSFORM_DISPATCH = {
+        "glyf" => :transform_glyf,
+        "loca" => :transform_loca,
+        "hmtx" => :transform_hmtx,
+      }.freeze
+
+      # Per-tag transform version constant.
+      TRANSFORM_VERSIONS = {
+        "glyf" => Directory::TRANSFORM_GLYF_LOCA,
+        "loca" => Directory::TRANSFORM_GLYF_LOCA,
+        "hmtx" => Directory::TRANSFORM_HMTX,
+      }.freeze
+
       def transform_table(tag)
-        case tag
-        when "glyf"
-          transform_glyf
-        when "loca"
-          transform_loca
-        when "hmtx"
-          transform_hmtx
-        else
-          # No transformation, return original data
-          get_table_data(tag)
-        end
+        transform_method = TRANSFORM_DISPATCH[tag]
+        return method(transform_method).call if transform_method
+
+        # No transformation, return original data
+        get_table_data(tag)
       end
 
-      # Check if a table can be transformed
-      #
-      # @param tag [String] Table tag
-      # @return [Boolean] True if table supports transformation
       def transformable?(tag)
-        %w[glyf loca hmtx].include?(tag)
+        TRANSFORM_DISPATCH.key?(tag)
       end
 
-      # Determine transformation version for a table
-      #
-      # @param tag [String] Table tag
-      # @return [Integer] Transformation version
       def transformation_version(tag)
-        case tag
-        when "glyf", "loca"
-          Directory::TRANSFORM_GLYF_LOCA
-        when "hmtx"
-          Directory::TRANSFORM_HMTX
-        else
-          Directory::TRANSFORM_NONE
-        end
+        TRANSFORM_VERSIONS.fetch(tag, Directory::TRANSFORM_NONE)
       end
 
       private

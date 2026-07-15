@@ -84,8 +84,28 @@ module Fontisan
       # Generate individual table XML
       #
       # @param xml [Nokogiri::XML::Builder] XML builder
-      # @param tag [String] Table tag
-      # @return [void]
+      public
+
+      # Per-tag emitter dispatch table. Adding a new table's TTX
+      # emitter means adding one entry here, not editing generate_table.
+      TABLE_EMITTERS = {
+        "head" => :generate_head_table,
+        "hhea" => :generate_hhea_table,
+        "maxp" => :generate_maxp_table,
+        "post" => :generate_post_table,
+        "name" => :generate_name_table,
+        "cmap" => :generate_cmap_table,
+        "loca" => :generate_loca_table,
+        "glyf" => :generate_glyf_table,
+        "CFF" => :generate_cff_table,
+        "CFF " => :generate_cff_table,
+        "hmtx" => :generate_hmtx_table,
+        "fvar" => :generate_fvar_table,
+      }.freeze
+
+      # Variation tags all share the same emitter shape.
+      VARIATION_TAGS = %w[gvar cvar HVAR VVAR MVAR].freeze
+
       def generate_table(xml, tag)
         table = @font.table(tag)
 
@@ -97,36 +117,15 @@ module Fontisan
           return
         end
 
-        case tag
-        when "head"
-          generate_head_table(xml, table)
-        when "hhea"
-          generate_hhea_table(xml, table)
-        when "maxp"
-          generate_maxp_table(xml, table)
-        when "post"
-          generate_post_table(xml, table)
-        when "name"
-          generate_name_table(xml, table)
-        when "OS/2"
-          # Skip OS/2 for now - Nokogiri builder can't handle slashes in element names
-          # TODO: Implement OS/2 table generation with proper XML escaping
+        if tag == "OS/2"
           xml.comment(" OS/2 table skipped - requires special XML handling ")
-        when "cmap"
-          generate_cmap_table(xml, table)
-        when "loca"
-          generate_loca_table(xml, table)
-        when "glyf"
-          generate_glyf_table(xml, table)
-        when "CFF"
-          generate_cff_table(xml, table)
-        when "CFF "
-          generate_cff_table(xml, table)
-        when "hmtx"
-          generate_hmtx_table(xml, table)
-        when "fvar"
-          generate_fvar_table(xml, table)
-        when "gvar", "cvar", "HVAR", "VVAR", "MVAR"
+          return
+        end
+
+        emitter = TABLE_EMITTERS[tag]
+        if emitter
+          method(emitter).call(xml, table)
+        elsif VARIATION_TAGS.include?(tag)
           generate_variation_table(xml, tag, table)
         else
           generate_binary_table(xml, tag, table)

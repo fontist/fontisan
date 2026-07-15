@@ -42,18 +42,17 @@ module Fontisan
       (@flags & 0x3F) != 0x3F && KNOWN_TAGS[tag_index]&.start_with?(/glyf|loca|hmtx/)
     end
 
+    TRANSFORM_VERSIONS = {
+      "glyf" => TRANSFORM_GLYF_LOCA,
+      "loca" => TRANSFORM_GLYF_LOCA,
+      "hmtx" => TRANSFORM_HMTX,
+    }.freeze
+
     # Get transform version for this table
     def transform_version
       return TRANSFORM_NONE unless transformed?
 
-      case tag
-      when "glyf", "loca"
-        TRANSFORM_GLYF_LOCA
-      when "hmtx"
-        TRANSFORM_HMTX
-      else
-        TRANSFORM_NONE
-      end
+      TRANSFORM_VERSIONS.fetch(tag, TRANSFORM_NONE)
     end
 
     private
