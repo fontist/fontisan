@@ -251,24 +251,26 @@ module Fontisan
       # Parse table data into table object
       #
       # @param tag [String] Table tag
-      # @param data [String] Table binary data
-      # @return [Object] Parsed table object
+      public
+
+      # Per-tag table parser dispatch. Each entry maps tag → [class, init_mode].
+      # :parse means call obj.parse(data); :data= means call obj.data = data.
+      TABLE_PARSERS = {
+        "head" => [Tables::Head, :parse],
+        "maxp" => [Tables::Maxp, :parse],
+        "loca" => [Tables::Loca, :data_assign],
+        "glyf" => [Tables::Glyf, :data_assign],
+        "CFF " => [Tables::Cff, :parse],
+        "CFF2" => [Tables::Cff2, :parse],
+      }.freeze
+
       def parse_table(tag, data)
-        # For OutlineConverter, we need head, maxp, loca, glyf for TTF
-        # and CFF for OTF
-        case tag
-        when "head"
-          Tables::Head.new.tap { |t| t.parse(data) }
-        when "maxp"
-          Tables::Maxp.new.tap { |t| t.parse(data) }
-        when "loca"
-          Tables::Loca.new.tap { |t| t.data = data }
-        when "glyf"
-          Tables::Glyf.new.tap { |t| t.data = data }
-        when "CFF "
-          Tables::Cff.new.tap { |t| t.parse(data) }
-        when "CFF2"
-          Tables::Cff2.new.tap { |t| t.parse(data) }
+        entry = TABLE_PARSERS[tag]
+        if entry
+          klass, init_mode = entry
+          obj = klass.new
+          init_mode == :parse ? obj.parse(data) : obj.data = data
+          obj
         else
           # For other tables, return a simple object that just holds data
           Object.new.tap do |obj|

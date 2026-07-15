@@ -63,26 +63,26 @@ module Fontisan
 
         # Transform individual table
         #
-        # @param ttx [Models::Ttx::TtFont] TTX model being built
-        # @param tag [String] Table tag
-        # @return [void]
+        public
+
+        # Per-tag TTX model transformer dispatch.
+        TABLE_TRANSFORMERS = {
+          "head" => [HeadTransformer, :head_table=],
+          "hhea" => [HheaTransformer, :hhea_table=],
+          "maxp" => [MaxpTransformer, :maxp_table=],
+          "name" => [NameTransformer, :name_table=],
+          "OS/2" => [Os2Transformer, :os2_table=],
+          "post" => [PostTransformer, :post_table=],
+        }.freeze
+
         def transform_table(ttx, tag)
           table = @font.table(tag)
           return unless table
 
-          case tag
-          when "head"
-            ttx.head_table = HeadTransformer.transform(table)
-          when "hhea"
-            ttx.hhea_table = HheaTransformer.transform(table)
-          when "maxp"
-            ttx.maxp_table = MaxpTransformer.transform(table)
-          when "name"
-            ttx.name_table = NameTransformer.transform(table)
-          when "OS/2"
-            ttx.os2_table = Os2Transformer.transform(table)
-          when "post"
-            ttx.post_table = PostTransformer.transform(table)
+          entry = TABLE_TRANSFORMERS[tag]
+          if entry
+            transformer, setter = entry
+            ttx.public_send(setter, transformer.transform(table))
           else
             # Fallback to binary table
             binary_table = transform_binary_table(tag, table)

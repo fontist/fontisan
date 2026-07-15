@@ -213,24 +213,23 @@ module Fontisan
         end
       end
 
-      # Get base metric value by tag
-      #
-      # @param tag [String] Metric tag (e.g., "hasc", "hdsc")
-      # @return [Integer, nil] Base metric value
+      public
+
+      # Maps MVAR metric tags to [table_tag, method] for base value lookup.
+      METRIC_SOURCES = {
+        "hasc" => ["hhea", :ascender],
+        "hdsc" => ["hhea", :descender],
+        "hlgp" => ["hhea", :line_gap],
+        "xhgt" => ["OS/2", :sx_height],
+        "cpht" => ["OS/2", :s_cap_height],
+      }.freeze
+
       def get_base_metric_value(tag)
-        case tag
-        when "hasc"
-          variation_table("hhea")&.ascender
-        when "hdsc"
-          variation_table("hhea")&.descender
-        when "hlgp"
-          variation_table("hhea")&.line_gap
-        when "xhgt"
-          variation_table("OS/2")&.sx_height
-        when "cpht"
-          variation_table("OS/2")&.s_cap_height
-          # Add more metrics as needed
-        end
+        source = METRIC_SOURCES[tag]
+        return nil unless source
+
+        table_tag, method = source
+        variation_table(table_tag)&.public_send(method)
       end
 
       # Update font metric in appropriate table
