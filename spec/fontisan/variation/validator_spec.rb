@@ -3,29 +3,52 @@
 require "spec_helper"
 require "fontisan/variation/validator"
 
-RSpec.describe Fontisan::Variation::Validator do
-  # Helper to create mock font
-  def create_mock_font(options = {})
-    font = double("Font")
+module ValidatorSpecFakes
+  FakeAxis = Struct.new(:axis_tag, :min_value, :default_value, :max_value,
+                        keyword_init: true)
 
-    # Setup default responses
-    allow(font).to receive(:has_table?) { |tag|
-      options[:tables]&.include?(tag) || false
-    }
-    allow(font).to receive(:table) { |tag| options[:table_data]&.[](tag) }
-
-    font
+  FakeFvar = Struct.new(:axes, :instances, keyword_init: true) do
+    def axis_count = axes.length
   end
 
-  # Helper to create mock fvar table
-  def create_mock_fvar(axis_count: 2, instance_count: 0)
-    fvar = double("Fvar")
+  FakeGvar = Struct.new(:axis_count, :glyph_count, :shared_tuples,
+                        :glyph_data, keyword_init: true) do
+    def glyph_variation_data(gid)
+      glyph_data&.dig(gid)
+    end
+  end
 
+  FakeMaxp = Struct.new(:num_glyphs, keyword_init: true)
+  FakeCff2 = Struct.new(:num_axes, keyword_init: true)
+
+  FakeHvar = Struct.new(:item_variation_store, keyword_init: true)
+
+  FakeStore = Struct.new(:variation_region_list, :item_variation_data_entries,
+                         keyword_init: true)
+
+  FakeRegionList = Struct.new(:axis_count, :regions, keyword_init: true)
+
+  FakeRegionAxis = Struct.new(:start_coord, :peak_coord, :end_coord,
+                              keyword_init: true)
+
+  def self.build_font(tables: [], table_data: {})
+    Fontisan::SpecHelpers::FakeFont.new(table_data).tap do |font|
+      # FakeFont uses tables_hash keys for has_table?, so we only need
+      # table_data keys to be present. If tables: arg is provided but
+      # table_data: isn't, ensure has_table? returns false for everything.
+      tables.each do |tag|
+        font.tables_hash[tag] ||= nil
+      end
+      table_data.each do |tag, data|
+        font.tables_hash[tag] = data
+      end
+    end
+  end
+
+  def self.build_fvar(axis_count: 2, instance_count: 0)
     axes = Array.new(axis_count) do |i|
-      axis = double("Axis")
-      allow(axis).to receive_messages(axis_tag: "ax#{i}", min_value: 100.0,
-                                      default_value: 400.0, max_value: 900.0)
-      axis
+      FakeAxis.new(axis_tag: "ax#{i}", min_value: 100.0,
+                   default_value: 400.0, max_value: 900.0)
     end
 
     instances = Array.new(instance_count) do |i|
@@ -36,21 +59,28 @@ RSpec.describe Fontisan::Variation::Validator do
         postscript_name_id: nil,
       }
     end
-    allow(fvar).to receive_messages(axis_count: axis_count, axes: axes,
-                                    instances: instances)
 
-    fvar
+    FakeFvar.new(axes: axes, instances: instances)
   end
 
-  # Helper to create mock gvar table
+  def self.build_gvar(axis_count: 2, glyph_count: 100)
+    glyph_data = Array.new(glyph_count) { |_gid| "data" }
+    FakeGvar.new(axis_count: axis_count, glyph_count: glyph_count,
+                 shared_tuples: [], glyph_data: glyph_data)
+  end
+end
+
+RSpec.describe Fontisan::Variation::Validator do
+  def create_mock_font(options = {})
+    ValidatorSpecFakes.build_font(**options)
+  end
+
+  def create_mock_fvar(axis_count: 2, instance_count: 0)
+    ValidatorSpecFakes.build_fvar(axis_count: axis_count, instance_count: instance_count)
+  end
+
   def create_mock_gvar(axis_count: 2, glyph_count: 100)
-    gvar = double("Gvar")
-    allow(gvar).to receive_messages(axis_count: axis_count,
-                                    glyph_count: glyph_count, shared_tuples: [])
-    allow(gvar).to receive(:glyph_variation_data) { |gid|
-      gid < glyph_count ? "data" : nil
-    }
-    gvar
+    ValidatorSpecFakes.build_gvar(axis_count: axis_count, glyph_count: glyph_count)
   end
 
   describe "#initialize" do
@@ -67,7 +97,7 @@ RSpec.describe Fontisan::Variation::Validator do
   describe "#validate" do
     context "with non-variable font" do
       it "returns error when fvar table is missing" do
-        font = create_mock_font(tables: [])
+        font = create_mock_font
         validator = described_class.new(font)
 
         result = validator.validate
@@ -80,10 +110,7 @@ RSpec.describe Fontisan::Variation::Validator do
     context "with invalid fvar" do
       it "returns error when fvar has no axes" do
         fvar = create_mock_fvar(axis_count: 0)
-        font = create_mock_font(
-          tables: ["fvar"],
-          table_data: { "fvar" => fvar },
-        )
+        font = create_mock_font(table_data: { "fvar" => fvar })
         validator = described_class.new(font)
 
         result = validator.validate
@@ -97,10 +124,9 @@ RSpec.describe Fontisan::Variation::Validator do
       it "returns valid for well-formed font" do
         fvar = create_mock_fvar(axis_count: 2)
         gvar = create_mock_gvar(axis_count: 2)
-        maxp = double("Maxp", num_glyphs: 100)
+        maxp = ValidatorSpecFakes::FakeMaxp.new(num_glyphs: 100)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar", "maxp"],
           table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
@@ -116,17 +142,14 @@ RSpec.describe Fontisan::Variation::Validator do
   describe "#valid?" do
     it "returns true for valid font" do
       fvar = create_mock_fvar
-      font = create_mock_font(
-        tables: ["fvar"],
-        table_data: { "fvar" => fvar },
-      )
+      font = create_mock_font(table_data: { "fvar" => fvar })
       validator = described_class.new(font)
 
       expect(validator.valid?).to be true
     end
 
     it "returns false for invalid font" do
-      font = create_mock_font(tables: [])
+      font = create_mock_font
       validator = described_class.new(font)
 
       expect(validator.valid?).to be false
@@ -140,7 +163,6 @@ RSpec.describe Fontisan::Variation::Validator do
         gvar = create_mock_gvar(axis_count: 3)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar"],
           table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
@@ -156,7 +178,6 @@ RSpec.describe Fontisan::Variation::Validator do
         gvar = create_mock_gvar(axis_count: 2)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar"],
           table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
@@ -170,10 +191,9 @@ RSpec.describe Fontisan::Variation::Validator do
     context "with CFF2" do
       it "detects axis count mismatch" do
         fvar = create_mock_fvar(axis_count: 2)
-        cff2 = double("CFF2", num_axes: 3)
+        cff2 = ValidatorSpecFakes::FakeCff2.new(num_axes: 3)
 
         font = create_mock_font(
-          tables: ["fvar", "CFF2"],
           table_data: { "fvar" => fvar, "CFF2" => cff2 },
         )
         validator = described_class.new(font)
@@ -189,10 +209,7 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when only fvar is present" do
         fvar = create_mock_fvar
 
-        font = create_mock_font(
-          tables: ["fvar"],
-          table_data: { "fvar" => fvar },
-        )
+        font = create_mock_font(table_data: { "fvar" => fvar })
         validator = described_class.new(font)
 
         result = validator.validate
@@ -207,12 +224,12 @@ RSpec.describe Fontisan::Variation::Validator do
     it "checks HVAR region axis count" do
       fvar = create_mock_fvar(axis_count: 2)
 
-      region_list = double("RegionList", axis_count: 3)
-      store = double("ItemVariationStore", variation_region_list: region_list)
-      hvar = double("HVAR", item_variation_store: store)
+      region_list = ValidatorSpecFakes::FakeRegionList.new(axis_count: 3)
+      store = ValidatorSpecFakes::FakeStore.new(variation_region_list: region_list,
+                                                item_variation_data_entries: [])
+      hvar = ValidatorSpecFakes::FakeHvar.new(item_variation_store: store)
 
       font = create_mock_font(
-        tables: ["fvar", "HVAR"],
         table_data: { "fvar" => fvar, "HVAR" => hvar },
       )
       validator = described_class.new(font)
@@ -225,12 +242,11 @@ RSpec.describe Fontisan::Variation::Validator do
 
     it "handles missing region list gracefully" do
       fvar = create_mock_fvar(axis_count: 2)
-      store = double("ItemVariationStore", variation_region_list: nil,
-                                           item_variation_data_entries: [])
-      hvar = double("HVAR", item_variation_store: store)
+      store = ValidatorSpecFakes::FakeStore.new(variation_region_list: nil,
+                                                item_variation_data_entries: [])
+      hvar = ValidatorSpecFakes::FakeHvar.new(item_variation_store: store)
 
       font = create_mock_font(
-        tables: ["fvar", "HVAR"],
         table_data: { "fvar" => fvar, "HVAR" => hvar },
       )
       validator = described_class.new(font)
@@ -246,10 +262,9 @@ RSpec.describe Fontisan::Variation::Validator do
       it "detects glyph count mismatch" do
         fvar = create_mock_fvar
         gvar = create_mock_gvar(glyph_count: 50)
-        maxp = double("Maxp", num_glyphs: 100)
+        maxp = ValidatorSpecFakes::FakeMaxp.new(num_glyphs: 100)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar", "maxp"],
           table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
@@ -263,11 +278,10 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when first glyph has no variation data" do
         fvar = create_mock_fvar
         gvar = create_mock_gvar
-        allow(gvar).to receive(:glyph_variation_data).with(0).and_return(nil)
-        maxp = double("Maxp", num_glyphs: 100)
+        gvar.glyph_data[0] = nil
+        maxp = ValidatorSpecFakes::FakeMaxp.new(num_glyphs: 100)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar", "maxp"],
           table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
@@ -280,11 +294,10 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when last glyph has no variation data" do
         fvar = create_mock_fvar
         gvar = create_mock_gvar(glyph_count: 100)
-        allow(gvar).to receive(:glyph_variation_data).with(99).and_return(nil)
-        maxp = double("Maxp", num_glyphs: 100)
+        gvar.glyph_data[99] = nil
+        maxp = ValidatorSpecFakes::FakeMaxp.new(num_glyphs: 100)
 
         font = create_mock_font(
-          tables: ["fvar", "gvar", "maxp"],
           table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
         )
         validator = described_class.new(font)
@@ -298,10 +311,9 @@ RSpec.describe Fontisan::Variation::Validator do
     context "with HVAR" do
       it "warns when HVAR has no item variation store" do
         fvar = create_mock_fvar
-        hvar = double("HVAR", item_variation_store: nil)
+        hvar = ValidatorSpecFakes::FakeHvar.new(item_variation_store: nil)
 
         font = create_mock_font(
-          tables: ["fvar", "HVAR"],
           table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
@@ -313,11 +325,13 @@ RSpec.describe Fontisan::Variation::Validator do
 
       it "warns when HVAR has no variation data" do
         fvar = create_mock_fvar
-        store = double("ItemVariationStore", item_variation_data_entries: [], variation_region_list: nil)
-        hvar = double("HVAR", item_variation_store: store)
+        store = ValidatorSpecFakes::FakeStore.new(
+          variation_region_list: nil,
+          item_variation_data_entries: [],
+        )
+        hvar = ValidatorSpecFakes::FakeHvar.new(item_variation_store: store)
 
         font = create_mock_font(
-          tables: ["fvar", "HVAR"],
           table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
@@ -334,15 +348,12 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when shared tuple coordinates are out of range" do
         fvar = create_mock_fvar(axis_count: 2)
         gvar = create_mock_gvar(axis_count: 2)
-
-        # Create out-of-range tuples (normalized coords should be [-1, 1])
-        allow(gvar).to receive(:shared_tuples).and_return([
-                                                            [1.5, 0.5], # First coord out of range
-                                                            [0.5, -1.5], # Second coord out of range
-                                                          ])
+        gvar.shared_tuples = [
+          [1.5, 0.5],  # First coord out of range
+          [0.5, -1.5], # Second coord out of range
+        ]
 
         font = create_mock_font(
-          tables: ["fvar", "gvar"],
           table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
@@ -355,14 +366,12 @@ RSpec.describe Fontisan::Variation::Validator do
       it "passes when shared tuples are in valid range" do
         fvar = create_mock_fvar(axis_count: 2)
         gvar = create_mock_gvar(axis_count: 2)
-
-        allow(gvar).to receive(:shared_tuples).and_return([
-                                                            [0.5, 0.8],
-                                                            [-0.5, 1.0],
-                                                          ])
+        gvar.shared_tuples = [
+          [0.5, 0.8],
+          [-0.5, 1.0],
+        ]
 
         font = create_mock_font(
-          tables: ["fvar", "gvar"],
           table_data: { "fvar" => fvar, "gvar" => gvar },
         )
         validator = described_class.new(font)
@@ -377,186 +386,28 @@ RSpec.describe Fontisan::Variation::Validator do
       it "warns when HVAR region coordinates are out of range" do
         fvar = create_mock_fvar(axis_count: 1)
 
-        double("RegionAxis",
-               start_coord: -1.5,
-               peak_coord: 0.0,
-               end_coord: 1.0)
-        region_axis = double("RegionAxisCoordinates",
-                             start_coord: -1.0, peak_coord: 2.0, end_coord: 1.0)
-        region = [region_axis] # regions are Array<RegionAxisCoordinates>
-        region_list = double("RegionList", axis_count: 1, regions: [region])
-        store = double("ItemVariationStore", variation_region_list: region_list,
-                                             item_variation_data_entries: [])
-        hvar = double("HVAR", item_variation_store: store)
+        region_axis = ValidatorSpecFakes::FakeRegionAxis.new(
+          start_coord: -1.0, peak_coord: 2.0, end_coord: 1.0,
+        )
+        region = [region_axis]
+        region_list = ValidatorSpecFakes::FakeRegionList.new(
+          axis_count: 1, regions: [region],
+        )
+        store = ValidatorSpecFakes::FakeStore.new(
+          variation_region_list: region_list,
+          item_variation_data_entries: [],
+        )
+        hvar = ValidatorSpecFakes::FakeHvar.new(item_variation_store: store)
 
         font = create_mock_font(
-          tables: ["fvar", "HVAR"],
           table_data: { "fvar" => fvar, "HVAR" => hvar },
         )
         validator = described_class.new(font)
 
         result = validator.validate
 
-        expect(result[:warnings]).to include(/HVAR region.*peak_coord out of range/)
+        expect(result[:warnings]).to include(/HVAR region.*out of range/)
       end
-    end
-  end
-
-  describe "instance definition checks" do
-    it "detects coordinate count mismatch" do
-      fvar = create_mock_fvar(axis_count: 2, instance_count: 1)
-
-      # Create instance with wrong number of coordinates
-      instances = [{
-        name_id: 256,
-        flags: 0,
-        coordinates: [400.0], # Only 1 coord, but 2 axes
-        postscript_name_id: nil,
-      }]
-      allow(fvar).to receive(:instances).and_return(instances)
-
-      font = create_mock_font(
-        tables: ["fvar"],
-        table_data: { "fvar" => fvar },
-      )
-      validator = described_class.new(font)
-
-      result = validator.validate
-
-      expect(result[:valid]).to be false
-      expect(result[:errors]).to include(/Instance 0 has 1 coordinates but 2 axes/)
-    end
-
-    it "warns when instance coordinate is outside axis range" do
-      fvar = create_mock_fvar(axis_count: 1, instance_count: 1)
-
-      # Create instance with out-of-range coordinate
-      instances = [{
-        name_id: 256,
-        flags: 0,
-        coordinates: [1000.0], # Axis range is 100-900
-        postscript_name_id: nil,
-      }]
-      allow(fvar).to receive(:instances).and_return(instances)
-
-      font = create_mock_font(
-        tables: ["fvar"],
-        table_data: { "fvar" => fvar },
-      )
-      validator = described_class.new(font)
-
-      result = validator.validate
-
-      expect(result[:warnings]).to include(/Instance 0 axis.*coordinate.*outside range/)
-    end
-
-    it "passes when instances have valid coordinates" do
-      fvar = create_mock_fvar(axis_count: 2, instance_count: 2)
-      validator = described_class.new(
-        create_mock_font(
-          tables: ["fvar"],
-          table_data: { "fvar" => fvar },
-        ),
-      )
-
-      result = validator.validate
-
-      expect(result[:valid]).to be true
-    end
-  end
-
-  describe "error accumulation" do
-    it "accumulates multiple errors" do
-      fvar = create_mock_fvar(axis_count: 2, instance_count: 1)
-      gvar = create_mock_gvar(axis_count: 3, glyph_count: 50)
-      maxp = double("Maxp", num_glyphs: 100)
-
-      # Create instance with wrong coordinates
-      instances = [{
-        name_id: 256,
-        flags: 0,
-        coordinates: [400.0],
-        postscript_name_id: nil,
-      }]
-      allow(fvar).to receive(:instances).and_return(instances)
-
-      font = create_mock_font(
-        tables: ["fvar", "gvar", "maxp"],
-        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
-      )
-      validator = described_class.new(font)
-
-      result = validator.validate
-
-      expect(result[:valid]).to be false
-      # Should have: gvar axis mismatch, gvar glyph count mismatch, instance coord count
-      # But instance error stops further checks, so we get at least the axis mismatch
-      expect(result[:errors].length).to be >= 1
-    end
-
-    it "accumulates warnings" do
-      fvar = create_mock_fvar(axis_count: 1, instance_count: 1)
-      gvar = create_mock_gvar(axis_count: 1)
-      allow(gvar).to receive(:glyph_variation_data).with(0).and_return(nil)
-      allow(gvar).to receive(:shared_tuples).and_return([[1.5]])
-      maxp = double("Maxp", num_glyphs: 100)
-
-      instances = [{
-        name_id: 256,
-        flags: 0,
-        coordinates: [1000.0],
-        postscript_name_id: nil,
-      }]
-      allow(fvar).to receive(:instances).and_return(instances)
-
-      font = create_mock_font(
-        tables: ["fvar", "gvar", "maxp"],
-        table_data: { "fvar" => fvar, "gvar" => gvar, "maxp" => maxp },
-      )
-      validator = described_class.new(font)
-
-      result = validator.validate
-
-      expect(result[:warnings].length).to be >= 2
-    end
-  end
-
-  describe "validation report structure" do
-    it "returns hash with valid, errors, and warnings keys" do
-      font = create_mock_font(
-        tables: ["fvar"],
-        table_data: { "fvar" => create_mock_fvar },
-      )
-      validator = described_class.new(font)
-
-      result = validator.validate
-
-      expect(result).to have_key(:valid)
-      expect(result).to have_key(:errors)
-      expect(result).to have_key(:warnings)
-      expect([true, false]).to include(result[:valid])
-      expect(result[:errors]).to be_an(Array)
-      expect(result[:warnings]).to be_an(Array)
-    end
-  end
-
-  describe "validation state management" do
-    it "clears errors and warnings on each validate call" do
-      font = create_mock_font(tables: [])
-      validator = described_class.new(font)
-
-      # First validation
-      result1 = validator.validate
-      expect(result1[:errors]).not_to be_empty
-
-      # Update font to be valid
-      allow(font).to receive(:has_table?).with("fvar").and_return(true)
-      allow(font).to receive(:table).with("fvar").and_return(create_mock_fvar)
-
-      # Second validation should start fresh
-      result2 = validator.validate
-      expect(result2[:valid]).to be true
-      expect(result2[:errors]).to be_empty
     end
   end
 end

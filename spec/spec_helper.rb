@@ -72,6 +72,7 @@ require "tempfile"
 require_relative "support/fixture_fonts"
 require_relative "support/fake_font"
 require_relative "support/fake_table_dictionary"
+require_relative "support/fake_axis"
 
 # Define the fixtures directory constant for test files
 FIXTURES_DIR = File.join(__dir__, "fixtures")

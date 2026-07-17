@@ -124,11 +124,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
   describe "private methods" do
     describe "#extract_regions_from_store" do
       let(:axis) do
-        double("Axis",
-               axis_tag: "wght",
-               min_value: 400.0,
-               default_value: 400.0,
-               max_value: 900.0)
+        Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 900.0)
       end
 
       let(:interpolator) { Fontisan::Variation::Interpolator.new([axis]) }

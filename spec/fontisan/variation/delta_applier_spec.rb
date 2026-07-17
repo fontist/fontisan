@@ -11,10 +11,8 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
   let(:font) { double("Font") }
   let(:axes) do
     [
-      double("Axis", axis_tag: "wght", min_value: 400.0, default_value: 400.0,
-                     max_value: 900.0),
-      double("Axis", axis_tag: "wdth", min_value: 75.0, default_value: 100.0,
-                     max_value: 125.0),
+      Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 900.0),
+      Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth", min_value: 75.0, default_value: 100.0, max_value: 125.0),
     ]
   end
   let(:interpolator) { Fontisan::Variation::Interpolator.new(axes) }
