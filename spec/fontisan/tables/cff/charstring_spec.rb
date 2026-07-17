@@ -5,11 +5,7 @@ require "spec_helper"
 RSpec.describe Fontisan::Tables::Cff::CharString do
   # Helper to create a mock PrivateDict
   def mock_private_dict(default_width: 0, nominal_width: 0)
-    double(
-      "PrivateDict",
-      default_width_x: default_width,
-      nominal_width_x: nominal_width,
-    )
+    Struct.new(:default_width_x, :nominal_width_x).new(default_width, nominal_width)
   end
 
   # Helper to create an empty INDEX
