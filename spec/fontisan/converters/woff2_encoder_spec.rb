@@ -56,18 +56,22 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
 
   describe "#validate" do
     let(:font) do
-      double("Font",
-             table: nil)
+      Fontisan::SpecHelpers::FakeFont.new({
+                                            "head" => Struct.new(:tag).new("HeadTable"),
+                                            "hhea" => Struct.new(:tag).new("HheaTable"),
+                                            "maxp" => Struct.new(:tag).new("MaxpTable"),
+                                            "glyf" => Struct.new(:tag).new("GlyfTable"),
+                                          })
     end
 
     before do
       allow(font).to receive(:has_table?).with("glyf").and_return(true)
       allow(font).to receive(:has_table?).with("CFF ").and_return(false)
       allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-      allow(font).to receive(:table).with("head").and_return(double("HeadTable"))
-      allow(font).to receive(:table).with("hhea").and_return(double("HheaTable"))
-      allow(font).to receive(:table).with("maxp").and_return(double("MaxpTable"))
-      allow(font).to receive(:table).with("glyf").and_return(double("GlyfTable"))
+      allow(font).to receive(:table).with("head").and_return(Struct.new(:tag).new("HeadTable"))
+      allow(font).to receive(:table).with("hhea").and_return(Struct.new(:tag).new("HheaTable"))
+      allow(font).to receive(:table).with("maxp").and_return(Struct.new(:tag).new("MaxpTable"))
+      allow(font).to receive(:table).with("glyf").and_return(Struct.new(:tag).new("GlyfTable"))
     end
 
     it "validates successfully for valid TTF font" do
@@ -106,7 +110,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
       allow(font).to receive(:has_table?).with("CFF ").and_return(true)
       allow(font).to receive(:has_table?).with("CFF2").and_return(false)
       allow(font).to receive(:table).with("glyf").and_return(nil)
-      allow(font).to receive(:table).with("CFF ").and_return(double("CFFTable"))
+      allow(font).to receive(:table).with("CFF ").and_return(Struct.new(:tag).new("CFFTable"))
 
       expect { encoder.validate(font, :woff2) }.not_to raise_error
     end
@@ -164,24 +168,24 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
   describe "private methods" do
     describe "#detect_flavor" do
       it "detects TrueType flavor" do
-        font = double("Font")
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("glyf").and_return(true)
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
         allow(font).to receive(:has_table?).with("CFF2").and_return(false)
         allow(font).to receive(:table).with("CFF ").and_return(nil)
         allow(font).to receive(:table).with("CFF2").and_return(nil)
-        allow(font).to receive(:table).with("glyf").and_return(double("GlyfTable"))
+        allow(font).to receive(:table).with("glyf").and_return(Struct.new(:tag).new("GlyfTable"))
 
         flavor = encoder.send(:detect_flavor, font)
         expect(flavor).to eq(0x00010000)
       end
 
       it "detects CFF flavor" do
-        font = double("Font")
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("glyf").and_return(false)
         allow(font).to receive(:has_table?).with("CFF ").and_return(true)
         allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-        allow(font).to receive(:table).with("CFF ").and_return(double("CFFTable"))
+        allow(font).to receive(:table).with("CFF ").and_return(Struct.new(:tag).new("CFFTable"))
         allow(font).to receive(:table).with("glyf").and_return(nil)
 
         flavor = encoder.send(:detect_flavor, font)
@@ -189,7 +193,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
       end
 
       it "raises error when neither glyf nor CFF present" do
-        font = double("Font")
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("glyf").and_return(false)
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
         allow(font).to receive(:has_table?).with("CFF2").and_return(false)

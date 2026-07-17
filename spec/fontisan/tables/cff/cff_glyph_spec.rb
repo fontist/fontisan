@@ -279,7 +279,6 @@ RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
   describe "curve support" do
     let(:curve_charstring) do
       CffGlyphSpecFakes::FakeCharstring.new(
-
         path: [
           { type: :move_to, x: 0.0, y: 0.0 },
           {
