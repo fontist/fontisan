@@ -9,14 +9,13 @@ module Fontisan
     class FakeFont
       include Fontisan::SfntSource
 
-      attr_reader :tables_hash, :sfnt_version_value
+      attr_accessor :sfnt_version_value
+      attr_reader :tables_hash
 
       def initialize(tables = {})
         @tables_hash = tables
         @sfnt_version_value = 0x00010000
       end
-
-      attr_writer :sfnt_version_value
 
       def table(tag)
         tables_hash[tag]
