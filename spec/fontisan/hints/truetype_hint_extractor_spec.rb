@@ -70,13 +70,13 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
   end
 
   describe "#extract" do
+    FakeGlyph = Struct.new(:instructions) do
+      def empty? = false
+    end
+
     context "with glyph instructions" do
       it "extracts interpolation hints from IUP_Y" do
-        glyph = double(
-          "glyph",
-          instructions: [0x30], # IUP_Y
-          empty?: false,
-        )
+        glyph = FakeGlyph.new([0x30])
         allow(glyph).to receive(:is_a?).with(Fontisan::Tables::SimpleGlyph).and_return(true)
 
         hints = extractor.extract(glyph)
@@ -86,11 +86,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
       end
 
       it "extracts interpolation hints from IUP_X" do
-        glyph = double(
-          "glyph",
-          instructions: [0x31], # IUP_X
-          empty?: false,
-        )
+        glyph = FakeGlyph.new([0x31])
         allow(glyph).to receive(:is_a?).with(Fontisan::Tables::SimpleGlyph).and_return(true)
 
         hints = extractor.extract(glyph)
