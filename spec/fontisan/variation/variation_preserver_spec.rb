@@ -25,7 +25,7 @@ RSpec.describe Fontisan::Variation::VariationPreserver do
     # Stub #table to return Fvar-like objects for parsed-table access
     # by VariationContext. table_data still reads from tables_hash.
     allow(source_font).to receive(:table) do |tag|
-      source_font.tables_hash[tag] ? double("Table", axes: []) : nil
+      source_font.tables_hash[tag] ? Struct.new(:axes).new([]) : nil
     end
   end
 

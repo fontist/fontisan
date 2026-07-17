@@ -51,7 +51,7 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
     end
 
     context "with invalid variable font" do
-      let(:mock_font) { instance_double(Fontisan::TrueTypeFont) }
+      let(:mock_font) { Fontisan::SpecHelpers::FakeFont.new({}) }
 
       it "raises error for font without variation data" do
         allow(mock_font).to receive(:has_table?).with("fvar").and_return(true)
@@ -199,7 +199,7 @@ RSpec.describe Fontisan::Variation::VariableSvgGenerator do
     end
 
     it "returns empty hash for font without fvar" do
-      static_font = instance_double(Fontisan::TrueTypeFont)
+      static_font = Fontisan::SpecHelpers::FakeFont.new({})
       allow(static_font).to receive(:has_table?).and_return(false)
 
       # This would fail in initialize, so we'll skip this test
