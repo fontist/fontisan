@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Converters::OutlineConverter do
   let(:converter) { described_class.new }
-  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "loca" => double, "head" => double, "hhea" => double, "maxp" => double }) }
-  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "head" => double, "hhea" => double, "maxp" => double }) }
+  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => Struct.new(:tag).new("glyf"), "loca" => Struct.new(:tag).new("loca"), "head" => Struct.new(:tag).new("head"), "hhea" => Struct.new(:tag).new("hhea"), "maxp" => Struct.new(:tag).new("maxp") }) }
+  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => Struct.new(:tag).new("CFF "), "head" => Struct.new(:tag).new("head"), "hhea" => Struct.new(:tag).new("hhea"), "maxp" => Struct.new(:tag).new("maxp") }) }
 
   before do
     # Setup TTF font mock with dynamic has_table? response
@@ -18,7 +18,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
     end
     allow(ttf_font).to receive(:table) do |tag|
       case tag
-      when "glyf", "loca", "head", "hhea", "maxp" then double(tag)
+      when "glyf", "loca", "head", "hhea", "maxp" then Struct.new(:tag).new(tag)
       when "CFF ", "CFF2" then nil
       end
     end
@@ -34,7 +34,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
     end
     allow(otf_font).to receive(:table) do |tag|
       case tag
-      when "CFF ", "head", "hhea", "maxp" then double(tag)
+      when "CFF ", "head", "hhea", "maxp" then Struct.new(:tag).new(tag)
       when "glyf", "CFF2" then nil
       end
     end
@@ -146,8 +146,8 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         # Ensure glyf and loca are properly set up
         allow(ttf_font).to receive(:has_table?).with("glyf").and_return(true)
         allow(ttf_font).to receive(:has_table?).with("loca").and_return(true)
-        allow(ttf_font).to receive(:table).with("glyf").and_return(double("glyf"))
-        allow(ttf_font).to receive(:table).with("loca").and_return(double("loca"))
+        allow(ttf_font).to receive(:table).with("glyf").and_return(Struct.new(:tag).new("glyf"))
+        allow(ttf_font).to receive(:table).with("loca").and_return(Struct.new(:tag).new("loca"))
         allow(ttf_font).to receive(:table).with("head").and_return(nil)
 
         expect do
@@ -341,7 +341,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
     end
 
     describe "#apply_opening_options" do
-      let(:mock_font) { double("Font") }
+      let(:mock_font) { Fontisan::SpecHelpers::FakeFont.new({}) }
 
       before do
         allow(mock_font).to receive(:is_a?).with(Fontisan::TrueTypeFont).and_return(true)
