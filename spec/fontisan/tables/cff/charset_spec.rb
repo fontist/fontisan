@@ -5,10 +5,14 @@ require "fontisan/tables/cff"
 require "fontisan/tables/cff/charset"
 
 RSpec.describe Fontisan::Tables::Cff::Charset do
-  let(:mock_cff_table) do
-    double("Cff").tap do |cff|
-      allow(cff).to receive(:string_for_sid) { |sid| "glyph#{sid}" }
+  FakeCff = Struct.new(:sid_to_name) do
+    def string_for_sid(sid)
+      sid_to_name.call(sid)
     end
+  end
+
+  let(:mock_cff_table) do
+    FakeCff.new(->(sid) { "glyph#{sid}" })
   end
 
   describe "#initialize" do
@@ -190,16 +194,14 @@ RSpec.describe Fontisan::Tables::Cff::Charset do
 
   describe "integration with CFF string table" do
     let(:cff_table) do
-      double("Cff").tap do |cff|
-        allow(cff).to receive(:string_for_sid) do |sid|
-          case sid
-          when 1 then "A"
-          when 2 then "B"
-          when 3 then "C"
-          else ".notdef"
-          end
+      FakeCff.new(->(sid) {
+        case sid
+        when 1 then "A"
+        when 2 then "B"
+        when 3 then "C"
+        else ".notdef"
         end
-      end
+      })
     end
 
     it "resolves SIDs to glyph names via CFF table" do
