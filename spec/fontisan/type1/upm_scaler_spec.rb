@@ -6,9 +6,7 @@ RSpec.describe Fontisan::Type1::UPMScaler do
   let(:metrics) { Fontisan::MetricsCalculator.new(font) }
 
   # Mock font with 2048 UPM for scaling tests
-  let(:font_2048) do
-    double("Font", units_per_em: 2048)
-  end
+  let(:font_2048) { Struct.new(:units_per_em).new(2048) }
 
   describe ".type1_standard" do
     it "creates a scaler with 1000 UPM" do

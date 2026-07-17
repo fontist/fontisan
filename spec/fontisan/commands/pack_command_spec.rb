@@ -12,8 +12,8 @@ RSpec.describe Fontisan::Commands::PackCommand do
   let(:font_paths) { [font_path1, font_path2] }
   let(:output_path) { "output.ttc" }
 
-  let(:mock_font1) { instance_double(Fontisan::TrueTypeFont, table_data: {}, respond_to?: true, table_names: []) }
-  let(:mock_font2) { instance_double(Fontisan::TrueTypeFont, table_data: {}, respond_to?: true, table_names: []) }
+  let(:mock_font1) { Fontisan::SpecHelpers::FakeFont.new({}) }
+  let(:mock_font2) { Fontisan::SpecHelpers::FakeFont.new({}) }
 
   describe "#initialize" do
     it "initializes with font paths and output" do
