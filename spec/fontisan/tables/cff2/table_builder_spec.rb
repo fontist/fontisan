@@ -172,7 +172,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
   describe "#extract_charstrings_offset" do
     it "extracts CharStrings offset from Top DICT" do
       # Create CFF2 with CharStrings offset in Top DICT
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data, read_variable_store: nil, header: { major_version: 2 }, top_dict: { 17 => 100 }) # operator 17 = CharStrings
@@ -184,7 +184,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "returns nil when no CharStrings offset" do
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -199,7 +199,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
   describe "#calculate_stem_count" do
     it "calculates stem count from font-level hints" do
-      hint_set = double("hint_set")
+      hint_set = Struct.new(:p).new(nil)
       allow(hint_set).to receive_messages(font_level_hints: {
                                             blue_values: [10, 20, 30, 40], # 2 hstem
                                             stem_snap_h: [50, 60, 70], # 3 vstem
@@ -229,7 +229,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "handles missing blue_values" do
-      hint_set = double("hint_set")
+      hint_set = Struct.new(:p).new(nil)
       allow(hint_set).to receive_messages(font_level_hints: {
                                             stem_snap_h: [50, 60], # 2 vstem
                                           }, per_glyph_hints: {})
@@ -249,7 +249,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "handles missing stem_snap_h" do
-      hint_set = double("hint_set")
+      hint_set = Struct.new(:p).new(nil)
       allow(hint_set).to receive_messages(font_level_hints: {
                                             blue_values: [10, 20], # 1 hstem
                                           }, per_glyph_hints: {})
@@ -272,7 +272,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
   describe "#modify_charstrings" do
     let(:charstrings_index) do
       # Mock CharStrings INDEX
-      index = double("charstrings_index")
+      index = Struct.new(:p).new(nil)
       allow(index).to receive(:count).and_return(2)
       allow(index).to receive(:[]).with(0).and_return("\x00\x0e".b) # .notdef (endchar)
       allow(index).to receive(:[]).with(1).and_return("\x64\x96\x0e".b) # glyph 1
@@ -280,8 +280,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "modifies CharStrings with per-glyph hints" do
-      hint_set = double("hint_set")
-      hint = double("hint")
+      hint_set = Struct.new(:p).new(nil)
+      hint = Struct.new(:p).new(nil)
       allow(hint).to receive_messages(type: :hstem, values: [10, 20])
 
       allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint] },
@@ -312,7 +312,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       # Use simple valid CharString instead (just endchar)
       charstring_simple = "\x0e".b # endchar operator
 
-      index = double("charstrings_index")
+      index = Struct.new(:p).new(nil)
       allow(index).to receive(:count).and_return(1)
       allow(index).to receive(:[]).with(0).and_return(charstring_simple)
 
@@ -346,7 +346,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "returns nil when per_glyph_hints is empty" do
-      hint_set = double("hint_set")
+      hint_set = Struct.new(:p).new(nil)
       allow(hint_set).to receive_messages(per_glyph_hints: {},
                                           font_level_hints: {})
 
@@ -361,11 +361,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "handles multiple hints per glyph" do
-      hint_set = double("hint_set")
-      hint1 = double("hint1")
+      hint_set = Struct.new(:p).new(nil)
+      hint1 = Struct.new(:p).new(nil)
       allow(hint1).to receive_messages(type: :hstem, values: [10, 20])
 
-      hint2 = double("hint2")
+      hint2 = Struct.new(:p).new(nil)
       allow(hint2).to receive_messages(type: :vstem, values: [30, 40])
 
       allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint1,
@@ -397,8 +397,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
     it "maintains stack neutrality" do
       # This is verified by CharStringBuilder which validates operations
-      hint_set = double("hint_set")
-      hint = double("hint")
+      hint_set = Struct.new(:p).new(nil)
+      hint = Struct.new(:p).new(nil)
       allow(hint).to receive_messages(type: :hstem, values: [10, 20])
 
       allow(hint_set).to receive_messages(per_glyph_hints: { 1 => [hint] },
@@ -458,8 +458,8 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "handles invalid JSON gracefully" do
-      hint_set = double("hint_set")
-      allow(hint_set).to receive(:respond_to?).with(:private_dict_hints).and_return(true)
+      hint_set = Struct.new(:p).new(nil)
+      allow(hint_set).to receive(:is_a?).with(Fontisan::Models::HintSet).and_return(true)
       allow(hint_set).to receive_messages(private_dict_hints: "invalid json",
                                           hinted_glyph_ids: [])
 
@@ -472,7 +472,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
   describe "#extract_private_dict_info" do
     it "extracts Private DICT offset and size from Top DICT" do
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -485,7 +485,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
     end
 
     it "returns nil when no Private DICT in Top DICT" do
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -508,7 +508,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       )
 
       # Create mock reader with Private DICT
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -535,7 +535,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
         6 => [500, 10, 5], # BlueValues with blend (2 axes)
       }
 
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -559,7 +559,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
         }.to_json,
       )
 
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data, read_variable_store: {
@@ -581,7 +581,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
         private_dict_hints: { blue_values: [10, 20] }.to_json,
       )
 
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: cff2_data,
@@ -636,7 +636,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       vstore_data = "\x00\x01\x00\x01\x00\x00\x00\x00".b
       full_data = cff2_data + vstore_data
 
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
       allow(reader).to receive_messages(data: full_data, read_variable_store: {
@@ -731,12 +731,12 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       full_cff2_data = cff2_data + charstrings_data
 
       # Need a more complete CFF2 with Private DICT for full rebuild
-      reader = double("reader")
+      reader = Struct.new(:p).new(nil)
       allow(reader).to receive(:read_header)
       allow(reader).to receive(:read_top_dict)
 
       # Mock charstrings index
-      charstrings_index = double("charstrings_index")
+      charstrings_index = Struct.new(:p).new(nil)
       allow(charstrings_index).to receive(:count).and_return(1)
       allow(charstrings_index).to receive(:[]).with(0).and_return("\x0e".b)
       allow(reader).to receive_messages(data: full_cff2_data, read_variable_store: nil, header: {
