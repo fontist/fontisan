@@ -2,6 +2,23 @@
 
 require "spec_helper"
 
+module PostscriptHintExtractorFakes
+  HintDict = Struct.new(:blue_values, :std_hw, :std_vw, :other_blues,
+                        :family_blues, :family_other_blues, :blue_scale,
+                        :blue_shift, :blue_fuzz, :stem_snap_h, :stem_snap_v,
+                        :language_group) do # rubocop:disable Naming/PredicateName
+    def force_bold?
+      nil
+    end
+  end
+
+  HintCff = Struct.new(:dict) do
+    def private_dict(_index = 0)
+      dict
+    end
+  end
+end
+
 RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
   let(:extractor) { described_class.new }
 
@@ -99,23 +116,10 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
 
   describe "private methods" do
     describe "#extract_private_dict_hints" do
-      HintDict = Struct.new(:blue_values, :std_hw, :std_vw, :other_blues,
-                            :family_blues, :family_other_blues, :blue_scale,
-                            :blue_shift, :blue_fuzz, :stem_snap_h, :stem_snap_v,
-                            :language_group) do
-        def force_bold? = nil
-      end
-
-      HintCff = Struct.new(:dict) do
-        def private_dict(_index = 0)
-          dict
-        end
-      end
-
       it "extracts hint parameters from Private dict" do
         font = Fontisan::SpecHelpers::FakeFont.new({})
-        font.tables_hash["CFF "] = HintCff.new(
-          HintDict.new(blue_values: [-20, 0, 450, 470], std_hw: 68, std_vw: 88)
+        font.tables_hash["CFF "] = PostscriptHintExtractorFakes::HintCff.new(
+          PostscriptHintExtractorFakes::HintDict.new(blue_values: [-20, 0, 450, 470], std_hw: 68, std_vw: 88),
         )
 
         hints = extractor.send(:extract_private_dict_hints, font)

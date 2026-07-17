@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Converters::FormatConverter do
   let(:converter) { described_class.new }
-  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "head" => double }) }
-  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "head" => double }) }
+  let(:ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil) }) }
+  let(:otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil) }) }
 
   # Mock tables for detecting format
   before do
@@ -13,35 +13,29 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(ttf_font).to receive(:has_table?).with("CFF ").and_return(false)
     allow(ttf_font).to receive(:has_table?).with("CFF2").and_return(false)
     allow(ttf_font).to receive(:has_table?).with("fvar").and_return(false)
-    allow(ttf_font).to receive(:table).with("glyf").and_return(double)
+    allow(ttf_font).to receive(:table).with("glyf").and_return(Struct.new(:p).new(nil))
     allow(ttf_font).to receive(:table).with("CFF ").and_return(nil)
     allow(ttf_font).to receive(:table).with("CFF2").and_return(nil)
-    allow(ttf_font).to receive_messages(tables: { "glyf" => double, "head" => double }, table_data: { "glyf" => "glyf_data",
-                                                                                                      "head" => "\x00" * 54 }, read_table_data: "data")
-    allow(ttf_font).to receive(:table).with("name").and_return(double("name",
-                                                                      english_name: "TestFont"))
+    allow(ttf_font).to receive_messages(tables: { "glyf" => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil) }, table_data: { "glyf" => "glyf_data",
+                                                                                                                                        "head" => "\x00" * 54 }, read_table_data: "data")
+    allow(ttf_font).to receive(:table).with("name").and_return(Struct.new(:_name) { def english_name(_id = nil) = _name }.new("TestFont"))
 
     # Add stubs for OutlineConverter validation
     allow(ttf_font).to receive(:has_table?).with("loca").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("head").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("hhea").and_return(true)
     allow(ttf_font).to receive(:has_table?).with("maxp").and_return(true)
-    allow(ttf_font).to receive(:table).with("loca").and_return(double("loca",
-                                                                      parse_with_context: nil))
-    allow(ttf_font).to receive(:table).with("head").and_return(double("head",
-                                                                      units_per_em: 1000,
-                                                                      index_to_loc_format: 1))
-    allow(ttf_font).to receive(:table).with("hhea").and_return(double("hhea"))
-    allow(ttf_font).to receive(:table).with("maxp").and_return(double("maxp",
-                                                                      num_glyphs: 100))
-    allow(ttf_font).to receive(:table).with("name").and_return(double("name",
-                                                                      english_name: "TestFont"))
+    allow(ttf_font).to receive(:table).with("loca").and_return(Struct.new(:p) { def parse_with_context(*); end }.new(nil))
+    allow(ttf_font).to receive(:table).with("head").and_return(Struct.new(:units_per_em, :index_to_loc_format).new(1000, 1))
+    allow(ttf_font).to receive(:table).with("hhea").and_return(Struct.new(:p).new(nil))
+    allow(ttf_font).to receive(:table).with("maxp").and_return(Struct.new(:num_glyphs).new(100))
+    allow(ttf_font).to receive(:table).with("name").and_return(Struct.new(:_name) { def english_name(_id = nil) = _name }.new("TestFont"))
 
     # Mock glyf table to handle glyph_for calls
-    glyf_mock = double("glyf")
+    glyf_mock = Struct.new(:p).new(nil)
     allow(glyf_mock).to receive(:glyph_for) do |_glyph_id, _loca, _head|
       # Return empty glyph mock
-      glyph_mock = double("glyph")
+      glyph_mock = Struct.new(:p).new(nil)
       allow(glyph_mock).to receive_messages(
         nil?: false,
         empty?: true,
@@ -56,23 +50,19 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     allow(otf_font).to receive(:has_table?).with("CFF ").and_return(true)
     allow(otf_font).to receive(:has_table?).with("CFF2").and_return(false)
     allow(otf_font).to receive(:has_table?).with("fvar").and_return(false)
-    allow(otf_font).to receive(:table).with("CFF ").and_return(double("cff",
-                                                                      glyph_count: 100,
-                                                                      charstring_for_glyph: nil))
+    allow(otf_font).to receive(:table).with("CFF ").and_return(Struct.new(:glyph_count) { def charstring_for_glyph(_id); nil; end }.new(100))
     allow(otf_font).to receive(:table).with("CFF2").and_return(nil)
     allow(otf_font).to receive(:table).with("glyf").and_return(nil)
-    allow(otf_font).to receive_messages(tables: { "CFF " => double, "head" => double }, table_data: { "CFF " => "CFF _data",
-                                                                                                      "head" => "\x00" * 54 }, read_table_data: "data")
+    allow(otf_font).to receive_messages(tables: { "CFF " => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil) }, table_data: { "CFF " => "CFF _data",
+                                                                                                                                        "head" => "\x00" * 54 }, read_table_data: "data")
 
     # Add stubs for OutlineConverter validation
     allow(otf_font).to receive(:has_table?).with("head").and_return(true)
     allow(otf_font).to receive(:has_table?).with("hhea").and_return(true)
     allow(otf_font).to receive(:has_table?).with("maxp").and_return(true)
-    allow(otf_font).to receive(:table).with("head").and_return(double("head",
-                                                                      units_per_em: 1000))
-    allow(otf_font).to receive(:table).with("hhea").and_return(double("hhea"))
-    allow(otf_font).to receive(:table).with("maxp").and_return(double("maxp",
-                                                                      num_glyphs: 100))
+    allow(otf_font).to receive(:table).with("head").and_return(Struct.new(:units_per_em).new(1000))
+    allow(otf_font).to receive(:table).with("hhea").and_return(Struct.new(:p).new(nil))
+    allow(otf_font).to receive(:table).with("maxp").and_return(Struct.new(:num_glyphs).new(100))
   end
 
   describe "#initialize" do
@@ -326,8 +316,8 @@ RSpec.describe Fontisan::Converters::FormatConverter do
   end
 
   describe "variable font preservation" do
-    let(:variable_ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => double, "fvar" => double, "gvar" => double, "loca" => double, "head" => double, "hhea" => double, "maxp" => double }) }
-    let(:variable_otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => double, "fvar" => double, "head" => double, "hhea" => double, "maxp" => double }) }
+    let(:variable_ttf_font) { Fontisan::SpecHelpers::FakeFont.new({ "glyf" => Struct.new(:p).new(nil), "fvar" => Struct.new(:p).new(nil), "gvar" => Struct.new(:p).new(nil), "loca" => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil), "hhea" => Struct.new(:p).new(nil), "maxp" => Struct.new(:p).new(nil) }) }
+    let(:variable_otf_font) { Fontisan::SpecHelpers::FakeFont.new({ "CFF " => Struct.new(:p).new(nil), "fvar" => Struct.new(:p).new(nil), "head" => Struct.new(:p).new(nil), "hhea" => Struct.new(:p).new(nil), "maxp" => Struct.new(:p).new(nil) }) }
 
     before do
       # Setup variable TTF font
@@ -350,21 +340,29 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
       # Mock tables
       allow(variable_ttf_font).to receive(:table).with("glyf").and_return(
-        double("glyf", glyph_for: double(nil?: false, empty?: true,
-                                         simple?: true, compound?: false)),
+        Struct.new(:p) {
+          def glyph_for(*)
+            Struct.new(:_e) {
+              def nil? = false
+              def empty? = true
+              def simple? = true
+              def compound? = false
+            }.new(nil)
+          end
+        }.new(nil),
       )
       allow(variable_ttf_font).to receive(:table).with("loca").and_return(
-        double("loca", parse_with_context: nil),
+        Struct.new(:p) { def parse_with_context(*); end }.new(nil),
       )
       allow(variable_ttf_font).to receive(:table).with("head").and_return(
-        double("head", units_per_em: 1000, index_to_loc_format: 1),
+        Struct.new(:units_per_em, :index_to_loc_format).new(1000, 1),
       )
-      allow(variable_ttf_font).to receive(:table).with("hhea").and_return(double("hhea"))
+      allow(variable_ttf_font).to receive(:table).with("hhea").and_return(Struct.new(:p).new(nil))
       allow(variable_ttf_font).to receive(:table).with("maxp").and_return(
-        double("maxp", num_glyphs: 100),
+        Struct.new(:num_glyphs).new(100),
       )
       allow(variable_ttf_font).to receive(:table).with("name").and_return(
-        double("name", english_name: "TestFont"),
+        Struct.new(:_name) { def english_name(_id = nil) = _name }.new("TestFont"),
       )
       allow(variable_ttf_font).to receive_messages(table_data: {
                                                      "glyf" => "glyf_data",
@@ -389,17 +387,17 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       allow(variable_otf_font).to receive(:has_table?).with("cmap").and_return(false)
 
       allow(variable_otf_font).to receive(:table).with("CFF2").and_return(
-        double("cff2", glyph_count: 100, charstring_for_glyph: nil),
+        Struct.new(:glyph_count) { def charstring_for_glyph(_id); nil; end }.new(100),
       )
       allow(variable_otf_font).to receive(:table).with("CFF ").and_return(
-        double("cff", glyph_count: 100, charstring_for_glyph: nil),
+        Struct.new(:glyph_count) { def charstring_for_glyph(_id); nil; end }.new(100),
       )
       allow(variable_otf_font).to receive(:table).with("head").and_return(
-        double("head", units_per_em: 1000),
+        Struct.new(:units_per_em).new(1000),
       )
-      allow(variable_otf_font).to receive(:table).with("hhea").and_return(double("hhea"))
+      allow(variable_otf_font).to receive(:table).with("hhea").and_return(Struct.new(:p).new(nil))
       allow(variable_otf_font).to receive(:table).with("maxp").and_return(
-        double("maxp", num_glyphs: 100),
+        Struct.new(:num_glyphs).new(100),
       )
       allow(variable_otf_font).to receive_messages(table_data: {
                                                      "CFF2" => "cff2_data",
@@ -411,7 +409,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     describe "variable font detection" do
       it "detects variable TTF font" do
         # Mock VariationPreserver to check if it's called
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -422,7 +420,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
       it "detects non-variable font" do
         # Mock VariationPreserver to check it's NOT called
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -434,7 +432,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "preserve_variation option" do
       it "preserves variation by default" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -444,7 +442,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       end
 
       it "preserves variation when explicitly enabled" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -454,7 +452,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
       end
 
       it "does not preserve variation when disabled" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -466,7 +464,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "compatible format preservation (TTF→TTF)" do
       it "preserves variation tables for same format conversion" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve) do |_font, tables, _options|
           tables.merge("fvar" => "fvar_data", "gvar" => "gvar_data")
         end
@@ -482,7 +480,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "compatible format preservation (OTF→OTF)" do
       it "preserves variation tables for same format conversion" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve) do |_font, tables, _options|
           tables.merge("fvar" => "fvar_data", "CFF2" => "cff2_data")
         end
@@ -498,7 +496,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "format conversion with variation (TTF→OTF)" do
       it "warns about incomplete conversion and preserves common tables" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -519,7 +517,7 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "format conversion with variation (OTF→TTF)" do
       it "warns about incomplete conversion and preserves common tables" do
-        preserver_class = double("VariationPreserver")
+        preserver_class = Struct.new(:target_tables) { def preserve = target_tables }
         allow(preserver_class).to receive(:preserve).and_return({})
         stub_const("Fontisan::Variation::VariationPreserver", preserver_class)
 
@@ -576,7 +574,12 @@ RSpec.describe Fontisan::Converters::FormatConverter do
   end
 
   describe "Type 1 font support" do
-    let(:type1_font) { double("Type1Font") }
+    let(:type1_font) do
+      Struct.new(:format) do
+        def is_a?(k) = k == Fontisan::Type1Font
+        def class = Fontisan::Type1Font
+      end
+    end
 
     before do
       allow(type1_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
