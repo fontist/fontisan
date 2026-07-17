@@ -135,7 +135,7 @@ RSpec.describe Fontisan::Variation::Cache do
   end
 
   describe "#fetch_region_matches" do
-    let(:regions) { [double("Region1"), double("Region2")] }
+    let(:regions) { [Struct.new(:id).new(1), Struct.new(:id).new(2)] }
 
     it "caches region matches" do
       coordinates = { "wght" => 700.0 }
