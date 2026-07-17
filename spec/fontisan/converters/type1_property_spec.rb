@@ -18,11 +18,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
             rand(500..1500),
           ]
 
-          font = double("Type1Font")
-          allow(font).to receive_messages(font_dictionary: double(
-            "font_dict", font_bbox: font_bbox
-          ), version: "001.000")
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
+          font = Fontisan::SpecHelpers::FakeType1Font.new
+          font.font_dictionary = Struct.new(:font_bbox).new(font_bbox)
+          allow(font).to receive_messages(version: "001.000")
 
           head_data = converter.send(:build_head_table, font)
 
@@ -35,13 +33,12 @@ RSpec.describe "Type 1 Property-Based Tests" do
 
       it "always uses 1000 units per em for Type 1 fonts" do
         100.times do
-          font_dict = double("font_dict")
+          font_dict = Struct.new(:font_bbox).new([0, 0, 1000, 1000])
           allow(font_dict).to receive(:font_bbox).and_return([0, 0, 1000, 1000])
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           version: "001.000")
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           head_data = converter.send(:build_head_table, font)
 
@@ -59,10 +56,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
         100.times do
           num_glyphs = rand(1..1000)
 
-          font = double("Type1Font")
-          allow(font).to receive(:charstrings).and_return(double("charstrings",
-                                                                 count: num_glyphs))
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
+          font = Fontisan::SpecHelpers::FakeType1Font.new
+          cs = Struct.new(:count, :encoding).new(num_glyphs, {})
+          allow(font).to receive(:charstrings).and_return(cs)
 
           maxp_data = converter.send(:build_maxp_table, font)
 
@@ -90,17 +86,16 @@ RSpec.describe "Type 1 Property-Based Tests" do
         ]
 
         weight_names.each do |weight_name|
-          font_info = double("font_info")
+          font_info = Struct.new(:family_name, :full_name, :version, :copyright).new(nil, nil, nil, nil)
           allow(font_info).to receive(:weight).and_return(weight_name)
 
-          font_dict = double("font_dictionary")
+          font_dict = Fontisan::SpecHelpers::FakeFontDictionary.new("")
           allow(font_dict).to receive_messages(font_bbox: [0, 0, 1000, 1000],
                                                font_info: font_info)
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           private_dict: nil)
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           os2_data = converter.send(:build_os2_table, font)
           weight_class = os2_data[4..5].unpack1("n")
@@ -117,10 +112,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
     context "name table encoding invariant" do
       it "always uses Windows platform ID 3" do
         100.times do
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           name_data = converter.send(:build_name_table, font)
 
@@ -133,10 +127,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
 
       it "always uses Unicode BMP encoding ID 1" do
         100.times do
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           name_data = converter.send(:build_name_table, font)
 
@@ -149,10 +142,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
 
       it "always uses US English language ID 0x0409" do
         100.times do
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           name_data = converter.send(:build_name_table, font)
 
@@ -168,16 +160,15 @@ RSpec.describe "Type 1 Property-Based Tests" do
     context "post table version invariant" do
       it "always produces version 3.0 for any font" do
         100.times do
-          font_info = double("font_info")
+          font_info = Struct.new(:family_name, :full_name, :version, :copyright).new(nil, nil, nil, nil)
           allow(font_info).to receive_messages(italic_angle: 0,
                                                underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
 
-          font_dict = double("font_dict")
+          font_dict = Struct.new(:font_bbox).new([0, 0, 1000, 1000])
           allow(font_dict).to receive(:font_info).and_return(font_info)
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive(:font_dictionary).and_return(font_dict)
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           post_data = converter.send(:build_post_table, font)
 
@@ -190,16 +181,15 @@ RSpec.describe "Type 1 Property-Based Tests" do
 
       it "always has fixed size of 32 bytes" do
         100.times do
-          font_info = double("font_info")
+          font_info = Struct.new(:family_name, :full_name, :version, :copyright).new(nil, nil, nil, nil)
           allow(font_info).to receive_messages(italic_angle: 0,
                                                underline_position: -100, underline_thickness: 50, is_fixed_pitch: false)
 
-          font_dict = double("font_dict")
+          font_dict = Struct.new(:font_bbox).new([0, 0, 1000, 1000])
           allow(font_dict).to receive(:font_info).and_return(font_info)
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive(:font_dictionary).and_return(font_dict)
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           post_data = converter.send(:build_post_table, font)
 
@@ -213,10 +203,9 @@ RSpec.describe "Type 1 Property-Based Tests" do
     context "cmap table encoding invariant" do
       it "always uses Windows platform (3) and Unicode BMP encoding (1)" do
         100.times do
-          font = double("Type1Font")
-          allow(font).to receive(:charstrings).and_return(double("charstrings",
-                                                                 encoding: {}, glyph_names: []))
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
+          font = Fontisan::SpecHelpers::FakeType1Font.new
+          cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+          allow(font).to receive(:charstrings).and_return(cs)
 
           cmap_data = converter.send(:build_cmap_table, font)
 
@@ -247,14 +236,12 @@ RSpec.describe "Type 1 Property-Based Tests" do
           ]
           font_matrix = [0.001, 0, 0, 0.001, 0, 0]
 
-          font_dict = double("font_dictionary")
+          font_dict = Fontisan::SpecHelpers::FakeFontDictionary.new("")
           allow(font_dict).to receive_messages(version: "001.000",
                                                notice: "Notice", copyright: "Copyright", full_name: "Test Font", family_name: "Test Family", weight: "Regular", font_bbox: font_bbox, font_matrix: font_matrix, font_info: nil)
 
-          font = double("Type1Font")
-          allow(font).to receive_messages(font_dictionary: font_dict, font_name: "TestFont", charstrings: double("charstrings",
-                                                                                                                 encoding: { "A" => 1 }))
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
+          font = Fontisan::SpecHelpers::FakeType1Font.new
+          allow(font).to receive_messages(font_dictionary: font_dict, font_name: "TestFont", charstrings: Struct.new(:encoding).new({}))
 
           result = converter.send(:build_cff_font_dict, font)
 
@@ -271,17 +258,16 @@ RSpec.describe "Type 1 Property-Based Tests" do
     context "CFF private dictionary invariants" do
       it "always uses valid default values" do
         100.times do
-          font_dict = double("font_dictionary")
+          font_dict = Fontisan::SpecHelpers::FakeFontDictionary.new("")
           allow(font_dict).to receive(:font_info).and_return(nil)
 
-          private_dict = double("private_dict")
+          private_dict = Fontisan::SpecHelpers::FakePrivateDict.new
           allow(private_dict).to receive_messages(blue_values: [],
                                                   other_blues: [], family_blues: [], family_other_blues: [], blue_scale: nil, blue_shift: nil, blue_fuzz: nil, force_bold: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(private_dict: private_dict,
                                           font_dictionary: font_dict)
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           result = converter.send(:build_cff_private_dict, font)
 
@@ -315,13 +301,12 @@ RSpec.describe "Type 1 Property-Based Tests" do
         ]
 
         versions.each do |version_str|
-          font_dict = double("font_dict")
+          font_dict = Struct.new(:font_bbox).new([0, 0, 1000, 1000])
           allow(font_dict).to receive(:font_bbox).and_return([0, 0, 1000, 1000])
 
-          font = double("Type1Font")
+          font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           version: version_str)
-          allow(font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
           head_data = converter.send(:build_head_table, font)
 
