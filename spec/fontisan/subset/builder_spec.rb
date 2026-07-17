@@ -333,7 +333,7 @@ RSpec.describe Fontisan::Subset::Builder do
 
   describe "integration with other components" do
     it "uses GlyphAccessor for closure calculation" do
-      accessor_double = instance_double(Fontisan::GlyphAccessor)
+      accessor_double = Struct.new(:placeholder).new(nil)
       allow(Fontisan::GlyphAccessor).to receive(:new).and_return(accessor_double)
       allow(accessor_double).to receive(:closure_for).and_return(Set.new([0,
                                                                           65]))
@@ -343,14 +343,13 @@ RSpec.describe Fontisan::Subset::Builder do
     end
 
     it "uses TableSubsetter for table operations" do
-      subsetter_class = class_double(Fontisan::Subset::TableSubsetter).as_stubbed_const
-      subsetter_instance = instance_double(Fontisan::Subset::TableSubsetter)
+      subsetter_instance = Struct.new(:placeholder).new(nil)
 
-      allow(subsetter_class).to receive(:new).and_return(subsetter_instance)
+      allow(Fontisan::Subset::TableSubsetter).to receive(:new).and_return(subsetter_instance)
       allow(subsetter_instance).to receive(:subset_table).and_return("test")
 
       builder.build
-      expect(subsetter_class).to have_received(:new)
+      expect(Fontisan::Subset::TableSubsetter).to have_received(:new)
     end
 
     it "uses FontWriter for font assembly" do
