@@ -4,15 +4,17 @@ require "spec_helper"
 require "fontisan/tables/cff"
 require "fontisan/tables/cff/charset"
 
-RSpec.describe Fontisan::Tables::Cff::Charset do
+module CharsetSpecFakes
   FakeCff = Struct.new(:sid_to_name) do
     def string_for_sid(sid)
       sid_to_name.call(sid)
     end
   end
+end
 
+RSpec.describe Fontisan::Tables::Cff::Charset do
   let(:mock_cff_table) do
-    FakeCff.new(->(sid) { "glyph#{sid}" })
+    CharsetSpecFakes::FakeCff.new(->(sid) { "glyph#{sid}" })
   end
 
   describe "#initialize" do
@@ -194,7 +196,7 @@ RSpec.describe Fontisan::Tables::Cff::Charset do
 
   describe "integration with CFF string table" do
     let(:cff_table) do
-      FakeCff.new(->(sid) {
+      CharsetSpecFakes::FakeCff.new(->(sid) {
         case sid
         when 1 then "A"
         when 2 then "B"
