@@ -7,13 +7,7 @@ RSpec.describe Fontisan::Variation::Converter do
   let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
   let(:axes) do
     [
-      double(
-        "VariationAxisRecord",
-        axis_tag: "wght",
-        min_value: 400.0,
-        default_value: 400.0,
-        max_value: 700.0,
-      ),
+      Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 700.0),
     ]
   end
   let(:converter) { described_class.new(font, axes) }
@@ -78,8 +72,8 @@ RSpec.describe Fontisan::Variation::Converter do
   end
 
   describe "#gvar_to_blend" do
-    let(:gvar_table) { instance_double(Fontisan::Tables::Gvar) }
-    let(:glyf_table) { instance_double(Fontisan::Tables::Glyf) }
+    let(:gvar_table) { Struct.new(:p).new(nil) }
+    let(:glyf_table) { Struct.new(:p).new(nil) }
     let(:glyph_id) { 42 }
 
     before do
@@ -230,8 +224,8 @@ RSpec.describe Fontisan::Variation::Converter do
     context "with single tuple, multiple axes" do
       let(:axes) do
         [
-          double("VariationAxisRecord", axis_tag: "wght"),
-          double("VariationAxisRecord", axis_tag: "wdth"),
+          Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"),
+          Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth"),
         ]
       end
       let(:converter) { described_class.new(font, axes) }
@@ -325,7 +319,7 @@ RSpec.describe Fontisan::Variation::Converter do
   end
 
   describe "#blend_to_gvar" do
-    let(:cff2_table) { instance_double(Fontisan::Tables::Cff2) }
+    let(:cff2_table) { Struct.new(:p).new(nil) }
     let(:glyph_id) { 42 }
 
     before do
@@ -355,10 +349,13 @@ RSpec.describe Fontisan::Variation::Converter do
 
     context "when charstring has no blend data" do
       let(:charstring) do
-        double("CharstringParser",
-               parse: true,
-               instance_variable_get: nil,
-               blend_data: [])
+        Struct.new(:_parsed, :blend_data) do
+          def parse = true
+
+          def instance_variable_get(*)
+            _parsed
+          end
+        end.new(nil, [])
       end
 
       before do
@@ -372,19 +369,22 @@ RSpec.describe Fontisan::Variation::Converter do
 
     context "with blend data" do
       let(:charstring) do
-        double("CharstringParser",
-               parse: true,
-               instance_variable_get: true,
-               blend_data: [
-                 {
-                   num_values: 2,
-                   num_axes: 1,
-                   blends: [
-                     { base: 100, deltas: [10] },
-                     { base: 200, deltas: [20] },
-                   ],
-                 },
-               ])
+        Struct.new(:_p, :blend_data) do
+          def parse = true
+
+          def instance_variable_get(*)
+            _p
+          end
+        end.new(true, [
+                  {
+                    num_values: 2,
+                    num_axes: 1,
+                    blends: [
+                      { base: 100, deltas: [10] },
+                      { base: 200, deltas: [20] },
+                    ],
+                  },
+                ])
       end
 
       before do
@@ -409,8 +409,8 @@ RSpec.describe Fontisan::Variation::Converter do
   end
 
   describe "#convert_all_gvar_to_blend" do
-    let(:gvar_table) { instance_double(Fontisan::Tables::Gvar) }
-    let(:glyf_table) { instance_double(Fontisan::Tables::Glyf) }
+    let(:gvar_table) { Struct.new(:p).new(nil) }
+    let(:glyf_table) { Struct.new(:p).new(nil) }
     let(:glyph_count) { 3 }
 
     before do
@@ -493,7 +493,7 @@ RSpec.describe Fontisan::Variation::Converter do
   end
 
   describe "#convert_all_blend_to_gvar" do
-    let(:cff2_table) { instance_double(Fontisan::Tables::Cff2) }
+    let(:cff2_table) { Struct.new(:p).new(nil) }
     let(:glyph_count) { 3 }
 
     before do
@@ -513,23 +513,29 @@ RSpec.describe Fontisan::Variation::Converter do
 
     context "with charstrings that have blend data" do
       let(:charstring_with_blend) do
-        double("CharstringParser",
-               parse: true,
-               instance_variable_get: true,
-               blend_data: [
-                 {
-                   num_values: 1,
-                   num_axes: 1,
-                   blends: [{ base: 100, deltas: [10] }],
-                 },
-               ])
+        Struct.new(:_p, :blend_data) do
+          def parse = true
+
+          def instance_variable_get(*)
+            _p
+          end
+        end.new(true, [
+                  {
+                    num_values: 1,
+                    num_axes: 1,
+                    blends: [{ base: 100, deltas: [10] }],
+                  },
+                ])
       end
 
       let(:charstring_without_blend) do
-        double("CharstringParser",
-               parse: true,
-               instance_variable_get: true,
-               blend_data: [])
+        Struct.new(:_parsed, :blend_data) do
+          def parse = true
+
+          def instance_variable_get(*)
+            _parsed
+          end
+        end.new(true, [])
       end
 
       before do

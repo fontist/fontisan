@@ -7,7 +7,7 @@ require "fontisan/variation/validator"
 RSpec.describe Fontisan::Variation::Subsetter do
   # Helper to create mock font with basic structure
   def create_mock_font(options = {})
-    font = double("Font")
+    font = Fontisan::SpecHelpers::FakeFont.new({})
 
     tables = options[:tables] || ["fvar", "gvar", "maxp"]
     table_data = options[:table_data] || {}
@@ -21,10 +21,10 @@ RSpec.describe Fontisan::Variation::Subsetter do
 
   # Helper to create mock fvar
   def create_mock_fvar(axes: ["wght", "wdth"])
-    fvar = double("Fvar")
+    fvar = Struct.new(:axes).new([])
 
     axis_objects = axes.map do |tag|
-      axis = double("Axis")
+      axis = Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght")
       allow(axis).to receive_messages(axis_tag: tag, min_value: 100.0,
                                       default_value: 400.0, max_value: 900.0)
       axis
@@ -38,7 +38,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
 
   # Helper to create mock maxp
   def create_mock_maxp(num_glyphs: 100)
-    double("Maxp", num_glyphs: num_glyphs)
+    Struct.new(:num_glyphs).new(num_glyphs)
   end
 
   describe "#initialize" do
@@ -110,7 +110,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "gvar", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "gvar" => double("Gvar"),
+          "gvar" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
@@ -127,7 +127,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "CFF2", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "CFF2" => double("CFF2"),
+          "CFF2" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" },
@@ -141,7 +141,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
 
     context "with validation enabled" do
       it "validates input font" do
-        validator = instance_double(Fontisan::Variation::Validator)
+        validator = Struct.new(:p).new(nil)
         allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
         allow(validator).to receive(:validate).and_return({ valid: true,
                                                             errors: [], warnings: [] })
@@ -154,7 +154,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
       end
 
       it "raises error for invalid input font" do
-        validator = instance_double(Fontisan::Variation::Validator)
+        validator = Struct.new(:p).new(nil)
         allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
         allow(validator).to receive(:validate).and_return({
                                                             valid: false,
@@ -221,7 +221,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "gvar"],
         table_data: {
           "fvar" => fvar,
-          "gvar" => double("Gvar"),
+          "gvar" => Struct.new(:p).new(nil),
         },
         all_tables: { "fvar" => "data", "gvar" => "data" },
       )
@@ -238,7 +238,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "CFF2"],
         table_data: {
           "fvar" => fvar,
-          "CFF2" => double("CFF2"),
+          "CFF2" => Struct.new(:p).new(nil),
         },
         all_tables: { "fvar" => "data", "CFF2" => "data" },
       )
@@ -290,7 +290,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
 
     context "with CFF2 table" do
       it "optimizes CFF2 regions" do
-        cff2 = double("CFF2")
+        cff2 = Struct.new(:p).new(nil)
         font_with_cff2 = create_mock_font(
           tables: ["fvar", "CFF2"],
           table_data: {
@@ -301,7 +301,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         )
 
         # Mock optimizer
-        optimizer = instance_double(Fontisan::Variation::Optimizer)
+        optimizer = Struct.new(:p).new(nil)
         allow(Fontisan::Variation::Optimizer).to receive(:new).and_return(optimizer)
         allow(optimizer).to receive_messages(optimize: cff2,
                                              stats: { regions_deduplicated: 5 })
@@ -420,7 +420,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         all_tables: { "fvar" => "data" },
       )
 
-      validator = instance_double(Fontisan::Variation::Validator)
+      validator = Struct.new(:p).new(nil)
       allow(Fontisan::Variation::Validator).to receive(:new).and_return(validator)
       allow(validator).to receive(:validate).and_return({ valid: true,
                                                           errors: [], warnings: [] })
@@ -480,7 +480,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "gvar", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "gvar" => double("Gvar"),
+          "gvar" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
@@ -509,7 +509,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "gvar", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "gvar" => double("Gvar"),
+          "gvar" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "gvar" => "data", "maxp" => "data" },
@@ -526,7 +526,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "CFF2", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "CFF2" => double("CFF2"),
+          "CFF2" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "CFF2" => "data", "maxp" => "data" },
@@ -543,7 +543,7 @@ RSpec.describe Fontisan::Variation::Subsetter do
         tables: ["fvar", "HVAR", "maxp"],
         table_data: {
           "fvar" => create_mock_fvar,
-          "HVAR" => double("HVAR"),
+          "HVAR" => Struct.new(:p).new(nil),
           "maxp" => create_mock_maxp,
         },
         all_tables: { "fvar" => "data", "HVAR" => "data", "maxp" => "data" },
