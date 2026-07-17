@@ -2,46 +2,36 @@
 
 require "spec_helper"
 
+module UnpackCommandFakes
+  class FakeNameTable
+    def initialize(name)
+      @name = name
+    end
+
+    def english_name(_id = nil)
+      @name
+    end
+  end
+
+  FakeCollection = Struct.new(:_font_count, :_fonts) do
+    def font_count = _font_count
+
+    def extract_fonts(*)
+      _fonts
+    end
+  end
+end
+
 RSpec.describe Fontisan::Commands::UnpackCommand do
   let(:collection_path) { "spec/fixtures/fonttools/TestTTC.ttc" }
   let(:output_dir) { "output_fonts" }
 
+  let(:mock_name_table1) { UnpackCommandFakes::FakeNameTable.new("Font1") }
+  let(:mock_name_table2) { UnpackCommandFakes::FakeNameTable.new("Font2") }
+  let(:mock_font1) { Fontisan::SpecHelpers::FakeFont.new("name" => mock_name_table1) }
+  let(:mock_font2) { Fontisan::SpecHelpers::FakeFont.new("name" => mock_name_table2) }
   let(:mock_collection) do
-    instance_double(
-      Fontisan::TrueTypeCollection,
-      font_count: 2,
-      extract_fonts: [mock_font1, mock_font2],
-    )
-  end
-
-  let(:mock_font1) do
-    instance_double(
-      Fontisan::TrueTypeFont,
-      table: mock_name_table1,
-      respond_to?: true,
-    )
-  end
-
-  let(:mock_font2) do
-    instance_double(
-      Fontisan::TrueTypeFont,
-      table: mock_name_table2,
-      respond_to?: true,
-    )
-  end
-
-  let(:mock_name_table1) do
-    instance_double(
-      Fontisan::Tables::Name,
-      english_name: "Font1",
-    )
-  end
-
-  let(:mock_name_table2) do
-    instance_double(
-      Fontisan::Tables::Name,
-      english_name: "Font2",
-    )
+    UnpackCommandFakes::FakeCollection.new(2, [mock_font1, mock_font2])
   end
 
   describe "#initialize" do
@@ -176,7 +166,7 @@ RSpec.describe Fontisan::Commands::UnpackCommand do
       described_class.new(collection_path, output_dir: output_dir,
                                            format: :woff)
     end
-    let(:mock_converter) { instance_double(Fontisan::Converters::FormatConverter) }
+    let(:mock_converter) { Struct.new(:placeholder).new(nil) }
 
     before do
       allow(File).to receive(:exist?).with(collection_path).and_return(true)
