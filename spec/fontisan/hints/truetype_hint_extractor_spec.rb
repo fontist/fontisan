@@ -57,7 +57,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
     context "with a font without hint tables" do
       # Some fonts may not have hinting tables
       it "returns empty HintSet without errors" do
-        font = instance_double(Fontisan::TrueTypeFont)
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive_messages(has_table?: false, table: nil)
 
         result = extractor.extract_from_font(font)
@@ -100,13 +100,13 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
       end
 
       it "returns empty array for empty glyph" do
-        glyph = double("glyph", empty?: true)
+        glyph = Struct.new(:_empty) { def empty? = _empty }.new(true)
         hints = extractor.extract(glyph)
         expect(hints).to be_empty
       end
 
       it "returns empty array for glyph without instructions" do
-        glyph = double("glyph", empty?: false, instructions: nil)
+        glyph = Struct.new(:_empty, :instructions) { def empty? = _empty }.new(false, nil)
         hints = extractor.extract(glyph)
         expect(hints).to be_empty
       end
@@ -116,7 +116,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
   describe "private methods" do
     describe "#extract_control_values" do
       it "parses signed 16-bit integers from cvt table" do
-        font = instance_double(Fontisan::TrueTypeFont)
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("cvt ").and_return(true)
 
         # Create sample CVT data: two 16-bit signed integers

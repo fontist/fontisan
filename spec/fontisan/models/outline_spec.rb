@@ -160,16 +160,7 @@ RSpec.describe Fontisan::Models::Outline do
 
   describe ".from_truetype" do
     let(:simple_glyph) do
-      double(
-        "SimpleGlyph",
-        simple?: true,
-        compound?: false,
-        num_contours: 1,
-        x_min: 100,
-        y_min: 0,
-        x_max: 300,
-        y_max: 700,
-      )
+      Struct.new(:simple?, :compound?, :num_contours, :x_min, :y_min, :x_max, :y_max).new(true, false, 1, 100, 0, 300, 700)
     end
 
     let(:contour_points) do
@@ -219,7 +210,7 @@ RSpec.describe Fontisan::Models::Outline do
     end
 
     it "raises error for compound glyph" do
-      compound = double("CompoundGlyph", simple?: false, compound?: true)
+      compound = Struct.new(:simple?, :compound?).new(false, true)
 
       expect do
         described_class.from_truetype(compound, 65)
@@ -288,7 +279,7 @@ RSpec.describe Fontisan::Models::Outline do
 
   describe ".from_cff" do
     let(:charstring) do
-      double("CharString")
+      Struct.new(:placeholder).new("charstring")
     end
 
     let(:cff_path) do

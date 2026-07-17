@@ -20,10 +20,6 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
   let(:gvar) { Struct.new(:placeholder).new("gvar") }
   let(:glyf) { Struct.new(:placeholder).new("glyf") }
 
-  before do
-    # FakeFont already has gvar and glyf in tables_hash from initialization
-  end
-
   describe "#initialize" do
     it "initializes with font and helpers" do
       expect(applier.font).to eq(font)

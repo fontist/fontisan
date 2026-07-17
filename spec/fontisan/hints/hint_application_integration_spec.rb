@@ -214,7 +214,7 @@ RSpec.describe "Hint Application Integration" do
     end
 
     context "validation mode safety" do
-      let(:cff_table) { double("CFF Table") }
+      let(:cff_table) { Struct.new(:placeholder).new("cff") }
 
       it "returns tables unchanged for invalid parameters" do
         applier = Fontisan::Hints::PostScriptHintApplier.new
@@ -370,7 +370,7 @@ RSpec.describe "Hint Application Integration" do
       tt_hint_set.font_program = "\x00\x01"
 
       ps_applier = Fontisan::Hints::PostScriptHintApplier.new
-      tables = { "CFF " => double("CFF Table") }
+      tables = { "CFF " => Struct.new(:placeholder).new("cff") }
 
       expect { ps_applier.apply(tt_hint_set, tables) }.not_to raise_error
       expect(ps_applier.apply(tt_hint_set, tables)).to eq(tables)
