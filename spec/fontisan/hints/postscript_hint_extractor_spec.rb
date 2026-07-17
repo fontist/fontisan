@@ -99,25 +99,24 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
 
   describe "private methods" do
     describe "#extract_private_dict_hints" do
+      HintDict = Struct.new(:blue_values, :std_hw, :std_vw, :other_blues,
+                            :family_blues, :family_other_blues, :blue_scale,
+                            :blue_shift, :blue_fuzz, :stem_snap_h, :stem_snap_v,
+                            :language_group) do
+        def force_bold? = nil
+      end
+
+      HintCff = Struct.new(:dict) do
+        def private_dict(_index = 0)
+          dict
+        end
+      end
+
       it "extracts hint parameters from Private dict" do
         font = Fontisan::SpecHelpers::FakeFont.new({})
-        allow(font).to receive(:has_table?).with("CFF ").and_return(true)
-
-        private_dict = double("private_dict")
-        # Set up respond_to? to return true for supported methods
-        allow(private_dict).to receive(:respond_to?) do |method|
-          %i[blue_values std_hw std_vw other_blues family_blues
-             family_other_blues blue_scale blue_shift blue_fuzz
-             stem_snap_h stem_snap_v force_bold language_group].include?(method)
-        end
-        # Set up actual methods
-        allow(private_dict).to receive_messages(blue_values: [-20, 0, 450,
-                                                              470], std_hw: 68, std_vw: 88, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold?: nil, language_group: nil)
-
-        cff_table = double("cff_table")
-        allow(cff_table).to receive(:private_dict).with(0).and_return(private_dict)
-
-        allow(font).to receive(:table).with("CFF ").and_return(cff_table)
+        font.tables_hash["CFF "] = HintCff.new(
+          HintDict.new(blue_values: [-20, 0, 450, 470], std_hw: 68, std_vw: 88)
+        )
 
         hints = extractor.send(:extract_private_dict_hints, font)
         expect(hints).to be_a(Hash)
