@@ -3,27 +3,20 @@
 require "spec_helper"
 
 RSpec.describe Fontisan::Collection::OffsetCalculator do
-  let(:font1_header) do
-    double("header", sfnt_version: 0x00010000)
-  end
-
-  let(:font2_header) do
-    double("header", sfnt_version: 0x00010000)
-  end
-
   let(:font1) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp],
-      header: font1_header,
+    Fontisan::SpecHelpers::FakeFont.new(
+      "head" => "data",
+      "hhea" => "data",
+      "maxp" => "data",
     )
   end
 
   let(:font2) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name],
-      header: font2_header,
+    Fontisan::SpecHelpers::FakeFont.new(
+      "head" => "data",
+      "hhea" => "data",
+      "maxp" => "data",
+      "name" => "data",
     )
   end
 
