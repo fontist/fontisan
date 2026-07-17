@@ -116,10 +116,10 @@ RSpec.describe Fontisan::Collection::Builder do
 
   describe "#build" do
     let(:builder) { described_class.new(fonts) }
-    let(:mock_analyzer) { instance_double(Fontisan::Collection::TableAnalyzer) }
-    let(:mock_deduplicator) { instance_double(Fontisan::Collection::TableDeduplicator) }
-    let(:mock_calculator) { instance_double(Fontisan::Collection::OffsetCalculator) }
-    let(:mock_writer) { instance_double(Fontisan::Collection::Writer) }
+    let(:mock_analyzer) { Struct.new(:placeholder).new(nil) }
+    let(:mock_deduplicator) { Struct.new(:placeholder).new(nil) }
+    let(:mock_calculator) { Struct.new(:placeholder).new(nil) }
+    let(:mock_writer) { Struct.new(:placeholder).new(nil) }
 
     let(:analysis_report) do
       {
@@ -231,7 +231,7 @@ RSpec.describe Fontisan::Collection::Builder do
 
   describe "#analyze" do
     let(:builder) { described_class.new(fonts) }
-    let(:mock_analyzer) { instance_double(Fontisan::Collection::TableAnalyzer) }
+    let(:mock_analyzer) { Struct.new(:placeholder).new(nil) }
     let(:analysis_report) { { total_fonts: 2, space_savings: 100 } }
 
     before do
