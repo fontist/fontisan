@@ -5,14 +5,14 @@ require "benchmark"
 require "fontisan/variation/parallel_generator"
 
 RSpec.describe Fontisan::Variation::ParallelGenerator do
-  let(:font) { instance_double(Fontisan::TrueTypeFont) }
-  let(:fvar) { instance_double(Fontisan::Tables::Fvar, axes: axes) }
+  let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
+  let(:fvar) { Struct.new(:axes).new(axes) }
   let(:axes) do
     [
-      double("VariationAxisRecord", axis_tag: "wght",
-                                    min_value: 100.0, max_value: 900.0, default_value: 400.0),
-      double("VariationAxisRecord", axis_tag: "wdth", min_value: 75.0,
-                                    max_value: 125.0, default_value: 100.0),
+      Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght",
+                                          min_value: 100.0, max_value: 900.0, default_value: 400.0),
+      Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth", min_value: 75.0,
+                                          max_value: 125.0, default_value: 100.0),
     ]
   end
 
