@@ -64,11 +64,11 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     context "with same axes" do
       it "passes validation" do
         axes = [
-          double(axis_tag: "wght"),
-          double(axis_tag: "wdth"),
+          Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"),
+          Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth"),
         ]
-        font1 = create_variable_font_mock_with_fvar(double("fvar", axes: axes))
-        font2 = create_variable_font_mock_with_fvar(double("fvar", axes: axes))
+        font1 = create_variable_font_mock_with_fvar(Struct.new(:axes).new(axes))
+        font2 = create_variable_font_mock_with_fvar(Struct.new(:axes).new(axes))
 
         builder = described_class.new([font1, font2])
         expect { builder.validate_variation_compatibility! }.not_to raise_error
@@ -78,10 +78,10 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     context "with different axes" do
       it "raises error" do
         font1 = create_variable_font_mock_with_fvar(
-          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "wdth")]),
+          Struct.new(:axes).new([Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"), Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth")]),
         )
         font2 = create_variable_font_mock_with_fvar(
-          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "slnt")]),
+          Struct.new(:axes).new([Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"), Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "slnt")]),
         )
 
         builder = described_class.new([font1, font2])
@@ -95,10 +95,10 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     context "with different number of axes" do
       it "raises error" do
         font1 = create_variable_font_mock_with_fvar(
-          double("fvar", axes: [double(axis_tag: "wght")]),
+          Struct.new(:axes).new([Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght")]),
         )
         font2 = create_variable_font_mock_with_fvar(
-          double("fvar", axes: [double(axis_tag: "wght"), double(axis_tag: "wdth")]),
+          Struct.new(:axes).new([Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"), Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth")]),
         )
 
         builder = described_class.new([font1, font2])
@@ -136,14 +136,14 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
 
   # Helper methods
   def create_variable_ttf_mock
-    fvar_table = double("fvar", axes: [])
+    fvar_table = Struct.new(:axes).new([])
     font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "glyf" => "" })
     allow(font).to receive(:table).with("fvar").and_return(fvar_table)
     font
   end
 
   def create_variable_otf_mock
-    fvar_table = double("fvar", axes: [])
+    fvar_table = Struct.new(:axes).new([])
     font = Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "CFF2" => "" })
     allow(font).to receive(:table).with("fvar").and_return(fvar_table)
     font
@@ -156,8 +156,8 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
   end
 
   def create_variable_ttf_mock_complete
-    axes = [double(axis_tag: "wght"), double(axis_tag: "wdth")]
-    fvar = double(axes: axes)
+    axes = [Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"), Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth")]
+    fvar = Struct.new(:axes).new(axes)
 
     Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "glyf" => "", "head" => "", "hhea" => "", "maxp" => "" }).tap { |f| f.sfnt_version_value = 0x00010000 }.tap do |font|
       allow(font).to receive(:table).with("fvar").and_return(fvar)

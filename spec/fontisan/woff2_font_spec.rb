@@ -247,7 +247,7 @@ RSpec.describe Fontisan::Woff2Font do
       woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
       woff2.header.num_tables = 5
-      woff2.table_entries = [double(tag: "head")]
+      woff2.table_entries = [Struct.new(:tag).new("head")]
 
       expect(woff2.valid?).to be false
     end
@@ -257,7 +257,7 @@ RSpec.describe Fontisan::Woff2Font do
       woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
       woff2.header.num_tables = 1
-      entry = double(tag: "name")
+      entry = Struct.new(:tag).new("name")
       woff2.table_entries = [entry]
 
       expect(woff2.valid?).to be false
@@ -268,7 +268,7 @@ RSpec.describe Fontisan::Woff2Font do
       woff2.header = Fontisan::Woff2::Woff2Header.new
       woff2.header.signature = Fontisan::Woff2::Woff2Header::SIGNATURE
       woff2.header.num_tables = 1
-      entry = double(tag: "head")
+      entry = Struct.new(:tag).new("head")
       woff2.table_entries = [entry]
 
       expect(woff2.valid?).to be true
@@ -317,7 +317,7 @@ RSpec.describe Fontisan::Woff2Font do
         woff2.header.meta_offset = 100
         woff2.header.meta_length = 10
         woff2.header.meta_orig_length = 50
-        woff2.io_source = double(path: "test.woff2")
+        woff2.io_source = Struct.new(:path).new("test.woff2")
 
         allow(File).to receive(:open).and_raise(StandardError,
                                                 "Decompression error")
