@@ -4,43 +4,31 @@ require "spec_helper"
 
 RSpec.describe Fontisan::Collection::TableAnalyzer do
   let(:font1) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name cmap],
-      table_data: {
-        "head" => "head_data_1",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_1",
-        "name" => "shared_name_data",
-        "cmap" => "cmap_data_1",
-      },
+    Fontisan::SpecHelpers::FakeFont.new(
+      "head" => "head_data_1",
+      "hhea" => "shared_hhea_data",
+      "maxp" => "maxp_data_1",
+      "name" => "shared_name_data",
+      "cmap" => "cmap_data_1",
     )
   end
 
   let(:font2) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name cmap],
-      table_data: {
-        "head" => "head_data_2",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_2",
-        "name" => "shared_name_data",
-        "cmap" => "cmap_data_2",
-      },
+    Fontisan::SpecHelpers::FakeFont.new(
+      "head" => "head_data_2",
+      "hhea" => "shared_hhea_data",
+      "maxp" => "maxp_data_2",
+      "name" => "shared_name_data",
+      "cmap" => "cmap_data_2",
     )
   end
 
   let(:font3) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name],
-      table_data: {
-        "head" => "head_data_3",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_3",
-        "name" => "shared_name_data",
-      },
+    Fontisan::SpecHelpers::FakeFont.new(
+      "head" => "head_data_3",
+      "hhea" => "shared_hhea_data",
+      "maxp" => "maxp_data_3",
+      "name" => "shared_name_data",
     )
   end
 

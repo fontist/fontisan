@@ -159,18 +159,12 @@ RSpec.describe Fontisan::Collection::Builder, "variable fonts" do
     axes = [double(axis_tag: "wght"), double(axis_tag: "wdth")]
     fvar = double(axes: axes)
 
-    Fontisan::SpecHelpers::FakeFont.new(
-      { "fvar" => "", "glyf" => "", "head" => "", "hhea" => "", "maxp" => "" },
-      sfnt_version: 0x00010000,
-    ).tap do |font|
+    Fontisan::SpecHelpers::FakeFont.new({ "fvar" => "", "glyf" => "", "head" => "", "hhea" => "", "maxp" => "" }).tap { |f| f.sfnt_version_value = 0x00010000 }.tap do |font|
       allow(font).to receive(:table).with("fvar").and_return(fvar)
     end
   end
 
   def create_static_font_mock
-    Fontisan::SpecHelpers::FakeFont.new(
-      { "head" => "", "hhea" => "", "maxp" => "" },
-      sfnt_version: 0x00010000,
-    )
+    Fontisan::SpecHelpers::FakeFont.new({ "head" => "", "hhea" => "", "maxp" => "" }).tap { |f| f.sfnt_version_value = 0x00010000 }
   end
 end
