@@ -2,13 +2,29 @@
 
 require "spec_helper"
 
+module CffGlyphSpecFakes
+  FakeCharstring = Struct.new(:path, :width, :bounding_box, :to_commands,
+                              keyword_init: true)
+
+  class FakeCharset
+    def initialize(glyph_name:)
+      @glyph_name = glyph_name
+    end
+
+    def glyph_name(_id = nil)
+      @glyph_name
+    end
+  end
+
+  FakeEncoding = Struct.new(:placeholder)
+end
+
 RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
   # Create mock objects for testing
   let(:glyph_id) { 42 }
 
   let(:mock_charstring) do
-    double(
-      "CharString",
+    CffGlyphSpecFakes::FakeCharstring.new(
       path: [
         { type: :move_to, x: 100.0, y: 200.0 },
         { type: :line_to, x: 300.0, y: 200.0 },
@@ -27,14 +43,11 @@ RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
   end
 
   let(:mock_charset) do
-    double(
-      "Charset",
-      glyph_name: "A",
-    )
+    CffGlyphSpecFakes::FakeCharset.new(glyph_name: "A")
   end
 
   let(:mock_encoding) do
-    double("Encoding")
+    CffGlyphSpecFakes::FakeEncoding.new
   end
 
   let(:cff_glyph) do
@@ -86,7 +99,7 @@ RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
 
     context "with empty path" do
       let(:empty_charstring) do
-        double("CharString", path: [])
+        CffGlyphSpecFakes::FakeCharstring.new(path: [])
       end
 
       let(:empty_glyph) do
@@ -158,7 +171,7 @@ RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
 
     context "when charset returns nil name" do
       let(:nil_name_charset) do
-        double("Charset", glyph_name: nil)
+        CffGlyphSpecFakes::FakeCharset.new(glyph_name: nil)
       end
 
       let(:nil_name_glyph) do
@@ -265,8 +278,8 @@ RSpec.describe Fontisan::Tables::Cff::CFFGlyph do
 
   describe "curve support" do
     let(:curve_charstring) do
-      double(
-        "CharString",
+      CffGlyphSpecFakes::FakeCharstring.new(
+
         path: [
           { type: :move_to, x: 0.0, y: 0.0 },
           {
