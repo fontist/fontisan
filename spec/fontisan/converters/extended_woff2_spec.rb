@@ -198,7 +198,7 @@ RSpec.describe "WOFF2 Extended Testing", :woff2 do
 
     it "validates required tables presence" do
       # Create a mock font missing required tables
-      incomplete_font = double("Font")
+      incomplete_font = Fontisan::SpecHelpers::FakeFont.new({})
       allow(incomplete_font).to receive(:table).with("head").and_return(nil)
       allow(incomplete_font).to receive(:table).with("hhea").and_return(double)
       allow(incomplete_font).to receive(:table).with("maxp").and_return(double)
