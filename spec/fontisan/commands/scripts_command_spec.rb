@@ -70,9 +70,7 @@ RSpec.describe Fontisan::Commands::ScriptsCommand do
     context "font without GSUB/GPOS" do
       it "returns empty scripts list" do
         # Mock a font that has no GSUB or GPOS tables
-        mock_font = double("font")
-        allow(mock_font).to receive(:has_table?).with("GSUB").and_return(false)
-        allow(mock_font).to receive(:has_table?).with("GPOS").and_return(false)
+        mock_font = Fontisan::SpecHelpers::FakeFont.new({})
 
         # Mock the font loading process
         allow(Fontisan::FontLoader).to receive(:load).and_return(mock_font)

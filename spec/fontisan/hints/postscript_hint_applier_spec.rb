@@ -96,7 +96,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
     end
 
     context "with TrueType hint set (wrong format)" do
-      let(:cff_table) { double("CFF Table") }
+      let(:cff_table) { Struct.new(:placeholder).new("cff") }
       let(:hint_set) do
         set = Fontisan::Models::HintSet.new(format: :truetype)
         set.font_program = "\x00\x01"
