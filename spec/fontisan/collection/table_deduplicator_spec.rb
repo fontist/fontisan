@@ -6,26 +6,26 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
   let(:fonts) { [font1, font2, font3] }
   let(:font3) do
     Fontisan::SpecHelpers::FakeFont.new({
-        "head" => "head_data_3",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_3",
-      })
+                                          "head" => "head_data_3",
+                                          "hhea" => "shared_hhea_data",
+                                          "maxp" => "maxp_data_3",
+                                        })
   end
   let(:font2) do
     Fontisan::SpecHelpers::FakeFont.new({
-        "head" => "head_data_2",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_2",
-        "name" => "shared_name_data",
-      })
+                                          "head" => "head_data_2",
+                                          "hhea" => "shared_hhea_data",
+                                          "maxp" => "maxp_data_2",
+                                          "name" => "shared_name_data",
+                                        })
   end
   let(:font1) do
     Fontisan::SpecHelpers::FakeFont.new({
-        "head" => "head_data_1",
-        "hhea" => "shared_hhea_data",
-        "maxp" => "maxp_data_1",
-        "name" => "shared_name_data",
-      })
+                                          "head" => "head_data_1",
+                                          "hhea" => "shared_hhea_data",
+                                          "maxp" => "maxp_data_1",
+                                          "name" => "shared_name_data",
+                                        })
   end
 
   describe "variable font table deduplication" do
@@ -384,13 +384,13 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
     let(:identical_fonts) do
       [
         Fontisan::SpecHelpers::FakeFont.new({
-            "head" => "same_data",
-            "name" => "same_name",
-          }),
+                                              "head" => "same_data",
+                                              "name" => "same_name",
+                                            }),
         Fontisan::SpecHelpers::FakeFont.new({
-            "head" => "same_data",
-            "name" => "same_name",
-          }),
+                                              "head" => "same_data",
+                                              "name" => "same_name",
+                                            }),
       ]
     end
 
@@ -407,13 +407,13 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
     let(:unique_fonts) do
       [
         Fontisan::SpecHelpers::FakeFont.new({
-            "head" => "unique_1",
-            "name" => "name_1",
-          }),
+                                              "head" => "unique_1",
+                                              "name" => "name_1",
+                                            }),
         Fontisan::SpecHelpers::FakeFont.new({
-            "head" => "unique_2",
-            "name" => "name_2",
-          }),
+                                              "head" => "unique_2",
+                                              "name" => "name_2",
+                                            }),
       ]
     end
 
