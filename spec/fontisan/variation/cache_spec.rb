@@ -64,8 +64,8 @@ RSpec.describe Fontisan::Variation::Cache do
   describe "#fetch_scalars" do
     let(:axes) do
       [
-        double("Axis", axis_tag: "wght"),
-        double("Axis", axis_tag: "wdth"),
+        Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght"),
+        Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wdth"),
       ]
     end
 
