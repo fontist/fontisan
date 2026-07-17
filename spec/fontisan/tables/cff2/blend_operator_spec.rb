@@ -117,11 +117,8 @@ RSpec.describe Fontisan::Tables::Cff2::BlendOperator do
   describe "#normalize_coordinate" do
     let(:blend) { described_class.new(num_axes: 1) }
     let(:axis) do
-      double(
-        "VariationAxisRecord",
-        min_value: 400.0,
-        default_value: 600.0,
-        max_value: 900.0,
+      Fontisan::SpecHelpers::FakeAxis.new(
+        min_value: 400.0, default_value: 600.0, max_value: 900.0,
       )
     end
 
