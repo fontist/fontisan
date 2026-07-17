@@ -11,10 +11,12 @@ module Fontisan
 
       attr_reader :tables_hash, :sfnt_version_value
 
-      def initialize(tables = {}, sfnt_version: 0x00010000)
+      def initialize(tables = {})
         @tables_hash = tables
-        @sfnt_version_value = sfnt_version
+        @sfnt_version_value = 0x00010000
       end
+
+      attr_writer :sfnt_version_value
 
       def table(tag)
         tables_hash[tag]

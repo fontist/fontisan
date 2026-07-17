@@ -5,45 +5,27 @@ require "spec_helper"
 RSpec.describe Fontisan::Collection::TableDeduplicator do
   let(:fonts) { [font1, font2, font3] }
   let(:font3) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp],
-      table_data: {
+    Fontisan::SpecHelpers::FakeFont.new({
         "head" => "head_data_3",
         "hhea" => "shared_hhea_data",
         "maxp" => "maxp_data_3",
-      },
-    ).tap do |font|
-      allow(font).to receive(:has_table?).with("fvar").and_return(false)
-    end
+      })
   end
   let(:font2) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name],
-      table_data: {
+    Fontisan::SpecHelpers::FakeFont.new({
         "head" => "head_data_2",
         "hhea" => "shared_hhea_data",
         "maxp" => "maxp_data_2",
         "name" => "shared_name_data",
-      },
-    ).tap do |font|
-      allow(font).to receive(:has_table?).with("fvar").and_return(false)
-    end
+      })
   end
   let(:font1) do
-    double(
-      "truetype_font",
-      table_names: %w[head hhea maxp name],
-      table_data: {
+    Fontisan::SpecHelpers::FakeFont.new({
         "head" => "head_data_1",
         "hhea" => "shared_hhea_data",
         "maxp" => "maxp_data_1",
         "name" => "shared_name_data",
-      },
-    ).tap do |font|
-      allow(font).to receive(:has_table?).with("fvar").and_return(false)
-    end
+      })
   end
 
   describe "variable font table deduplication" do
@@ -401,22 +383,14 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
   context "with identical tables across all fonts" do
     let(:identical_fonts) do
       [
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
+        Fontisan::SpecHelpers::FakeFont.new({
             "head" => "same_data",
             "name" => "same_name",
-          },
-        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
+          }),
+        Fontisan::SpecHelpers::FakeFont.new({
             "head" => "same_data",
             "name" => "same_name",
-          },
-        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
+          }),
       ]
     end
 
@@ -432,22 +406,14 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
   context "with no shared tables" do
     let(:unique_fonts) do
       [
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
+        Fontisan::SpecHelpers::FakeFont.new({
             "head" => "unique_1",
             "name" => "name_1",
-          },
-        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
+          }),
+        Fontisan::SpecHelpers::FakeFont.new({
             "head" => "unique_2",
             "name" => "name_2",
-          },
-        ).tap { |f| allow(f).to receive(:has_table?).with("fvar").and_return(false) },
+          }),
       ]
     end
 
@@ -463,7 +429,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
 
   # Helper methods
   def create_font_with_table(tag, data)
-    font = instance_double(Fontisan::TrueTypeFont)
+    font = Fontisan::SpecHelpers::FakeFont.new({})
     allow(font).to receive_messages(table_names: [tag],
                                     table_data: { tag => data }, has_table?: false)
     allow(font).to receive(:has_table?).with(tag).and_return(true)
@@ -472,7 +438,7 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
   end
 
   def create_variable_font_with_tables(tables)
-    font = instance_double(Fontisan::TrueTypeFont)
+    font = Fontisan::SpecHelpers::FakeFont.new({})
 
     # Default to false for all tables
     allow(font).to receive_messages(table_names: tables.keys,
