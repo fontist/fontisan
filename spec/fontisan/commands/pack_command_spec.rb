@@ -60,7 +60,7 @@ RSpec.describe Fontisan::Commands::PackCommand do
 
   describe "#run" do
     let(:command) { described_class.new(font_paths, output: output_path) }
-    let(:mock_builder) { instance_double(Fontisan::Collection::Builder) }
+    let(:mock_builder) { Struct.new(:placeholder).new(nil) }
     let(:build_result) do
       {
         binary: "BINARY",
