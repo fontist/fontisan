@@ -4,7 +4,7 @@ require "spec_helper"
 require "fontisan/variation/converter"
 
 RSpec.describe Fontisan::Variation::Converter do
-  let(:font) { instance_double(Fontisan::TrueTypeFont) }
+  let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
   let(:axes) do
     [
       double(

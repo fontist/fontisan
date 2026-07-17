@@ -40,7 +40,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
 
     context "with a font without CFF table" do
       it "returns empty HintSet without errors" do
-        font = instance_double(Fontisan::OpenTypeFont)
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
         allow(font).to receive(:table).and_return(nil)
 
@@ -100,7 +100,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
   describe "private methods" do
     describe "#extract_private_dict_hints" do
       it "extracts hint parameters from Private dict" do
-        font = instance_double(Fontisan::OpenTypeFont)
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("CFF ").and_return(true)
 
         private_dict = double("private_dict")
@@ -127,7 +127,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
       end
 
       it "returns empty hash for font without CFF table" do
-        font = instance_double(Fontisan::OpenTypeFont)
+        font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
 
         hints = extractor.send(:extract_private_dict_hints, font)

@@ -169,22 +169,8 @@ RSpec.describe Fontisan::Collection::TableAnalyzer do
   context "with all unique tables" do
     let(:unique_fonts) do
       [
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
-            "head" => "head_1",
-            "name" => "name_1",
-          },
-        ),
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
-            "head" => "head_2",
-            "name" => "name_2",
-          },
-        ),
+        Fontisan::SpecHelpers::FakeFont.new("head" => "head_1", "name" => "name_1"),
+        Fontisan::SpecHelpers::FakeFont.new("head" => "head_2", "name" => "name_2"),
       ]
     end
 
@@ -200,22 +186,8 @@ RSpec.describe Fontisan::Collection::TableAnalyzer do
   context "with all shared tables" do
     let(:shared_fonts) do
       [
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
-            "head" => "shared_head",
-            "name" => "shared_name",
-          },
-        ),
-        double(
-          "truetype_font",
-          table_names: %w[head name],
-          table_data: {
-            "head" => "shared_head",
-            "name" => "shared_name",
-          },
-        ),
+        Fontisan::SpecHelpers::FakeFont.new("head" => "shared_head", "name" => "shared_name"),
+        Fontisan::SpecHelpers::FakeFont.new("head" => "shared_head", "name" => "shared_name"),
       ]
     end
 
