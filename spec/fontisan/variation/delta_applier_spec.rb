@@ -8,7 +8,7 @@ require "fontisan/variation/region_matcher"
 RSpec.describe Fontisan::Variation::DeltaApplier do
   subject(:applier) { described_class.new(font, interpolator, region_matcher) }
 
-  let(:font) { double("Font") }
+  let(:font) { Fontisan::SpecHelpers::FakeFont.new({ "gvar" => gvar, "glyf" => glyf }) }
   let(:axes) do
     [
       Fontisan::SpecHelpers::FakeAxis.new(axis_tag: "wght", min_value: 400.0, default_value: 400.0, max_value: 900.0),
@@ -17,15 +17,11 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
   end
   let(:interpolator) { Fontisan::Variation::Interpolator.new(axes) }
   let(:region_matcher) { Fontisan::Variation::RegionMatcher.new(axes) }
-  let(:gvar) { double("Gvar") }
-  let(:glyf) { double("Glyf") }
+  let(:gvar) { Struct.new(:placeholder).new("gvar") }
+  let(:glyf) { Struct.new(:placeholder).new("glyf") }
 
   before do
-    allow(font).to receive(:table).with("gvar").and_return(gvar)
-    allow(font).to receive(:table).with("glyf").and_return(glyf)
-    # TableAccessor calls has_table? for caching
-    allow(font).to receive(:has_table?).with("gvar").and_return(true)
-    allow(font).to receive(:has_table?).with("glyf").and_return(true)
+    # FakeFont already has gvar and glyf in tables_hash from initialization
   end
 
   describe "#initialize" do
@@ -40,15 +36,13 @@ RSpec.describe Fontisan::Variation::DeltaApplier do
   describe "#apply_deltas" do
     context "when gvar or glyf table missing" do
       it "returns nil when gvar missing" do
-        allow(font).to receive(:table).with("gvar").and_return(nil)
-        allow(font).to receive(:has_table?).with("gvar").and_return(false)
+        font.tables_hash.delete("gvar")
         result = applier.apply_deltas(0, { "wght" => 700.0 })
         expect(result).to be_nil
       end
 
       it "returns nil when glyf missing" do
-        allow(font).to receive(:table).with("glyf").and_return(nil)
-        allow(font).to receive(:has_table?).with("glyf").and_return(false)
+        font.tables_hash.delete("glyf")
         result = applier.apply_deltas(0, { "wght" => 700.0 })
         expect(result).to be_nil
       end
