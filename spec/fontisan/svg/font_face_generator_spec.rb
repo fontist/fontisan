@@ -92,12 +92,7 @@ RSpec.describe Fontisan::Svg::FontFaceGenerator do
   end
 
   describe "attribute extraction with missing tables" do
-    let(:minimal_font) do
-      double("font").tap do |f|
-        allow(f).to receive(:respond_to?).with(:table).and_return(true)
-        allow(f).to receive(:table).and_return(nil)
-      end
-    end
+    let(:minimal_font) { Fontisan::SpecHelpers::FakeFont.new({}) }
 
     it "provides default values when tables are missing" do
       generator = described_class.new(minimal_font)

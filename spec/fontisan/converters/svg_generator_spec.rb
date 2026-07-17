@@ -52,8 +52,7 @@ RSpec.describe Fontisan::Converters::SvgGenerator do
     end
 
     it "raises error for missing required tables" do
-      minimal_font = double("font")
-      allow(minimal_font).to receive(:table).and_return(nil)
+      minimal_font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
         generator.validate(minimal_font, :svg)
