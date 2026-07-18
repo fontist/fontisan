@@ -45,5 +45,8 @@ Each file is `NN-short-name.md` where `NN` is the priority order.
 
 ### P3 — Architecture polish (post-#137 audit)
 - [x] ~~[27 — Table class registry (OCP: eliminate case/when tag dispatch)](27-table-class-registry.md)~~ ✓ Done (#138)
-- [ ] [28 — Spec doubles cleanup](28-spec-doubles-cleanup.md)
-- [x] ~~[29 — Strategy registries for per-tag dispatch](29-strategy-registries.md)~~ ✓ Done
+- [x] ~~[28 — Spec doubles cleanup](28-spec-doubles-cleanup.md)~~ ✓ Done (#140-#145)
+- [x] ~~[29 — Strategy registries for per-tag dispatch](29-strategy-registries.md)~~ ✓ Done (#139)
+
+### P3 — Encapsulation completion (post-#146 audit)
+- [ ] [30 — Eliminate .send(:private_method) calls in specs](30-eliminate-send-in-specs.md)
