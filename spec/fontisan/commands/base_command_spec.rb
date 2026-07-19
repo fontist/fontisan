@@ -40,18 +40,18 @@ RSpec.describe Fontisan::Commands::BaseCommand do
     context "with a valid TTF file" do
       it "loads the font successfully" do
         command = described_class.new(temp_font_file.path)
-        expect(command.send(:font)).to be_a(Fontisan::TrueTypeFont)
+        expect(command.font).to be_a(Fontisan::TrueTypeFont)
       end
 
       it "stores the font path" do
         command = described_class.new(temp_font_file.path)
-        expect(command.send(:font_path)).to eq(temp_font_file.path)
+        expect(command.font_path).to eq(temp_font_file.path)
       end
 
       it "stores the options" do
         options = { verbose: true }
         command = described_class.new(temp_font_file.path, options)
-        expect(command.send(:options)).to eq(options)
+        expect(command.options).to eq(options)
       end
     end
 
@@ -60,7 +60,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
       it "detects TTC files and uses default font_index" do
         command = described_class.new(ttc_file)
-        font = command.send(:font)
+        font = command.font
 
         expect(font).not_to be_nil
         expect([Fontisan::TrueTypeFont,
@@ -69,7 +69,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
       it "uses custom font_index from options" do
         command = described_class.new(ttc_file, { font_index: 1 })
-        font = command.send(:font)
+        font = command.font
 
         expect(font).not_to be_nil
         expect([Fontisan::TrueTypeFont,
@@ -85,7 +85,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
       it "detects OTC files and loads OpenType fonts" do
         command = described_class.new(otc_file)
-        font = command.send(:font)
+        font = command.font
 
         expect(font).not_to be_nil
         expect(font).to be_a(Fontisan::OpenTypeFont)
@@ -93,7 +93,7 @@ RSpec.describe Fontisan::Commands::BaseCommand do
 
       it "uses custom font_index for OTC" do
         command = described_class.new(otc_file, { font_index: 0 })
-        font = command.send(:font)
+        font = command.font
 
         expect(font).not_to be_nil
         expect(font).to be_a(Fontisan::OpenTypeFont)
@@ -137,15 +137,15 @@ RSpec.describe Fontisan::Commands::BaseCommand do
     let(:command) { described_class.new(temp_font_file.path) }
 
     it "provides access to font_path" do
-      expect(command.send(:font_path)).to eq(temp_font_file.path)
+      expect(command.font_path).to eq(temp_font_file.path)
     end
 
     it "provides access to font" do
-      expect(command.send(:font)).to be_a(Fontisan::TrueTypeFont)
+      expect(command.font).to be_a(Fontisan::TrueTypeFont)
     end
 
     it "provides access to options" do
-      expect(command.send(:options)).to be_a(Hash)
+      expect(command.options).to be_a(Hash)
     end
   end
 end

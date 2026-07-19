@@ -92,7 +92,7 @@ RSpec.describe Fontisan::Parsers::DfontParser do
   describe ".parse_header" do
     it "parses resource fork header correctly" do
       File.open(dfont_path, "rb") do |io|
-        header = described_class.send(:parse_header, io)
+        header = described_class.parse_header(io)
 
         expect(header).to be_a(Fontisan::Parsers::DfontParser::ResourceHeader)
         expect(header.resource_data_offset).to be > 0
@@ -106,8 +106,8 @@ RSpec.describe Fontisan::Parsers::DfontParser do
   describe ".find_sfnt_resources" do
     it "finds sfnt resources in resource map" do
       File.open(dfont_path, "rb") do |io|
-        header = described_class.send(:parse_header, io)
-        resources = described_class.send(:find_sfnt_resources, io, header)
+        header = described_class.parse_header(io)
+        resources = described_class.find_sfnt_resources(io, header)
 
         expect(resources).to be_an(Array)
         expect(resources).not_to be_empty
@@ -124,12 +124,12 @@ RSpec.describe Fontisan::Parsers::DfontParser do
   describe ".extract_resource_data" do
     it "extracts resource data at specific offset" do
       File.open(dfont_path, "rb") do |io|
-        header = described_class.send(:parse_header, io)
-        resources = described_class.send(:find_sfnt_resources, io, header)
+        header = described_class.parse_header(io)
+        resources = described_class.find_sfnt_resources(io, header)
 
         resource_info = resources.first
-        data = described_class.send(:extract_resource_data, io, header,
-                                    resource_info)
+        data = described_class.extract_resource_data(io, header,
+                                                     resource_info)
 
         expect(data).to be_a(String)
         expect(data.length).to be > 0

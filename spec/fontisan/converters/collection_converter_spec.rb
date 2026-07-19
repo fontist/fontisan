@@ -10,7 +10,7 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
       conv_options = Fontisan::ConversionOptions.new(from: :ttc, to: :otc)
       options = { options: conv_options }
 
-      result = converter.send(:extract_conversion_options, options)
+      result = converter.extract_conversion_options(options)
 
       expect(result).to eq(conv_options)
     end
@@ -18,7 +18,7 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
     it "returns nil when no ConversionOptions provided" do
       options = { target_format: :otf }
 
-      result = converter.send(:extract_conversion_options, options)
+      result = converter.extract_conversion_options(options)
 
       expect(result).to be_nil
     end
@@ -26,7 +26,7 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
     it "returns ConversionOptions when passed directly" do
       conv_options = Fontisan::ConversionOptions.new(from: :ttc, to: :otc)
 
-      result = converter.send(:extract_conversion_options, conv_options)
+      result = converter.extract_conversion_options(conv_options)
 
       expect(result).to eq(conv_options)
     end

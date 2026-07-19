@@ -42,10 +42,9 @@ RSpec.describe "Hint Round-Trip Conversion" do
       # This is a known limitation of TrueType format
 
       # TT → PS conversion shows values are preserved in CVT even if positions change
-      recovered_ps = converter.send(:convert_tt_programs_to_ps_dict,
-                                    tt_programs[:fpgm],
-                                    tt_programs[:prep],
-                                    tt_programs[:cvt])
+      recovered_ps = converter.convert_tt_programs_to_ps_dict(tt_programs[:fpgm],
+                                                              tt_programs[:prep],
+                                                              tt_programs[:cvt])
 
       # Verify that recovered values are from the CVT (converter uses abs())
       if recovered_ps[:std_hw]
@@ -60,10 +59,9 @@ RSpec.describe "Hint Round-Trip Conversion" do
       original_ps = { std_hw: 100 }
 
       tt_programs = generator.generate(original_ps)
-      recovered_ps = converter.send(:convert_tt_programs_to_ps_dict,
-                                    tt_programs[:fpgm],
-                                    tt_programs[:prep],
-                                    tt_programs[:cvt])
+      recovered_ps = converter.convert_tt_programs_to_ps_dict(tt_programs[:fpgm],
+                                                              tt_programs[:prep],
+                                                              tt_programs[:cvt])
 
       # With minimal params, no sorting conflicts
       expect(recovered_ps[:std_hw]).to eq(100)
@@ -85,10 +83,9 @@ RSpec.describe "Hint Round-Trip Conversion" do
 
       # After sorting, first two CVT values may not be std_hw/std_vw
       # This is expected behavior due to CVT optimization
-      recovered_ps = converter.send(:convert_tt_programs_to_ps_dict,
-                                    tt_programs[:fpgm],
-                                    tt_programs[:prep],
-                                    tt_programs[:cvt])
+      recovered_ps = converter.convert_tt_programs_to_ps_dict(tt_programs[:fpgm],
+                                                              tt_programs[:prep],
+                                                              tt_programs[:cvt])
 
       # Verify recovered values are valid CVT entries (converter uses abs())
       if recovered_ps[:std_hw]
@@ -108,8 +105,8 @@ RSpec.describe "Hint Round-Trip Conversion" do
       original_cvt = [80, 90, 100]
 
       # TT → PS conversion (use full converter)
-      ps_params = converter.send(:convert_tt_programs_to_ps_dict, "",
-                                 original_prep, original_cvt)
+      ps_params = converter.convert_tt_programs_to_ps_dict("",
+                                                           original_prep, original_cvt)
 
       # PS → TT conversion
       tt_programs = generator.generate(ps_params)
@@ -123,7 +120,7 @@ RSpec.describe "Hint Round-Trip Conversion" do
     end
 
     it "handles empty programs" do
-      ps_params = converter.send(:convert_tt_programs_to_ps_dict, "", "", [])
+      ps_params = converter.convert_tt_programs_to_ps_dict("", "", [])
       tt_programs = generator.generate(ps_params)
 
       # Should provide defaults
@@ -271,7 +268,7 @@ RSpec.describe "Hint Round-Trip Conversion" do
       }
 
       # Use converter (which now uses generator internally)
-      tt_programs = converter.send(:convert_ps_dict_to_tt_programs, ps_dict)
+      tt_programs = converter.convert_ps_dict_to_tt_programs(ps_dict)
 
       expect(tt_programs[:prep]).not_to be_empty
       expect(tt_programs[:cvt]).to include(80, 90)
@@ -282,7 +279,7 @@ RSpec.describe "Hint Round-Trip Conversion" do
       cvt = [80, 90]
 
       # Use converter (which now uses analyzer internally)
-      ps_dict = converter.send(:convert_tt_programs_to_ps_dict, "", prep, cvt)
+      ps_dict = converter.convert_tt_programs_to_ps_dict("", prep, cvt)
 
       expect(ps_dict[:std_hw]).to eq(80)
       expect(ps_dict[:std_vw]).to eq(90)

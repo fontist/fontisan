@@ -193,26 +193,26 @@ RSpec.describe Fontisan::Pipeline::TransformationPipeline do
         output_font,
         target_format: :woff2,
       )
-      expect(pipeline.send(:target_format)).to eq(:woff2)
+      expect(pipeline.target_format).to eq(:woff2)
     end
 
     it "detects format from .ttf extension" do
       output = File.join(output_dir, "output.ttf")
       pipeline = described_class.new(input_font, output)
-      expect(pipeline.send(:target_format)).to eq(:ttf)
+      expect(pipeline.target_format).to eq(:ttf)
     end
 
     it "detects format from .otf extension" do
       output = File.join(output_dir, "output.otf")
       pipeline = described_class.new(input_font, output)
-      expect(pipeline.send(:target_format)).to eq(:otf)
+      expect(pipeline.target_format).to eq(:otf)
     end
 
     it "raises error for unknown extension" do
       output = File.join(output_dir, "output.unknown")
       pipeline = described_class.new(input_font, output)
 
-      expect { pipeline.send(:target_format) }.to raise_error(
+      expect { pipeline.target_format }.to raise_error(
         ArgumentError,
         /Cannot determine target format/,
       )

@@ -170,7 +170,7 @@ module Fontisan
         !parser.seac_components.nil?
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Encode number in CFF format
       #

@@ -283,7 +283,7 @@ RSpec.describe Fontisan::Hints::HintConverter do
     describe "#convert_tt_programs_to_ps_dict" do
       it "extracts stem widths from CVT" do
         cvt = [68, 88, 100]
-        result = converter.send(:convert_tt_programs_to_ps_dict, "", "", cvt)
+        result = converter.convert_tt_programs_to_ps_dict("", "", cvt)
 
         expect(result).to be_a(Hash)
         expect(result[:std_hw]).to eq(68)
@@ -291,13 +291,13 @@ RSpec.describe Fontisan::Hints::HintConverter do
       end
 
       it "generates default BlueValues" do
-        result = converter.send(:convert_tt_programs_to_ps_dict, "", "", [])
+        result = converter.convert_tt_programs_to_ps_dict("", "", [])
 
         expect(result[:blue_values]).to eq([-20, 0, 706, 726])
       end
 
       it "handles nil CVT" do
-        result = converter.send(:convert_tt_programs_to_ps_dict, "", "", nil)
+        result = converter.convert_tt_programs_to_ps_dict("", "", nil)
 
         expect(result).to be_a(Hash)
         expect(result[:blue_values]).not_to be_nil
@@ -308,20 +308,20 @@ RSpec.describe Fontisan::Hints::HintConverter do
     describe "#convert_ps_dict_to_tt_programs" do
       it "generates CVT from stem widths" do
         ps_dict = { std_hw: 68, std_vw: 88 }
-        result = converter.send(:convert_ps_dict_to_tt_programs, ps_dict)
+        result = converter.convert_ps_dict_to_tt_programs(ps_dict)
 
         expect(result[:cvt]).to include(68, 88)
       end
 
       it "includes stem snap values in CVT" do
         ps_dict = { std_hw: 68, stem_snap_h: [60, 70, 80] }
-        result = converter.send(:convert_ps_dict_to_tt_programs, ps_dict)
+        result = converter.convert_ps_dict_to_tt_programs(ps_dict)
 
         expect(result[:cvt]).to include(68, 60, 70, 80)
       end
 
       it "generates empty programs" do
-        result = converter.send(:convert_ps_dict_to_tt_programs, {})
+        result = converter.convert_ps_dict_to_tt_programs({})
 
         expect(result[:fpgm]).to eq("")
         expect(result[:prep]).to eq("")
@@ -329,7 +329,7 @@ RSpec.describe Fontisan::Hints::HintConverter do
 
       it "removes duplicates from CVT" do
         ps_dict = { std_hw: 68, std_vw: 68, stem_snap_h: [68] }
-        result = converter.send(:convert_ps_dict_to_tt_programs, ps_dict)
+        result = converter.convert_ps_dict_to_tt_programs(ps_dict)
 
         expect(result[:cvt].count(68)).to eq(1)
       end

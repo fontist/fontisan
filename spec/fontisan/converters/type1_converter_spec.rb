@@ -10,7 +10,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       conv_options = Fontisan::ConversionOptions.new(from: :type1, to: :otf)
       options = { options: conv_options }
 
-      result = converter.send(:extract_conversion_options, options)
+      result = converter.extract_conversion_options(options)
 
       expect(result).to eq(conv_options)
     end
@@ -18,7 +18,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     it "returns nil when no ConversionOptions provided" do
       options = { target_format: :otf }
 
-      result = converter.send(:extract_conversion_options, options)
+      result = converter.extract_conversion_options(options)
 
       expect(result).to be_nil
     end
@@ -26,7 +26,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     it "returns ConversionOptions when passed directly" do
       conv_options = Fontisan::ConversionOptions.new(from: :type1, to: :otf)
 
-      result = converter.send(:extract_conversion_options, conv_options)
+      result = converter.extract_conversion_options(conv_options)
 
       expect(result).to eq(conv_options)
     end
@@ -59,7 +59,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       expect(converter).to receive(:generate_unicode_mappings).with(mock_font)
 
-      converter.send(:apply_opening_options, mock_font, conv_options)
+      converter.apply_opening_options(mock_font, conv_options)
     end
 
     it "applies decompose_composites option when set" do
@@ -71,7 +71,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       expect(converter).to receive(:decompose_seac_glyphs).with(mock_font)
 
-      converter.send(:apply_opening_options, mock_font, conv_options)
+      converter.apply_opening_options(mock_font, conv_options)
     end
 
     it "skips opening options when not set" do
@@ -83,14 +83,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
       # Just verify it runs without error
       expect do
-        converter.send(:apply_opening_options, mock_font, conv_options)
+        converter.apply_opening_options(mock_font, conv_options)
       end.not_to raise_error
     end
 
     it "skips opening options when conv_options is nil" do
       # Just verify it runs without error
       expect do
-        converter.send(:apply_opening_options, mock_font, nil)
+        converter.apply_opening_options(mock_font, nil)
       end.not_to raise_error
     end
   end
@@ -172,7 +172,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds hash from CFF Private dict" do
-      result = converter.send(:build_private_dict_hash, mock_private_dict)
+      result = converter.build_private_dict_hash(mock_private_dict)
 
       expect(result[:nominal_width]).to eq(0)
       expect(result[:default_width]).to eq(500)
@@ -188,7 +188,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "handles nil private dict" do
-      result = converter.send(:build_private_dict_hash, nil)
+      result = converter.build_private_dict_hash(nil)
 
       expect(result).to eq({})
     end
@@ -198,7 +198,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(dict).to receive_messages(nominal_width: nil, default_width: nil,
                                       blue_values: nil, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
-      result = converter.send(:build_private_dict_hash, dict)
+      result = converter.build_private_dict_hash(dict)
 
       expect(result[:nominal_width]).to be_nil
       expect(result[:default_width]).to be_nil
@@ -239,7 +239,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "converts CFF CharStrings to Type 1 format" do
-      result = converter.send(:convert_otf_to_type1, mock_open_type_font)
+      result = converter.convert_otf_to_type1(mock_open_type_font)
 
       expect(result).to be_a(Hash)
       expect(result.key?(:pfb)).to be true
@@ -250,7 +250,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(font).to receive(:table).with("CFF ").and_return(nil)
 
       expect do
-        converter.send(:convert_otf_to_type1, font)
+        converter.convert_otf_to_type1(font)
       end.to raise_error(Fontisan::Error, "CFF table not found")
     end
 
@@ -261,7 +261,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(cff).to receive(:charstrings_index).with(0).and_return(nil)
 
       expect do
-        converter.send(:convert_otf_to_type1, font)
+        converter.convert_otf_to_type1(font)
       end.to raise_error(Fontisan::Error, "CharStrings INDEX not found")
     end
   end
@@ -281,14 +281,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds head table with correct structure" do
-      result = converter.send(:build_head_table, mock_type1_font)
+      result = converter.build_head_table(mock_type1_font)
 
       expect(result).to be_a(String)
       expect(result.bytesize).to be >= 54 # Minimum head table size
     end
 
     it "includes correct magic number" do
-      result = converter.send(:build_head_table, mock_type1_font)
+      result = converter.build_head_table(mock_type1_font)
 
       # Magic number is at offset 12 (bytes 12-15)
       magic = result[12..15].unpack1("N")
@@ -296,7 +296,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets units per em to 1000 (Type 1 standard)" do
-      result = converter.send(:build_head_table, mock_type1_font)
+      result = converter.build_head_table(mock_type1_font)
 
       # Units per em is at offset 18 (bytes 18-19)
       upem = result[18..19].unpack1("n")
@@ -304,7 +304,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "includes font bounding box" do
-      result = converter.send(:build_head_table, mock_type1_font)
+      result = converter.build_head_table(mock_type1_font)
 
       # Bounding box is at offset 36-43 (4 x int16)
       x_min = result[36..37].unpack1("s>")
@@ -322,7 +322,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive_messages(font_dictionary: nil, version: "001.000")
 
-      result = converter.send(:build_head_table, font)
+      result = converter.build_head_table(font)
 
       # Should use default bbox [0, 0, 1000, 1000]
       x_min = result[36..37].unpack1("s>")
@@ -341,7 +341,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(font).to receive_messages(font_dictionary: mock_font_dict,
                                       version: "002.500")
 
-      result = converter.send(:build_head_table, font)
+      result = converter.build_head_table(font)
 
       # Version is at offset 0-3 (Fixed 16.16)
       # 002.500 => 2.5 => 0x00028000
@@ -377,14 +377,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds hhea table with correct structure" do
-      result = converter.send(:build_hhea_table, mock_type1_font)
+      result = converter.build_hhea_table(mock_type1_font)
 
       expect(result).to be_a(String)
       expect(result.bytesize).to be >= 36 # hhea table size
     end
 
     it "uses BlueValues for ascent when available" do
-      result = converter.send(:build_hhea_table, mock_type1_font)
+      result = converter.build_hhea_table(mock_type1_font)
 
       # Ascent is at offset 4-5 (int16)
       ascent = result[4..5].unpack1("s>")
@@ -392,7 +392,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "uses BlueValues for descent when available" do
-      result = converter.send(:build_hhea_table, mock_type1_font)
+      result = converter.build_hhea_table(mock_type1_font)
 
       # Descent is at offset 6-7 (int16)
       descent = result[6..7].unpack1("s>")
@@ -404,7 +404,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(font).to receive_messages(font_dictionary: mock_font_dict,
                                       private_dict: nil, charstrings: mock_charstrings)
 
-      result = converter.send(:build_hhea_table, font)
+      result = converter.build_hhea_table(font)
 
       ascent = result[4..5].unpack1("s>")
       descent = result[6..7].unpack1("s>")
@@ -414,7 +414,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets number of HMetrics correctly" do
-      result = converter.send(:build_hhea_table, mock_type1_font)
+      result = converter.build_hhea_table(mock_type1_font)
 
       # Number of HMetrics is at offset 34-35 (uint16)
       num_hmetrics = result[34..35].unpack1("n")
@@ -426,7 +426,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(font).to receive_messages(font_dictionary: mock_font_dict,
                                       private_dict: mock_private_dict, charstrings: nil)
 
-      result = converter.send(:build_hhea_table, font)
+      result = converter.build_hhea_table(font)
 
       num_hmetrics = result[34..35].unpack1("n")
       expect(num_hmetrics).to be >= 1
@@ -447,7 +447,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds maxp table with version 0.5 for CFF fonts" do
-      result = converter.send(:build_maxp_table, mock_type1_font)
+      result = converter.build_maxp_table(mock_type1_font)
 
       # Version is at offset 0-3 (Fixed 16.16)
       version = result[0..3].unpack1("N")
@@ -455,7 +455,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets number of glyphs correctly" do
-      result = converter.send(:build_maxp_table, mock_type1_font)
+      result = converter.build_maxp_table(mock_type1_font)
 
       # Num glyphs is at offset 4-5 (uint16)
       num_glyphs = result[4..5].unpack1("n")
@@ -466,14 +466,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive(:charstrings).and_return(nil)
 
-      result = converter.send(:build_maxp_table, font)
+      result = converter.build_maxp_table(font)
 
       num_glyphs = result[4..5].unpack1("n")
       expect(num_glyphs).to be >= 1
     end
 
     it "has minimum table size of 6 bytes" do
-      result = converter.send(:build_maxp_table, mock_type1_font)
+      result = converter.build_maxp_table(mock_type1_font)
 
       expect(result.bytesize).to eq(6) # Version (4) + num_glyphs (2)
     end
@@ -501,35 +501,35 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds name table with correct structure" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       expect(result).to be_a(String)
       expect(result.bytesize).to be >= 6 # Minimum header size
     end
 
     it "sets format selector to 0" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       format = result[0..1].unpack1("n")
       expect(format).to eq(0)
     end
 
     it "includes name records count" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       count = result[2..3].unpack1("n")
       expect(count).to be > 0
     end
 
     it "includes string storage offset" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       offset = result[4..5].unpack1("n")
       expect(offset).to be >= 6
     end
 
     it "uses Windows platform ID (3)" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       # First name record starts at offset 6
       platform_id = result[6..7].unpack1("n")
@@ -537,14 +537,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "uses Unicode BMP encoding ID (1)" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       encoding_id = result[8..9].unpack1("n")
       expect(encoding_id).to eq(1)  # Unicode BMP
     end
 
     it "uses US English language ID (0x0409)" do
-      result = converter.send(:build_name_table, mock_type1_font)
+      result = converter.build_name_table(mock_type1_font)
 
       language_id = result[10..11].unpack1("n")
       expect(language_id).to eq(0x0409)
@@ -555,7 +555,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       allow(font).to receive_messages(font_dictionary: nil,
                                       font_name: "TestFont", version: "001.000")
 
-      result = converter.send(:build_name_table, font)
+      result = converter.build_name_table(font)
 
       count = result[2..3].unpack1("n")
       # Should have at least the font name record (name_id 6)
@@ -591,7 +591,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds OS/2 table with version 4" do
-      result = converter.send(:build_os2_table, mock_type1_font)
+      result = converter.build_os2_table(mock_type1_font)
 
       # Version is at offset 0-1 (uint16)
       version = result[0..1].unpack1("n")
@@ -599,7 +599,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets weight class correctly" do
-      result = converter.send(:build_os2_table, mock_type1_font)
+      result = converter.build_os2_table(mock_type1_font)
 
       # Weight class is at offset 4-5 (uint16)
       weight_class = result[4..5].unpack1("n")
@@ -631,7 +631,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
         allow(font).to receive_messages(font_dictionary: dict,
                                         private_dict: nil)
 
-        result = converter.send(:build_os2_table, font)
+        result = converter.build_os2_table(font)
         weight_class = result[4..5].unpack1("n")
 
         expect(weight_class).to eq(expected_class)
@@ -639,7 +639,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "includes PANOSE data" do
-      result = converter.send(:build_os2_table, mock_type1_font)
+      result = converter.build_os2_table(mock_type1_font)
 
       # PANOSE is at offset 32-41 (10 bytes)
       panose = result[32..41].unpack("C*")
@@ -648,7 +648,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "includes vendor ID" do
-      result = converter.send(:build_os2_table, mock_type1_font)
+      result = converter.build_os2_table(mock_type1_font)
 
       # Vendor ID is at offset 58-61 (4 bytes)
       vendor_id = result[58..61]
@@ -666,7 +666,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive_messages(font_dictionary: dict, private_dict: nil)
 
-      result = converter.send(:build_os2_table, font)
+      result = converter.build_os2_table(font)
 
       # fsSelection is at offset 62-63 (uint16)
       fs_selection = result[62..63].unpack1("n")
@@ -674,7 +674,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets fsSelection for bold weight" do
-      result = converter.send(:build_os2_table, mock_type1_font)
+      result = converter.build_os2_table(mock_type1_font)
 
       fs_selection = result[62..63].unpack1("n")
       expect(fs_selection & 0x20).to eq(0x20)  # BOLD bit
@@ -702,7 +702,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds post table with version 3.0 for CFF fonts" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       # Version is at offset 0-3 (Fixed 16.16)
       version = result[0..3].unpack1("N")
@@ -710,7 +710,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets italic angle correctly" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       # Italic angle is at offset 4-7 (Fixed 16.16)
       italic_angle = result[4..7].unpack1("N")
@@ -718,7 +718,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets underline position" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       # Underline position is at offset 8-9 (int16)
       underline_position = result[8..9].unpack1("s>")
@@ -726,7 +726,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets underline thickness" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       # Underline thickness is at offset 10-11 (int16)
       underline_thickness = result[10..11].unpack1("s>")
@@ -734,7 +734,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "sets fixed pitch flag correctly" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       # Fixed pitch is at offset 12-15 (uint32)
       is_fixed_pitch = result[12..15].unpack1("N")
@@ -752,14 +752,14 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive(:font_dictionary).and_return(dict)
 
-      result = converter.send(:build_post_table, font)
+      result = converter.build_post_table(font)
 
       is_fixed_pitch = result[12..15].unpack1("N")
       expect(is_fixed_pitch).to eq(1)  # Monospace
     end
 
     it "has minimum table size of 32 bytes" do
-      result = converter.send(:build_post_table, mock_type1_font)
+      result = converter.build_post_table(mock_type1_font)
 
       expect(result.bytesize).to eq(32) # Version 3.0 post table size
     end
@@ -784,42 +784,42 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds cmap table with correct structure" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       expect(result).to be_a(String)
       expect(result.bytesize).to be >= 4 # Minimum header size
     end
 
     it "sets cmap version to 0" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       version = result[0..1].unpack1("n")
       expect(version).to eq(0)
     end
 
     it "includes one encoding record" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       num_tables = result[2..3].unpack1("n")
       expect(num_tables).to eq(1)
     end
 
     it "uses Windows platform ID (3)" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       platform_id = result[4..5].unpack1("n")
       expect(platform_id).to eq(3)  # Windows
     end
 
     it "uses Unicode BMP encoding ID (1)" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       encoding_id = result[6..7].unpack1("n")
       expect(encoding_id).to eq(1)  # Unicode BMP
     end
 
     it "includes format 4 subtable" do
-      result = converter.send(:build_cmap_table, mock_type1_font)
+      result = converter.build_cmap_table(mock_type1_font)
 
       subtable_offset = result[8..11].unpack1("N")
       format = result[subtable_offset..subtable_offset + 1].unpack1("n")
@@ -833,7 +833,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive(:charstrings).and_return(cs)
 
-      result = converter.send(:build_cmap_table, font)
+      result = converter.build_cmap_table(font)
 
       # Should still produce valid cmap table
       expect(result.bytesize).to be >= 12
@@ -869,7 +869,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds CFF font dictionary hash" do
-      result = converter.send(:build_cff_font_dict, mock_type1_font)
+      result = converter.build_cff_font_dict(mock_type1_font)
 
       expect(result).to be_a(Hash)
       expect(result[:version]).to eq("001.000")
@@ -878,25 +878,25 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "includes font bounding box" do
-      result = converter.send(:build_cff_font_dict, mock_type1_font)
+      result = converter.build_cff_font_dict(mock_type1_font)
 
       expect(result[:font_b_box]).to eq([0, -100, 1000, 900])
     end
 
     it "includes font matrix" do
-      result = converter.send(:build_cff_font_dict, mock_type1_font)
+      result = converter.build_cff_font_dict(mock_type1_font)
 
       expect(result[:font_matrix]).to eq([0.001, 0, 0, 0.001, 0, 0])
     end
 
     it "includes charset from charstrings encoding" do
-      result = converter.send(:build_cff_font_dict, mock_type1_font)
+      result = converter.build_cff_font_dict(mock_type1_font)
 
       expect(result[:charset]).to eq(["A"])
     end
 
     it "includes encoding from charstrings" do
-      result = converter.send(:build_cff_font_dict, mock_type1_font)
+      result = converter.build_cff_font_dict(mock_type1_font)
 
       expect(result[:encoding]).to eq({ "A" => 1 })
     end
@@ -917,7 +917,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "builds CFF private dictionary hash" do
-      result = converter.send(:build_cff_private_dict, mock_type1_font)
+      result = converter.build_cff_private_dict(mock_type1_font)
 
       expect(result).to be_a(Hash)
       expect(result[:blue_values]).to eq([-20, 0, 750, 770])
@@ -925,7 +925,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "includes all hinting values" do
-      result = converter.send(:build_cff_private_dict, mock_type1_font)
+      result = converter.build_cff_private_dict(mock_type1_font)
 
       expect(result[:std_hw]).to eq(50)
       expect(result[:std_vw]).to eq(60)
@@ -941,7 +941,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive(:private_dict).and_return(dict)
 
-      result = converter.send(:build_cff_private_dict, font)
+      result = converter.build_cff_private_dict(font)
 
       expect(result[:blue_scale]).to eq(0.039625)
       expect(result[:blue_shift]).to eq(7)

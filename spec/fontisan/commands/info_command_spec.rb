@@ -241,48 +241,43 @@ RSpec.describe Fontisan::Commands::InfoCommand do
 
   describe "#format_permissions" do
     it "formats installable embedding" do
-      expect(command.send(:format_permissions, 0)).to eq("Installable")
+      expect(command.format_permissions(0)).to eq("Installable")
     end
 
     it "formats restricted license embedding" do
-      expect(command.send(:format_permissions, 2)).to eq("Restricted License")
+      expect(command.format_permissions(2)).to eq("Restricted License")
     end
 
     it "formats preview & print embedding" do
-      expect(command.send(:format_permissions, 4)).to eq("Preview & Print")
+      expect(command.format_permissions(4)).to eq("Preview & Print")
     end
 
     it "formats editable embedding" do
-      expect(command.send(:format_permissions, 8)).to eq("Editable")
+      expect(command.format_permissions(8)).to eq("Editable")
     end
 
     it "formats unknown embedding type" do
-      expect(command.send(:format_permissions, 15)).to eq("Unknown (15)")
+      expect(command.format_permissions(15)).to eq("Unknown (15)")
     end
 
     it "formats no subsetting flag" do
-      expect(command.send(:format_permissions,
-                          0x100)).to eq("Installable, No subsetting")
+      expect(command.format_permissions(0x100)).to eq("Installable, No subsetting")
     end
 
     it "formats bitmap only flag" do
-      expect(command.send(:format_permissions,
-                          0x200)).to eq("Installable, Bitmap only")
+      expect(command.format_permissions(0x200)).to eq("Installable, Bitmap only")
     end
 
     it "formats multiple flags" do
-      expect(command.send(:format_permissions,
-                          0x300)).to eq("Installable, No subsetting, Bitmap only")
+      expect(command.format_permissions(0x300)).to eq("Installable, No subsetting, Bitmap only")
     end
 
     it "formats editable with no subsetting" do
-      expect(command.send(:format_permissions,
-                          0x108)).to eq("Editable, No subsetting")
+      expect(command.format_permissions(0x108)).to eq("Editable, No subsetting")
     end
 
     it "formats preview & print with bitmap only" do
-      expect(command.send(:format_permissions,
-                          0x204)).to eq("Preview & Print, Bitmap only")
+      expect(command.format_permissions(0x204)).to eq("Preview & Print, Bitmap only")
     end
   end
 

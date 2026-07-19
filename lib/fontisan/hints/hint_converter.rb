@@ -120,7 +120,7 @@ module Fontisan
         result
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Convert a single hint to PostScript format
       #

@@ -122,7 +122,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
           PostscriptHintExtractorFakes::HintDict.new(blue_values: [-20, 0, 450, 470], std_hw: 68, std_vw: 88),
         )
 
-        hints = extractor.send(:extract_private_dict_hints, font)
+        hints = extractor.extract_private_dict_hints(font)
         expect(hints).to be_a(Hash)
         expect(hints[:blue_values]).to eq([-20, 0, 450, 470])
         expect(hints[:std_hw]).to eq(68)
@@ -133,7 +133,7 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
         font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
 
-        hints = extractor.send(:extract_private_dict_hints, font)
+        hints = extractor.extract_private_dict_hints(font)
         expect(hints).to eq({})
       end
     end

@@ -118,7 +118,7 @@ module Fontisan
         true
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Extract regions from ItemVariationStore
       #
@@ -212,8 +212,6 @@ module Fontisan
           update_font_metric(tag, new_value)
         end
       end
-
-      public
 
       # Maps MVAR metric tags to [table_tag, method] for base value lookup.
       METRIC_SOURCES = {

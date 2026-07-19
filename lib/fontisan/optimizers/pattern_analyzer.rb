@@ -83,7 +83,7 @@ module Fontisan
         @patterns.values.sort_by { |p| -p.savings }
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Find operator boundaries in CharString
       # Returns positions where operators end, which are valid pattern boundaries

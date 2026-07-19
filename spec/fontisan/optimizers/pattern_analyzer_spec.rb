@@ -253,7 +253,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       charstring = "\x20\x05".b
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       expect(boundaries).to eq([0, 2]) # Start and after rmoveto
     end
@@ -263,7 +263,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       charstring = "\x20\x0c\x0a\x05".b
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       expect(boundaries).to eq([0, 3, 4]) # Start, after add, after rmoveto
     end
@@ -273,7 +273,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       charstring = "\xf7\x2a\x05".b
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       expect(boundaries).to eq([0, 3]) # Start and after rmoveto
     end
@@ -283,7 +283,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       charstring = "\x1c\x01\x00\x05".b
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       expect(boundaries).to eq([0, 4]) # Start and after rmoveto
     end
@@ -293,7 +293,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       charstring = "\xff\x00\x01\x00\x00\x05".b
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       expect(boundaries).to eq([0, 6]) # Start and after rmoveto
     end
@@ -304,7 +304,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       # 32 33 rmoveto(05) 28 0100 rlineto(06) add(0c0a) endchar(14)
 
       analyzer = described_class.new(min_length: 1)
-      boundaries = analyzer.send(:find_operator_boundaries, charstring)
+      boundaries = analyzer.find_operator_boundaries(charstring)
 
       # Should have boundaries at: start(0), after rmoveto(3), after rlineto(7), after add(9), after endchar(10)
       expect(boundaries.length).to be >= 4
@@ -317,7 +317,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       io = StringIO.new("\x80\x05".b) # 128 is single byte
       analyzer = described_class.new(min_length: 1)
 
-      analyzer.send(:skip_number, io)
+      analyzer.skip_number(io)
 
       expect(io.pos).to eq(1) # Should have consumed 1 byte
     end
@@ -326,7 +326,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       io = StringIO.new("\xf7\x2a\x05".b) # 2-byte number
       analyzer = described_class.new(min_length: 1)
 
-      analyzer.send(:skip_number, io)
+      analyzer.skip_number(io)
 
       expect(io.pos).to eq(2) # Should have consumed 2 bytes
     end
@@ -335,7 +335,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       io = StringIO.new("\x1c\x01\x00\x05".b) # 3-byte number
       analyzer = described_class.new(min_length: 1)
 
-      analyzer.send(:skip_number, io)
+      analyzer.skip_number(io)
 
       expect(io.pos).to eq(3) # Should have consumed 3 bytes
     end
@@ -344,7 +344,7 @@ RSpec.describe Fontisan::Optimizers::PatternAnalyzer do
       io = StringIO.new("\xff\x00\x01\x00\x00\x05".b) # 5-byte number
       analyzer = described_class.new(min_length: 1)
 
-      analyzer.send(:skip_number, io)
+      analyzer.skip_number(io)
 
       expect(io.pos).to eq(5)  # Should have consumed 5 bytes
     end

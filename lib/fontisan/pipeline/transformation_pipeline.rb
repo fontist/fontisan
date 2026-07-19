@@ -105,7 +105,7 @@ module Fontisan
         handle_error(e)
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Detect input format and capabilities
       #

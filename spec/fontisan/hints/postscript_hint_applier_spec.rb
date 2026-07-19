@@ -573,34 +573,34 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
     describe "#cff2_table?" do
       it "detects CFF2 table" do
         tables = { "CFF2 " => cff2_data }
-        expect(applier.send(:cff2_table?, tables)).to be true
+        expect(applier.cff2_table?(tables)).to be true
       end
 
       it "detects CFF2 without trailing space" do
         tables = { "CFF2" => cff2_data }
-        expect(applier.send(:cff2_table?, tables)).to be true
+        expect(applier.cff2_table?(tables)).to be true
       end
 
       it "returns false for CFF table" do
         tables = { "CFF " => "data" }
-        expect(applier.send(:cff2_table?, tables)).to be false
+        expect(applier.cff2_table?(tables)).to be false
       end
 
       it "returns false when no CFF2 table" do
         tables = { "head" => "data" }
-        expect(applier.send(:cff2_table?, tables)).to be false
+        expect(applier.cff2_table?(tables)).to be false
       end
     end
 
     describe "#cff_table?" do
       it "detects CFF table" do
         tables = { "CFF " => "data" }
-        expect(applier.send(:cff_table?, tables)).to be true
+        expect(applier.cff_table?(tables)).to be true
       end
 
       it "returns false for CFF2 table" do
         tables = { "CFF2 " => cff2_data }
-        expect(applier.send(:cff_table?, tables)).to be false
+        expect(applier.cff_table?(tables)).to be false
       end
     end
 

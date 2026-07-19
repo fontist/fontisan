@@ -86,7 +86,7 @@ module Fontisan
           !@variable_store.nil?
         end
 
-        private
+        # Methods below were private; made public for testability (TODO 30)
 
         # Extract number of variation axes from Variable Store
         #
