@@ -65,12 +65,12 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
     end
 
     it "parses simple coordinate string" do
-      coords = command.send(:parse_coordinates, "wght=700")
+      coords = command.parse_coordinates("wght=700")
       expect(coords).to eq({ "wght" => 700.0 })
     end
 
     it "parses multiple coordinates" do
-      coords = command.send(:parse_coordinates, "wght=700,wdth=100,slnt=-10")
+      coords = command.parse_coordinates("wght=700,wdth=100,slnt=-10")
       expect(coords).to eq({
                              "wght" => 700.0,
                              "wdth" => 100.0,
@@ -79,12 +79,12 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
     end
 
     it "handles whitespace in coordinate string" do
-      coords = command.send(:parse_coordinates, "wght = 700 ,   wdth=100")
+      coords = command.parse_coordinates("wght = 700 ,   wdth=100")
       expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
     end
 
     it "handles empty pairs gracefully" do
-      coords = command.send(:parse_coordinates, "wght=700,,wdth=100")
+      coords = command.parse_coordinates("wght=700,,wdth=100")
       expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
     end
   end

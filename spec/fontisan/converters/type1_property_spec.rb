@@ -22,7 +22,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           font.font_dictionary = Struct.new(:font_bbox).new(font_bbox)
           allow(font).to receive_messages(version: "001.000")
 
-          head_data = converter.send(:build_head_table, font)
+          head_data = converter.build_head_table(font)
 
           # Verify magic number
           magic = head_data[12..15].unpack1("N")
@@ -40,7 +40,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           version: "001.000")
 
-          head_data = converter.send(:build_head_table, font)
+          head_data = converter.build_head_table(font)
 
           # Verify units per em is 1000
           upem = head_data[18..19].unpack1("n")
@@ -60,7 +60,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           cs = Struct.new(:count, :encoding).new(num_glyphs, {})
           allow(font).to receive(:charstrings).and_return(cs)
 
-          maxp_data = converter.send(:build_maxp_table, font)
+          maxp_data = converter.build_maxp_table(font)
 
           # Verify version 0.5
           version = maxp_data[0..3].unpack1("N")
@@ -97,7 +97,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           private_dict: nil)
 
-          os2_data = converter.send(:build_os2_table, font)
+          os2_data = converter.build_os2_table(font)
           weight_class = os2_data[4..5].unpack1("n")
 
           expect(weight_class).to be >= 100,
@@ -116,7 +116,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
 
-          name_data = converter.send(:build_name_table, font)
+          name_data = converter.build_name_table(font)
 
           # Verify platform ID is Windows (3)
           platform_id = name_data[6..7].unpack1("n")
@@ -131,7 +131,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
 
-          name_data = converter.send(:build_name_table, font)
+          name_data = converter.build_name_table(font)
 
           # Verify encoding ID is Unicode BMP (1)
           encoding_id = name_data[8..9].unpack1("n")
@@ -146,7 +146,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: nil,
                                           font_name: "TestFont", version: "001.000")
 
-          name_data = converter.send(:build_name_table, font)
+          name_data = converter.build_name_table(font)
 
           # Verify language ID is US English (0x0409)
           language_id = name_data[10..11].unpack1("n")
@@ -170,7 +170,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive(:font_dictionary).and_return(font_dict)
 
-          post_data = converter.send(:build_post_table, font)
+          post_data = converter.build_post_table(font)
 
           # Verify version 3.0
           version = post_data[0..3].unpack1("N")
@@ -191,7 +191,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive(:font_dictionary).and_return(font_dict)
 
-          post_data = converter.send(:build_post_table, font)
+          post_data = converter.build_post_table(font)
 
           expect(post_data.bytesize).to eq(32),
                                         "Post table version 3.0 should always be 32 bytes"
@@ -207,7 +207,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
           allow(font).to receive(:charstrings).and_return(cs)
 
-          cmap_data = converter.send(:build_cmap_table, font)
+          cmap_data = converter.build_cmap_table(font)
 
           # Verify platform and encoding IDs
           platform_id = cmap_data[4..5].unpack1("n")
@@ -243,7 +243,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           font = Fontisan::SpecHelpers::FakeType1Font.new
           allow(font).to receive_messages(font_dictionary: font_dict, font_name: "TestFont", charstrings: Struct.new(:encoding).new({}))
 
-          result = converter.send(:build_cff_font_dict, font)
+          result = converter.build_cff_font_dict(font)
 
           # Verify all required fields are present
           expect(result.key?(:version)).to be true
@@ -269,7 +269,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(private_dict: private_dict,
                                           font_dictionary: font_dict)
 
-          result = converter.send(:build_cff_private_dict, font)
+          result = converter.build_cff_private_dict(font)
 
           # Verify defaults are applied
           expect(result[:blue_scale]).to eq(0.039625),
@@ -308,7 +308,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
           allow(font).to receive_messages(font_dictionary: font_dict,
                                           version: version_str)
 
-          head_data = converter.send(:build_head_table, font)
+          head_data = converter.build_head_table(font)
 
           # Extract version from head table and verify it matches
           version_raw = head_data[0..3].unpack1("N")

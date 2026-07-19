@@ -179,7 +179,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
     context "with non-overlapping patterns" do
       it "returns false for different glyphs" do
         # pattern1 in glyphs [0,1,2], pattern2 in glyphs [3,4]
-        result = optimizer.send(:conflicts_with_selected?, pattern2, [pattern1])
+        result = optimizer.conflicts_with_selected?(pattern2, [pattern1])
         expect(result).to be false
       end
 
@@ -188,8 +188,8 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "BBB", 3, [0], 1, 5,
           { 0 => [20] } # Far from pattern1 position at 0
         )
-        result = optimizer.send(:conflicts_with_selected?, non_overlap,
-                                [pattern1])
+        result = optimizer.conflicts_with_selected?(non_overlap,
+                                                    [pattern1])
         expect(result).to be false
       end
     end
@@ -200,7 +200,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "OVER", 4, [0], 1, 5,
           { 0 => [5] } # Overlaps with pattern1 (len=10 at pos=0)
         )
-        result = optimizer.send(:conflicts_with_selected?, overlap, [pattern1])
+        result = optimizer.conflicts_with_selected?(overlap, [pattern1])
         expect(result).to be true
       end
 
@@ -209,7 +209,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "AAA", 3, [0], 1, 5,
           { 0 => [0] } # Same position as pattern1
         )
-        result = optimizer.send(:conflicts_with_selected?, same_pos, [pattern1])
+        result = optimizer.conflicts_with_selected?(same_pos, [pattern1])
         expect(result).to be true
       end
 
@@ -218,8 +218,8 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
           "CCC", 3, [0], 1, 5,
           { 0 => [3] } # Inside pattern1 (0-10)
         )
-        result = optimizer.send(:conflicts_with_selected?, contained,
-                                [pattern1])
+        result = optimizer.conflicts_with_selected?(contained,
+                                                    [pattern1])
         expect(result).to be true
       end
     end
@@ -235,7 +235,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
       p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
         "BBB", 3, [0], 1, 0, { 0 => [10] } # 10-13
       )
-      result = optimizer.send(:positions_overlap?, p1, p2, 0)
+      result = optimizer.positions_overlap?(p1, p2, 0)
       expect(result).to be false
     end
 
@@ -246,7 +246,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
       p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
         "BBB", 3, [0], 1, 0, { 0 => [2] } # 2-5
       )
-      result = optimizer.send(:positions_overlap?, p1, p2, 0)
+      result = optimizer.positions_overlap?(p1, p2, 0)
       expect(result).to be true
     end
 
@@ -257,7 +257,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
       p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
         "BBB", 3, [0], 1, 0, { 0 => [3] } # 3-6 (inside p1)
       )
-      result = optimizer.send(:positions_overlap?, p1, p2, 0)
+      result = optimizer.positions_overlap?(p1, p2, 0)
       expect(result).to be true
     end
 
@@ -269,7 +269,7 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
         "BBB", 3, [1], 1, 0, { 1 => [0] }
       )
       # Check glyph 0, but p2 doesn't have positions in glyph 0
-      result = optimizer.send(:positions_overlap?, p1, p2, 0)
+      result = optimizer.positions_overlap?(p1, p2, 0)
       expect(result).to be false
     end
   end

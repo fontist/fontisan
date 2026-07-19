@@ -126,7 +126,7 @@ module Fontisan
         true
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Extract ConversionOptions from options hash
       #

@@ -275,7 +275,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           [7, medium_savings_pattern], # Position 7-12 (overlaps with high)
         ]
 
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         # Should keep only the high savings pattern
         expect(result.length).to eq(1)
@@ -288,7 +288,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           [15, medium_savings_pattern], # Position 15-20 (no overlap)
         ]
 
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         # Should keep both since they don't overlap
         expect(result.length).to eq(2)
@@ -304,7 +304,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           [8, low_savings_pattern],     # Position 8-10, savings 10 (overlaps)
         ]
 
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         # Should keep only high_savings_pattern
         expect(result.length).to eq(1)
@@ -318,7 +318,7 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           [15, low_savings_pattern],    # Position 15-17
         ]
 
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         # All should be kept since they don't overlap
         expect(result.length).to eq(3)
@@ -337,20 +337,20 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
           [7, pattern_b],  # Position 7-10, savings 25 (overlaps)
         ]
 
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         # Should keep one of them (the first encountered in sorted order)
         expect(result.length).to eq(1)
       end
 
       it "handles empty replacements array" do
-        result = rewriter.send(:remove_overlaps, [])
+        result = rewriter.remove_overlaps([])
         expect(result).to eq([])
       end
 
       it "handles single replacement" do
         replacements = [[5, high_savings_pattern]]
-        result = rewriter.send(:remove_overlaps, replacements)
+        result = rewriter.remove_overlaps(replacements)
 
         expect(result).to eq(replacements)
       end

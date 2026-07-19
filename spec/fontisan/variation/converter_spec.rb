@@ -562,17 +562,17 @@ RSpec.describe Fontisan::Variation::Converter do
   describe "helper methods" do
     describe "#encode_blend_operator" do
       it "encodes base value and deltas" do
-        result = converter.send(:encode_blend_operator, 100, [10, 20])
+        result = converter.encode_blend_operator(100, [10, 20])
         expect(result).to eq([100, 10, 20, 2, 1])
       end
 
       it "handles single delta" do
-        result = converter.send(:encode_blend_operator, 50, [5])
+        result = converter.encode_blend_operator(50, [5])
         expect(result).to eq([50, 5, 1, 1])
       end
 
       it "handles no deltas" do
-        result = converter.send(:encode_blend_operator, 50, [])
+        result = converter.encode_blend_operator(50, [])
         expect(result).to eq([50, 0, 1])
       end
     end
@@ -580,7 +580,7 @@ RSpec.describe Fontisan::Variation::Converter do
     describe "#decode_blend_operator" do
       it "decodes blend operator arguments" do
         args = [100, 10, 20, 2, 1]
-        result = converter.send(:decode_blend_operator, args)
+        result = converter.decode_blend_operator(args)
 
         expect(result[:base]).to eq(100)
         expect(result[:deltas]).to eq([10, 20])
@@ -588,7 +588,7 @@ RSpec.describe Fontisan::Variation::Converter do
 
       it "handles single delta" do
         args = [50, 5, 1, 1]
-        result = converter.send(:decode_blend_operator, args)
+        result = converter.decode_blend_operator(args)
 
         expect(result[:base]).to eq(50)
         expect(result[:deltas]).to eq([5])
@@ -596,7 +596,7 @@ RSpec.describe Fontisan::Variation::Converter do
 
       it "handles invalid arguments" do
         args = [100]
-        result = converter.send(:decode_blend_operator, args)
+        result = converter.decode_blend_operator(args)
 
         expect(result[:base]).to eq(0)
         expect(result[:deltas]).to eq([])
@@ -613,7 +613,7 @@ RSpec.describe Fontisan::Variation::Converter do
       end
 
       it "builds region with all coordinates" do
-        region = converter.send(:build_region_from_tuple, tuple)
+        region = converter.build_region_from_tuple(tuple)
 
         expect(region).to have_key("wght")
         expect(region["wght"][:start]).to eq(0.25)
@@ -623,7 +623,7 @@ RSpec.describe Fontisan::Variation::Converter do
 
       it "uses default values when not provided" do
         tuple = { peak: [0.5] }
-        region = converter.send(:build_region_from_tuple, tuple)
+        region = converter.build_region_from_tuple(tuple)
 
         expect(region["wght"][:start]).to eq(-1.0)
         expect(region["wght"][:peak]).to eq(0.5)
@@ -649,12 +649,9 @@ RSpec.describe Fontisan::Variation::Converter do
       end
 
       it "builds tuple with peak/start/end arrays" do
-        tuple = converter.send(
-          :build_tuple_from_region,
-          region,
-          point_deltas,
-          0,
-        )
+        tuple = converter.build_tuple_from_region(region,
+                                                  point_deltas,
+                                                  0)
 
         expect(tuple[:peak]).to eq([0.5])
         expect(tuple[:start]).to eq([0.25])
@@ -662,12 +659,9 @@ RSpec.describe Fontisan::Variation::Converter do
       end
 
       it "extracts deltas for region" do
-        tuple = converter.send(
-          :build_tuple_from_region,
-          region,
-          point_deltas,
-          0,
-        )
+        tuple = converter.build_tuple_from_region(region,
+                                                  point_deltas,
+                                                  0)
 
         expect(tuple[:deltas]).to eq([
                                        { x: 10, y: 20 },

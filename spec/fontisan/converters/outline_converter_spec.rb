@@ -177,18 +177,18 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
   describe "format detection" do
     it "detects TTF from glyf table" do
-      format = converter.send(:detect_format, ttf_font)
+      format = converter.detect_format(ttf_font)
       expect(format).to eq(:ttf)
     end
 
     it "detects OTF from CFF table" do
-      format = converter.send(:detect_format, otf_font)
+      format = converter.detect_format(otf_font)
       expect(format).to eq(:otf)
     end
 
     it "prefers CFF over CFF2" do
       allow(otf_font).to receive(:table).with("CFF2").and_return(double)
-      format = converter.send(:detect_format, otf_font)
+      format = converter.detect_format(otf_font)
       expect(format).to eq(:otf)
     end
 
@@ -196,7 +196,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       unknown_font = Fontisan::SpecHelpers::FakeFont.new({})
 
       expect do
-        converter.send(:detect_format, unknown_font)
+        converter.detect_format(unknown_font)
       end.to raise_error(Fontisan::Error, /Cannot detect font format/)
     end
   end
@@ -318,7 +318,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
         options = { options: conv_options }
 
-        result = converter.send(:extract_conversion_options, options)
+        result = converter.extract_conversion_options(options)
 
         expect(result).to eq(conv_options)
       end
@@ -326,7 +326,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       it "returns nil when no ConversionOptions provided" do
         options = { target_format: :otf }
 
-        result = converter.send(:extract_conversion_options, options)
+        result = converter.extract_conversion_options(options)
 
         expect(result).to be_nil
       end
@@ -334,7 +334,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
       it "returns ConversionOptions when passed directly" do
         conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
 
-        result = converter.send(:extract_conversion_options, conv_options)
+        result = converter.extract_conversion_options(conv_options)
 
         expect(result).to eq(conv_options)
       end
@@ -357,7 +357,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
         expect(converter).to receive(:decompose_composite_glyphs).with(mock_font)
 
-        converter.send(:apply_opening_options, mock_font, conv_options)
+        converter.apply_opening_options(mock_font, conv_options)
       end
 
       it "skips opening options when not set" do
@@ -371,7 +371,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
 
         # Just verify it runs without error
         expect do
-          converter.send(:apply_opening_options, mock_font, conv_options)
+          converter.apply_opening_options(mock_font, conv_options)
         end.not_to raise_error
       end
 
@@ -379,7 +379,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         expect(converter).not_to receive(:decompose_composite_glyphs)
 
         expect do
-          converter.send(:apply_opening_options, mock_font, nil)
+          converter.apply_opening_options(mock_font, nil)
         end.not_to raise_error
       end
     end
@@ -398,7 +398,7 @@ RSpec.describe Fontisan::Converters::OutlineConverter do
         conv_options = Fontisan::ConversionOptions.new(from: :ttf, to: :otf)
         options = { options: conv_options }
 
-        result = converter.send(:extract_conversion_options, options)
+        result = converter.extract_conversion_options(options)
         expect(result).to eq(conv_options)
       end
     end

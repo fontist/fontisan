@@ -132,21 +132,19 @@ RSpec.describe Fontisan::Commands::TablesCommand do
 
   describe "#format_sfnt_version" do
     it "formats TrueType version" do
-      expect(command.send(:format_sfnt_version,
-                          0x00010000)).to eq("TrueType (0x00010000)")
+      expect(command.format_sfnt_version(0x00010000)).to eq("TrueType (0x00010000)")
     end
 
     it "formats OpenType CFF version" do
-      expect(command.send(:format_sfnt_version,
-                          0x4F54544F)).to eq("OpenType CFF (OTTO)")
+      expect(command.format_sfnt_version(0x4F54544F)).to eq("OpenType CFF (OTTO)")
     end
 
     it "formats custom version" do
-      expect(command.send(:format_sfnt_version, 0xABCDEF01)).to eq("0xABCDEF01")
+      expect(command.format_sfnt_version(0xABCDEF01)).to eq("0xABCDEF01")
     end
 
     it "formats zero version" do
-      expect(command.send(:format_sfnt_version, 0)).to eq("0x00000000")
+      expect(command.format_sfnt_version(0)).to eq("0x00000000")
     end
   end
 end

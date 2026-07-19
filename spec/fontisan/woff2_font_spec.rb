@@ -334,7 +334,7 @@ RSpec.describe Fontisan::Woff2Font do
         woff2 = described_class.new
         io = StringIO.new([0x7F].pack("C")) # 127
 
-        result = woff2.send(:read_uint_base128, io)
+        result = woff2.read_uint_base128(io)
 
         expect(result).to eq(127)
       end
@@ -344,7 +344,7 @@ RSpec.describe Fontisan::Woff2Font do
         # Encode 300: 0x82 0x2C (10000010 00101100 in base128)
         io = StringIO.new([0x82, 0x2C].pack("C*"))
 
-        result = woff2.send(:read_uint_base128, io)
+        result = woff2.read_uint_base128(io)
 
         expect(result).to eq(300)
       end
@@ -354,7 +354,7 @@ RSpec.describe Fontisan::Woff2Font do
         # Send 6 bytes with continuation bits set
         io = StringIO.new([0x80, 0x80, 0x80, 0x80, 0x80, 0x80].pack("C*"))
 
-        expect { woff2.send(:read_uint_base128, io) }
+        expect { woff2.read_uint_base128(io) }
           .to raise_error(Fontisan::InvalidFontError, /Invalid UIntBase128/)
       end
     end
@@ -453,9 +453,7 @@ RSpec.describe Fontisan::Woff2Font do
     it "calculates correct values for 1 table" do
       woff2 = described_class.new
 
-      search_range, entry_selector, range_shift = woff2.send(
-        :calculate_offset_table_fields, 1
-      )
+      search_range, entry_selector, range_shift = woff2.calculate_offset_table_fields(1)
 
       expect(entry_selector).to eq(0)
       expect(search_range).to eq(16)
@@ -465,9 +463,7 @@ RSpec.describe Fontisan::Woff2Font do
     it "calculates correct values for 8 tables" do
       woff2 = described_class.new
 
-      search_range, entry_selector, range_shift = woff2.send(
-        :calculate_offset_table_fields, 8
-      )
+      search_range, entry_selector, range_shift = woff2.calculate_offset_table_fields(8)
 
       expect(entry_selector).to eq(3)
       expect(search_range).to eq(128)
@@ -477,9 +473,7 @@ RSpec.describe Fontisan::Woff2Font do
     it "calculates correct values for 10 tables" do
       woff2 = described_class.new
 
-      search_range, entry_selector, range_shift = woff2.send(
-        :calculate_offset_table_fields, 10
-      )
+      search_range, entry_selector, range_shift = woff2.calculate_offset_table_fields(10)
 
       expect(entry_selector).to eq(3)
       expect(search_range).to eq(128)

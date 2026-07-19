@@ -149,14 +149,14 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
         font = create_font_with_table("fvar", "fvar_data")
         deduplicator = described_class.new([font])
 
-        expect(deduplicator.send(:has_variable_fonts?)).to be true
+        expect(deduplicator.has_variable_fonts?).to be true
       end
 
       it "returns false when fonts do not have fvar table" do
         font = create_font_with_table("head", "head_data")
         deduplicator = described_class.new([font])
 
-        expect(deduplicator.send(:has_variable_fonts?)).to be false
+        expect(deduplicator.has_variable_fonts?).to be false
       end
     end
 

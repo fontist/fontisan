@@ -120,7 +120,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
         region_list = Fontisan::SpecHelpers::FakeRegionList.new(regions: [[coords]])
         store = Fontisan::SpecHelpers::FakeStore.new(variation_region_list: region_list)
 
-        regions = adjuster.send(:extract_regions_from_store, store)
+        regions = adjuster.extract_regions_from_store(store)
 
         expect(regions).to be_an(Array)
         expect(regions.length).to eq(1)
@@ -135,7 +135,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
       it "returns empty array when no region list" do
         store = Fontisan::SpecHelpers::FakeStore.new(variation_region_list: nil)
 
-        regions = adjuster.send(:extract_regions_from_store, store)
+        regions = adjuster.extract_regions_from_store(store)
 
         expect(regions).to eq([])
       end
@@ -145,26 +145,26 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
       it "returns ascender for hasc tag" do
         font.tables_hash["hhea"] = MetricsAdjusterSpecFakes::FakeHhea.new(ascender: 800)
 
-        value = adjuster.send(:get_base_metric_value, "hasc")
+        value = adjuster.get_base_metric_value("hasc")
         expect(value).to eq(800)
       end
 
       it "returns descender for hdsc tag" do
         font.tables_hash["hhea"] = MetricsAdjusterSpecFakes::FakeHhea.new(descender: -200)
 
-        value = adjuster.send(:get_base_metric_value, "hdsc")
+        value = adjuster.get_base_metric_value("hdsc")
         expect(value).to eq(-200)
       end
 
       it "returns line_gap for hlgp tag" do
         font.tables_hash["hhea"] = MetricsAdjusterSpecFakes::FakeHhea.new(line_gap: 100)
 
-        value = adjuster.send(:get_base_metric_value, "hlgp")
+        value = adjuster.get_base_metric_value("hlgp")
         expect(value).to eq(100)
       end
 
       it "returns nil for unknown tag" do
-        value = adjuster.send(:get_base_metric_value, "unknown")
+        value = adjuster.get_base_metric_value("unknown")
         expect(value).to be_nil
       end
     end
@@ -179,7 +179,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
 
         font.tables_hash["hhea"] = MetricsAdjusterSpecFakes::FakeHhea.new
 
-        data = adjuster.send(:build_hmtx_data, metrics)
+        data = adjuster.build_hmtx_data(metrics)
 
         expect(data).to be_a(String)
         expect(data.encoding).to eq(Encoding::BINARY)
@@ -187,7 +187,7 @@ RSpec.describe Fontisan::Variation::MetricsAdjuster do
       end
 
       it "returns nil for empty metrics" do
-        data = adjuster.send(:build_hmtx_data, [])
+        data = adjuster.build_hmtx_data([])
 
         expect(data).to be_nil
       end

@@ -55,7 +55,7 @@ module Fontisan
       TRANSFORM_VERSIONS.fetch(tag, TRANSFORM_NONE)
     end
 
-    private
+    # Methods below were private; made public for testability (TODO 30)
 
     def tag_index
       @flags & 0x3F
@@ -726,7 +726,7 @@ module Fontisan
       sfnt_data[head_offset + 8, 4] = [adjustment].pack("N")
     end
 
-    private
+    # Methods below were private; made public for testability (TODO 30)
 
     # Read variable-length UIntBase128 integer from IO
     def read_uint_base128(io)

@@ -177,7 +177,7 @@ RSpec.describe Fontisan::Subset::Profile do
         .and_return("/nonexistent/path.yml")
 
       # Clear cache to force reload
-      described_class.send(:clear_cache!)
+      described_class.clear_cache!
 
       expect do
         described_class.for_name("pdf")
@@ -185,7 +185,7 @@ RSpec.describe Fontisan::Subset::Profile do
                          /Profile configuration file not found/)
 
       # Restore for other tests
-      described_class.send(:clear_cache!)
+      described_class.clear_cache!
     end
   end
 

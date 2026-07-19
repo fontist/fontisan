@@ -37,7 +37,7 @@ module Fontisan
         end
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Get collection information
       #

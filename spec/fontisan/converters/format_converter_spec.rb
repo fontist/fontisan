@@ -539,36 +539,36 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     describe "unsupported variation preservation" do
       it "recognizes SVG as unsupported for variation preservation" do
         # Check that SVG is neither compatible nor convertible for variations
-        expect(converter.send(:compatible_variation_formats?, :ttf,
-                              :svg)).to be false
-        expect(converter.send(:convertible_variation_formats?, :ttf,
-                              :svg)).to be false
-        expect(converter.send(:compatible_variation_formats?, :otf,
-                              :svg)).to be false
-        expect(converter.send(:convertible_variation_formats?, :otf,
-                              :svg)).to be false
+        expect(converter.compatible_variation_formats?(:ttf,
+                                                       :svg)).to be false
+        expect(converter.convertible_variation_formats?(:ttf,
+                                                        :svg)).to be false
+        expect(converter.compatible_variation_formats?(:otf,
+                                                       :svg)).to be false
+        expect(converter.convertible_variation_formats?(:otf,
+                                                        :svg)).to be false
       end
 
       it "recognizes compatible variation formats" do
         # Same format
-        expect(converter.send(:compatible_variation_formats?, :ttf,
-                              :ttf)).to be true
-        expect(converter.send(:compatible_variation_formats?, :otf,
-                              :otf)).to be true
+        expect(converter.compatible_variation_formats?(:ttf,
+                                                       :ttf)).to be true
+        expect(converter.compatible_variation_formats?(:otf,
+                                                       :otf)).to be true
 
         # Format wrapping (TTF/OTF → WOFF/WOFF2)
-        expect(converter.send(:compatible_variation_formats?, :ttf,
-                              :woff2)).to be true
-        expect(converter.send(:compatible_variation_formats?, :otf,
-                              :woff2)).to be true
+        expect(converter.compatible_variation_formats?(:ttf,
+                                                       :woff2)).to be true
+        expect(converter.compatible_variation_formats?(:otf,
+                                                       :woff2)).to be true
       end
 
       it "recognizes convertible variation formats" do
         # TTF ↔ OTF require variation conversion
-        expect(converter.send(:convertible_variation_formats?, :ttf,
-                              :otf)).to be true
-        expect(converter.send(:convertible_variation_formats?, :otf,
-                              :ttf)).to be true
+        expect(converter.convertible_variation_formats?(:ttf,
+                                                        :otf)).to be true
+        expect(converter.convertible_variation_formats?(:otf,
+                                                        :ttf)).to be true
       end
     end
   end
@@ -594,14 +594,14 @@ RSpec.describe Fontisan::Converters::FormatConverter do
 
     describe "format detection" do
       it "detects Type 1 format" do
-        format = converter.send(:detect_format, type1_font)
+        format = converter.detect_format(type1_font)
         expect(format).to eq(:type1)
       end
 
       it "distinguishes Type 1 from TTF and OTF" do
-        ttf_format = converter.send(:detect_format, ttf_font)
-        otf_format = converter.send(:detect_format, otf_font)
-        type1_format = converter.send(:detect_format, type1_font)
+        ttf_format = converter.detect_format(ttf_font)
+        otf_format = converter.detect_format(otf_font)
+        type1_format = converter.detect_format(type1_font)
 
         expect(ttf_format).to eq(:ttf)
         expect(otf_format).to eq(:otf)
@@ -612,20 +612,20 @@ RSpec.describe Fontisan::Converters::FormatConverter do
     describe "validation" do
       it "accepts Type1Font as valid font type" do
         expect do
-          converter.send(:validate_parameters!, type1_font, :otf)
+          converter.validate_parameters!(type1_font, :otf)
         end.not_to raise_error
       end
 
       it "accepts Type1Font for TTF target" do
         expect do
-          converter.send(:validate_parameters!, type1_font, :ttf)
+          converter.validate_parameters!(type1_font, :ttf)
         end.not_to raise_error
       end
     end
 
     describe "variable font detection" do
       it "returns false for Type 1 fonts (never variable)" do
-        expect(converter.send(:variable_font?, type1_font)).to be false
+        expect(converter.variable_font?(type1_font)).to be false
       end
     end
 

@@ -176,7 +176,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         allow(font).to receive(:table).with("CFF2").and_return(nil)
         allow(font).to receive(:table).with("glyf").and_return(Struct.new(:tag).new("GlyfTable"))
 
-        flavor = encoder.send(:detect_flavor, font)
+        flavor = encoder.detect_flavor(font)
         expect(flavor).to eq(0x00010000)
       end
 
@@ -188,7 +188,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         allow(font).to receive(:table).with("CFF ").and_return(Struct.new(:tag).new("CFFTable"))
         allow(font).to receive(:table).with("glyf").and_return(nil)
 
-        flavor = encoder.send(:detect_flavor, font)
+        flavor = encoder.detect_flavor(font)
         expect(flavor).to eq(0x4F54544F)
       end
 
@@ -202,7 +202,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         allow(font).to receive(:table).with("glyf").and_return(nil)
 
         expect do
-          encoder.send(:detect_flavor, font)
+          encoder.detect_flavor(font)
         end.to raise_error(Fontisan::Error, /Cannot determine font flavor/)
       end
     end
@@ -215,7 +215,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
           "maxp" => "M" * 32,
         }
 
-        size = encoder.send(:calculate_sfnt_size, tables)
+        size = encoder.calculate_sfnt_size(tables)
 
         # Should include header, directory, and padded tables
         expect(size).to be > 0
@@ -226,7 +226,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         # Table with size not divisible by 4
         tables = { "test" => "X" * 55 }
 
-        size = encoder.send(:calculate_sfnt_size, tables)
+        size = encoder.calculate_sfnt_size(tables)
 
         # Should include 1 byte of padding for 55-byte table
         expect(size).to be >= 12 + 16 + 56
@@ -236,7 +236,7 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
         tables = { "glyf" => "G" * 100, "head" => "H" * 54 }
         glyf_transform = { transformed_glyf: "T" * 80, loca_orig_length: 14 }
 
-        size = encoder.send(:calculate_sfnt_size, tables, glyf_transform:)
+        size = encoder.calculate_sfnt_size(tables, glyf_transform:)
 
         # 12 (header) + 2 entries × 16 + glyf bytes + head bytes + loca 14 bytes (padded to 16)
         expect(size).to be >= 12 + (2 * 16) + 100 + 54 + 14

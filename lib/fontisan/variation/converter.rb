@@ -124,7 +124,7 @@ module Fontisan
         )
       end
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Convert blend data from a glyph to tuple format
       #

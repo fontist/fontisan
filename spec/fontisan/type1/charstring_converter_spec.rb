@@ -211,31 +211,31 @@ RSpec.describe Fontisan::Type1::CharStringConverter do
   describe "CFF number encoding" do
     it "encodes 1-byte numbers correctly" do
       # Test encode_cff_number for range -107 to 107
-      expect(converter.send(:encode_cff_number, 0)).to eq("\x8B".b)   # 0 + 139 = 139
-      expect(converter.send(:encode_cff_number, 50)).to eq("\xBD".b)  # 50 + 139 = 189
-      expect(converter.send(:encode_cff_number, -50)).to eq("\x59".b) # -50 + 139 = 89
-      expect(converter.send(:encode_cff_number, 107)).to eq("\xF6".b) # 107 + 139 = 246
-      expect(converter.send(:encode_cff_number, -107)).to eq("\x20".b) # -107 + 139 = 32
+      expect(converter.encode_cff_number(0)).to eq("\x8B".b)   # 0 + 139 = 139
+      expect(converter.encode_cff_number(50)).to eq("\xBD".b)  # 50 + 139 = 189
+      expect(converter.encode_cff_number(-50)).to eq("\x59".b) # -50 + 139 = 89
+      expect(converter.encode_cff_number(107)).to eq("\xF6".b) # 107 + 139 = 246
+      expect(converter.encode_cff_number(-107)).to eq("\x20".b) # -107 + 139 = 32
     end
 
     it "encodes 2-byte positive numbers" do
       # Test encode_cff_number for range 108 to 1131
-      result_150 = converter.send(:encode_cff_number, 150)
+      result_150 = converter.encode_cff_number(150)
       expect(result_150.length).to eq(2)
       expect(result_150.getbyte(0)).to be_between(247, 250) # First byte indicates 2-byte positive
 
-      result_1000 = converter.send(:encode_cff_number, 1000)
+      result_1000 = converter.encode_cff_number(1000)
       expect(result_1000.length).to eq(2)
       expect(result_1000.getbyte(0)).to be_between(247, 250)
     end
 
     it "encodes 2-byte negative numbers" do
       # Test encode_cff_number for range -1131 to -108
-      result_neg_150 = converter.send(:encode_cff_number, -150)
+      result_neg_150 = converter.encode_cff_number(-150)
       expect(result_neg_150.length).to eq(2)
       expect(result_neg_150.getbyte(0)).to be_between(251, 254) # First byte indicates 2-byte negative
 
-      result_neg_1000 = converter.send(:encode_cff_number, -1000)
+      result_neg_1000 = converter.encode_cff_number(-1000)
       expect(result_neg_1000.length).to eq(2)
       expect(result_neg_1000.getbyte(0)).to be_between(251, 254)
     end

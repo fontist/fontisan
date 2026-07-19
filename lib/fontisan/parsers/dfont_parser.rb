@@ -184,8 +184,8 @@ module Fontisan
         io.read(data_length)
       end
 
-      private_class_method :parse_header, :find_sfnt_resources,
-                           :extract_resource_data
+      # parse_header, find_sfnt_resources, extract_resource_data
+      # were private_class_method; made public for testability (TODO 30)
     end
   end
 end

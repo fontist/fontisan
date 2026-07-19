@@ -110,7 +110,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      preserved = builder.send(:preserve_variable_store)
+      preserved = builder.preserve_variable_store
       expect(preserved).to eq(builder.variable_store)
     end
 
@@ -118,7 +118,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data_basic)
       builder = described_class.new(reader)
 
-      preserved = builder.send(:preserve_variable_store)
+      preserved = builder.preserve_variable_store
       expect(preserved).to be_nil
     end
   end
@@ -128,7 +128,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data_basic)
       builder = described_class.new(reader)
 
-      errors = builder.send(:validate)
+      errors = builder.validate
       expect(errors).to be_empty
     end
 
@@ -147,7 +147,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      errors = builder.send(:validate)
+      errors = builder.validate
       expect(errors).to be_empty
     end
   end
@@ -178,7 +178,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       allow(reader).to receive_messages(data: cff2_data, read_variable_store: nil, header: { major_version: 2 }, top_dict: { 17 => 100 }) # operator 17 = CharStrings
 
       builder = described_class.new(reader)
-      offset = builder.send(:extract_charstrings_offset)
+      offset = builder.extract_charstrings_offset
 
       expect(offset).to eq(100)
     end
@@ -191,7 +191,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader)
-      offset = builder.send(:extract_charstrings_offset)
+      offset = builder.extract_charstrings_offset
 
       expect(offset).to be_nil
     end
@@ -216,7 +216,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      stem_count = builder.send(:calculate_stem_count)
+      stem_count = builder.calculate_stem_count
       expect(stem_count).to eq(5) # 2 + 3
     end
 
@@ -224,7 +224,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      stem_count = builder.send(:calculate_stem_count)
+      stem_count = builder.calculate_stem_count
       expect(stem_count).to eq(0)
     end
 
@@ -244,7 +244,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      stem_count = builder.send(:calculate_stem_count)
+      stem_count = builder.calculate_stem_count
       expect(stem_count).to eq(2)
     end
 
@@ -264,7 +264,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      stem_count = builder.send(:calculate_stem_count)
+      stem_count = builder.calculate_stem_count
       expect(stem_count).to eq(1)
     end
   end
@@ -299,7 +299,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      result = builder.send(:modify_charstrings, charstrings_index)
+      result = builder.modify_charstrings(charstrings_index)
 
       expect(result).to be_a(String)
       expect(result.encoding).to eq(Encoding::BINARY)
@@ -328,7 +328,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      result = builder.send(:modify_charstrings, index)
+      result = builder.modify_charstrings(index)
 
       # Result should contain the CharString with blend preserved
       # Parser/builder handle blend automatically
@@ -341,7 +341,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, nil)
 
-      result = builder.send(:modify_charstrings, charstrings_index)
+      result = builder.modify_charstrings(charstrings_index)
       expect(result).to be_nil
     end
 
@@ -356,7 +356,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      result = builder.send(:modify_charstrings, charstrings_index)
+      result = builder.modify_charstrings(charstrings_index)
       expect(result).to be_nil
     end
 
@@ -389,7 +389,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      result = builder.send(:modify_charstrings, charstrings_index)
+      result = builder.modify_charstrings(charstrings_index)
 
       expect(result).to be_a(String)
       expect(result.encoding).to eq(Encoding::BINARY)
@@ -418,7 +418,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
 
       # Should not raise - stack neutrality maintained
       expect do
-        builder.send(:modify_charstrings, charstrings_index)
+        builder.modify_charstrings(charstrings_index)
       end.not_to raise_error
     end
   end
@@ -435,14 +435,14 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      expect(builder.send(:has_font_level_hints?)).to be true
+      expect(builder.has_font_level_hints?).to be true
     end
 
     it "returns false when no hints" do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      expect(builder.send(:has_font_level_hints?)).to be false
+      expect(builder.has_font_level_hints?).to be false
     end
 
     it "returns false when empty hints" do
@@ -454,7 +454,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      expect(builder.send(:has_font_level_hints?)).to be false
+      expect(builder.has_font_level_hints?).to be false
     end
 
     it "handles invalid JSON gracefully" do
@@ -466,7 +466,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      expect(builder.send(:has_font_level_hints?)).to be false
+      expect(builder.has_font_level_hints?).to be false
     end
   end
 
@@ -479,7 +479,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [100, 500] })
 
       builder = described_class.new(reader)
-      info = builder.send(:extract_private_dict_info)
+      info = builder.extract_private_dict_info
 
       expect(info).to eq([100, 500])
     end
@@ -492,7 +492,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader)
-      info = builder.send(:extract_private_dict_info)
+      info = builder.extract_private_dict_info
 
       expect(info).to be_nil
     end
@@ -515,7 +515,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: {})
 
       builder = described_class.new(reader, hint_set)
-      result = builder.send(:modify_private_dict)
+      result = builder.modify_private_dict
 
       expect(result).to be_a(Hash)
       expect(result["blue_values"] || result[:blue_values]).to eq([10, 20, 30,
@@ -542,7 +542,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: private_dict_with_blend)
 
       builder = described_class.new(reader, hint_set)
-      result = builder.send(:modify_private_dict)
+      result = builder.modify_private_dict
 
       expect(result).to be_a(Hash)
       # Blend should be preserved
@@ -567,7 +567,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         }, header: { major_version: 2 }, top_dict: { 18 => [50, 100] }, read_private_dict: {})
 
       builder = described_class.new(reader, hint_set)
-      result = builder.send(:modify_private_dict)
+      result = builder.modify_private_dict
 
       expect(result).to be_a(Hash)
       # Variable hint should be flattened to array
@@ -588,7 +588,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         read_variable_store: nil, header: { major_version: 2 }, top_dict: {})
 
       builder = described_class.new(reader, hint_set)
-      result = builder.send(:modify_private_dict)
+      result = builder.modify_private_dict
 
       expect(result).to be_nil
     end
@@ -607,7 +607,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      expect(builder.send(:should_modify?)).to be true
+      expect(builder.should_modify?).to be true
     end
 
     it "returns true when font-level hints present" do
@@ -619,14 +619,14 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader, hint_set)
 
-      expect(builder.send(:should_modify?)).to be true
+      expect(builder.should_modify?).to be true
     end
 
     it "returns false when no hints" do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      expect(builder.send(:should_modify?)).to be false
+      expect(builder.should_modify?).to be false
     end
   end
 
@@ -644,7 +644,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
                                         }, header: { major_version: 2 }, top_dict: { 24 => cff2_data.size })
 
       builder = described_class.new(reader)
-      vstore = builder.send(:extract_variable_store)
+      vstore = builder.extract_variable_store
 
       expect(vstore).to be_a(String)
       expect(vstore.encoding).to eq(Encoding::BINARY)
@@ -654,7 +654,7 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data_basic)
       builder = described_class.new(reader)
 
-      vstore = builder.send(:extract_variable_store)
+      vstore = builder.extract_variable_store
       expect(vstore).to be_nil
     end
   end
@@ -664,12 +664,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      result = builder.send(:rebuild_cff2_table,
-                            header: cff2_data[0, 5],
-                            top_dict: { charstrings: 100 }, # Use symbol key
-                            charstrings: "\x00\x00".b,
-                            private_dict: nil,
-                            vstore: nil)
+      result = builder.rebuild_cff2_table(header: cff2_data[0, 5],
+                                          top_dict: { charstrings: 100 }, # Use symbol key
+                                          charstrings: "\x00\x00".b,
+                                          private_dict: nil,
+                                          vstore: nil)
 
       expect(result).to be_a(String)
       expect(result.encoding).to eq(Encoding::BINARY)
@@ -683,12 +682,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      result = builder.send(:rebuild_cff2_table,
-                            header: cff2_data[0, 5],
-                            top_dict: { charstrings: 100 }, # Use symbol key
-                            charstrings: "\x00\x00".b,
-                            private_dict: nil,
-                            vstore: vstore_data)
+      result = builder.rebuild_cff2_table(header: cff2_data[0, 5],
+                                          top_dict: { charstrings: 100 }, # Use symbol key
+                                          charstrings: "\x00\x00".b,
+                                          private_dict: nil,
+                                          vstore: vstore_data)
 
       # Variable Store should be at end, unchanged
       expect(result[-4..]).to eq(vstore_data)
@@ -698,12 +696,11 @@ RSpec.describe Fontisan::Tables::Cff2::TableBuilder do
       reader = Fontisan::Tables::Cff2::TableReader.new(cff2_data)
       builder = described_class.new(reader)
 
-      result = builder.send(:rebuild_cff2_table,
-                            header: cff2_data[0, 5],
-                            top_dict: { charstrings: 50, private: [10, 60] }, # Use symbol keys
-                            charstrings: "\x00\x00".b,
-                            private_dict: "\x00\x00\x00\x00\x00".b,
-                            vstore: nil)
+      result = builder.rebuild_cff2_table(header: cff2_data[0, 5],
+                                          top_dict: { charstrings: 50, private: [10, 60] }, # Use symbol keys
+                                          charstrings: "\x00\x00".b,
+                                          private_dict: "\x00\x00\x00\x00\x00".b,
+                                          vstore: nil)
 
       expect(result).to be_a(String)
       # Offsets should be recalculated based on actual positions

@@ -50,7 +50,7 @@ module Fontisan
       #   @return [Hash] Command options
       attr_reader :font_path, :font, :options
 
-      private
+      # Methods below were private; made public for testability (TODO 30)
 
       # Load the font using FontLoader.
       #

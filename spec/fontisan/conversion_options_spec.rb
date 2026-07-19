@@ -40,26 +40,26 @@ RSpec.describe Fontisan::ConversionOptions do
 
   describe ".normalize_format" do
     it "normalizes TTF variants" do
-      expect(described_class.send(:normalize_format, "TTF")).to eq(:ttf)
-      expect(described_class.send(:normalize_format, "truetype")).to eq(:ttf)
-      expect(described_class.send(:normalize_format, :ttf)).to eq(:ttf)
+      expect(described_class.normalize_format("TTF")).to eq(:ttf)
+      expect(described_class.normalize_format("truetype")).to eq(:ttf)
+      expect(described_class.normalize_format(:ttf)).to eq(:ttf)
     end
 
     it "normalizes OTF variants" do
-      expect(described_class.send(:normalize_format, "OTF")).to eq(:otf)
-      expect(described_class.send(:normalize_format, "cff")).to eq(:otf)
-      expect(described_class.send(:normalize_format, "opentype")).to eq(:otf)
+      expect(described_class.normalize_format("OTF")).to eq(:otf)
+      expect(described_class.normalize_format("cff")).to eq(:otf)
+      expect(described_class.normalize_format("opentype")).to eq(:otf)
     end
 
     it "normalizes Type 1 variants" do
-      expect(described_class.send(:normalize_format, "type1")).to eq(:type1)
-      expect(described_class.send(:normalize_format, "pfb")).to eq(:type1)
-      expect(described_class.send(:normalize_format, "pfa")).to eq(:type1)
+      expect(described_class.normalize_format("type1")).to eq(:type1)
+      expect(described_class.normalize_format("pfb")).to eq(:type1)
+      expect(described_class.normalize_format("pfa")).to eq(:type1)
     end
 
     it "raises error for unknown format" do
       expect do
-        described_class.send(:normalize_format, "unknown")
+        described_class.normalize_format("unknown")
       end.to raise_error(ArgumentError, /Unknown format/)
     end
   end

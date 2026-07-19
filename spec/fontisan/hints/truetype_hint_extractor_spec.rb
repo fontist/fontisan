@@ -122,7 +122,7 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
         cvt_data = [100, 65536 - 50].pack("n*")
         allow(font).to receive(:table_data).and_return({ "cvt " => cvt_data })
 
-        values = extractor.send(:extract_control_values, font)
+        values = extractor.extract_control_values(font)
         expect(values).to eq([100, -50])
       end
     end
