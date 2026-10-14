@@ -39,6 +39,29 @@ RSpec.describe Fontisan::Tables::Gpos do
       end
     end
 
+    it "does not match glyphs below or between Coverage2 ranges" do
+      subtable = gpos_pair_two(coverage: [2, 4], coverage_format: 2, matrix: [[-5, -7], [-11, -29]])
+      pairs = described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs
+      [1, 3, 5].each { |left| expect(pairs[[left, 3]]).to eq(0) }
+    end
+
+    it "returns the collection after yielding pairs" do
+      pairs = described_class.read(gpos_binary([gpos_lookup([individual])])).kern_pairs
+      yielded = []
+      expect(pairs.each { |pair, value| yielded << [pair, value] }).to equal(pairs)
+      expect(yielded).to eq([[[2, 3], -29], [[2, 4], 15]])
+    end
+
+    it "keeps queries stable when callers edit table bytes or yielded pairs" do
+      table = described_class.read(gpos_binary([gpos_lookup([gpos_pair_two(class_format: 1)])]))
+      pairs = table.kern_pairs(glyph_count: 5)
+      expected = pairs.to_h
+      pairs.each.first[0].replace([65535, 65535])
+      table.raw_data.replace("\x00".b * table.raw_data.bytesize)
+      expect(pairs[[2, 3]]).to eq(-29)
+      expect(pairs.to_h).to eq(expected)
+    end
+
     it "preserves the signed xAdvance limits and zero" do
       [-32768, -1, 0, 32767].each do |value|
         data = gpos_binary([gpos_lookup([gpos_pair_one({ 2 => { 3 => value } })])])
@@ -102,7 +125,9 @@ RSpec.describe Fontisan::Tables::Gpos do
       expect(pairs[[2, 3]]).to eq(-29)
       expect { pairs.to_h }.to raise_error(ArgumentError, /glyph_count/)
       bounded = described_class.read(gpos_binary([gpos_lookup([class_based])])).kern_pairs(glyph_count: 65536)
-      expect(bounded.each.first).to eq([[2, 0], -11])
+      first, array_bytes = gpos_measured_first(bounded)
+      expect(first).to eq([[2, 0], -11])
+      expect(array_bytes).to be < 64_000
     end
 
     it "selects the requested script and feature, including a required feature" do
@@ -120,6 +145,16 @@ RSpec.describe Fontisan::Tables::Gpos do
 
     it "returns an empty collection when there are no script or feature lists" do
       expect(described_class.read([1, 0, 0, 0, 0].pack("n*")).kern_pairs.to_h).to eq({})
+    end
+
+    it "leaves malformed later lists unread when no script or feature is selected" do
+      unknown_script = gpos_binary([gpos_lookup([individual])], script_tag: "DFLT")
+      unknown_script[6, 2] = [65535].pack("n")
+      unknown_feature = gpos_binary([gpos_lookup([individual])], feature_tag: "dist")
+      unknown_feature[8, 2] = [65535].pack("n")
+      [unknown_script, unknown_feature].each do |data|
+        expect(described_class.read(data).kern_pairs.to_h).to eq({})
+      end
     end
 
     it "skips other lookup types and handles the mark-filtering-set field" do
@@ -232,10 +267,55 @@ RSpec.describe Fontisan::Tables::Gpos do
         expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
           .to raise_error(Fontisan::ParseError)
       end
-      subtable = individual.dup
-      subtable[0, 2] = [3].pack("n")
-      expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
-        .to raise_error(Fontisan::ParseError)
+      [individual, class_based].each do |valid|
+        subtable = valid.dup
+        subtable[0, 2] = [3].pack("n")
+        expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError, /Unsupported PairPos format/)
+      end
+    end
+
+    it "rejects unknown Coverage and ClassDef formats in otherwise valid class tables" do
+      [1, 2].each do |format|
+        valid = gpos_pair_two(coverage_format: format, class_format: format)
+        { 2 => "Coverage", 8 => "ClassDef", 10 => "ClassDef" }.each do |field, kind|
+          malformed = valid.dup
+          offset = malformed.byteslice(field, 2).unpack1("n")
+          malformed[offset, 2] = [3].pack("n")
+          expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+            .to raise_error(Fontisan::ParseError, /Unsupported #{kind} format/)
+        end
+      end
+    end
+
+    it "rejects ClassDef1 arrays that extend beyond the glyph-ID domain" do
+      [65535, 65536].each do |last|
+        subtable = gpos_pair_two(coverage: [65535], first: { 65535 => 0, last => 0 },
+                                 second: {}, matrix: [[-29]], class_format: 1)
+        table = described_class.read(gpos_binary([gpos_lookup([subtable])]))
+        if last == 65535
+          expect(table.kern_pairs[[65535, 0]]).to eq(-29)
+        else
+          expect { table.kern_pairs }.to raise_error(Fontisan::ParseError, /class definition/)
+        end
+      end
+    end
+
+    it "rejects an invalid feature index with valid Script and LangSys offsets" do
+      data = gpos_binary([gpos_lookup([individual])])
+      script_list = data.byteslice(4, 2).unpack1("n")
+      script = script_list + data.byteslice(script_list + 6, 2).unpack1("n")
+      language = script + data.byteslice(script, 2).unpack1("n")
+      data[language + 6, 2] = [2].pack("n")
+      expect { described_class.read(data).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /feature index 2/)
+    end
+
+    it "requires the optional mark-filtering word even for an empty lookup" do
+      data = gpos_binary([gpos_lookup([], flags: 16)])
+      expect(described_class.read(data).kern_pairs.to_h).to eq({})
+      expect { described_class.read(data.byteslice(0...-2)).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /Truncated GPOS/)
     end
 
     it "rejects malformed overlapping Feature indices before repeated decoding" do
@@ -330,7 +410,7 @@ RSpec.describe Fontisan::Tables::Gpos do
       end
     end
 
-    it "rejects invalid class IDs and a huge zero-width class matrix without expansion" do
+    it "rejects invalid class IDs and queries a huge zero-width class matrix without expansion" do
       subtable = gpos_pair_two(first: { 2 => 2 })
       expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
         .to raise_error(Fontisan::ParseError)
