@@ -57,7 +57,8 @@ RSpec.describe "Type 1 Property-Based Tests" do
           num_glyphs = rand(1..1000)
 
           font = Fontisan::SpecHelpers::FakeType1Font.new
-          cs = Struct.new(:count, :encoding).new(num_glyphs, {})
+          cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
+          allow(cs).to receive(:count).and_return(num_glyphs)
           allow(font).to receive(:charstrings).and_return(cs)
 
           maxp_data = converter.build_maxp_table(font)
@@ -204,7 +205,7 @@ RSpec.describe "Type 1 Property-Based Tests" do
       it "always uses Windows platform (3) and Unicode BMP encoding (1)" do
         100.times do
           font = Fontisan::SpecHelpers::FakeType1Font.new
-          cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+          cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
           allow(font).to receive(:charstrings).and_return(cs)
 
           cmap_data = converter.build_cmap_table(font)

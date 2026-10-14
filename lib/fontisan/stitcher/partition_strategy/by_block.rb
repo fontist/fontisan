@@ -33,7 +33,7 @@ module Fontisan
         # be data-driven, swap BLOCKS for a CSV/YAML loader behind
         # the same constant — callers don't care about the source
         # (OCP).
-        # rubocop:disable Metrics/CollectionLiteralLength
+        # rubocop:disable-next Metrics/CollectionLiteralLength
         BLOCKS = {
           # BMP (Plane 0)
           "Basic_Latin" => 0x0000..0x007F,
@@ -375,7 +375,6 @@ module Fontisan
           "Tags" => 0xE0000..0xE007F,
           "Variation_Selectors_Supplement" => 0xE0100..0xE01EF,
         }.freeze
-        # rubocop:enable Metrics/CollectionLiteralLength
 
         # @param cp_map [Hash{Integer=>Object}] codepoint → donor label
         # @param cap [Integer] max codepoints per partition

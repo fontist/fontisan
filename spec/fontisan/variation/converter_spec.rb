@@ -350,7 +350,7 @@ RSpec.describe Fontisan::Variation::Converter do
     context "when charstring has no blend data" do
       let(:charstring) do
         Struct.new(:_parsed, :blend_data) do
-          def parse = true
+          def parse = self
 
           def instance_variable_get(*)
             _parsed
@@ -370,7 +370,7 @@ RSpec.describe Fontisan::Variation::Converter do
     context "with blend data" do
       let(:charstring) do
         Struct.new(:_p, :blend_data) do
-          def parse = true
+          def parse = self
 
           def instance_variable_get(*)
             _p
@@ -514,7 +514,7 @@ RSpec.describe Fontisan::Variation::Converter do
     context "with charstrings that have blend data" do
       let(:charstring_with_blend) do
         Struct.new(:_p, :blend_data) do
-          def parse = true
+          def parse = self
 
           def instance_variable_get(*)
             _p
@@ -530,7 +530,7 @@ RSpec.describe Fontisan::Variation::Converter do
 
       let(:charstring_without_blend) do
         Struct.new(:_parsed, :blend_data) do
-          def parse = true
+          def parse = self
 
           def instance_variable_get(*)
             _parsed

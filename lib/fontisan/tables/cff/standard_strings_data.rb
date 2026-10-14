@@ -13,7 +13,7 @@ module Fontisan
       module StandardStrings
         # The 391 CFF standard strings are a fixed spec-defined data
         # table (Adobe TN 5176 Appendix A).
-        # rubocop:disable Metrics/CollectionLiteralLength
+        # rubocop:disable-next Metrics/CollectionLiteralLength
         LIST = %w[
           .notdef space exclam quotedbl numbersign
           dollar percent ampersand quoteright
@@ -75,7 +75,6 @@ module Fontisan
           afii57518 afii57519 afii57520 afii57521 afii64237 afii64238
           exclamdouble uni204A uni2080 uni2081 uni2082 uni2083 uni2084
         ].freeze
-        # rubocop:enable Metrics/CollectionLiteralLength
 
         COUNT = 391
       end
