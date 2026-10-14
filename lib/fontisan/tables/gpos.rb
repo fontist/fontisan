@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "fontisan"
+
 module Fontisan
   module Tables
     # GPOS (Glyph Positioning) table parser

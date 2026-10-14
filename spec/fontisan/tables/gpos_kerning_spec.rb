@@ -39,6 +39,13 @@ RSpec.describe Fontisan::Tables::Gpos do
       end
     end
 
+    it "preserves the signed xAdvance limits and zero" do
+      [-32768, -1, 0, 32767].each do |value|
+        data = gpos_binary([gpos_lookup([gpos_pair_one({ 2 => { 3 => value } })])])
+        expect(described_class.read(data).kern_pairs[[2, 3]]).to eq(value)
+      end
+    end
+
     it "consumes all value fields and both records without treating offsets as advances" do
       [gpos_pair_one({ 2 => { 3 => -29, 4 => 15 } }, value_format: 255, second_format: 255),
        gpos_pair_two(value_format: 255, second_format: 255)].each do |subtable|
@@ -135,6 +142,78 @@ RSpec.describe Fontisan::Tables::Gpos do
     end
   end
 
+  describe "shared binary data" do
+    it "keeps aliased lookup decoding bounded while retaining logical lookup sums" do
+      pairs, allocations = gpos_measured_pairs(gpos_lookup_alias_binary(count: 32), glyph_count: 1)
+      expect(allocations).to be < 20_000
+      expect(pairs[[0, 0]]).to eq(-32)
+      first, array_bytes = gpos_measured_first(pairs)
+      expect(first).to eq([[0, 0], -32])
+      expect(array_bytes).to be < 64_000
+    end
+
+    it "keeps shared PairSet decoding bounded without dropping first glyphs" do
+      pairs, allocations = gpos_measured_pairs(gpos_pair_set_alias_binary(count: 32), glyph_count: 2)
+      expect(allocations).to be < 50_000
+      expect(pairs[[0, 0]]).to eq(-1)
+      expect(pairs[[31, 4095]]).to eq(-1)
+      expect(pairs.to_h).to eq({ [0, 0] => -1, [0, 1] => -1, [1, 0] => -1, [1, 1] => -1 })
+    end
+
+    it "keeps full-domain Coverage2 compact before bounded enumeration" do
+      data = gpos_shared_coverage_binary(count: 32, glyphs: 65536)
+      pairs, _allocations, array_bytes = gpos_measured_pairs(data, glyph_count: 1)
+      expect(array_bytes).to be < 64_000
+      expect(pairs[[65535, 65535]]).to eq(-32)
+      expect(pairs.each.first).to eq([[0, 0], -32])
+    end
+
+    it "keeps overlapping ClassDef1 data compact" do
+      data = gpos_overlapping_classes_binary
+      pairs, allocations = gpos_measured_pairs(data, glyph_count: 1)
+      expect(allocations).to be < 20_000
+      expect(pairs[[2, 0]]).to eq(-5025)
+    end
+
+    it "keeps Coverage sharing across distinct PairPos tables bounded" do
+      pairs, allocations = gpos_measured_pairs(gpos_shared_coverage_binary(count: 32), glyph_count: 1)
+      expect(allocations).to be < 20_000
+      expect(pairs[[0, 0]]).to eq(-32)
+      first, array_bytes = gpos_measured_first(pairs)
+      expect(first).to eq([[0, 0], -32])
+      expect(array_bytes).to be < 64_000
+    end
+  end
+
+  describe "shared decode contexts" do
+    it "decodes shared PairSets separately for different value1 formats" do
+      pairs = described_class.read(gpos_shared_pair_set_binary).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-29)
+    end
+
+    it "decodes shared PairSets separately for different value2 strides" do
+      data = gpos_shared_pair_set_binary(first_formats: [4, 4], second_formats: [0, 1],
+                                         records: [2, 3, -29, 4, 5, 15, 0])
+      pairs = described_class.read(data).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-58)
+      expect(pairs[[2, 4]]).to eq(5)
+      expect(pairs[[2, 5]]).to eq(15)
+    end
+
+    it "validates shared ClassDefs against both parent class counts" do
+      subtable = gpos_pair_two(first: { 2 => 1 }, second: {}, matrix: [[0], [-29]])
+      subtable[10, 2] = subtable.byteslice(8, 2)
+      expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /class definition/)
+    end
+
+    it "decodes aliased features once while deduplicating referenced lookups" do
+      pairs, allocations = gpos_measured_pairs(gpos_feature_alias_binary, glyph_count: 1)
+      expect(allocations).to be < 40_000
+      expect(pairs[[0, 0]]).to eq(-1)
+    end
+  end
+
   describe "malformed selected data" do
     it "rejects every truncated suffix of a selected synthetic table" do
       [individual, class_based].each do |subtable|
@@ -157,6 +236,14 @@ RSpec.describe Fontisan::Tables::Gpos do
       subtable[0, 2] = [3].pack("n")
       expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
         .to raise_error(Fontisan::ParseError)
+    end
+
+    it "rejects malformed overlapping Feature indices before repeated decoding" do
+      data = gpos_overlapping_features_binary
+      before = GC.stat(:total_allocated_objects)
+      expect { described_class.read(data).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /lookup index 1000/)
+      expect(GC.stat(:total_allocated_objects) - before).to be < 20_000
     end
 
     it "rejects offsets into headers, off-table offsets, and invalid feature/lookup indices" do
@@ -210,6 +297,30 @@ RSpec.describe Fontisan::Tables::Gpos do
       end
     end
 
+    it "rejects unordered Coverage1 glyphs with otherwise valid offsets" do
+      malformed = gpos_pair_one({ 2 => { 3 => -29 }, 4 => { 3 => -15 } })
+      offset = malformed.byteslice(2, 2).unpack1("n")
+      malformed[offset + 4, 4] = [4, 2].pack("n*")
+      expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /glyph IDs/)
+    end
+
+    it "rejects duplicate PairSet second glyph IDs with otherwise valid records" do
+      malformed = individual.dup
+      offset = malformed.byteslice(10, 2).unpack1("n")
+      malformed[offset + 6, 2] = [3].pack("n")
+      expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /glyph IDs/)
+    end
+
+    it "rejects inconsistent Coverage2 indices with otherwise ordered ranges" do
+      malformed = gpos_pair_two(coverage_format: 2)
+      offset = malformed.byteslice(2, 2).unpack1("n")
+      malformed[offset + 8, 2] = [1].pack("n")
+      expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /coverage range/)
+    end
+
     it "rejects empty matrices even when class definitions contain no explicit assignments" do
       [12, 14].each do |offset|
         malformed = gpos_pair_two(first: {}, second: {}, matrix: [[0]], value_format: 0)
@@ -226,6 +337,23 @@ RSpec.describe Fontisan::Tables::Gpos do
       compact = gpos_pair_two(value_format: 0)
       compact[12, 4] = [65535, 65535].pack("n*")
       expect(described_class.read(gpos_binary([gpos_lookup([compact])])).kern_pairs[[2, 3]]).to eq(0)
+    end
+  end
+
+  describe "loading in a fresh process" do
+    {
+      "pair parser first" => ["fontisan/tables/gpos/pair_position", "fontisan"],
+      "collection first" => ["fontisan/tables/gpos/kerning_pairs", "fontisan"],
+      "facade first" => ["fontisan/tables/gpos", "fontisan"],
+      "gem first" => ["fontisan", "fontisan/tables/gpos/pair_position", "fontisan/tables/gpos/kerning_pairs"],
+    }.each do |name, order|
+      it "keeps the table reader intact with #{name}" do
+        path = font_fixture_path("Libertinus", "static/TTF/LibertinusSerif-Regular.ttf")
+        output, errors, status = gpos_load_order(order, path)
+        expect(status.exitstatus).to eq(0), errors
+        expect(output).to eq("ok\n")
+        expect(errors).to eq("")
+      end
     end
   end
 

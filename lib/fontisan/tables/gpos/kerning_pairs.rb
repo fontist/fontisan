@@ -15,8 +15,9 @@ module Fontisan
           end
 
           @glyph_count = glyph_count
-          @view = BinaryView.new(table.raw_data)
-          @lookups = selected_lookups(table, script_tag, feature_tag)
+          @view = BinaryView.new(table.raw_data.dup.freeze)
+          @lookups = selected_lookups(table, script_tag, feature_tag).freeze
+          @view.freeze
         end
 
         def [](pair)
@@ -41,13 +42,9 @@ module Fontisan
             raise ArgumentError, "glyph_count is required to enumerate class-based kerning"
           end
 
-          subtables = @lookups.flatten
-          subtables.flat_map(&:left_glyphs).uniq.sort.each do |left|
-            next if @glyph_count && left >= @glyph_count
-
+          subtables = @lookups.flatten.uniq
+          left_glyphs(subtables).each do |left|
             candidates(subtables, left).each do |right|
-              next if @glyph_count && right >= @glyph_count
-
               pair = [left, right]
               value = self[pair]
               yield pair, value unless value.zero?
@@ -59,10 +56,26 @@ module Fontisan
         private
 
         def candidates(subtables, left)
-          matching = subtables.select { |subtable| subtable.left_glyphs.include?(left) }
+          matching = subtables.select { |subtable| subtable.covers?(left) }
           return (0...@glyph_count) if matching.any?(&:class_based?)
 
-          matching.flat_map { |subtable| subtable.right_glyphs(left, @glyph_count) }.uniq.sort
+          union(matching.map { |subtable| subtable.right_glyphs(left, @glyph_count) })
+        end
+
+        def left_glyphs(subtables)
+          union(subtables.map(&:left_glyphs))
+        end
+
+        def union(sequences)
+          glyphs = {}
+          sequences.each do |sequence|
+            sequence.each do |glyph|
+              break if @glyph_count && glyph >= @glyph_count
+
+              glyphs[glyph] = true
+            end
+          end
+          glyphs.keys.sort
         end
 
         def selected_lookups(table, script_tag, feature_tag)
@@ -73,18 +86,36 @@ module Fontisan
 
           features = @view.child(table.feature_list_offset.to_i, minimum: 10)
           list = features.record(LayoutCommon::FeatureList, header: 2, count_offset: 0, item_size: 6)
-          lookup_indices = indices.flat_map do |index|
+          feature_offsets = indices.filter_map do |index|
             raise ParseError, "Invalid GPOS feature index #{index}" if index >= list.feature_count
 
             record = list.feature_records[index]
-            next [] unless record.feature_tag == feature_tag
-
-            feature = features.child(record.feature_offset.to_i, minimum: 2 + list.feature_count.to_i * 6)
-            feature.record(LayoutCommon::Feature, header: 4, count_offset: 2, item_size: 2).lookup_list_indices.map(&:to_i)
+            record.feature_offset.to_i if record.feature_tag == feature_tag
           end
+          lookup_indices = feature_lookup_indices(features, feature_offsets.uniq,
+                                                  2 + list.feature_count.to_i * 6,
+                                                  table.lookup_list_offset.to_i)
           return [] if lookup_indices.empty?
 
-          lookups(table.lookup_list_offset.to_i, lookup_indices.uniq.sort)
+          lookups(table.lookup_list_offset.to_i, lookup_indices)
+        end
+
+        def feature_lookup_indices(features, offsets, minimum, lookup_list_offset)
+          indices = {}
+          lookup_count = nil
+          offsets.each do |offset|
+            feature = features.child(offset, minimum: minimum)
+            count = feature.uint16(2)
+            feature.bytes(0, 4 + count * 2)
+            count.times do |index|
+              lookup_index = feature.uint16(4 + index * 2)
+              lookup_count ||= @view.child(lookup_list_offset, minimum: 10).uint16(0)
+              raise ParseError, "Invalid GPOS lookup index #{lookup_index}" if lookup_index >= lookup_count
+
+              indices[lookup_index] = true
+            end
+          end
+          indices.keys.sort
         end
 
         def feature_indices(offset, script_tag)
@@ -119,9 +150,10 @@ module Fontisan
             header = 6 + subtable_count * 2
             header += 2 unless (lookup.uint16(2) & 16).zero?
             lookup.bytes(0, header)
-            subtable_offsets.map do |subtable_offset|
-              PairPosition.new(lookup.child(subtable_offset, minimum: header))
-            end
+            subtable_offsets.uniq.map do |subtable_offset|
+              view = lookup.child(subtable_offset, minimum: header)
+              view.cached(:pair_position) { PairPosition.new(view) }
+            end.freeze
           end
         end
       end

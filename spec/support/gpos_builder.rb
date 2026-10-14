@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require "objspace"
+require "open3"
+require "rbconfig"
+
 module GposBuilder
   def gpos_coverage(glyphs, format: 1)
     return [1, glyphs.size, *glyphs].pack("n*") if format == 1
@@ -90,5 +94,146 @@ module GposBuilder
     lookup_list = [lookups.size, *offsets].pack("n*") + lookups.join
     [1, 0, 10, 10 + script_list.bytesize,
      10 + script_list.bytesize + feature_list.bytesize].pack("n*") + script_list + feature_list + lookup_list
+  end
+
+  def gpos_lookup_alias_binary(count:, glyphs: 4096)
+    subtable = gpos_pair_two(coverage: [0], first: {}, second: {}, matrix: [[-1]], coverage_format: 2)
+    coverage = subtable.byteslice(2, 2).unpack1("n")
+    subtable[coverage + 6, 2] = [glyphs - 1].pack("n")
+    lookup = gpos_lookup([subtable])
+    data = gpos_binary([lookup] * count)
+    list_offset = data.byteslice(8, 2).unpack1("n")
+    data.byteslice(0, list_offset) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup
+  end
+
+  def gpos_pair_set_alias_binary(count:, rights: 4096)
+    records = (0...rights).map { |gid| [gid, -1].pack("n*") }.join
+    coverage = [2, 1, 0, count - 1, 0].pack("n*")
+    base = 10 + count * 2
+    offsets = Array.new(count, base + coverage.bytesize)
+    subtable = [1, base, 4, 0, count, *offsets].pack("n*") + coverage + [rights].pack("n") + records
+    gpos_binary([gpos_lookup([subtable])])
+  end
+
+  def gpos_shared_coverage_binary(count:, glyphs: 4096)
+    lookup = gpos_lookup([gpos_pair_two(coverage: [0], first: {}, second: {}, matrix: [[-1]])])
+    data = gpos_binary([lookup] * count)
+    list_offset = data.byteslice(8, 2).unpack1("n")
+    header_size = 2 + count * 2
+    positions_base = header_size + count * 8
+    coverage_base = positions_base + count * 18
+    class_base = coverage_base + 10
+    lookup_offsets = (0...count).map { |index| header_size + index * 8 }
+    headers = (0...count).map do |index|
+      [2, 0, 1, positions_base + index * 18 - lookup_offsets[index]].pack("n*")
+    end.join
+    positions = (0...count).map do |index|
+      base = positions_base + index * 18
+      [2, coverage_base - base, 4, 0, class_base - base, class_base + 4 - base, 1, 1, -1].pack("n*")
+    end.join
+    list = [count, *lookup_offsets].pack("n*") + headers + positions +
+      [2, 1, 0, glyphs - 1, 0, 2, 0, 2, 0].pack("n*")
+    data.byteslice(0, list_offset) + list
+  end
+
+  def gpos_measured_pairs(data, glyph_count:)
+    was_disabled = GC.disable
+    arrays_before = ObjectSpace.memsize_of_all(Array)
+    before = GC.stat(:total_allocated_objects)
+    pairs = Fontisan::Tables::Gpos.read(data).kern_pairs(glyph_count: glyph_count)
+    [pairs, GC.stat(:total_allocated_objects) - before,
+     ObjectSpace.memsize_of_all(Array) - arrays_before]
+  ensure
+    GC.enable unless was_disabled
+  end
+
+  def gpos_measured_first(pairs)
+    was_disabled = GC.disable
+    before = ObjectSpace.memsize_of_all(Array)
+    first = pairs.each.first
+    [first, ObjectSpace.memsize_of_all(Array) - before]
+  ensure
+    GC.enable unless was_disabled
+  end
+
+  def gpos_shared_pair_set_binary(first_formats: [4, 1], second_formats: [0, 0], records: [1, 3, -29])
+    data = gpos_binary([gpos_lookup(["ignored"])] * 2)
+    list_offset = data.byteslice(8, 2).unpack1("n")
+    positions_base = 22
+    coverage_base = 46
+    pair_base = 52
+    headers = [2, 0, 1, 16, 2, 0, 1, 20].pack("n*")
+    positions = (0...2).map do |index|
+      base = positions_base + index * 12
+      [1, coverage_base - base, first_formats[index], second_formats[index], 1, pair_base - base].pack("n*")
+    end.join
+    list = [2, 6, 14].pack("n*") + headers + positions + [1, 1, 2, *records].pack("n*")
+    data.byteslice(0, list_offset) + list
+  end
+
+  def gpos_feature_alias_binary(count: 32, indices: 1000)
+    langsys = [0, 0xffff, count, *(0...count)].pack("n*")
+    scripts = "#{[1].pack('n')}latn#{[8, 4, 0].pack('n*')}#{langsys}"
+    feature_records = Array.new(count) { "kern#{[2 + count * 6].pack('n')}" }.join
+    features = [count].pack("n") + feature_records + [0, indices, *Array.new(indices, 0)].pack("n*")
+    lookup = gpos_lookup([gpos_pair_two(coverage: [0], first: {}, second: {}, matrix: [[-1]])])
+    lookups = [1, 4].pack("n*") + lookup
+    [1, 0, 10, 10 + scripts.bytesize, 10 + scripts.bytesize + features.bytesize].pack("n*") +
+      scripts + features + lookups
+  end
+
+  def gpos_load_order(order, font_path)
+    program = <<~RUBY
+      font_path = ARGV.pop
+      ARGV.each { |path| require path }
+      klass = Fontisan::Tables::Gpos
+      raise "wrong superclass" unless klass.superclass == Fontisan::Binary::BaseRecord
+      raise "missing reader" unless klass.respond_to?(:read)
+      %w[fontisan fontisan/tables/gpos fontisan/tables/gpos/pair_position fontisan/tables/gpos/kerning_pairs].each do |path|
+        require path
+      end
+      raise "duplicate class" unless klass.equal?(Fontisan::Tables::Gpos)
+      pairs = Fontisan::FontLoader.load(font_path).table("GPOS").kern_pairs
+      raise "wrong kerning" unless pairs[[34, 55]] == -112
+      puts "ok"
+    RUBY
+    Open3.capture3(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__),
+                   "-e", program, *order, font_path)
+  end
+
+  def gpos_overlapping_classes_binary(count: 32, class_values: 2000)
+    data = gpos_binary([gpos_lookup(["ignored"])] * count)
+    list_offset = data.byteslice(8, 2).unpack1("n")
+    header = 2 + count * 2
+    positions_base = header + count * 8
+    coverage_base = positions_base + (count - 1) * 18 + 60016
+    second_base = coverage_base + 6
+    first_base = second_base + 4
+    body = "\x00".b * (first_base + count * 6 + class_values * 2)
+    body[0, header] = [count, *(0...count).map { |index| header + index * 8 }].pack("n*")
+    count.times do |index|
+      lookup_base = header + index * 8
+      position = positions_base + index * 18
+      body[lookup_base, 8] = [2, 0, 1, position - lookup_base].pack("n*")
+      body[position, 18] = [2, coverage_base - position, 4, 0, first_base + index * 6 - position,
+                            second_base - position, 30000, 1, -1].pack("n*")
+      body[first_base + index * 6, 6] = [1, index, class_values].pack("n*")
+    end
+    body[coverage_base, 6] = [1, 1, 2].pack("n*")
+    body[second_base, 4] = [2, 0].pack("n*")
+    data.byteslice(0, list_offset) + body
+  end
+
+  def gpos_overlapping_features_binary(count: 32, indices: 1000)
+    langsys = [0, 0xffff, count, *(0...count)].pack("n*")
+    scripts = "#{[1].pack('n')}latn#{[8, 4, 0].pack('n*')}#{langsys}"
+    records = (0...count).map do |index|
+      "kern#{[2 + count * 6 + index * 4].pack('n')}"
+    end.join
+    features = [count].pack("n") + records + Array.new(count, [0, indices].pack("n*")).join +
+      "\x00".b * (indices * 2)
+    lookups = [1, 4, 1, 0, 0].pack("n*")
+    [1, 0, 10, 10 + scripts.bytesize, 10 + scripts.bytesize + features.bytesize].pack("n*") +
+      scripts + features + lookups
   end
 end
