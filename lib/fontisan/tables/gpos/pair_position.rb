@@ -187,8 +187,8 @@ module Fontisan
           advance(@matrix, (row * @second_count + column) * @record_size)
         end
 
-        def right_glyphs(left, glyph_count)
-          class_based? ? (0...glyph_count) : @pairs.fetch(left).each_key
+        def right_glyphs(left)
+          @pairs.fetch(left).each_key
         end
 
         private

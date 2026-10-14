@@ -106,6 +106,37 @@ module GposBuilder
     data.byteslice(0, list_offset) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup
   end
 
+  def gpos_lookup_subtable_alias_binary(count:, repetitions:, subtables:)
+    cursor = 6 + 2 * repetitions * subtables.size
+    offsets = subtables.map do |data|
+      offset = cursor
+      cursor += data.bytesize
+      offset
+    end
+    entries = Array.new(repetitions, offsets).flatten
+    lookup = [2, 0, entries.size, *entries].pack("n*") + subtables.join
+    data = gpos_binary([lookup] * count)
+    base = data.byteslice(8, 2).unpack1("n")
+    data.byteslice(0, base) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup
+  end
+
+  def gpos_subtable_decode_counts(data)
+    base = data.byteslice(8, 2).unpack1("n")
+    lookup_offset = base + data.byteslice(base + 2, 2).unpack1("n")
+    view_class = Fontisan::Tables::Gpos.const_get(:BinaryView)
+    reads = 0
+    trace = TracePoint.new(:call) do |event|
+      next unless event.method_id == :array && event.self.is_a?(view_class)
+      next unless event.self.instance_variable_get(:@offset) == lookup_offset
+
+      reads += 1 if event.binding.local_variable_get(:offset) == 6
+    end
+    table = Fontisan::Tables::Gpos.read(data)
+    pairs = nil
+    trace.enable { pairs = table.kern_pairs }
+    [pairs, reads]
+  end
+
   def gpos_pair_set_alias_binary(count:, rights: 4096)
     records = (0...rights).map { |gid| [gid, -1].pack("n*") }.join
     coverage = [2, 1, 0, count - 1, 0].pack("n*")

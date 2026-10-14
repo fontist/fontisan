@@ -59,7 +59,7 @@ module Fontisan
           matching = subtables.select { |subtable| subtable.covers?(left) }
           return (0...@glyph_count) if matching.any?(&:class_based?)
 
-          union(matching.map { |subtable| subtable.right_glyphs(left, @glyph_count) })
+          union(matching.map { |subtable| subtable.right_glyphs(left) })
         end
 
         def left_glyphs(subtables)
@@ -155,15 +155,17 @@ module Fontisan
             lookup = list.child(offsets[index], minimum: 2 + count * 2)
             next unless lookup.uint16(0) == 2
 
-            subtable_count = lookup.uint16(4)
-            subtable_offsets = lookup.array(6, subtable_count)
-            header = 6 + subtable_count * 2
-            header += 2 unless (lookup.uint16(2) & 16).zero?
-            lookup.bytes(0, header)
-            subtable_offsets.uniq.map do |subtable_offset|
-              view = lookup.child(subtable_offset, minimum: header)
-              view.cached(:pair_position) { PairPosition.new(view) }
-            end.freeze
+            lookup.cached(:lookup_subtables) do
+              subtable_count = lookup.uint16(4)
+              subtable_offsets = lookup.array(6, subtable_count)
+              header = 6 + subtable_count * 2
+              header += 2 unless (lookup.uint16(2) & 16).zero?
+              lookup.bytes(0, header)
+              subtable_offsets.uniq.map do |subtable_offset|
+                view = lookup.child(subtable_offset, minimum: header)
+                view.cached(:pair_position) { PairPosition.new(view) }
+              end.freeze
+            end
           end
         end
       end

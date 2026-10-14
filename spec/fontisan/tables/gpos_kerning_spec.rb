@@ -187,6 +187,16 @@ RSpec.describe Fontisan::Tables::Gpos do
       expect(array_bytes).to be < 64_000
     end
 
+    it "decodes a shared Lookup subtable array once while preserving logical sums and priority" do
+      zero = gpos_pair_one({ 2 => { 3 => 0 } })
+      data = gpos_lookup_subtable_alias_binary(count: 32, repetitions: 128, subtables: [zero, individual])
+      pairs, reads = gpos_subtable_decode_counts(data)
+      expect(reads).to be <= 1
+      expect(pairs[[2, 3]]).to eq(0)
+      expect(pairs[[2, 4]]).to eq(480)
+      expect(pairs.to_h).to eq({ [2, 4] => 480 })
+    end
+
     it "keeps shared PairSet decoding bounded without dropping first glyphs" do
       pairs, allocations = gpos_measured_pairs(gpos_pair_set_alias_binary(count: 32), glyph_count: 2)
       expect(allocations).to be < 50_000
