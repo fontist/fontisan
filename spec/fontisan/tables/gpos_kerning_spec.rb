@@ -242,6 +242,35 @@ RSpec.describe Fontisan::Tables::Gpos do
         .to raise_error(Fontisan::ParseError, /class definition/)
     end
 
+    it "bounds valid overlapping Feature words, including contained shorter spans" do
+      [false, true].each do |nested|
+        data = gpos_valid_overlapping_features_binary(count: 128, nested: nested)
+        pairs, allocations = gpos_measured_pairs(data, glyph_count: 1)
+        expect(allocations).to be < 20_000
+        expect(pairs[[0, 0]]).to eq(nested ? -3 : -2)
+      end
+    end
+
+    it "preserves distinct disjoint Feature bodies at either byte alignment" do
+      [0, 1].each do |padding|
+        payload = [0, 1, 0].pack("n*") + "\x00".b * padding + [0, 1, 1].pack("n*")
+        data = gpos_feature_spans_binary(offsets: [14, 20 + padding], data: payload)
+        expect(described_class.read(data).kern_pairs[[0, 0]]).to eq(-2)
+      end
+    end
+
+    it "preserves both interpretations when Feature index spans overlap at odd alignment" do
+      payload = [0, 259, 1, 1, *Array.new(257, 0)].pack("n*")
+      data = gpos_feature_spans_binary(offsets: [14, 17], data: payload, lookup_count: 300)
+      expect(described_class.read(data).kern_pairs[[0, 0]]).to eq(-3)
+    end
+
+    it "leaves unused lookup data unread for a selected empty Feature" do
+      data = gpos_binary([gpos_lookup([individual])], indices: [])
+      data[8, 2] = [0].pack("n")
+      expect(described_class.read(data).kern_pairs.to_h).to eq({})
+    end
+
     it "decodes aliased features once while deduplicating referenced lookups" do
       pairs, allocations = gpos_measured_pairs(gpos_feature_alias_binary, glyph_count: 1)
       expect(allocations).to be < 40_000

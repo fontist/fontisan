@@ -101,21 +101,33 @@ module Fontisan
         end
 
         def feature_lookup_indices(features, offsets, minimum, lookup_list_offset)
-          indices = {}
-          lookup_count = nil
-          offsets.each do |offset|
-            feature = features.child(offset, minimum: minimum)
-            count = feature.uint16(2)
-            feature.bytes(0, 4 + count * 2)
-            count.times do |index|
-              lookup_index = feature.uint16(4 + index * 2)
-              lookup_count ||= @view.child(lookup_list_offset, minimum: 10).uint16(0)
-              raise ParseError, "Invalid GPOS lookup index #{lookup_index}" if lookup_index >= lookup_count
+          ranges = feature_ranges(features, offsets, minimum)
+          return [] if ranges.empty?
 
-              indices[lookup_index] = true
+          lookup_count = @view.child(lookup_list_offset, minimum: 10).uint16(0)
+          indices = {}
+          ranges.group_by { |first, _last| first % 2 }.each_value do |spans|
+            previous = -1
+            spans.sort.each do |first, last|
+              [first, previous + 2].max.step(last, 2) do |position|
+                lookup_index = features.uint16(position)
+                raise ParseError, "Invalid GPOS lookup index #{lookup_index}" if lookup_index >= lookup_count
+
+                indices[lookup_index] = true
+              end
+              previous = [previous, last].max
             end
           end
           indices.keys.sort
+        end
+
+        def feature_ranges(features, offsets, minimum)
+          offsets.filter_map do |offset|
+            feature = features.child(offset, minimum: minimum)
+            count = feature.uint16(2)
+            feature.bytes(2 + count * 2, 2)
+            [offset + 4, offset + 2 + count * 2] unless count.zero?
+          end
         end
 
         def feature_indices(offset, script_tag)
@@ -140,8 +152,6 @@ module Fontisan
           count = list.uint16(0)
           offsets = list.array(2, count)
           indices.filter_map do |index|
-            raise ParseError, "Invalid GPOS lookup index #{index}" if index >= count
-
             lookup = list.child(offsets[index], minimum: 2 + count * 2)
             next unless lookup.uint16(0) == 2
 

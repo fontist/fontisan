@@ -182,6 +182,35 @@ module GposBuilder
       scripts + features + lookups
   end
 
+  def gpos_valid_overlapping_features_binary(count: 32, indices: 5000, nested: false)
+    lookup_count = indices + 1
+    scripts = "#{[1].pack('n')}latn#{[8, 4, 0, 0, 0xffff, count, *(0...count)].pack('n*')}"
+    header = 2 + count * 6
+    records = (0...count).map { |index| "kern#{[header + index * 4].pack('n')}" }.join
+    counts = (0...count).map { |index| nested && index.odd? ? 1 : indices }
+    features = [count].pack("n") + records + counts.map { |size| [0, size].pack("n*") }.join +
+      "\x00".b * (indices * 2)
+    lookup = gpos_lookup([gpos_pair_two(coverage: [0], first: {}, second: {}, matrix: [[-1]])])
+    data = "\x00".b * (65544 + lookup.bytesize)
+    data[0, 10] = [1, 0, 100, 20000, 10].pack("n*")
+    data[10, 2 + lookup_count * 2] = [lookup_count, *Array.new(lookup_count, 65534)].pack("n*")
+    data[100, scripts.bytesize] = scripts
+    data[20000, features.bytesize] = features
+    data[65544, lookup.bytesize] = lookup
+    data
+  end
+
+  def gpos_feature_spans_binary(offsets:, data:, lookup_count: 2)
+    count = offsets.size
+    langsys = [0, 0xffff, count, *(0...count)].pack("n*")
+    scripts = "#{[1].pack('n')}latn#{[8, 4, 0].pack('n*')}#{langsys}"
+    features = [count].pack("n") + offsets.map { |offset| "kern#{[offset].pack('n')}" }.join + data
+    lookup = gpos_lookup([gpos_pair_two(coverage: [0], first: {}, second: {}, matrix: [[-1]])])
+    lookups = [lookup_count, *Array.new(lookup_count, 2 + lookup_count * 2)].pack("n*") + lookup
+    [1, 0, 10, 10 + scripts.bytesize, 10 + scripts.bytesize + features.bytesize].pack("n*") +
+      scripts + features + lookups
+  end
+
   def gpos_load_order(order, font_path)
     program = <<~RUBY
       font_path = ARGV.pop
