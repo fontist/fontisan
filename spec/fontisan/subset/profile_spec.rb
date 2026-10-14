@@ -161,31 +161,26 @@ RSpec.describe Fontisan::Subset::Profile do
       expect(tables).not_to be_empty
     end
 
-    it "caches loaded profiles" do
-      # Call twice to test caching
-      tables1 = described_class.for_name("pdf")
-      tables2 = described_class.for_name("pdf")
+    it "caches configuration across public profile queries" do
+      profile_class = Class.new(described_class)
+      allow(YAML).to receive(:load_file).and_call_original
 
-      expect(tables1).to eq(tables2)
+      tables = profile_class.for_name("pdf")
+
+      expect(profile_class.for_name("pdf")).to eq(tables)
+      expect(profile_class.valid_names).to include("pdf")
+      expect(profile_class.description("pdf")).to include("PDF")
+      expect(YAML).to have_received(:load_file).once
     end
 
-    it "handles missing configuration file" do
-      # Temporarily mock the config path
-      allow(File).to receive(:join).and_call_original
-      allow(File).to receive(:join).with(anything,
-                                         "../config/subset_profiles.yml")
-        .and_return("/nonexistent/path.yml")
-
-      # Clear cache to force reload
-      described_class.clear_cache!
+    it "raises a public error when the configuration file is missing" do
+      profile_class = Class.new(described_class)
+      allow(YAML).to receive(:load_file).and_raise(Errno::ENOENT)
 
       expect do
-        described_class.for_name("pdf")
+        profile_class.for_name("pdf")
       end.to raise_error(Fontisan::Error,
                          /Profile configuration file not found/)
-
-      # Restore for other tests
-      described_class.clear_cache!
     end
   end
 

@@ -6,15 +6,19 @@ module PostscriptHintExtractorFakes
   HintDict = Struct.new(:blue_values, :std_hw, :std_vw, :other_blues,
                         :family_blues, :family_other_blues, :blue_scale,
                         :blue_shift, :blue_fuzz, :stem_snap_h, :stem_snap_v,
-                        :language_group) do # rubocop:disable Naming/PredicateName
+                        :language_group) do
     def force_bold?
-      nil
+      false
     end
   end
 
   HintCff = Struct.new(:dict) do
     def private_dict(_index = 0)
       dict
+    end
+
+    def charstrings_index(_index = 0)
+      nil
     end
   end
 end
@@ -114,26 +118,26 @@ RSpec.describe Fontisan::Hints::PostScriptHintExtractor do
     end
   end
 
-  describe "private methods" do
-    describe "#extract_private_dict_hints" do
+  describe "font-level hint extraction" do
+    describe "#extract_from_font Private dict hints" do
       it "extracts hint parameters from Private dict" do
         font = Fontisan::SpecHelpers::FakeFont.new({})
         font.tables_hash["CFF "] = PostscriptHintExtractorFakes::HintCff.new(
           PostscriptHintExtractorFakes::HintDict.new(blue_values: [-20, 0, 450, 470], std_hw: 68, std_vw: 88),
         )
 
-        hints = extractor.extract_private_dict_hints(font)
+        hints = JSON.parse(extractor.extract_from_font(font).private_dict_hints)
         expect(hints).to be_a(Hash)
-        expect(hints[:blue_values]).to eq([-20, 0, 450, 470])
-        expect(hints[:std_hw]).to eq(68)
-        expect(hints[:std_vw]).to eq(88)
+        expect(hints["blue_values"]).to eq([-20, 0, 450, 470])
+        expect(hints["std_hw"]).to eq(68)
+        expect(hints["std_vw"]).to eq(88)
       end
 
       it "returns empty hash for font without CFF table" do
         font = Fontisan::SpecHelpers::FakeFont.new({})
         allow(font).to receive(:has_table?).with("CFF ").and_return(false)
 
-        hints = extractor.extract_private_dict_hints(font)
+        hints = JSON.parse(extractor.extract_from_font(font).private_dict_hints)
         expect(hints).to eq({})
       end
     end

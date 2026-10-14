@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require_relative "../../support/baseline_command_probe"
 
 RSpec.describe Fontisan::Commands::ConvertCommand do
+  include Fontisan::SpecHelpers::BaselineCommandTestHelpers
+
   let(:fixtures_dir) { File.expand_path("../../fixtures/fonts", __dir__) }
   let(:ttf_path) { font_fixture_path("NotoSans", "NotoSans-Regular.ttf") }
   let(:variable_ttf) do
@@ -58,34 +61,46 @@ RSpec.describe Fontisan::Commands::ConvertCommand do
     end
   end
 
-  describe "#parse_coordinates" do
-    let(:command) do
-      output_path = File.join(output_dir, "output.ttf")
-      described_class.new(ttf_path, to: "ttf", output: output_path)
-    end
-
+  describe "coordinate parsing through #run" do
     it "parses simple coordinate string" do
-      coords = command.parse_coordinates("wght=700")
-      expect(coords).to eq({ "wght" => 700.0 })
+      output_path = File.join(output_dir, "output.ttf")
+      result = run_conversion_with_coordinates(
+        ttf_path, output_path, "wght=700", { "wght" => 700.0 }
+      )
+
+      expect(result[:success]).to be(true)
     end
 
     it "parses multiple coordinates" do
-      coords = command.parse_coordinates("wght=700,wdth=100,slnt=-10")
-      expect(coords).to eq({
-                             "wght" => 700.0,
-                             "wdth" => 100.0,
-                             "slnt" => -10.0,
-                           })
+      output_path = File.join(output_dir, "output.ttf")
+      result = run_conversion_with_coordinates(
+        ttf_path,
+        output_path,
+        "wght=700,wdth=100,slnt=-10",
+        { "wght" => 700.0, "wdth" => 100.0, "slnt" => -10.0 },
+      )
+
+      expect(result[:success]).to be(true)
     end
 
     it "handles whitespace in coordinate string" do
-      coords = command.parse_coordinates("wght = 700 ,   wdth=100")
-      expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
+      output_path = File.join(output_dir, "output.ttf")
+      result = run_conversion_with_coordinates(
+        ttf_path, output_path, "wght = 700 ,   wdth=100",
+        { "wght" => 700.0, "wdth" => 100.0 }
+      )
+
+      expect(result[:success]).to be(true)
     end
 
     it "handles empty pairs gracefully" do
-      coords = command.parse_coordinates("wght=700,,wdth=100")
-      expect(coords).to eq({ "wght" => 700.0, "wdth" => 100.0 })
+      output_path = File.join(output_dir, "output.ttf")
+      result = run_conversion_with_coordinates(
+        ttf_path, output_path, "wght=700,,wdth=100",
+        { "wght" => 700.0, "wdth" => 100.0 }
+      )
+
+      expect(result[:success]).to be(true)
     end
   end
 

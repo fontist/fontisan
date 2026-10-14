@@ -570,37 +570,58 @@ RSpec.describe Fontisan::Hints::PostScriptHintApplier do
       ].pack("CCCCC") + ("\x00" * 20)
     end
 
-    describe "#cff2_table?" do
-      it "detects CFF2 table" do
-        tables = { "CFF2 " => cff2_data }
-        expect(applier.cff2_table?(tables)).to be true
+    describe "#apply format routing" do
+      let(:routing_hints) do
+        Fontisan::Models::HintSet.new(
+          format: "postscript", private_dict_hints: { blue_values: [10, 20] }.to_json,
+        )
+      end
+      let(:cff_data) do
+        font = Fontisan::FontLoader.load(font_fixture_path("SourceSans3", "SourceSans3-Regular.otf"))
+        font.table_data.fetch("CFF ")
       end
 
-      it "detects CFF2 without trailing space" do
-        tables = { "CFF2" => cff2_data }
-        expect(applier.cff2_table?(tables)).to be true
+      ["CFF2 ", "CFF2"].each do |tag|
+        it "rebuilds hints for the #{tag.inspect} tag" do
+          tables = { tag => cff2_data.dup }
+
+          result = applier.apply(routing_hints, tables)
+
+          expect(result.keys).to eq([tag])
+          expect(result.fetch(tag)).not_to eq(cff2_data)
+          expect(result.fetch(tag).bytes.first).to eq(2)
+        end
       end
 
-      it "returns false for CFF table" do
-        tables = { "CFF " => "data" }
-        expect(applier.cff2_table?(tables)).to be false
+      it "applies CFF hints when no CFF2 table is present" do
+        result = applier.apply(routing_hints, { "CFF " => cff_data.dup })
+        rebuilt = Fontisan::Tables::Cff.read(result.fetch("CFF "))
+
+        expect(result.fetch("CFF ")).not_to eq(cff_data)
+        expect(rebuilt.private_dict(0).blue_values).to eq([10, 20])
       end
 
-      it "returns false when no CFF2 table" do
+      it "preserves unrelated tables when neither format is present" do
         tables = { "head" => "data" }
-        expect(applier.cff2_table?(tables)).to be false
-      end
-    end
 
-    describe "#cff_table?" do
-      it "detects CFF table" do
-        tables = { "CFF " => "data" }
-        expect(applier.cff_table?(tables)).to be true
+        expect(applier.apply(routing_hints, tables)).to eq("head" => "data")
       end
 
-      it "returns false for CFF2 table" do
-        tables = { "CFF2 " => cff2_data }
-        expect(applier.cff_table?(tables)).to be false
+      it "rebuilds CFF data under the CFF table tag" do
+        result = applier.apply(routing_hints, { "CFF " => cff_data.dup, "head" => "head_data" })
+        rebuilt = Fontisan::Tables::Cff.read(result.fetch("CFF "))
+
+        expect(rebuilt.private_dict(0).blue_values).to eq([10, 20])
+        expect(result.fetch("head")).to eq("head_data")
+      end
+
+      it "selects CFF2 ahead of CFF when both table tags are present" do
+        tables = { "CFF2 " => cff2_data.dup, "CFF " => cff_data.dup }
+
+        result = applier.apply(routing_hints, tables)
+
+        expect(result.fetch("CFF2 ")).not_to eq(cff2_data)
+        expect(result.fetch("CFF ")).to eq(cff_data)
       end
     end
 

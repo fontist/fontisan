@@ -130,21 +130,39 @@ RSpec.describe Fontisan::Commands::TablesCommand do
     end
   end
 
-  describe "#format_sfnt_version" do
+  describe "SFNT version formatting through #run" do
+    let(:font) { Fontisan::SpecHelpers::FakeFont.new({}) }
+
+    before do
+      allow(Fontisan::FontLoader).to receive(:load).and_return(font)
+    end
+
     it "formats TrueType version" do
-      expect(command.format_sfnt_version(0x00010000)).to eq("TrueType (0x00010000)")
+      font.sfnt_version_value = 0x00010000
+
+      expect(described_class.new("font.ttf").run.sfnt_version)
+        .to eq("TrueType (0x00010000)")
     end
 
     it "formats OpenType CFF version" do
-      expect(command.format_sfnt_version(0x4F54544F)).to eq("OpenType CFF (OTTO)")
+      font.sfnt_version_value = 0x4F54544F
+
+      expect(described_class.new("font.ttf").run.sfnt_version)
+        .to eq("OpenType CFF (OTTO)")
     end
 
     it "formats custom version" do
-      expect(command.format_sfnt_version(0xABCDEF01)).to eq("0xABCDEF01")
+      font.sfnt_version_value = 0xABCDEF01
+
+      expect(described_class.new("font.ttf").run.sfnt_version)
+        .to eq("0xABCDEF01")
     end
 
     it "formats zero version" do
-      expect(command.format_sfnt_version(0)).to eq("0x00000000")
+      font.sfnt_version_value = 0
+
+      expect(described_class.new("font.ttf").run.sfnt_version)
+        .to eq("0x00000000")
     end
   end
 end

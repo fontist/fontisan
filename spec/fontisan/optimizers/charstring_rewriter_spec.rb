@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require_relative "../../support/baseline_optimizer_cases"
 
 RSpec.describe Fontisan::Optimizers::CharstringRewriter do
+  include Fontisan::SpecHelpers::BaselineOptimizerCases
+
   let(:pattern1) do
     Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
       "ABCDEFGHIJ", # 10 bytes
@@ -250,109 +253,43 @@ RSpec.describe Fontisan::Optimizers::CharstringRewriter do
       end
     end
 
-    describe "#remove_overlaps" do
-      let(:high_savings_pattern) do
-        Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "HIGH", 4, [0], 5, 50, { 0 => [5] }, false
-        )
-      end
+    context "overlap selection" do
+      [
+        ["keeps the higher savings overlapping pattern", "ABCDEFGHIJKLMNO",
+         [["FGHI", 50], ["HIJKLM", 30]], ["ABCDE", 0, "JKLMNO"]],
+        ["keeps non-overlapping replacements", "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+         [["FGHI", 50], ["PQRSTU", 30]], ["ABCDE", 0, "JKLMNO", 1, "VWXYZ"]],
+        ["keeps the highest savings across multiple overlaps", "ABCDEFGHIJKLMNO",
+         [["FGHI", 50], ["HIJKLM", 30], ["IJK", 10]], ["ABCDE", 0, "JKLMNO"]],
+        ["keeps a chain of non-overlapping replacements", "ABCDEFGHIJKLMNOPQRST",
+         [["ABCD", 50], ["FGHIJK", 30], ["PQR", 10]], [0, "E", 1, "LMNO", 2, "ST"]],
+        ["keeps the earlier position when savings are equal", "ABCDEFGHIJKLMNO",
+         [["HIJK", 25], ["FGHI", 25]], ["ABCDE", 1, "JKLMNO"]],
+        ["preserves input when no pattern matches", "ABCDEFGHIJKLMNO",
+         [["XYZ", 50]], ["ABCDEFGHIJKLMNO"]],
+        ["keeps a single replacement", "ABCDEFGHIJKLMNO",
+         [["FGHI", 50]], ["ABCDE", 0, "JKLMNO"]],
+        ["replaces an earlier overlap with a higher savings pattern", "ABCDEFGHIJKLMNO",
+         [["FGHI", 30], ["HIJKLM", 50]], ["ABCDEFG", 1, "NO"]],
+        ["keeps replacements at adjacent boundaries", "ABCDEFGHIJKLMNO",
+         [["FGHI", 50], ["JKLM", 30]], ["ABCDE", 0, 1, "NO"]],
+        ["prioritizes higher savings at the same start", "ABCDEFGHIJKLMNO",
+         [["FGHIJK", 30], ["FGHI", 50]], ["ABCDE", 1, "JKLMNO"]],
+      ].each do |description, charstring, pattern_cases, expected_parts|
+        it description do
+          candidates = pattern_cases.map do |bytes, savings|
+            optimizer_pattern(bytes, positions: { 0 => [charstring.index(bytes)].compact }, savings: savings)
+          end
+          subroutine_builder = Fontisan::Optimizers::SubroutineBuilder.new(candidates)
+          subroutine_builder.build
+          map = candidates.each_with_index.to_h { |pattern, index| [pattern.bytes, index] }
+          writer = described_class.new(map, subroutine_builder)
+          expected = expected_parts.map do |part|
+            part.is_a?(Integer) ? subroutine_builder.create_call(part) : part
+          end.join
 
-      let(:medium_savings_pattern) do
-        Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "MEDIUM", 6, [0], 3, 30, { 0 => [7] }, false
-        )
-      end
-
-      let(:low_savings_pattern) do
-        Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "LOW", 3, [0], 2, 10, { 0 => [10] }, false
-        )
-      end
-
-      it "removes overlapping replacements" do
-        replacements = [
-          [5, high_savings_pattern],   # Position 5-8, savings 50
-          [7, medium_savings_pattern], # Position 7-12 (overlaps with high)
-        ]
-
-        result = rewriter.remove_overlaps(replacements)
-
-        # Should keep only the high savings pattern
-        expect(result.length).to eq(1)
-        expect(result[0][1]).to eq(high_savings_pattern)
-      end
-
-      it "keeps non-overlapping replacements" do
-        replacements = [
-          [5, high_savings_pattern], # Position 5-8
-          [15, medium_savings_pattern], # Position 15-20 (no overlap)
-        ]
-
-        result = rewriter.remove_overlaps(replacements)
-
-        # Should keep both since they don't overlap
-        expect(result.length).to eq(2)
-        expect(result.map do |r|
-          r[1]
-        end).to contain_exactly(high_savings_pattern, medium_savings_pattern)
-      end
-
-      it "handles multiple overlaps by keeping highest savings" do
-        replacements = [
-          [5, high_savings_pattern],    # Position 5-8, savings 50
-          [7, medium_savings_pattern],  # Position 7-12, savings 30 (overlaps)
-          [8, low_savings_pattern],     # Position 8-10, savings 10 (overlaps)
-        ]
-
-        result = rewriter.remove_overlaps(replacements)
-
-        # Should keep only high_savings_pattern
-        expect(result.length).to eq(1)
-        expect(result[0][1]).to eq(high_savings_pattern)
-      end
-
-      it "handles chain of non-overlapping patterns" do
-        replacements = [
-          [0, high_savings_pattern],    # Position 0-3
-          [5, medium_savings_pattern],  # Position 5-10
-          [15, low_savings_pattern],    # Position 15-17
-        ]
-
-        result = rewriter.remove_overlaps(replacements)
-
-        # All should be kept since they don't overlap
-        expect(result.length).to eq(3)
-      end
-
-      it "prefers later pattern when both have same savings" do
-        pattern_a = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "SAME", 4, [0], 3, 25, { 0 => [5] }, false
-        )
-        pattern_b = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "SAME", 4, [0], 3, 25, { 0 => [7] }, false
-        )
-
-        replacements = [
-          [5, pattern_a],  # Position 5-8, savings 25
-          [7, pattern_b],  # Position 7-10, savings 25 (overlaps)
-        ]
-
-        result = rewriter.remove_overlaps(replacements)
-
-        # Should keep one of them (the first encountered in sorted order)
-        expect(result.length).to eq(1)
-      end
-
-      it "handles empty replacements array" do
-        result = rewriter.remove_overlaps([])
-        expect(result).to eq([])
-      end
-
-      it "handles single replacement" do
-        replacements = [[5, high_savings_pattern]]
-        result = rewriter.remove_overlaps(replacements)
-
-        expect(result).to eq(replacements)
+          expect(writer.rewrite(charstring, candidates)).to eq(expected)
+        end
       end
     end
 
