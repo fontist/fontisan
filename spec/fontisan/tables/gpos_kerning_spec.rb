@@ -64,6 +64,14 @@ RSpec.describe Fontisan::Tables::Gpos do
       expect(pairs.to_h).to eq({ [2, 3] => -8, [2, 4] => 15 })
     end
 
+    it "treats a covered zero class cell as a match before later subtables" do
+      zero_classes = gpos_pair_two(matrix: [[0, 0], [0, 0]])
+      data = gpos_binary([gpos_lookup([zero_classes, individual])])
+      pairs = described_class.read(data).kern_pairs(glyph_count: 5)
+      expect(pairs[[2, 3]]).to eq(0)
+      expect(pairs.to_h).to eq({})
+    end
+
     it "adds nonzero adjustments from independent lookups" do
       second = gpos_pair_one({ 2 => { 3 => -8 } })
       data = gpos_binary([gpos_lookup([individual]), gpos_lookup([second])])
