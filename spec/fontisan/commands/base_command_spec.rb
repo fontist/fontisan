@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require_relative "../../support/baseline_command_probe"
 
 RSpec.describe Fontisan::Commands::BaseCommand do
   # Helper to build minimal valid font binary data
@@ -39,19 +40,19 @@ RSpec.describe Fontisan::Commands::BaseCommand do
   describe "#initialize" do
     context "with a valid TTF file" do
       it "loads the font successfully" do
-        command = described_class.new(temp_font_file.path)
-        expect(command.font).to be_a(Fontisan::TrueTypeFont)
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(temp_font_file.path)
+        expect(command.run[:font]).to be_a(Fontisan::TrueTypeFont)
       end
 
       it "stores the font path" do
-        command = described_class.new(temp_font_file.path)
-        expect(command.font_path).to eq(temp_font_file.path)
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(temp_font_file.path)
+        expect(command.run[:font_path]).to eq(temp_font_file.path)
       end
 
       it "stores the options" do
         options = { verbose: true }
-        command = described_class.new(temp_font_file.path, options)
-        expect(command.options).to eq(options)
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(temp_font_file.path, options)
+        expect(command.run[:options]).to eq(options)
       end
     end
 
@@ -59,8 +60,8 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       let(:ttc_file) { font_fixture_path("NotoSerifCJK", "NotoSerifCJK.ttc") }
 
       it "detects TTC files and uses default font_index" do
-        command = described_class.new(ttc_file)
-        font = command.font
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(ttc_file)
+        font = command.run[:font]
 
         expect(font).not_to be_nil
         expect([Fontisan::TrueTypeFont,
@@ -68,12 +69,22 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       end
 
       it "uses custom font_index from options" do
-        command = described_class.new(ttc_file, { font_index: 1 })
-        font = command.font
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(ttc_file, { font_index: 1 })
+        font = command.run[:font]
+        selected_name = font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
+        expected_font = Fontisan::FontLoader.load(ttc_file, font_index: 1)
+        expected_name = expected_font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
+        default_font = Fontisan::FontLoader.load(ttc_file, font_index: 0)
+        default_name = default_font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
 
-        expect(font).not_to be_nil
-        expect([Fontisan::TrueTypeFont,
-                Fontisan::OpenTypeFont]).to include(font.class)
+        expect(selected_name).to eq(expected_name)
+        expect(selected_name).not_to eq(default_name)
       end
     end
 
@@ -84,19 +95,30 @@ RSpec.describe Fontisan::Commands::BaseCommand do
       end
 
       it "detects OTC files and loads OpenType fonts" do
-        command = described_class.new(otc_file)
-        font = command.font
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(otc_file)
+        font = command.run[:font]
 
         expect(font).not_to be_nil
         expect(font).to be_a(Fontisan::OpenTypeFont)
       end
 
       it "uses custom font_index for OTC" do
-        command = described_class.new(otc_file, { font_index: 0 })
-        font = command.font
+        command = Fontisan::SpecHelpers::BaselineCommandProbe.new(otc_file, { font_index: 1 })
+        font = command.run[:font]
+        selected_name = font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
+        expected_font = Fontisan::FontLoader.load(otc_file, font_index: 1)
+        expected_name = expected_font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
+        default_font = Fontisan::FontLoader.load(otc_file, font_index: 0)
+        default_name = default_font.table("name").english_name(
+          Fontisan::Tables::Name::POSTSCRIPT_NAME,
+        )
 
-        expect(font).not_to be_nil
-        expect(font).to be_a(Fontisan::OpenTypeFont)
+        expect(selected_name).to eq(expected_name)
+        expect(selected_name).not_to eq(default_name)
       end
     end
 
@@ -134,18 +156,20 @@ RSpec.describe Fontisan::Commands::BaseCommand do
   end
 
   describe "protected attributes" do
-    let(:command) { described_class.new(temp_font_file.path) }
+    let(:command) do
+      Fontisan::SpecHelpers::BaselineCommandProbe.new(temp_font_file.path)
+    end
 
     it "provides access to font_path" do
-      expect(command.font_path).to eq(temp_font_file.path)
+      expect(command.run[:font_path]).to eq(temp_font_file.path)
     end
 
     it "provides access to font" do
-      expect(command.font).to be_a(Fontisan::TrueTypeFont)
+      expect(command.run[:font]).to be_a(Fontisan::TrueTypeFont)
     end
 
     it "provides access to options" do
-      expect(command.options).to be_a(Hash)
+      expect(command.run[:options]).to be_a(Hash)
     end
   end
 end

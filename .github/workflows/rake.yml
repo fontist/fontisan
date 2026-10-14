@@ -12,5 +12,7 @@ on:
 jobs:
   rake:
     uses: metanorma/ci/.github/workflows/generic-rake.yml@main
+    with:
+      cascade: false
     secrets:
       pat_token: ${{ secrets.GITHUB_TOKEN }}

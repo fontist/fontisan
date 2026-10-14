@@ -8,7 +8,7 @@ require "rubocop/rake_task"
 
 RuboCop::RakeTask.new
 
-# rubocop:disable Metrics/BlockLength
+# rubocop:disable-next Metrics/BlockLength
 namespace :fixtures do
   # Load centralized fixture configuration and the test-only downloader.
   # The downloader lives under spec/support (not lib/) because it is
@@ -144,7 +144,6 @@ namespace :fixtures do
     end
   end
 end
-# rubocop:enable Metrics/BlockLength
 
 # RSpec task depends on fixtures
 RSpec::Core::RakeTask.new(spec: "fixtures:download")

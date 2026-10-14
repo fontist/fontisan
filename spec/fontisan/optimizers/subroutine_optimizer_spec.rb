@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require_relative "../../support/baseline_optimizer_cases"
 
 RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
+  include Fontisan::SpecHelpers::BaselineOptimizerCases
+
   let(:pattern1) do
     Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
       "ABCDEFGHIJ", # 10 bytes
@@ -173,104 +176,92 @@ RSpec.describe Fontisan::Optimizers::SubroutineOptimizer do
     end
   end
 
-  describe "#conflicts_with_selected?" do
-    let(:optimizer) { described_class.new(patterns) }
+  describe "#optimize_selection position conflicts" do
+    [
+      ["keeps patterns from different glyphs", "ABCDEFGHIJ", { 0 => [0] },
+       "XYZ", { 1 => [0] }, [0, 1]],
+      ["keeps distant positions in a shared glyph", "ABCDEFGHIJ", { 0 => [0] },
+       "XYZ", { 0 => [20] }, [0, 1]],
+      ["rejects partial overlap", "ABCDEFGHIJ", { 0 => [0] },
+       "HIJKLM", { 0 => [7] }, [0]],
+      ["rejects the same start position", "ABCDEFGHIJ", { 0 => [0] },
+       "ABC", { 0 => [0] }, [0]],
+      ["rejects a pattern contained inside another", "ABCDEFGHIJ", { 0 => [0] },
+       "DEF", { 0 => [3] }, [0]],
+      ["keeps separated short ranges", "ABC", { 0 => [0] },
+       "KLM", { 0 => [10] }, [0, 1]],
+      ["rejects ranges sharing their last byte", "ABC", { 0 => [0] },
+       "CDE", { 0 => [2] }, [0]],
+      ["rejects complete containment", "ABCDEFGHIJ", { 0 => [0] },
+       "DEFGHI", { 0 => [3] }, [0]],
+      ["keeps adjacent half-open ranges", "ABC", { 0 => [0] },
+       "DEF", { 0 => [3] }, [0, 1]],
+      ["keeps a candidate ending at the selected start", "DEF", { 0 => [3] },
+       "ABC", { 0 => [0] }, [0, 1]],
+      ["rejects a candidate containing a selected pattern", "DEF", { 0 => [3] },
+       "ABCDEFGHIJ", { 0 => [0] }, [0]],
+      ["rejects a candidate starting before the selected pattern", "FGHI", { 0 => [5] },
+       "DEFG", { 0 => [3] }, [0]],
+      ["keeps a candidate ending before the selected pattern", "KLM", { 0 => [10] },
+       "ABC", { 0 => [0] }, [0, 1]],
+      ["checks every occurrence in the selected pattern", "ABC", { 0 => [0, 10] },
+       "CDE", { 0 => [12] }, [0]],
+      ["checks every occurrence in the candidate", "ABC", { 0 => [10] },
+       "CDE", { 0 => [0, 12] }, [0]],
+      ["checks every common glyph", "ABC", { 0 => [0], 1 => [10] },
+       "CDE", { 0 => [10], 1 => [12] }, [0]],
+    ].each do |description, first_bytes, first_positions, second_bytes, second_positions, selected_indices|
+      it description do
+        preferred = optimizer_pattern(first_bytes, positions: first_positions, savings: 20)
+        candidate = optimizer_pattern(second_bytes, positions: second_positions, savings: 10)
+        input = [candidate, preferred]
+        expected = selected_indices.map { |index| [preferred, candidate].fetch(index) }
 
-    context "with non-overlapping patterns" do
-      it "returns false for different glyphs" do
-        # pattern1 in glyphs [0,1,2], pattern2 in glyphs [3,4]
-        result = optimizer.conflicts_with_selected?(pattern2, [pattern1])
-        expect(result).to be false
-      end
-
-      it "returns false for same glyphs but non-overlapping positions" do
-        non_overlap = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "BBB", 3, [0], 1, 5,
-          { 0 => [20] } # Far from pattern1 position at 0
-        )
-        result = optimizer.conflicts_with_selected?(non_overlap,
-                                                    [pattern1])
-        expect(result).to be false
-      end
-    end
-
-    context "with overlapping patterns" do
-      it "returns true for overlapping positions" do
-        overlap = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "OVER", 4, [0], 1, 5,
-          { 0 => [5] } # Overlaps with pattern1 (len=10 at pos=0)
-        )
-        result = optimizer.conflicts_with_selected?(overlap, [pattern1])
-        expect(result).to be true
-      end
-
-      it "returns true for exact position match" do
-        same_pos = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "AAA", 3, [0], 1, 5,
-          { 0 => [0] } # Same position as pattern1
-        )
-        result = optimizer.conflicts_with_selected?(same_pos, [pattern1])
-        expect(result).to be true
-      end
-
-      it "returns true for contained overlap" do
-        contained = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-          "CCC", 3, [0], 1, 5,
-          { 0 => [3] } # Inside pattern1 (0-10)
-        )
-        result = optimizer.conflicts_with_selected?(contained,
-                                                    [pattern1])
-        expect(result).to be true
+        expect(described_class.new(input).optimize_selection).to eq(expected)
       end
     end
-  end
 
-  describe "#positions_overlap?" do
-    let(:optimizer) { described_class.new(patterns) }
+    it "keeps a candidate without positions in a shared glyph" do
+      preferred = optimizer_pattern("ABC", positions: { 0 => [0] }, savings: 20)
+      candidate = optimizer_pattern("DEF", positions: { 1 => [0] }, savings: 10, glyphs: [0, 1])
 
-    it "returns false for non-overlapping ranges" do
-      p1 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "AAA", 3, [0], 1, 0, { 0 => [0] } # 0-3
-      )
-      p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "BBB", 3, [0], 1, 0, { 0 => [10] } # 10-13
-      )
-      result = optimizer.positions_overlap?(p1, p2, 0)
-      expect(result).to be false
+      expect(described_class.new([candidate, preferred]).optimize_selection).to eq([preferred, candidate])
     end
 
-    it "returns true for touching ranges" do
-      p1 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "AAA", 3, [0], 1, 0, { 0 => [0] } # 0-3
-      )
-      p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "BBB", 3, [0], 1, 0, { 0 => [2] } # 2-5
-      )
-      result = optimizer.positions_overlap?(p1, p2, 0)
-      expect(result).to be true
+    it "keeps a selected pattern without positions in a shared glyph" do
+      preferred = optimizer_pattern("DEF", positions: { 1 => [0] }, savings: 20, glyphs: [0, 1])
+      candidate = optimizer_pattern("ABC", positions: { 0 => [0] }, savings: 10)
+
+      expect(described_class.new([candidate, preferred]).optimize_selection).to eq([preferred, candidate])
     end
 
-    it "returns true for complete overlap" do
-      p1 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "AAAAAAAAAA", 10, [0], 1, 0, { 0 => [0] } # 0-10
-      )
-      p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "BBB", 3, [0], 1, 0, { 0 => [3] } # 3-6 (inside p1)
-      )
-      result = optimizer.positions_overlap?(p1, p2, 0)
-      expect(result).to be true
+    it "checks all selected peers for conflicts" do
+      first = optimizer_pattern("ABC", positions: { 0 => [0] }, savings: 30)
+      second = optimizer_pattern("KLM", positions: { 0 => [10] }, savings: 20)
+      conflicting = optimizer_pattern("MNO", positions: { 0 => [12] }, savings: 10)
+
+      expect(described_class.new([conflicting, second, first]).optimize_selection).to eq([first, second])
     end
 
-    it "returns false when glyph has no positions" do
-      p1 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "AAA", 3, [0], 1, 0, { 0 => [0] }
-      )
-      p2 = Fontisan::Optimizers::PatternAnalyzer::Pattern.new(
-        "BBB", 3, [1], 1, 0, { 1 => [0] }
-      )
-      # Check glyph 0, but p2 doesn't have positions in glyph 0
-      result = optimizer.positions_overlap?(p1, p2, 0)
-      expect(result).to be false
+    it "selects longer patterns first when savings are equal" do
+      shorter = optimizer_pattern("BCD", positions: { 0 => [1] }, savings: 20)
+      longer = optimizer_pattern("ABCDE", positions: { 0 => [0] }, savings: 20)
+
+      expect(described_class.new([shorter, longer]).optimize_selection).to eq([longer])
+    end
+
+    it "orders equal savings and lengths by the smallest glyph" do
+      higher_glyph = optimizer_pattern("ABC", positions: { 1 => [0] }, savings: 20)
+      lower_glyph = optimizer_pattern("DEF", positions: { 0 => [0] }, savings: 20)
+
+      expect(described_class.new([higher_glyph, lower_glyph]).optimize_selection).to eq([lower_glyph, higher_glyph])
+    end
+
+    it "orders equal savings, lengths and glyphs by bytes" do
+      later_bytes = optimizer_pattern("XYZ", positions: { 0 => [10] }, savings: 20)
+      earlier_bytes = optimizer_pattern("ABC", positions: { 0 => [0] }, savings: 20)
+
+      expect(described_class.new([later_bytes, earlier_bytes]).optimize_selection).to eq([earlier_bytes, later_bytes])
     end
   end
 

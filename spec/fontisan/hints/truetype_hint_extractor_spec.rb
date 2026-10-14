@@ -111,18 +111,13 @@ RSpec.describe Fontisan::Hints::TrueTypeHintExtractor do
     end
   end
 
-  describe "private methods" do
-    describe "#extract_control_values" do
+  describe "font-level hint extraction" do
+    describe "#extract_from_font control values" do
       it "parses signed 16-bit integers from cvt table" do
-        font = Fontisan::SpecHelpers::FakeFont.new({})
-        allow(font).to receive(:has_table?).with("cvt ").and_return(true)
-
-        # Create sample CVT data: two 16-bit signed integers
-        # 100 (positive) and -50 (negative)
         cvt_data = [100, 65536 - 50].pack("n*")
-        allow(font).to receive(:table_data).and_return({ "cvt " => cvt_data })
+        font = Fontisan::SpecHelpers::FakeFont.new("cvt " => cvt_data)
 
-        values = extractor.extract_control_values(font)
+        values = extractor.extract_from_font(font).control_values
         expect(values).to eq([100, -50])
       end
     end

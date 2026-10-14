@@ -144,19 +144,27 @@ RSpec.describe Fontisan::Collection::TableDeduplicator do
       end
     end
 
-    describe "has_variable_fonts?" do
-      it "returns true when fonts have fvar table" do
-        font = create_font_with_table("fvar", "fvar_data")
-        deduplicator = described_class.new([font])
+    describe "variable font detection through sharing" do
+      it "keeps gvar separate when only the second font has fvar" do
+        font1 = Fontisan::SpecHelpers::FakeFont.new("gvar" => "same_gvar")
+        font2 = Fontisan::SpecHelpers::FakeFont.new(
+          "gvar" => "same_gvar", "fvar" => "variation_axes",
+        )
 
-        expect(deduplicator.has_variable_fonts?).to be true
+        sharing_map = described_class.new([font1, font2]).build_sharing_map
+
+        expect(sharing_map[0]["gvar"][:shared]).to be false
+        expect(sharing_map[1]["gvar"][:shared]).to be false
       end
 
-      it "returns false when fonts do not have fvar table" do
-        font = create_font_with_table("head", "head_data")
-        deduplicator = described_class.new([font])
+      it "shares identical gvar when no font has fvar" do
+        font1 = Fontisan::SpecHelpers::FakeFont.new("gvar" => "same_gvar")
+        font2 = Fontisan::SpecHelpers::FakeFont.new("gvar" => "same_gvar")
 
-        expect(deduplicator.has_variable_fonts?).to be false
+        sharing_map = described_class.new([font1, font2]).build_sharing_map
+
+        expect(sharing_map[0]["gvar"][:shared]).to be true
+        expect(sharing_map[1]["gvar"][:shared]).to be true
       end
     end
 

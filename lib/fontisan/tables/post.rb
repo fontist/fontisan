@@ -14,7 +14,7 @@ module Fontisan
 
       register_tag "post"
       # Standard Mac glyph names for version 1.0 (258 glyphs)
-      # rubocop:disable Metrics/CollectionLiteralLength
+      # rubocop:disable-next Metrics/CollectionLiteralLength
       STANDARD_NAMES = %w[
         .notdef .null nonmarkingreturn space exclam quotedbl numbersign
         dollar percent ampersand quotesingle parenleft parenright asterisk
@@ -48,7 +48,6 @@ module Fontisan
         Gbreve gbreve Idotaccent Scedilla scedilla Cacute cacute Ccaron
         ccaron dcroat
       ].freeze
-      # rubocop:enable Metrics/CollectionLiteralLength
 
       # Version 2.0 as Fixed 16.16 constant
       VERSION_2_0_RAW = 131_072 # 2.0 * 65536
@@ -99,7 +98,7 @@ module Fontisan
       #
       # Version 2.0 uses a combination of standard Mac names (indices 0-257)
       # and custom names (indices >= 258) stored as Pascal strings.
-      # rubocop:disable Metrics/PerceivedComplexity
+      # rubocop:disable-next Metrics/PerceivedComplexity
       def parse_version_2_names
         return [] unless version_raw == VERSION_2_0_RAW
         return [] if remaining_data.empty?
@@ -145,7 +144,6 @@ module Fontisan
           end
         end
       end
-      # rubocop:enable Metrics/PerceivedComplexity
 
       public
 

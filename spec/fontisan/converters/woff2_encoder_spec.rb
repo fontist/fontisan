@@ -165,81 +165,72 @@ RSpec.describe Fontisan::Converters::Woff2Encoder do
     end
   end
 
-  describe "private methods" do
-    describe "#detect_flavor" do
-      it "detects TrueType flavor" do
-        font = Fontisan::SpecHelpers::FakeFont.new({})
-        allow(font).to receive(:has_table?).with("glyf").and_return(true)
-        allow(font).to receive(:has_table?).with("CFF ").and_return(false)
-        allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-        allow(font).to receive(:table).with("CFF ").and_return(nil)
-        allow(font).to receive(:table).with("CFF2").and_return(nil)
-        allow(font).to receive(:table).with("glyf").and_return(Struct.new(:tag).new("GlyfTable"))
+  describe "#convert font flavor" do
+    it "writes TrueType flavor to the WOFF2 header" do
+      font = Fontisan::FontLoader.load(fixture_path("fonttools/TestTTF.ttf"))
+      binary = encoder.convert(font)[:woff2_binary]
 
-        flavor = encoder.detect_flavor(font)
-        expect(flavor).to eq(0x00010000)
-      end
-
-      it "detects CFF flavor" do
-        font = Fontisan::SpecHelpers::FakeFont.new({})
-        allow(font).to receive(:has_table?).with("glyf").and_return(false)
-        allow(font).to receive(:has_table?).with("CFF ").and_return(true)
-        allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-        allow(font).to receive(:table).with("CFF ").and_return(Struct.new(:tag).new("CFFTable"))
-        allow(font).to receive(:table).with("glyf").and_return(nil)
-
-        flavor = encoder.detect_flavor(font)
-        expect(flavor).to eq(0x4F54544F)
-      end
-
-      it "raises error when neither glyf nor CFF present" do
-        font = Fontisan::SpecHelpers::FakeFont.new({})
-        allow(font).to receive(:has_table?).with("glyf").and_return(false)
-        allow(font).to receive(:has_table?).with("CFF ").and_return(false)
-        allow(font).to receive(:has_table?).with("CFF2").and_return(false)
-        allow(font).to receive(:table).with("CFF ").and_return(nil)
-        allow(font).to receive(:table).with("CFF2").and_return(nil)
-        allow(font).to receive(:table).with("glyf").and_return(nil)
-
-        expect do
-          encoder.detect_flavor(font)
-        end.to raise_error(Fontisan::Error, /Cannot determine font flavor/)
-      end
+      expect(Fontisan::Woff2::Woff2Header.read(binary).flavor).to eq(0x00010000)
     end
 
-    describe "#calculate_sfnt_size" do
-      it "calculates size correctly" do
-        tables = {
-          "head" => "H" * 54,
-          "hhea" => "H" * 36,
-          "maxp" => "M" * 32,
-        }
+    it "writes CFF flavor to the WOFF2 header" do
+      font = Fontisan::FontLoader.load(fixture_path("fonttools/TestOTF.otf"))
+      binary = encoder.convert(font)[:woff2_binary]
 
-        size = encoder.calculate_sfnt_size(tables)
+      expect(Fontisan::Woff2::Woff2Header.read(binary).flavor).to eq(0x4F54544F)
+    end
 
-        # Should include header, directory, and padded tables
-        expect(size).to be > 0
-        expect(size).to be >= 12 + (tables.size * 16) + 122
-      end
+    it "rejects a font with neither glyf nor CFF outlines" do
+      source = Fontisan::FontLoader.load(fixture_path("fonttools/TestTTF.ttf"))
+      tables = source.table_data.except("glyf", "loca")
+      font = Fontisan::SpecHelpers::FakeFont.new(tables)
 
-      it "includes padding" do
-        # Table with size not divisible by 4
-        tables = { "test" => "X" * 55 }
+      expect do
+        encoder.convert(font)
+      end.to raise_error(Fontisan::Error, "Font must have either glyf or CFF/CFF2 table")
+    end
+  end
 
-        size = encoder.calculate_sfnt_size(tables)
+  describe "#convert total SFNT size" do
+    let(:source) { Fontisan::FontLoader.load(fixture_path("fonttools/TestOTF.otf")) }
+    let(:tables) { source.table_data.except("DSIG") }
+    let(:font) { Fontisan::SpecHelpers::FakeFont.new(tables) }
+    let(:binary) { encoder.convert(font)[:woff2_binary] }
+    let(:header) { Fontisan::Woff2::Woff2Header.read(binary) }
 
-        # Should include 1 byte of padding for 55-byte table
-        expect(size).to be >= 12 + 16 + 56
-      end
+    it "includes the SFNT header, full directory, and aligned tables" do
+      expected_size = 12 + tables.size * 16 + tables.values.sum { |data| (data.bytesize + 3) / 4 * 4 }
 
-      it "includes synthetic loca entry when glyf_transform is provided" do
-        tables = { "glyf" => "G" * 100, "head" => "H" * 54 }
-        glyf_transform = { transformed_glyf: "T" * 80, loca_orig_length: 14 }
+      expect(header.num_tables).to eq(tables.size)
+      expect(header.total_sfnt_size).to eq(expected_size)
+    end
 
-        size = encoder.calculate_sfnt_size(tables, glyf_transform:)
+    it "includes padding for a 55-byte table" do
+      original_size = header.total_sfnt_size.to_i
+      tables["test"] = "X" * 55
+      padded_header = Fontisan::Woff2::Woff2Header.read(encoder.convert(font)[:woff2_binary])
 
-        # 12 (header) + 2 entries × 16 + glyf bytes + head bytes + loca 14 bytes (padded to 16)
-        expect(size).to be >= 12 + (2 * 16) + 100 + 54 + 14
+      expect(padded_header.num_tables).to eq(header.num_tables + 1)
+      expect(padded_header.total_sfnt_size).to eq(original_size + 16 + 56)
+    end
+
+    it "includes reconstructed loca bytes and its synthetic directory entry" do
+      source = Fontisan::FontLoader.load(fixture_path("fonttools/TestTTF.ttf"))
+      binary = encoder.convert(source)[:woff2_binary]
+      Tempfile.create(["encoded", ".woff2"]) do |file|
+        File.binwrite(file.path, binary)
+        decoded = Fontisan::FontLoader.load(file.path)
+        entries = decoded.table_entries
+        header = decoded.header
+        loca_entry = decoded.table_entries.find { |entry| entry.tag == "loca" }
+        without_loca = entries.reject { |entry| entry.tag == "loca" }
+        size_without_loca = 12 + without_loca.size * 16 + without_loca.sum { |entry| (entry.orig_length.to_i + 3) / 4 * 4 }
+        loca_size = (loca_entry.orig_length.to_i + 3) / 4 * 4
+
+        expect(loca_entry.transform_length).to eq(0)
+        expect(loca_size).to be > 0
+        expect(header.num_tables).to eq(entries.size)
+        expect(header.total_sfnt_size).to eq(size_without_loca + 16 + loca_size)
       end
     end
   end

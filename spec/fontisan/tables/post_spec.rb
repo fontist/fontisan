@@ -55,7 +55,7 @@ RSpec.describe Fontisan::Tables::Post do
     data << [max_mem_type1].pack("N")
 
     # Version-specific data
-    # rubocop:disable Lint/FloatComparison
+    # rubocop:disable-next Lint/FloatComparison
     if version == 2.0
       # Number of glyphs (uint16)
       data << [num_glyphs || 0].pack("n")
@@ -71,7 +71,6 @@ RSpec.describe Fontisan::Tables::Post do
         data << name.b # string
       end
     end
-    # rubocop:enable Lint/FloatComparison
 
     data
   end

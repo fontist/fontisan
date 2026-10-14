@@ -364,7 +364,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     let(:mock_charstrings) do
-      cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+      cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
       allow(cs).to receive(:count).and_return(250)
       cs
     end
@@ -435,7 +435,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
   describe "#build_maxp_table" do
     let(:mock_charstrings) do
-      cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+      cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
       allow(cs).to receive(:count).and_return(150)
       cs
     end
@@ -767,7 +767,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
   describe "#build_cmap_table" do
     let(:mock_charstrings) do
-      cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+      cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
       allow(cs).to receive_messages(encoding: {
                                       ".notdef" => 0,
                                       "A" => 1,
@@ -827,7 +827,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     it "handles empty encoding" do
-      cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+      cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
       allow(cs).to receive_messages(encoding: {}, glyph_names: [])
 
       font = Fontisan::SpecHelpers::FakeType1Font.new
@@ -856,7 +856,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     end
 
     let(:mock_charstrings) do
-      cs = Struct.new(:count, :encoding, :glyph_names).new(0, {}, [])
+      cs = Fontisan::Type1::CharStrings.from_hash({}, encoding: {})
       allow(cs).to receive(:encoding).and_return({ "A" => 1 })
       cs
     end

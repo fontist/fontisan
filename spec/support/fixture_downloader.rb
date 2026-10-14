@@ -218,13 +218,12 @@ module FixtureFonts
       # on +send_auth?+ so a token captured from ENV never leaks to
       # a non-GitHub host.
       #
-      # rubocop:disable Security/Open
+      # rubocop:disable-next Security/Open
       parsed.open(open_uri_options(parsed)) do |remote|
         File.open(destination, "wb") do |file|
           IO.copy_stream(remote, file)
         end
       end
-      # rubocop:enable Security/Open
     end
 
     def open_uri_options(parsed)
