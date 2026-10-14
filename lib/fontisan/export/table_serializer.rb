@@ -28,14 +28,6 @@ module Fontisan
         cvt fpgm prep gasp DSIG GDEF GPOS GSUB
       ].freeze
 
-      # Tables that ship a summary alongside the raw binary.
-      MIXED_SUMMARIES = {
-        "glyf" => GlyphSummary,
-        "loca" => LocaSummary,
-        "cmap" => CmapSummary,
-        "CFF" => CffSummary,
-      }.freeze
-
       # @param binary_format [Symbol] :hex or :base64
       def initialize(binary_format: :hex)
         @binary_format = binary_format
@@ -61,6 +53,42 @@ module Fontisan
       def serialize_binary(data, tag)
         { tag: tag, parsed: false, data: encode_binary(data), fields: nil }
       end
+
+      # Summary builders for mixed-content tables.
+      module GlyphSummary
+        def self.call(table)
+          { type: "glyf", num_glyphs: table.glyphs.length,
+            note: "Outline data stored as binary" }
+        end
+      end
+
+      module LocaSummary
+        def self.call(table)
+          { type: "loca", num_offsets: table.offsets.length,
+            format: table.format }
+        end
+      end
+
+      module CmapSummary
+        def self.call(table)
+          { type: "cmap", version: table.version,
+            note: "Character mappings stored as binary" }
+        end
+      end
+
+      module CffSummary
+        def self.call(_table)
+          { type: "CFF", note: "CharString data stored as binary" }
+        end
+      end
+
+      # Tables that ship a summary alongside the raw binary.
+      MIXED_SUMMARIES = {
+        "glyf" => GlyphSummary,
+        "loca" => LocaSummary,
+        "cmap" => CmapSummary,
+        "CFF" => CffSummary,
+      }.freeze
 
       private
 
@@ -106,36 +134,6 @@ module Fontisan
         raise ArgumentError,
               "Invalid binary format: #{@binary_format}. " \
               "Must be one of: #{valid.join(', ')}"
-      end
-
-      # Summary builders for mixed-content tables. Each is a callable
-      # that receives the typed table and returns a JSON-able Hash.
-
-      module GlyphSummary
-        def self.call(table)
-          { type: "glyf", num_glyphs: table.glyphs.length,
-            note: "Outline data stored as binary" }
-        end
-      end
-
-      module LocaSummary
-        def self.call(table)
-          { type: "loca", num_offsets: table.offsets.length,
-            format: table.format }
-        end
-      end
-
-      module CmapSummary
-        def self.call(table)
-          { type: "cmap", version: table.version,
-            note: "Character mappings stored as binary" }
-        end
-      end
-
-      module CffSummary
-        def self.call(_table)
-          { type: "CFF", note: "CharString data stored as binary" }
-        end
       end
     end
   end

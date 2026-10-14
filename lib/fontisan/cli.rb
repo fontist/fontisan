@@ -599,7 +599,7 @@ module Fontisan
 
     def export(font_file)
       command = Commands::ExportCommand.new(
-        font_file,
+        input: font_file,
         output: options[:output],
         format: options[:format].to_sym,
         tables: options[:tables],
