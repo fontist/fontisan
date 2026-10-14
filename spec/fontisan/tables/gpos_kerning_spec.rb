@@ -1,0 +1,235 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+require_relative "../../support/gpos_builder"
+
+RSpec.describe Fontisan::Tables::Gpos do
+  include GposBuilder
+
+  let(:individual) { gpos_pair_one({ 2 => { 3 => -29, 4 => 15 } }) }
+  let(:class_based) { gpos_pair_two }
+
+  describe "#kern_pairs" do
+    it "queries signed font units and enumerates explicit pairs" do
+      pairs = described_class.read(gpos_binary([gpos_lookup([individual])])).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-29)
+      expect(pairs[[3, 2]]).to eq(0)
+      expect(pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+    end
+
+    [1, 2].each do |coverage_format|
+      [1, 2].each do |class_format|
+        it "resolves coverage #{coverage_format} and classes #{class_format}, including class zero" do
+          subtable = gpos_pair_two(coverage: [1, 2], coverage_format: coverage_format,
+                                   class_format: class_format, matrix: [[-5, -7], [-11, -29]])
+          pairs = described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs(glyph_count: 5)
+          expect(pairs[[2, 3]]).to eq(-29)
+          expect(pairs[[2, 4]]).to eq(-11)
+          expect(pairs[[1, 3]]).to eq(-7)
+          expect(pairs[[4, 3]]).to eq(0)
+          expect(pairs.to_h).to include([1, 0] => -5, [2, 4] => -11)
+          expect(pairs.to_h.keys.flatten.max).to eq(4)
+        end
+      end
+
+      it "resolves individual coverage #{coverage_format}" do
+        subtable = gpos_pair_one({ 2 => { 3 => -29 } }, coverage_format: coverage_format)
+        expect(described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs.to_h)
+          .to eq({ [2, 3] => -29 })
+      end
+    end
+
+    it "consumes all value fields and both records without treating offsets as advances" do
+      [gpos_pair_one({ 2 => { 3 => -29, 4 => 15 } }, value_format: 255, second_format: 255),
+       gpos_pair_two(value_format: 255, second_format: 255)].each do |subtable|
+        pairs = described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs
+        expect(pairs[[2, 3]]).to eq(-29)
+      end
+    end
+
+    it "returns zero when value1 has no xAdvance" do
+      [gpos_pair_one({ 2 => { 3 => -29 } }, value_format: 3, second_format: 4),
+       gpos_pair_two(value_format: 0, second_format: 4)].each do |subtable|
+        expect(described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs[[2, 3]]).to eq(0)
+      end
+    end
+
+    it "stops at a matched zero subtable and sums each distinct lookup once" do
+      zero = gpos_pair_one({ 2 => { 3 => 0 } })
+      second = gpos_pair_one({ 2 => { 3 => -8 } })
+      data = gpos_binary([gpos_lookup([zero, individual]), gpos_lookup([second])], indices: [1, 0, 1])
+      pairs = described_class.read(data).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-8)
+      expect(pairs[[2, 4]]).to eq(15)
+      expect(pairs.to_h).to eq({ [2, 3] => -8, [2, 4] => 15 })
+    end
+
+    it "adds nonzero adjustments from independent lookups" do
+      second = gpos_pair_one({ 2 => { 3 => -8 } })
+      data = gpos_binary([gpos_lookup([individual]), gpos_lookup([second])])
+      expect(described_class.read(data).kern_pairs[[2, 3]]).to eq(-37)
+    end
+
+    it "tries later subtables when the first does not match" do
+      absent = gpos_pair_one({ 2 => { 5 => -3 } })
+      pairs = described_class.read(gpos_binary([gpos_lookup([absent, individual])])).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-29)
+    end
+
+    it "omits zero net pairs and honors bounds on individual enumeration" do
+      inverse = gpos_pair_one({ 2 => { 3 => 29 } })
+      data = gpos_binary([gpos_lookup([individual]), gpos_lookup([inverse])])
+      expect(described_class.read(data).kern_pairs(glyph_count: 4).to_h).to eq({})
+    end
+
+    it "requires explicit glyph count only for class enumeration and supports early exit" do
+      pairs = described_class.read(gpos_binary([gpos_lookup([class_based])])).kern_pairs
+      expect(pairs[[2, 3]]).to eq(-29)
+      expect { pairs.to_h }.to raise_error(ArgumentError, /glyph_count/)
+      bounded = described_class.read(gpos_binary([gpos_lookup([class_based])])).kern_pairs(glyph_count: 65536)
+      expect(bounded.each.first).to eq([[2, 0], -11])
+    end
+
+    it "selects the requested script and feature, including a required feature" do
+      data = gpos_binary([gpos_lookup([individual])], script_tag: "DFLT", feature_tag: "dist", required: true)
+      table = described_class.read(data)
+      expect(table.kern_pairs.to_h).to eq({})
+      expect(table.kern_pairs(script_tag: "DFLT").to_h).to eq({})
+      expect(table.kern_pairs(script_tag: "DFLT", feature_tag: "dist")[[2, 3]]).to eq(-29)
+    end
+
+    it "does not union named language systems into the default language" do
+      data = gpos_binary([gpos_lookup([individual])], default: false, language_feature: true)
+      expect(described_class.read(data).kern_pairs.to_h).to eq({})
+    end
+
+    it "returns an empty collection when there are no script or feature lists" do
+      expect(described_class.read([1, 0, 0, 0, 0].pack("n*")).kern_pairs.to_h).to eq({})
+    end
+
+    it "skips other lookup types and handles the mark-filtering-set field" do
+      data = gpos_binary([gpos_lookup(["ignored"], type: 1), gpos_lookup([individual], flags: 16)])
+      expect(described_class.read(data).kern_pairs[[2, 3]]).to eq(-29)
+    end
+
+    [-1, 65537, 2.5, "5"].each do |glyph_count|
+      it "rejects invalid glyph count #{glyph_count.inspect}" do
+        expect { described_class.read(gpos_binary([])).kern_pairs(glyph_count: glyph_count) }
+          .to raise_error(ArgumentError, /glyph_count/)
+      end
+    end
+
+    it "rejects invalid glyph pair queries" do
+      pairs = described_class.read(gpos_binary([gpos_lookup([individual])])).kern_pairs
+      [[-1, 2], [2, 65536], [2], [2, "3"]].each do |pair|
+        expect { pairs[pair] }.to raise_error(ArgumentError, /glyph/)
+      end
+    end
+  end
+
+  describe "malformed selected data" do
+    it "rejects every truncated suffix of a selected synthetic table" do
+      [individual, class_based].each do |subtable|
+        data = gpos_binary([gpos_lookup([subtable])])
+        (10...data.bytesize).each do |length|
+          expect { described_class.read(data.byteslice(0, length)).kern_pairs }
+            .to raise_error(Fontisan::ParseError), "accepted #{length}/#{data.bytesize} bytes"
+        end
+      end
+    end
+
+    it "rejects reserved value-format bits and unsupported pair formats" do
+      [0x100, 0xffff].each do |value_format|
+        subtable = individual.dup
+        subtable[4, 2] = [value_format].pack("n")
+        expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError)
+      end
+      subtable = individual.dup
+      subtable[0, 2] = [3].pack("n")
+      expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError)
+    end
+
+    it "rejects offsets into headers, off-table offsets, and invalid feature/lookup indices" do
+      data = gpos_binary([gpos_lookup([individual])])
+      feature_base = data.byteslice(6, 2).unpack1("n")
+      lookup_base = data.byteslice(8, 2).unpack1("n")
+      [[4, 9], [6, 65535], [8, 0], [18, 2], [feature_base + 6, 2],
+       [feature_base + 12, 3], [lookup_base + 2, 2]].each do |offset, value|
+        malformed = data.dup
+        malformed[offset, 2] = [value].pack("n")
+        expect { described_class.read(malformed).kern_pairs }
+          .to raise_error(Fontisan::ParseError), "accepted mutation #{offset}=#{value}"
+      end
+    end
+
+    it "rejects extra PairSets even when their offsets are valid" do
+      malformed = individual.dup
+      malformed.insert(12, [20].pack("n"))
+      malformed[2, 2] = [14].pack("n")
+      malformed[8, 4] = [2, 20].pack("n*")
+      expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /PairSet count/)
+    end
+
+    it "rejects inconsistent coverage and malformed class definitions" do
+      [[2, 0], [2, 65535], [8, 0], [10, 0], [12, 0], [14, 0]].each do |offset, value|
+        malformed = class_based.dup
+        malformed[offset, 2] = [value].pack("n")
+        expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError)
+      end
+      coverage_offset = individual.byteslice(2, 2).unpack1("n")
+      [[coverage_offset, 3], [8, 2]].each do |offset, value|
+        malformed = individual.dup
+        malformed[offset, 2] = [value].pack("n")
+        expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError)
+      end
+    end
+
+    it "rejects unordered coverage ranges and class ranges" do
+      malformed_coverage = gpos_pair_one({ 2 => { 3 => -29 }, 4 => { 3 => -15 } }, coverage_format: 2)
+      coverage_offset = malformed_coverage.byteslice(2, 2).unpack1("n")
+      malformed_coverage[coverage_offset + 10, 2] = [1].pack("n")
+      malformed_classes = gpos_pair_two(second: { 3 => 1, 4 => 1 })
+      class_offset = malformed_classes.byteslice(10, 2).unpack1("n")
+      malformed_classes[class_offset + 10, 2] = [2].pack("n")
+      [malformed_coverage, malformed_classes].each do |subtable|
+        expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError)
+      end
+    end
+
+    it "rejects empty matrices even when class definitions contain no explicit assignments" do
+      [12, 14].each do |offset|
+        malformed = gpos_pair_two(first: {}, second: {}, matrix: [[0]], value_format: 0)
+        malformed[offset, 2] = [0].pack("n")
+        expect { described_class.read(gpos_binary([gpos_lookup([malformed])])).kern_pairs }
+          .to raise_error(Fontisan::ParseError, /Empty/)
+      end
+    end
+
+    it "rejects invalid class IDs and a huge zero-width class matrix without expansion" do
+      subtable = gpos_pair_two(first: { 2 => 2 })
+      expect { described_class.read(gpos_binary([gpos_lookup([subtable])])).kern_pairs }
+        .to raise_error(Fontisan::ParseError)
+      compact = gpos_pair_two(value_format: 0)
+      compact[12, 4] = [65535, 65535].pack("n*")
+      expect(described_class.read(gpos_binary([gpos_lookup([compact])])).kern_pairs[[2, 3]]).to eq(0)
+    end
+  end
+
+  describe "Libertinus kerning" do
+    %w[TTF OTF].each do |format|
+      it "matches the independently measured AV adjustment in #{format}" do
+        extension = format.downcase
+        path = font_fixture_path("Libertinus", "static/#{format}/LibertinusSerif-Regular.#{extension}")
+        font = Fontisan::FontLoader.load(path)
+        pairs = font.table("GPOS").kern_pairs
+        expect(pairs[[34, 55]]).to eq(-112)
+      end
+    end
+  end
+end

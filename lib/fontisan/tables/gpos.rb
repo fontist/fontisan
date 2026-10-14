@@ -55,6 +55,21 @@ module Fontisan
         []
       end
 
+      # Read direct PairPos (lookup type 2) value1.xAdvance in font units.
+      # The returned Enumerable supports pairs[[left_glyph_id, right_glyph_id]];
+      # unmatched pairs return zero. Use glyph_count: font.table("maxp").num_glyphs.to_i
+      # to enumerate class-based pairs, including implicit class zero, with to_h.
+      # Selects the script's default language system, with no script fallback.
+      # First matching subtables take precedence; distinct lookups are summed.
+      # This reads raw pair data: extension/contextual lookups, lookup-flag glyph
+      # filtering, device corrections and variations require a shaping engine.
+      # @return [Enumerable] nonzero glyph-ID pairs and signed advances
+      # @raise [ParseError] malformed selected positioning data
+      def kern_pairs(script_tag: "latn", feature_tag: "kern", glyph_count: nil)
+        KerningPairs.new(self, script_tag: script_tag, feature_tag: feature_tag,
+                               glyph_count: glyph_count)
+      end
+
       private
 
       # Get feature indices for a given script
@@ -107,3 +122,5 @@ module Fontisan
     end
   end
 end
+
+require "fontisan/tables/gpos/kerning_pairs"
