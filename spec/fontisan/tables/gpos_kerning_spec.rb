@@ -298,6 +298,16 @@ RSpec.describe Fontisan::Tables::Gpos do
       expect(pairs.to_h).to eq({ [2, 4] => 480 })
     end
 
+    it "queries each physical lookup once without losing logical multiplicity" do
+      wrapped = gpos_extension(gpos_pair_one({ 4 => { 3 => -1 } }))
+      data = gpos_lookup_subtable_alias_binary(count: 32, repetitions: 1, subtables: [wrapped] * 128, type: 9)
+      pairs = described_class.read(data).kern_pairs
+      value, calls = gpos_pair_query_counts(pairs, [2, 3])
+      expect(value).to eq(0)
+      expect(calls).to be <= 128
+      expect(pairs[[4, 3]]).to eq(-32)
+    end
+
     it "uses all 32 extension offset bits relative to the wrapper" do
       wrapped = gpos_extension(individual, offset: 65544)
       pairs = described_class.read(gpos_binary([gpos_lookup([wrapped], type: 9)])).kern_pairs

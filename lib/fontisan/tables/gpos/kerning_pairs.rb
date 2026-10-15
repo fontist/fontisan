@@ -19,8 +19,8 @@ module Fontisan
           @glyph_count = glyph_count
           @view = BinaryView.new(table.raw_data.dup.freeze)
           @gdef = BinaryView.new(gdef.dup.freeze) if gdef
-          @lookups = selected_lookups(table, script_tag, feature_tag).freeze
-          @subtables = @lookups.uniq.flat_map(&:subtables).uniq.freeze
+          @lookups = selected_lookups(table, script_tag, feature_tag).tally.freeze
+          @subtables = @lookups.keys.flat_map(&:subtables).uniq.freeze
           @view.freeze
           @gdef&.freeze
         end
@@ -30,7 +30,7 @@ module Fontisan
             raise ArgumentError, "Expected two glyph IDs from 0 to 65535"
           end
 
-          @lookups.sum { |lookup| lookup.adjustment(*pair) }
+          @lookups.sum { |lookup, count| lookup.adjustment(*pair) * count }
         end
 
         def each

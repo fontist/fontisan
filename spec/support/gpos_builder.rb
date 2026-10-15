@@ -144,6 +144,17 @@ module GposBuilder
     data.byteslice(0, base) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup
   end
 
+  def gpos_pair_query_counts(pairs, pair)
+    type = Fontisan::Tables::Gpos.const_get(:PairPosition)
+    calls = 0
+    trace = TracePoint.new(:call) do |event|
+      calls += 1 if event.method_id == :adjustment && event.self.is_a?(type)
+    end
+    value = nil
+    trace.enable { value = pairs[pair] }
+    [value, calls]
+  end
+
   def gpos_subtable_decode_counts(data)
     base = data.byteslice(8, 2).unpack1("n")
     lookup_offset = base + data.byteslice(base + 2, 2).unpack1("n")
