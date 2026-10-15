@@ -186,6 +186,16 @@ RSpec.describe Fontisan::Tables::Gpos do
       end
     end
 
+    it "accepts explicitly loaded GDEF bytes from lazy SFNT fonts" do
+      font = Fontisan::FontLoader.load(font_fixture_path("SourceSans3", "SourceSans3-Regular.otf"), lazy: true)
+      gpos = font.table("GPOS")
+      expect { gpos.kern_pairs(gdef: font.table_data["GDEF"]) }
+        .to raise_error(Fontisan::UnsupportedFormatError, /gdef:/)
+      gdef = font.sfnt_table("GDEF").load_data!.data
+      expect(gpos.kern_pairs(gdef: gdef)[[2, 23]]).to eq(-14)
+      font.close
+    end
+
     it "filters both pair endpoints by base, ligature and mark classes" do
       [1, 2].each do |format|
         gdef = gpos_gdef(classes: { 2 => 1, 3 => 2, 4 => 3 }, class_format: format)

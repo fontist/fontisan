@@ -65,6 +65,7 @@ module Fontisan
       # First matching subtables take precedence; distinct lookups are summed.
       # Supports PairPos formats 1 and 2 in lookup types 2 and 9. Pass raw GDEF
       # bytes with gdef: font.table_data["GDEF"] for glyph-filtering lookups.
+      # Lazy SFNT fonts can use font.sfnt_table("GDEF").load_data!.data instead.
       # Filters apply to supplied pair endpoints; this does not shape a stream.
       # Other lookup types, device corrections and variations are not applied.
       # @return [Enumerable] nonzero glyph-ID pairs and signed advances
