@@ -180,6 +180,21 @@ RSpec.describe Fontisan::Cli do
     end
   end
 
+  describe "#export" do
+    it "exports a font through the CLI" do
+      font_path = font_fixture_path("NotoSans", "NotoSans-Regular.ttf")
+      output_path = File.join(Dir.mktmpdir, "font.yaml")
+
+      expect do
+        described_class.start(["export", font_path, "--output", output_path])
+      end.to raise_error(SystemExit) { |error| expect(error.status).to eq(0) }
+
+      expect(File.read(output_path)).to include("metadata:")
+    ensure
+      FileUtils.rm_rf(File.dirname(output_path))
+    end
+  end
+
   describe "#info" do
     context "with text format (default)" do
       it "outputs font information as text" do

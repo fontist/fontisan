@@ -32,8 +32,8 @@ module Fontisan
       # @param pretty [Boolean] Pretty-print output
       def initialize(input:, output: nil, format: :yaml, tables: nil,
                      binary_format: :hex, pretty: true)
-        super()
         @input = input
+        super(input)
         @output = output
         @format = format.to_sym
         @tables = tables
@@ -47,8 +47,8 @@ module Fontisan
       def run
         validate_params!
 
-        # Load font
-        font = load_font
+        # BaseCommand loads the font during initialization
+        font = @font
         return 1 unless font
 
         # Create exporter
