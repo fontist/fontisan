@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "fontisan/tables/gpos/pair_position"
+require "fontisan/tables/gpos/glyph_filter"
 
 module Fontisan
   module Tables
@@ -9,15 +9,20 @@ module Fontisan
       class KerningPairs
         include Enumerable
 
-        def initialize(table, script_tag:, feature_tag:, glyph_count:)
+        def initialize(table, script_tag:, feature_tag:, glyph_count:, gdef:)
           if !glyph_count.nil? && (!glyph_count.is_a?(Integer) || !glyph_count.between?(0, 65536))
             raise ArgumentError, "glyph_count must be an integer from 0 to 65536"
           end
 
+          raise ArgumentError, "gdef must contain raw GDEF table bytes" unless gdef.nil? || gdef.is_a?(String)
+
           @glyph_count = glyph_count
           @view = BinaryView.new(table.raw_data.dup.freeze)
+          @gdef = BinaryView.new(gdef.dup.freeze) if gdef
           @lookups = selected_lookups(table, script_tag, feature_tag).freeze
+          @subtables = @lookups.uniq.flat_map(&:subtables).uniq.freeze
           @view.freeze
+          @gdef&.freeze
         end
 
         def [](pair)
@@ -25,26 +30,18 @@ module Fontisan
             raise ArgumentError, "Expected two glyph IDs from 0 to 65535"
           end
 
-          @lookups.sum do |subtables|
-            value = nil
-            subtables.each do |subtable|
-              value = subtable.adjustment(*pair)
-              break unless value.nil?
-            end
-            value || 0
-          end
+          @lookups.sum { |lookup| lookup.adjustment(*pair) }
         end
 
         def each
           return enum_for(:each) unless block_given?
 
-          if @glyph_count.nil? && @lookups.flatten.any?(&:class_based?)
+          if @glyph_count.nil? && @subtables.any?(&:class_based?)
             raise ArgumentError, "glyph_count is required to enumerate class-based kerning"
           end
 
-          subtables = @lookups.flatten.uniq
-          left_glyphs(subtables).each do |left|
-            candidates(subtables, left).each do |right|
+          left_glyphs(@subtables).each do |left|
+            candidates(@subtables, left).each do |right|
               pair = [left, right]
               value = self[pair]
               yield pair, value unless value.zero?
@@ -147,30 +144,72 @@ module Fontisan
           indices.uniq
         end
 
+        def extension_subtables(views)
+          extensions = views.map do |view|
+            view.cached(:extension_position) do
+              raise ParseError, "Unsupported GPOS extension format" unless view.uint16(0) == 1
+
+              type = view.uint16(2)
+              raise ParseError, "Invalid GPOS extension lookup type #{type}" unless type.between?(1, 8)
+
+              [type, view.child(view.uint32(4), minimum: 8)].freeze
+            end
+          end
+          if extensions.map(&:first).uniq.size > 1
+            raise ParseError, "Inconsistent GPOS extension lookup types"
+          end
+
+          extensions.filter_map { |type, view| view if type == 2 }
+        end
+
         def lookups(offset, indices)
           list = @view.child(offset, minimum: 10)
           count = list.uint16(0)
           offsets = list.array(2, count)
           indices.filter_map do |index|
             lookup = list.child(offsets[index], minimum: 2 + count * 2)
-            next unless lookup.uint16(0) == 2
+            type = lookup.uint16(0)
+            next unless [2, 9].include?(type)
 
-            lookup.cached(:lookup_subtables) do
+            lookup.cached(:pair_lookup) do
               subtable_count = lookup.uint16(4)
               subtable_offsets = lookup.array(6, subtable_count)
               header = 6 + subtable_count * 2
               header += 2 unless (lookup.uint16(2) & 16).zero?
               lookup.bytes(0, header)
-              subtable_offsets.uniq.map do |subtable_offset|
-                view = lookup.child(subtable_offset, minimum: header)
-                view.cached(:pair_position) { PairPosition.new(view) }
-              end.freeze
+              views = subtable_offsets.uniq.map { |subtable_offset| lookup.child(subtable_offset, minimum: header) }
+              views = extension_subtables(views) if type == 9
+              subtables = views.map { |view| view.cached(:pair_position) { PairPosition.new(view) } }.freeze
+              flags = subtables.empty? ? 0 : lookup.uint16(2)
+              mark_set = (flags & 16).zero? ? 0 : lookup.uint16(6 + subtable_count * 2)
+              PairLookup.new(subtables, GlyphFilter.new(flags, @gdef, mark_set: mark_set))
             end
           end
         end
       end
 
-      private_constant :KerningPairs
+      # One physical lookup can be referenced by multiple logical lookup indices.
+      class PairLookup
+        attr_reader :subtables
+
+        def initialize(subtables, filter)
+          @subtables = subtables
+          @filter = filter
+          freeze
+        end
+
+        def adjustment(left, right)
+          return 0 unless @filter.allows?(left) && @filter.allows?(right)
+
+          subtables.each do |subtable|
+            value = subtable.adjustment(left, right)
+            return value unless value.nil?
+          end
+          0
+        end
+      end
+
+      private_constant :KerningPairs, :PairLookup
     end
   end
 end

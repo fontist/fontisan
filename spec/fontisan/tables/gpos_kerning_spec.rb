@@ -159,7 +159,7 @@ RSpec.describe Fontisan::Tables::Gpos do
 
     it "skips other lookup types and handles the mark-filtering-set field" do
       data = gpos_binary([gpos_lookup(["ignored"], type: 1), gpos_lookup([individual], flags: 16)])
-      expect(described_class.read(data).kern_pairs[[2, 3]]).to eq(-29)
+      expect(described_class.read(data).kern_pairs(gdef: gpos_gdef(mark_sets: [[]]))[[2, 3]]).to eq(-29)
     end
 
     [-1, 65537, 2.5, "5"].each do |glyph_count|
@@ -173,6 +173,171 @@ RSpec.describe Fontisan::Tables::Gpos do
       pairs = described_class.read(gpos_binary([gpos_lookup([individual])])).kern_pairs
       [[-1, 2], [2, 65536], [2], [2, "3"]].each do |pair|
         expect { pairs[pair] }.to raise_error(ArgumentError, /glyph/)
+      end
+    end
+  end
+
+  describe "lookup glyph filtering" do
+    it "requires actionable GDEF context instead of returning unfiltered data" do
+      [2, 4, 8, 16, 256].each do |flags|
+        data = gpos_binary([gpos_lookup([individual], flags: flags)])
+        expect { described_class.read(data).kern_pairs }
+          .to raise_error(Fontisan::UnsupportedFormatError, /gdef:.*GDEF/)
+      end
+    end
+
+    it "filters both pair endpoints by base, ligature and mark classes" do
+      [1, 2].each do |format|
+        gdef = gpos_gdef(classes: { 2 => 1, 3 => 2, 4 => 3 }, class_format: format)
+        { 2 => {}, 4 => { [2, 4] => 15 }, 8 => { [2, 3] => -29 } }.each do |flags, expected|
+          data = gpos_binary([gpos_lookup([individual], flags: flags)])
+          expect(described_class.read(data).kern_pairs(gdef: gdef).to_h).to eq(expected)
+        end
+        data = gpos_binary([gpos_lookup([individual], flags: 8)])
+        expect(described_class.read(data).kern_pairs(gdef: gpos_gdef(classes: { 2 => 3 })).to_h).to eq({})
+      end
+    end
+
+    it "keeps unclassified and component glyphs and ignores the cursive-only direction flag" do
+      [0, 2, 3].each do |version|
+        data = gpos_binary([gpos_lookup([individual], flags: 15)])
+        pairs = described_class.read(data).kern_pairs(gdef: gpos_gdef(classes: { 3 => 4 }, version: version))
+        expect(pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+      end
+      data = gpos_binary([gpos_lookup([individual], flags: 1)])
+      expect(described_class.read(data).kern_pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+    end
+
+    it "uses mark attachment classes and mark sets with the specified precedence" do
+      gdef = gpos_gdef(classes: { 2 => 1, 3 => 3, 4 => 3 }, mark_classes: { 3 => 1, 4 => 2 }, mark_sets: [[4]])
+      { 256 => { [2, 3] => -29 }, 272 => { [2, 4] => 15 }, 280 => {} }.each do |flags, expected|
+        data = gpos_binary([gpos_lookup([individual], flags: flags)])
+        expect(described_class.read(data).kern_pairs(gdef: gdef).to_h).to eq(expected)
+      end
+    end
+
+    it "selects the requested mark set and follows its full 32-bit coverage offset" do
+      data = gpos_binary([gpos_lookup([individual], flags: 16, mark_set: 1)])
+      gdef = gpos_gdef(classes: { 3 => 3, 4 => 3 }, mark_sets: [[4], [3]])
+      expect(described_class.read(data).kern_pairs(gdef: gdef).to_h).to eq({ [2, 3] => -29 })
+      sets = gdef.byteslice(12, 2).unpack1("n")
+      coverage = gdef.byteslice(sets + 8, 4).unpack1("N")
+      gdef.insert(sets + coverage, "\x00".b * 65536)
+      gdef[sets + 8, 4] = [coverage + 65536].pack("N")
+      expect(described_class.read(data).kern_pairs(gdef: gdef).to_h).to eq({ [2, 3] => -29 })
+    end
+
+    it "does not decode unused GDEF data and rejects non-binary context arguments" do
+      table = described_class.read(gpos_binary([gpos_lookup([individual])]))
+      expect(table.kern_pairs(gdef: "unused").to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+      [false, 0, {}].each do |gdef|
+        expect { table.kern_pairs(gdef: gdef) }.to raise_error(ArgumentError, /GDEF/)
+      end
+    end
+
+    it "applies filters per lookup without suppressing an independent lookup" do
+      data = gpos_binary([gpos_lookup([individual], flags: 8), gpos_lookup([individual])])
+      pairs = described_class.read(data).kern_pairs(gdef: gpos_gdef(classes: { 3 => 3 }))
+      expect(pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 30 })
+    end
+
+    it "rejects missing filter tables, invalid mark-set indices and reserved flags" do
+      { 8 => gpos_gdef, 16 => gpos_gdef, 256 => gpos_gdef }.each do |flags, gdef|
+        gdef[4, 2] = [0].pack("n") if flags == 8
+        data = gpos_binary([gpos_lookup([individual], flags: flags)])
+        expect { described_class.read(data).kern_pairs(gdef: gdef) }.to raise_error(Fontisan::UnsupportedFormatError)
+      end
+      data = gpos_binary([gpos_lookup([individual], flags: 16, mark_set: 1)])
+      expect { described_class.read(data).kern_pairs(gdef: gpos_gdef(mark_sets: [[3]])) }
+        .to raise_error(Fontisan::ParseError, /mark.*set/)
+      data = gpos_binary([gpos_lookup([individual], flags: 32)])
+      expect { described_class.read(data).kern_pairs }.to raise_error(Fontisan::ParseError, /flags/)
+    end
+
+    it "bounds malformed GDEF headers, glyph classes and mark coverage offsets" do
+      valid = gpos_gdef(classes: { 3 => 3 }, mark_sets: [[3]])
+      data = gpos_binary([gpos_lookup([individual], flags: 16)])
+      malformed = (0...14).map { |length| valid.byteslice(0, length) }
+      [[0, [2].pack("n")], [2, [1].pack("n")], [4, [2].pack("n")], [12, [65535].pack("n")]].each do |offset, bytes|
+        copy = valid.dup
+        copy[offset, bytes.bytesize] = bytes
+        malformed << copy
+      end
+      sets = valid.byteslice(12, 2).unpack1("n")
+      [0, 7, 0xffff_ffff].each do |offset|
+        copy = valid.dup
+        copy[sets + 4, 4] = [offset].pack("N")
+        malformed << copy
+      end
+      malformed << gpos_gdef(classes: { 3 => 5 }, mark_sets: [[3]])
+      malformed.each do |gdef|
+        expect { described_class.read(data).kern_pairs(gdef: gdef) }.to raise_error(Fontisan::ParseError)
+      end
+    end
+  end
+
+  describe "extension positioning" do
+    it "queries and enumerates wrapped PairPos formats while preserving zero priority and logical sums" do
+      [individual, class_based].each do |subtable|
+        zero = gpos_extension(gpos_pair_one({ 2 => { 3 => 0 } }))
+        wrapped = gpos_extension(subtable)
+        data = gpos_binary([gpos_lookup([zero, wrapped], type: 9), gpos_lookup([wrapped], type: 9)],
+                           indices: [1, 0, 1])
+        pairs = described_class.read(data).kern_pairs(glyph_count: 5)
+        expect(pairs[[2, 3]]).to eq(-29)
+        expect(pairs.to_h).to include([2, 3] => -29)
+      end
+    end
+
+    it "caches aliased extension lookups without collapsing logical sums" do
+      zero = gpos_extension(gpos_pair_one({ 2 => { 3 => 0 } }))
+      wrapped = gpos_extension(individual)
+      data = gpos_lookup_subtable_alias_binary(count: 32, repetitions: 128, subtables: [zero, wrapped], type: 9)
+      pairs, reads = gpos_subtable_decode_counts(data)
+      expect(reads).to be <= 1
+      expect(pairs.to_h).to eq({ [2, 4] => 480 })
+    end
+
+    it "uses all 32 extension offset bits relative to the wrapper" do
+      wrapped = gpos_extension(individual, offset: 65544)
+      pairs = described_class.read(gpos_binary([gpos_lookup([wrapped], type: 9)])).kern_pairs
+      expect(pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+    end
+
+    it "validates extension headers and offsets before following them" do
+      valid = gpos_extension(individual)
+      malformed = (0...8).map { |length| valid.byteslice(0, length) }
+      [[0, [2].pack("n")], [2, [0].pack("n")], [2, [9].pack("n")],
+       [2, [10].pack("n")], [4, [0].pack("N")], [4, [7].pack("N")],
+       [4, [0xffff_ffff].pack("N")]].each do |offset, value|
+        copy = valid.dup
+        copy[offset, value.bytesize] = value
+        malformed << copy
+      end
+      malformed.each do |subtable|
+        expect { described_class.read(gpos_binary([gpos_lookup([subtable], type: 9)])).kern_pairs }
+          .to raise_error(Fontisan::ParseError)
+      end
+    end
+
+    it "rejects inconsistent wrapped lookup types and skips valid non-pair extensions" do
+      pair = gpos_extension(individual)
+      other = gpos_extension([1, 0, 0].pack("n*"), type: 1)
+      expect { described_class.read(gpos_binary([gpos_lookup([pair, other], type: 9)])).kern_pairs }
+        .to raise_error(Fontisan::ParseError, /extension lookup types/)
+      data = gpos_binary([gpos_lookup([other], type: 9), gpos_lookup([individual])])
+      expect(described_class.read(data).kern_pairs.to_h).to eq({ [2, 3] => -29, [2, 4] => 15 })
+    end
+
+    { "SourceSans3" => ["SourceSans3-Regular.otf", [2, 23], -14, [21, 42], -66],
+      "MonaSans" => ["googlefonts/variable/MonaSans[wdth,wght].ttf", [1, 155], -122, [131, 314], -128] }.each do |name, values|
+      it "reads the independently measured AV and To advances in #{name}" do
+        path, av, av_advance, to, to_advance = values
+        font = Fontisan::FontLoader.load(font_fixture_path(name, path))
+        expect { font.table("GPOS").kern_pairs }.to raise_error(Fontisan::UnsupportedFormatError, /gdef:/)
+        pairs = font.table("GPOS").kern_pairs(gdef: font.table_data["GDEF"])
+        expect(pairs[av]).to eq(av_advance)
+        expect(pairs[to]).to eq(to_advance)
       end
     end
   end
@@ -463,6 +628,7 @@ RSpec.describe Fontisan::Tables::Gpos do
     {
       "pair parser first" => ["fontisan/tables/gpos/pair_position", "fontisan"],
       "collection first" => ["fontisan/tables/gpos/kerning_pairs", "fontisan"],
+      "filter first" => ["fontisan/tables/gpos/glyph_filter", "fontisan"],
       "facade first" => ["fontisan/tables/gpos", "fontisan"],
       "gem first" => ["fontisan", "fontisan/tables/gpos/pair_position", "fontisan/tables/gpos/kerning_pairs"],
     }.each do |name, order|

@@ -57,20 +57,22 @@ module Fontisan
         []
       end
 
-      # Read direct PairPos (lookup type 2) value1.xAdvance in font units.
+      # Read PairPos value1.xAdvance in font units, directly or via extensions.
       # The returned Enumerable supports pairs[[left_glyph_id, right_glyph_id]];
       # unmatched pairs return zero. Use glyph_count: font.table("maxp").num_glyphs.to_i
       # to enumerate class-based pairs, including implicit class zero, with to_h.
       # Selects the script's default language system, with no script fallback.
       # First matching subtables take precedence; distinct lookups are summed.
-      # Supports direct PairPos formats 1 and 2 only. Extension and contextual
-      # lookups, lookup-flag glyph filtering, device corrections and variations
-      # are not applied.
+      # Supports PairPos formats 1 and 2 in lookup types 2 and 9. Pass raw GDEF
+      # bytes with gdef: font.table_data["GDEF"] for glyph-filtering lookups.
+      # Filters apply to supplied pair endpoints; this does not shape a stream.
+      # Other lookup types, device corrections and variations are not applied.
       # @return [Enumerable] nonzero glyph-ID pairs and signed advances
       # @raise [ParseError] malformed selected positioning data
-      def kern_pairs(script_tag: "latn", feature_tag: "kern", glyph_count: nil)
+      # @raise [UnsupportedFormatError] selected filtering requires missing GDEF data
+      def kern_pairs(script_tag: "latn", feature_tag: "kern", glyph_count: nil, gdef: nil)
         KerningPairs.new(self, script_tag: script_tag, feature_tag: feature_tag,
-                               glyph_count: glyph_count)
+                               glyph_count: glyph_count, gdef: gdef)
       end
 
       private

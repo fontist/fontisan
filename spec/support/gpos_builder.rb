@@ -63,7 +63,31 @@ module GposBuilder
      matrix.size, matrix.first.size].pack("n*") + records + coverage_data + first_data + second_data
   end
 
-  def gpos_lookup(subtables, type: 2, flags: 0)
+  def gpos_gdef(classes: {}, mark_classes: nil, mark_sets: nil, version: 2, class_format: 2)
+    header = { 0 => 12, 2 => 14, 3 => 18 }.fetch(version)
+    glyphs = gpos_class_def(classes, format: class_format)
+    marks = mark_classes ? gpos_class_def(mark_classes, format: class_format) : ""
+    sets = ""
+    if mark_sets
+      offset = 4 + mark_sets.size * 4
+      offsets = mark_sets.map do |set|
+        current = offset
+        offset += gpos_coverage(set).bytesize
+        current
+      end
+      sets = [1, mark_sets.size].pack("n*") + offsets.pack("N*") + mark_sets.map { |set| gpos_coverage(set) }.join
+    end
+    data = [1, version, header, 0, 0, marks.empty? ? 0 : header + glyphs.bytesize].pack("n*")
+    data += [sets.empty? ? 0 : header + glyphs.bytesize + marks.bytesize].pack("n") unless version.zero?
+    data += [0].pack("N") if version == 3
+    data + glyphs + marks + sets
+  end
+
+  def gpos_extension(subtable, offset: 8, type: 2)
+    [1, type, offset].pack("nnN") + ("\x00".b * (offset - 8)) + subtable
+  end
+
+  def gpos_lookup(subtables, type: 2, flags: 0, mark_set: 0)
     cursor = 6 + subtables.size * 2 + ((flags & 16).zero? ? 0 : 2)
     offsets = subtables.map do |data|
       offset = cursor
@@ -71,7 +95,7 @@ module GposBuilder
       offset
     end
     [type, flags, subtables.size, *offsets].pack("n*") +
-      ((flags & 16).zero? ? "" : [0].pack("n")) + subtables.join
+      ((flags & 16).zero? ? "" : [mark_set].pack("n")) + subtables.join
   end
 
   def gpos_binary(lookups, script_tag: "latn", feature_tag: "kern", indices: nil,
@@ -106,7 +130,7 @@ module GposBuilder
     data.byteslice(0, list_offset) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup
   end
 
-  def gpos_lookup_subtable_alias_binary(count:, repetitions:, subtables:)
+  def gpos_lookup_subtable_alias_binary(count:, repetitions:, subtables:, type: 2)
     cursor = 6 + 2 * repetitions * subtables.size
     offsets = subtables.map do |data|
       offset = cursor
@@ -114,7 +138,7 @@ module GposBuilder
       offset
     end
     entries = Array.new(repetitions, offsets).flatten
-    lookup = [2, 0, entries.size, *entries].pack("n*") + subtables.join
+    lookup = [type, 0, entries.size, *entries].pack("n*") + subtables.join
     data = gpos_binary([lookup] * count)
     base = data.byteslice(8, 2).unpack1("n")
     data.byteslice(0, base) + [count, *Array.new(count, 2 + count * 2)].pack("n*") + lookup

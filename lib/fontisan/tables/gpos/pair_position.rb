@@ -25,6 +25,10 @@ module Fontisan
           bytes(offset, 2).unpack1("n")
         end
 
+        def uint32(offset)
+          bytes(offset, 4).unpack1("N")
+        end
+
         def array(offset, count)
           bytes(offset, count * 2).unpack("n*")
         end
