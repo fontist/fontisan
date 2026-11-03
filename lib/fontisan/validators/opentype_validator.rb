@@ -44,7 +44,7 @@ module Fontisan
           glyf = font.table("glyf")
           next true unless glyf # Skip if CFF font
 
-          loca = font.table("loca")
+          loca = parsed_loca(font)
           head = font.table("head")
           maxp = font.table("maxp")
           glyf.all_glyphs_accessible?(loca, head, maxp.num_glyphs)
@@ -55,7 +55,7 @@ module Fontisan
           glyf = font.table("glyf")
           next true unless glyf
 
-          loca = font.table("loca")
+          loca = parsed_loca(font)
           head = font.table("head")
           maxp = font.table("maxp")
           glyf.no_clipped_glyphs?(loca, head, maxp.num_glyphs)
@@ -66,7 +66,7 @@ module Fontisan
           glyf = font.table("glyf")
           next true unless glyf
 
-          loca = font.table("loca")
+          loca = parsed_loca(font)
           head = font.table("head")
           maxp = font.table("maxp")
 
@@ -100,6 +100,16 @@ module Fontisan
           # Most fonts have checksum mismatches, so we make it info not error
           true # Placeholder - actual checksum validation if desired
         end
+      end
+
+      # loca must be parsed with head/maxp context before glyf can read it.
+      def parsed_loca(font)
+        loca = font.table("loca")
+        return loca if loca.parsed?
+
+        loca.parse_with_context(font.table("head").index_to_loc_format,
+                                font.table("maxp").num_glyphs)
+        loca
       end
     end
   end

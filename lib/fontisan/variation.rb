@@ -15,6 +15,7 @@ module Fontisan
     autoload :InstanceGenerator, "fontisan/variation/instance_generator"
     autoload :InstanceFontWrapper, "fontisan/variation/instance_font_wrapper"
     autoload :InstanceWriter, "fontisan/variation/instance_writer"
+    autoload :Instancing, "fontisan/variation/instancing"
     autoload :Interpolator, "fontisan/variation/interpolator"
     autoload :MetricsAdjuster, "fontisan/variation/metrics_adjuster"
     autoload :Optimizer, "fontisan/variation/optimizer"
