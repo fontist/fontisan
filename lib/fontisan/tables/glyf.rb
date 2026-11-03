@@ -241,13 +241,11 @@ module Fontisan
         glyph = glyph_for(glyph_id, loca, head)
         return true if glyph.nil? # Empty glyphs are OK
 
-        # Simple glyphs: contours should be >= 0
-        # Compound glyphs: numberOfContours = -1
+        # Simple glyphs: contours must be >= 0. Compound glyphs always have
+        # numberOfContours = -1; CompoundGlyph.parse rejects anything else.
         case glyph
-        when SimpleGlyph, CompoundGlyph
-          glyph.num_contours >= -1
-        else
-          true
+        when SimpleGlyph then glyph.num_contours >= 0
+        else true
         end
       rescue StandardError
         false

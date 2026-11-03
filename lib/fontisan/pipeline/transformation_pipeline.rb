@@ -216,7 +216,7 @@ module Fontisan
         return tables if source_format == target
 
         # Use FormatConverter for outline conversion
-        if needs_outline_conversion?(source_format, target) || target == :svg
+        if needs_outline_conversion?(tables, target) || target == :svg
           converter = Converters::FormatConverter.new
           # Create temporary font object from tables
           font = build_font_from_tables(tables, source_format)
@@ -229,16 +229,18 @@ module Fontisan
 
       # Check if outline conversion is needed
       #
-      # @param source [Symbol] Source format
+      # TTF <-> OTF changes the outline format. WOFF/WOFF2 targets only
+      # repackage whichever outlines the font already has.
+      #
+      # @param tables [Hash] Font tables (their outlines decide the source)
       # @param target [Symbol] Target format
       # @return [Boolean] True if outline conversion needed
-      def needs_outline_conversion?(source, target)
-        # TTF ↔ OTF requires outline conversion
-        ttf_formats = %i[ttf ttc woff woff2]
-        otf_formats = %i[otf otc]
+      def needs_outline_conversion?(tables, target)
+        target_outline = { ttf: :glyf, ttc: :glyf, otf: :cff, otc: :cff }[target]
+        return false unless target_outline
 
-        (ttf_formats.include?(source) && otf_formats.include?(target)) ||
-          (otf_formats.include?(source) && ttf_formats.include?(target))
+        source_outline = tables.key?("glyf") ? :glyf : :cff
+        source_outline != target_outline
       end
 
       # Write output font file

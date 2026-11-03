@@ -107,6 +107,20 @@ module Fontisan
       # Returns all axes at their default values.
       #
       # @return [Hash<String, Float>] Default coordinates
+      # Out-of-range requests are pulled to the nearest axis limit and
+      # unknown axes dropped, so SVG preview stays tolerant.
+      def clamp_to_axes(coords)
+        return coords unless @font.has_table?("fvar")
+
+        by_tag = @font.table("fvar").axes.to_h { |a| [a.axis_tag.to_s, a] }
+        coords.each_with_object({}) do |(tag, value), clamped|
+          axis = by_tag[tag.to_s]
+          next unless axis
+
+          clamped[tag.to_s] = Float(value).clamp(axis.min_value, axis.max_value)
+        end
+      end
+
       def default_coordinates
         return {} unless @font.has_table?("fvar")
 
@@ -164,7 +178,11 @@ module Fontisan
       # @return [Hash<String, String>] Instance tables
       def generate_static_instance
         # Use coordinates or defaults if none specified
-        coords = @coordinates.empty? ? default_coordinates : @coordinates
+        coords = if @coordinates.empty?
+                   default_coordinates
+                 else
+                   clamp_to_axes(@coordinates)
+                 end
 
         instance_generator = InstanceGenerator.new(@font, coords)
         instance_generator.generate

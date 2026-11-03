@@ -54,29 +54,12 @@ module Fontisan
 
       # Generate static font instance
       #
-      # Applies variation deltas and returns static font tables.
+      # Applies gvar/HVAR deltas at the coordinates to the outlines and
+      # metrics and drops the variation tables. TrueType (gvar) fonts only.
       #
       # @return [Hash<String, String>] Map of table tags to binary data
       def generate
-        # Start with base font tables
-        tables = @font.table_data.dup
-
-        # Determine variation type
-        if has_variation_table?("gvar")
-          # TrueType outlines with gvar
-          apply_gvar_deltas(tables)
-        elsif has_variation_table?("CFF2")
-          # PostScript outlines with CFF2 blend
-          apply_cff2_blend(tables)
-        end
-
-        # Apply metrics variations if present
-        apply_metrics_deltas(tables) if @context.has_metrics_variations?
-
-        # Remove variation-specific tables to create static font
-        remove_variation_tables(tables)
-
-        tables
+        Instancing::TrueTypeInstancer.new(@font.table_data, @coordinates).call
       end
 
       # Generate a named instance
@@ -94,135 +77,6 @@ module Fontisan
         @coordinates = build_coordinates_from_instance(instance, @context.axes)
 
         generate
-      end
-
-      # Apply gvar deltas to TrueType outlines
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_gvar_deltas(_tables)
-        gvar = variation_table("gvar")
-        glyf = @font.table("glyf")
-        return unless gvar && glyf
-
-        # Get glyph count
-        maxp = @font.table("maxp")
-        glyph_count = maxp ? maxp.num_glyphs : gvar.glyph_count
-
-        # Process each glyph
-        glyph_count.times do |glyph_id|
-          apply_glyph_deltas(glyph_id, gvar, glyf)
-        end
-
-        # Rebuild glyf and loca tables with adjusted outlines
-        # This is a placeholder - full implementation would reconstruct tables
-      end
-
-      # Apply deltas to a specific glyph
-      #
-      # @param glyph_id [Integer] Glyph ID
-      # @param gvar [Gvar] Gvar table
-      # @param glyf [Glyf] Glyf table
-      def apply_glyph_deltas(glyph_id, gvar, _glyf)
-        # Get tuple variations for this glyph
-        tuple_data = gvar.glyph_tuple_variations(glyph_id)
-        return unless tuple_data
-
-        # Match tuples to current coordinates
-        matches = @context.region_matcher.match_tuples(
-          coordinates: @coordinates,
-          tuples: tuple_data[:tuples],
-        )
-
-        nil if matches.empty?
-
-        # Get base glyph outline
-        # Apply matched deltas with their scalars
-        # This is a placeholder - full implementation would:
-        # 1. Parse glyph outline points
-        # 2. Parse delta data for each tuple
-        # 3. Apply: new_point = base_point + Σ(delta * scalar)
-        # 4. Update glyph outline
-      end
-
-      # Apply CFF2 blend operators
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_cff2_blend(_tables)
-        cff2 = variation_table("CFF2")
-        return unless cff2
-
-        # Set number of axes for CFF2
-        cff2.num_axes = @context.axis_count
-
-        # Process each glyph's CharString
-        glyph_count = cff2.glyph_count
-        return if glyph_count.zero?
-
-        # Calculate variation scalars once
-        calculate_variation_scalars
-
-        # Apply blend to each glyph
-        # This is a placeholder - full implementation would:
-        # 1. Parse CharString with blend operators
-        # 2. Apply scalars to blend operands
-        # 3. Rebuild CharStrings without blend operators
-        # 4. Update CFF2 table
-      end
-
-      # Calculate variation scalars for current coordinates
-      #
-      # @return [Array<Float>] Scalars for each axis
-      def calculate_variation_scalars
-        @context.axes.map do |axis|
-          coord = @coordinates[axis.axis_tag] || axis.default_value
-          @context.interpolator.normalize_coordinate(coord, axis.axis_tag)
-        end
-      end
-
-      # Apply metrics variations
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_metrics_deltas(tables)
-        # Apply HVAR (horizontal metrics)
-        apply_hvar_deltas(tables) if has_variation_table?("HVAR")
-
-        # Apply VVAR (vertical metrics)
-        apply_vvar_deltas(tables) if has_variation_table?("VVAR")
-
-        # Apply MVAR (font-wide metrics)
-        apply_mvar_deltas(tables) if has_variation_table?("MVAR")
-      end
-
-      # Apply HVAR deltas to horizontal metrics
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_hvar_deltas(_tables)
-        adjuster = MetricsAdjuster.new(@font, @context.interpolator)
-        adjuster.apply_hvar_deltas(@coordinates)
-      end
-
-      # Apply VVAR deltas to vertical metrics
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_vvar_deltas(_tables)
-        adjuster = MetricsAdjuster.new(@font, @context.interpolator)
-        adjuster.apply_vvar_deltas(@coordinates)
-      end
-
-      # Apply MVAR deltas to font-wide metrics
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def apply_mvar_deltas(_tables)
-        adjuster = MetricsAdjuster.new(@font, @context.interpolator)
-        adjuster.apply_mvar_deltas(@coordinates)
-      end
-
-      # Remove variation tables from static font
-      #
-      # @param tables [Hash<String, String>] Font tables
-      def remove_variation_tables(tables)
-        variation_tables = %w[fvar gvar cvar HVAR VVAR MVAR avar STAT]
-        variation_tables.each { |tag| tables.delete(tag) }
       end
 
       # Interpolate a single value
