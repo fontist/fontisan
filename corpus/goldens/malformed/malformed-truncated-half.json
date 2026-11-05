@@ -1,0 +1,182 @@
+{
+  "audit": {
+    "causes": [],
+    "error_class": "EOFError",
+    "markers": [
+      "end of file reached"
+    ],
+    "message": "End of file reached",
+    "outcome": "error"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "mappings": 5,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "mappings": 5,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "EOFError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "End of file reached",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-truncated-half.ttf",
+  "file_sha256": "390e247781c6f88237d0d2690ddcedc171c341de6e925d375c07510a9275c1ac",
+  "id": "malformed-truncated-half",
+  "kind": "truncated-half",
+  "scan": {
+    "digest": "b87d635db22c3b4be365caa77aac015fe7fe03a397a956281f89bad11d5fb031",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": null,
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": {
+            "cause": {
+              "class": "EOFError",
+              "message": "End of file reached"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [
+              "end of file reached"
+            ],
+            "message": "Font file could not be parsed: #<EOFError: End of file reached>."
+          }
+        },
+        "format": "ttf",
+        "num_faces": 1,
+        "validation_status": "invalid"
+      }
+    ]
+  }
+}

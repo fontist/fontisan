@@ -1,0 +1,162 @@
+{
+  "audit": {
+    "causes": [],
+    "error_class": "Fontisan::InvalidFontError",
+    "markers": [],
+    "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+    "outcome": "error"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-garbage.ttf",
+  "file_sha256": "28496e939d928ebe96cda9125f1b075cea500bbb4826106a6448c82ca451864f",
+  "id": "malformed-garbage",
+  "kind": "garbage",
+  "scan": {
+    "digest": "12eed375dada6c6f039ba3950c79704ed2ada9e859b2b757d65f1716bcb8c05e",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": null,
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": {
+            "cause": {
+              "class": "Fontisan::InvalidFontError",
+              "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file."
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF<N>, PFB, or PFA file.>."
+          }
+        },
+        "format": null,
+        "num_faces": 1,
+        "validation_status": null
+      }
+    ]
+  }
+}

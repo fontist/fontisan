@@ -1,0 +1,231 @@
+{
+  "audit": {
+    "causes": [
+      {
+        "class": "RuntimeError",
+        "message": "Invalid TrueTypeFont file: End of file reached"
+      },
+      {
+        "class": "EOFError",
+        "message": "End of file reached"
+      }
+    ],
+    "error_class": "Fontisan::Error",
+    "markers": [
+      "end of file reached"
+    ],
+    "message": "Failed to load font: Invalid TrueTypeFont file: End of file reached",
+    "outcome": "error"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [
+            {
+              "class": "EOFError",
+              "message": "End of file reached"
+            }
+          ],
+          "error_class": "RuntimeError",
+          "markers": [
+            "end of file reached"
+          ],
+          "message": "Invalid TrueTypeFont file: End of file reached",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-truncated-100.ttf",
+  "file_sha256": "548caeb76df5e39af9100c75473ba30ae3a71721c31e8c3f7fbe1a5e281e47f7",
+  "id": "malformed-truncated-100",
+  "kind": "truncated-100",
+  "scan": {
+    "digest": "251cf7ffea37f4d573ba6caa012109e16fec359f41f54f683820b3b5ae2b2550",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": null,
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": {
+            "cause": {
+              "class": "RuntimeError",
+              "message": "Invalid TrueTypeFont file: End of file reached"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [
+              "end of file reached"
+            ],
+            "message": "Font file could not be parsed: #<RuntimeError: Invalid TrueTypeFont file: End of file reached>."
+          }
+        },
+        "format": "ttf",
+        "num_faces": 1,
+        "validation_status": null
+      }
+    ]
+  }
+}
