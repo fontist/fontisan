@@ -1,0 +1,128 @@
+{
+  "cases": {
+    "extract:0": {
+      "class": "exact",
+      "known_reference_bug": "cmap: bad glyph id offset (N > N)",
+      "ots": {
+        "detail": "member 0: ERROR: cmap: bad glyph id offset (1598 > 64) | ERROR: cmap: Failed to parse format 4 cmap subtable 0",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "TestTTF-Regular.ttf",
+        "format": "ttf",
+        "sha256": "9f0322c485495604430e6e3bd758cdf4491170e2882ced355637cc3cadf97e38",
+        "size": 2336
+      },
+      "params": {
+        "index": 0,
+        "op": "extract"
+      }
+    },
+    "extract:1": {
+      "class": "exact",
+      "known_reference_bug": "cmap: bad glyph id offset (N > N)",
+      "ots": {
+        "detail": "member 0: ERROR: cmap: bad glyph id offset (1598 > 64) | ERROR: cmap: Failed to parse format 4 cmap subtable 0",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "TestTTF-Regular.ttf",
+        "format": "ttf",
+        "sha256": "9f0322c485495604430e6e3bd758cdf4491170e2882ced355637cc3cadf97e38",
+        "size": 2336
+      },
+      "params": {
+        "index": 1,
+        "op": "extract"
+      }
+    },
+    "format:otc": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttc",
+        "sha256": "060ea85775d8624f3fa0339808f1642de60f1aef54726b406db52e54e571ab83",
+        "size": 2608
+      },
+      "params": {
+        "op": "format",
+        "to": "otc"
+      }
+    },
+    "format:ttc": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttc",
+        "sha256": "0b2f45464ed3e94c255e829d6ffc40e0c5b63f6410dc996698482de422d254fb",
+        "size": 2628
+      },
+      "params": {
+        "op": "format",
+        "to": "ttc"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "329ae55f26480983f120303688d98ca0b9252552586ae375d385608c4d44037a",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        },
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "329ae55f26480983f120303688d98ca0b9252552586ae375d385608c4d44037a",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "950725b0e61fa6eb9dd646dfca9c57da2e79d2adae1735ea40012bf9b1e1a2c1",
+        "size": 864
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    }
+  },
+  "font": "fonttools-test-ttc-v2",
+  "source_format": "ttc",
+  "source_sha256": "0b2f45464ed3e94c255e829d6ffc40e0c5b63f6410dc996698482de422d254fb",
+  "timestamp": 1735689600
+}

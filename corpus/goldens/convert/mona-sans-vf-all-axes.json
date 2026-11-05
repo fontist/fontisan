@@ -1,0 +1,3821 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "18d3f6c5020fda39be3b75b066f37ec1bbeecdc97f5a3e3c1ca56c24b842861d",
+        "size": 966784
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "3894253c1d6e48cce21c02331a1263b048848786ab9c2cffafcfd16d7b6b9853",
+          "GPOS": "5783803aef5b68d08cf05dfd181abcb7a85b7e6dbdd8c3b5d1188cd3aa83409f",
+          "GSUB": "ed91559f1ffdba59161f095d8399e67343169e94bbd90cb2020fc9d74137f4e7",
+          "OS/2": "7ee4d10d4e6c8d4213a29fb78879bb9c267c5e2dc78882930a001381636510a7",
+          "cmap": "39e6a62164282567dd3dfba6684d324f50119c5dd33c06fbdc911cf714942bb7",
+          "glyf": "54774aff692d2b36b27e89710ce02b286c217ca5d14eed26d810fef4f5abd8c3",
+          "head": "826c8a9ae48866785f9a05d341304442c961e3266315213e2f4c54bd8fb8721f",
+          "hhea": "2231e95942c8f0d57fbd9adcd1048e344f1a3456b239401b6f3d99ec3067112f",
+          "hmtx": "0636c7cff9a819038a9b1b24ea0dc96f82139bfbbcaa10adaf4bbca60dc63d1f",
+          "loca": "5b56f561c65c2555d9a01fa52eb671b0b82e4646d0a20ca6a1c65072ea860b82",
+          "maxp": "730eb5006231691c1fd955a3343aed44fb97d8fed87410bdcbaaca9170a41ffb",
+          "name": "9909cf8b2c639be7f9b97d66c62a1ac2b38632d045f48fc0f78bb7597e8dc5c0",
+          "post": "eb8c0897a68980619391243c3a98d22bb3b0860547c6f13eacfa267029a75b46"
+        }
+      ],
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "54fd344d345cc0b419aac628a3014a1b2e94210a49dbb250ad35f0feaf761888",
+        "size": 451124
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "3894253c1d6e48cce21c02331a1263b048848786ab9c2cffafcfd16d7b6b9853",
+          "GPOS": "5783803aef5b68d08cf05dfd181abcb7a85b7e6dbdd8c3b5d1188cd3aa83409f",
+          "GSUB": "ed91559f1ffdba59161f095d8399e67343169e94bbd90cb2020fc9d74137f4e7",
+          "OS/2": "7ee4d10d4e6c8d4213a29fb78879bb9c267c5e2dc78882930a001381636510a7",
+          "cmap": "39e6a62164282567dd3dfba6684d324f50119c5dd33c06fbdc911cf714942bb7",
+          "glyf": "d8b6857fc2c3d2502970d43c5445b6a69f5353976b9a1cd87c0b6198652b989d",
+          "head": "1ed1c98a5b9fa366bf97bb77bcfb15b258567e232660adfad9478caf5a845c85",
+          "hhea": "2231e95942c8f0d57fbd9adcd1048e344f1a3456b239401b6f3d99ec3067112f",
+          "hmtx": "0636c7cff9a819038a9b1b24ea0dc96f82139bfbbcaa10adaf4bbca60dc63d1f",
+          "loca": "b4dc022d3c0d1b1474082a66feb658d5b649c2a69f4a31d6896b35154e361dda",
+          "maxp": "730eb5006231691c1fd955a3343aed44fb97d8fed87410bdcbaaca9170a41ffb",
+          "name": "9909cf8b2c639be7f9b97d66c62a1ac2b38632d045f48fc0f78bb7597e8dc5c0",
+          "post": "eb8c0897a68980619391243c3a98d22bb3b0860547c6f13eacfa267029a75b46"
+        }
+      ],
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "6d201eff2d4287a1d1da9a1e6c7344d797ed8072118bce357960d916b66688fe",
+        "size": 337988
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "instance:0": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "943185faf2e900241d794cbba4ed40b60dfa0eb263cf226cd7ff5a4dbfe9fb3f",
+        "size": 899980
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:1": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3a81ddc5a4c5114ba0999700176fc145cc94e82cf6f946416df7415ddf2669d5",
+        "size": 899916
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:10": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "391a93d306f2cfc5d9dbf012b9037bfb54e04a5cfccbd7d8f7e5d0abf467e62a",
+        "size": 899908
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:100": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "869997fcf0cab222cafcdd871633ac399a501999b896fc35df229c746bea0cef",
+        "size": 901996
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:101": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "5eedfc88d784a07081d3f727310c293d3a92d05aaedb0f6614ed9bf9141dd5cb",
+        "size": 901944
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:102": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "030cab88dc7e28526d52761c471116238520f221818a89f4a616c9b3102b8531",
+        "size": 901972
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:103": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "fd4f7866332d926df40bbf9f4f1cfcab7dfed35486e571b7b39056b2ac2fc057",
+        "size": 901812
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:104": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6532081ec661313bcdfc30f6fbe9403f10baabab349af1410a8b4454e9870647",
+        "size": 902196
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:105": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "076abc1d21a5a81a3a6661f8a337d6b1705e6cea082ede7fd329a3c121f521cf",
+        "size": 902168
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:106": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "eb8e230b469bfae8a51babd89d52642c5ea2ceffcd872251049182200d2ec591",
+        "size": 902144
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:107": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0341bc97706543f1cfec85ee68c31c6bcbb9379b45828825ce563694a1283ac6",
+        "size": 902216
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:108": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7207ed50c44f596c92d6e91bc642faf979142aefe48cca636d79874c56560f37",
+        "size": 902176
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:109": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a3767d965f0bf10e615ad8f9ca0749d15d74410d9009ab9fcac79a387c95f0ce",
+        "size": 902124
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:11": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8d7e6b1e9e3b4f8da447f749cea75abf09a6cd32cbb07cf2e97e4374a633ef97",
+        "size": 899988
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:110": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f3d74abed85a99adbc86ff70efdd1a3cfffff822dea73643a282ca21d7aa2ac7",
+        "size": 902148
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:111": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "09f79e820649044fc574f585d4c159e6b6fed2492c2ac938372a23e3aa8d0480",
+        "size": 902024
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:112": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3d24e8bad96a4ba98c329625c7a2768f82109490a7126bd99028a12a7931476f",
+        "size": 902064
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:113": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f907390d245677e81dc427eb9ea36635a35acc98b9deb849c7cc817a69c28b57",
+        "size": 902064
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:114": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "d949da64accf2717d9c7f6b4050ee3074dabb738c56cf195e79416e648b2c5eb",
+        "size": 902024
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:115": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3c4032c68c06d804f116d5c76afdc9577f3c4e7777718ad27c2cd8ce617080af",
+        "size": 902100
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:116": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6ca9045cb2dcfb1ffe6388c1f08465ef7a07bb13222fb80003ddfd6de15841e9",
+        "size": 902116
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:117": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4a804a52d405899a6d02e5300c81dcf9abb294e14806d0d1b0b62791456b7fe7",
+        "size": 902052
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:118": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "10a99283e183c3eb25e35e62c194d8fa4c5f0bee2574825b25e03db532ba56ed",
+        "size": 902056
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:119": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "93eb9c0b29b6c0cca6c1eb6b0ad2970375b420162c40591a0cc16b6cbb75b8a6",
+        "size": 901940
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:12": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0d8d84c714303f00581494816c713301b1268e7f6daa7e9c54b2b61dcaa49031",
+        "size": 900024
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:120": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4d8dc707ac7683aac092e95b1c20eee9837a9ce62ce473d0cd27dc7867794128",
+        "size": 902552
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:121": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9d811e71f7bc1b8c7a4d744626ef54afffa2ea6a7659336900036694556fceb1",
+        "size": 902604
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:122": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a27fa705ae6c71e1d36bfaacfed3b5243b5c0849de83d6601129ae70f041e438",
+        "size": 902652
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:123": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "980e58a1ca4767ee45c345ebaa80c740690e16e3ec4b879e6d8efb0e1845735c",
+        "size": 902776
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:124": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "03fe64f532065312cf67a89122ee5907c5d1d43e60ff015165c29d2e851b8d48",
+        "size": 902764
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:125": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "582b1c4c1b43c19c5b98d9b8548d334de8a09b119d2b831b3dcd05027a393388",
+        "size": 902760
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:126": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "dc5985b48062b4b0f18cece030e63c572fd0962f339dcf2c8563c35322bb56f8",
+        "size": 902736
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:127": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "bcb83ca9f806e30f24b0d4cd718edc41e3bde5673397883dd6d99c899639529d",
+        "size": 902640
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:128": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9a01ead93b916e3749458252e05dda01ddcfacab1dd8b2bff58383c329727761",
+        "size": 902672
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:129": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "5b47fafacca75bf94d87ff315f98fc976c9e5304e8439c969049a2c7f44b94ed",
+        "size": 902676
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:13": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4d1213ece116a0133fccda0b7aba0ba8b7965f514ec76168086ea7661aede596",
+        "size": 899944
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:130": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6b4b1aa9595966c67c5040602936446b94393a77e8b52c93095cb5eaf5e21aa4",
+        "size": 902660
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:131": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "dd57ba7dd317db0272dabed84ee09d8853d386a9f21cfa796f7e95d77a086f38",
+        "size": 902744
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:132": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "78da0f5dfc9ce2ee9426e4a502f0ac0c4a074be16d44360a06ce45831c26483f",
+        "size": 902792
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:133": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "e44aa87e53318645eb77f44ca1fa79bb1e8ab7a90c89320416dded43b6338dcd",
+        "size": 902784
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:134": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "afe3c231bd47b50cbb518fb4fd0399e3ca099867b590ac224d09917a42bee632",
+        "size": 902788
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:135": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f5eedeb0c3da18a259570b380908987431a809c22f6c0a175d437862f221588d",
+        "size": 902760
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:136": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "94184fecda1b4e546df8edc6fe85fe74ace655f514306aad06777d180bdc660d",
+        "size": 901968
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:137": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "c1514942e9ac34c89212fd75cf4c247ab3f1b783d9338b4582d6c8ccf4051ec8",
+        "size": 902024
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:138": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "2bf15a9e7bd15fa8b6ad54affc4f169018b7d33374860d94cc286a90c3de5aeb",
+        "size": 902000
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:139": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "2ebfa37131a99f88e0af718bb4f8315a03f0baadc23f48e96a11ed087ed6740d",
+        "size": 902052
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:14": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a24727cc9e36ba773f0614298dd8a66eb978235ac870e0f539250ce1dc90fb71",
+        "size": 900052
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:140": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0760c26f969037f061e87dd1faccea8c643465e245d73d5304cb996a40db880e",
+        "size": 902056
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:141": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "af9bfa17607c653478f58e57c30637c1abfc498966877465e55550a871a5196b",
+        "size": 902052
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:142": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "02fe51e77983f7608911c833344267a1144f309b363c3abf03016d4c811336bd",
+        "size": 902048
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:143": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "509701fd6f400dd7a5f41ee279530cfe55bc362cca99ab7aa0f51ba4abef5e01",
+        "size": 901864
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:144": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "e386920c93e10f4022e74cc2e7f03b669d4e74eb5b2ba8cf2ded71d228ba739f",
+        "size": 902288
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:145": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b1194b2a61a71fdd2ebc23459ab2468ed0aaa2ca57d7ce16dd83268586b37556",
+        "size": 902284
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:146": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "e782da09ac04a5f2287f959568a51b237b6f370f9632e12a17128e628ae73f91",
+        "size": 902228
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:147": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4489e2e527cffe729968cb058c0d8c741ef10e063902de20b77f069a8d0277e5",
+        "size": 902264
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:148": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "ae217e727c0fed07552642b92ec6942e26da5f40a3cc6b6a167d44ff7122d1ad",
+        "size": 902276
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:149": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "df9f43d5913759aa050d13b971ae72fff14f45dd816dc1b087454ddb3663bbba",
+        "size": 902220
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:15": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4c0b9d578b93aaca2aa258eab804183fd4f6881becbb627dbebd8e93f70f4f65",
+        "size": 899976
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:150": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "c10e9d30e428bea3f4e63a25bd932cf7360a8f7ac6affcf516ea4c1d97c35335",
+        "size": 902256
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:151": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "401be3c1ba5468432582275281cdb9b3a3240e0026c3cb167526b1401eac1c8b",
+        "size": 902112
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:152": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6bb82f6ab24edaf97578e494f79b7d85ec3cdfaa8a0b4197d2519e542c1b5ab4",
+        "size": 902080
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:153": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "63b5ed98e7f65b2ac2381ca356256837ee68ced272875fe46680250cc5bbf9ed",
+        "size": 902064
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:154": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b2eafa03048d6d8d499ed1dc0548e98f7589e2f31f17893aade756ca7786749c",
+        "size": 902040
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:155": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a6f5e136f6521511c96f6dec51e58d2cca1e068ae4fde73b1d45dd97b8c672aa",
+        "size": 902116
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:156": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4da918686475726be77b850b073d733418af10b079011157456ca9b01b94e855",
+        "size": 902112
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:157": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9f04ad8c943a767166a59fb3520a424674b23237d3e169939f8b3ce5679c57d0",
+        "size": 902072
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:158": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "372a915c86f0bf484dbed58230318004d1241e7dfcec74d9a4f10ee007292b7f",
+        "size": 902060
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:159": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "338e2c9888fbeaa1750ce91460bb8127ff44c584faeb58262c1a2fc27515c6ff",
+        "size": 901944
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:16": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "d3e15e3a9572846a69fa5c89951e6a723bbfc673de0931291f4ee36c4ec47b03",
+        "size": 899888
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:17": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8298ba6f2f8c2225afef2f9cedad5f1884d22aaf5a6e812754771c10ff0895c0",
+        "size": 899844
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:18": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "43054f8014d4655ed233fe970ce7145229fbe7339cee823a5cf32e59d7a9b2f8",
+        "size": 899788
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:19": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "24e8363c484d87dd18ba8065f8a9afd6a8e73f9ee9099950900c5c63bc3f87ed",
+        "size": 899856
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:2": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6c74e540cd800bbedf3d8d7840cdfd35042e52ce807de809297bb05e4e9bdc61",
+        "size": 899928
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:20": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "26c46b5cfa6ebebb9e8636b3e7a89f675cb23c00d9625a8fb9ab94840f2eb525",
+        "size": 899888
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:21": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "56436ca6fd8807d009572bacc4a77e8e3f68d2b66bc8db051c4c49aa44ba7842",
+        "size": 899844
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:22": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "2a217d0ffa9d882dd231a2bc1df3c7fcee3d988cefeab8b38fa4cb0a2cedc6a7",
+        "size": 899884
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:23": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "d0fcbb94732009316adcbe4ffd5d1e1f91a6ca4efb69f5bb0b1035f31fedbc39",
+        "size": 899820
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 6553600,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:24": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "06f55f38157f328fc82ca3962ed2199c439daf789d175fe11ea7bed62fbc179c",
+        "size": 900016
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:25": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "fe673a120f88785dbdaa89533c474f4757b3ee27c6efad32da986eb2c9f1d106",
+        "size": 900004
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:26": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "56212c7475c8cb02fabeee740157a8168fc702b6154b8bf39e62f20794d31077",
+        "size": 899948
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:27": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "dc27c11b2e97b263a3efa843ea52ab04890035a2fc466d88068582ff7baa3b62",
+        "size": 900008
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:28": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7645590d6636d712e5130be7dc2c9d76255d6b0c64ad1f4564ef6830bffcfc36",
+        "size": 900036
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:29": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "eb7c8a3ad8feba116d4493d0cbaf9fc17f100e931884e1a78abb033bdfaba8d0",
+        "size": 900004
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:3": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "fb48d454763e834099019e9cfe34d3b0785ab837d09217e2bc4a41f8b4f3af24",
+        "size": 899932
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:30": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3f1ed4390d3620265d886dc1e8ea2c77248115b1ffbfed6af3f7e8fe6d4b297b",
+        "size": 900060
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:31": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6fe8bdfa7b37ad7fdd926fd17f32f42154791491b9979819c2e37010247da37c",
+        "size": 899980
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 7372800,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:32": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "db790fee67f973544281ab97b149b90502d71a037ff488f0ec154e82255a6273",
+        "size": 899948
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:33": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8426b4042d2750c5f4abd9a90e7e21e964a2f5916ea0c5d00ccdf426f1431922",
+        "size": 899916
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:34": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "861688f89a9de755be712a4359d03f080fc7e6e194cd9a67936ee193cb6487dd",
+        "size": 899908
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:35": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "2d28fbb6a413cd6c9f576be8deaddb32c0f4d2fa4d613005e255d0c705fab556",
+        "size": 899976
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:36": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "6d11c120219c1f36b5a85ba97f7fe5350c21495445828bfe7050431e3927bb83",
+        "size": 899992
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:37": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "740e4742b45a9fc0327710d7e8fc325872a470953034dd33ab77447720193800",
+        "size": 899960
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:38": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "81004ab96d5a029b4dbf149dccfb6d03966c3d026042c5bf021d530dc5479988",
+        "size": 899992
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:39": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "46fd20e7da868fa5378bad1c1836997c8585a33c7fd8796ab4b6fb6029205af9",
+        "size": 899968
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 8192000,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:4": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7902294f9f38d6f3e2cc4458159e5a69fc1286470cbfb92cba9beaaea60e526a",
+        "size": 900000
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:40": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "afba8bc90cb8bb44103ababc44a04fb10db2af27abd40a3b9ff5a133677256c6",
+        "size": 899900
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:41": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f36a6751cccf91a59b0458b0e8d13886906eaa3f78abb384633593ebee6d5595",
+        "size": 899944
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:42": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8d4a728aadef318d68673cccfaefbd7faad764df3238b6fb9ce00b888f89b711",
+        "size": 899896
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:43": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "1fe7fd69fad6abc58cd0332f820fad492c2c880ed1af4b4191f55ca893cbd680",
+        "size": 899928
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:44": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "c896703d800741338b2550a506dbaef660a2070149f9ad86226b364f570e9a4e",
+        "size": 899900
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:45": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "c864904541b3805f9d425510a8f59a7f41e5c626ac3173b7669ccc2d21ea5d4b",
+        "size": 899928
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:46": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "cb93bf17b106683da5fda8e9d0065081b7c69d397b0ee79a7c8a3851c4800179",
+        "size": 899956
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:47": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "799c34919cbdc78f1741a5ef392c45c19eaf1a8298760fff525bf0a6dc892701",
+        "size": 899896
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:48": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7b132c50db3c9e87aa86ff1b7ced2ff8828ef1f7ad48c8e9f74b6ba2b6c77291",
+        "size": 899968
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:49": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "d4862089cf7269cb41be5c078e285f156463b93cc84a9295db3ce274852896e7",
+        "size": 899900
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:5": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "fab42d3fdf278060ec9e0873c4935a9d7726a30418e71b0f5dffc846132d09e6",
+        "size": 899948
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:50": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "e9f8274056332cbe1feeb39ae89c6d1529e0b3845126a55a2ed725785e3e0c07",
+        "size": 899852
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:51": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "61cb91c6e3eb77f1f2bc1607aa81b3688b758d71e1f8159f31ca77452f4f346f",
+        "size": 899940
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:52": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "586b028003a574551ad147432b33a1e1a4a58c452faea055f9c3b650bdf54752",
+        "size": 899948
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:53": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "87227085c8f68dfc0b26a79601b3af99535a656f6aab38a078cb967c67769a81",
+        "size": 899924
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:54": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7108fd62d157bbbb20b641084a45b7cfa08b2377158d3ab857120741b9cb379f",
+        "size": 899964
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:55": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "968f1188ce87fc5278417bd2efa05060bdb7625349c6777ba75002ee1eeafa89",
+        "size": 899976
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:56": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "7050b111d331b9b209d586e6b5328ad3d7cc877cb170b354e5c67574adc7802b",
+        "size": 899824
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:57": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "29a1cf50594948ac89bb1bf4bf86d3d61d0fb22fb40bf2aec5347bcaf12cd8fa",
+        "size": 899780
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:58": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "41f111ae8ba72519153482562d4122ab872ea8697e8556a8fb4596f65d355d60",
+        "size": 899808
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:59": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b3f31942573b4a5dc80357925dfca6ef11a6e87ee7e6713d47e35a4c475c4653",
+        "size": 899780
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:6": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "239d0d2f4df038d0ed03614e94e416985de781fc8819e08682f6da13c5ffe82c",
+        "size": 900032
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:60": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a3cd81ee95341226ff4d56eecbbf4b1d121eea314453d32104b2fffa25dfb281",
+        "size": 899828
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:61": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "bbd5c4e5ad32da4e247085708afad5d0c240641e9d1806b6ed0ca3a75506602c",
+        "size": 899752
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:62": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "d612f174f7b3dbebbb9f79116b9281f3c624776a7419807fbc2b25aa7e0ceb89",
+        "size": 899804
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:63": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b0ff7305cf16759995d90fd12f1e632c6fc83c37fe5acb6875fb47c9a55f5d5e",
+        "size": 899756
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:64": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4f2e3710f880d195218860d76ff0f5e98befc07d3fc48ff9d74805b973d3bc03",
+        "size": 899940
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:65": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8db38af618a38ba204c3e4e63d09145b1207d1e849a128d9cfcab5bbac27783c",
+        "size": 899928
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:66": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "29830f78b766b4b8ca7864e42e95bf98be104565dae72f5698e0ea43c8f22da7",
+        "size": 899860
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:67": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a4c6792559bc25d289a907e450446ef7933b9194cc82d0b7f519a6176fc8c181",
+        "size": 899952
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:68": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b3ea614c09e4e282ed6928b6b1021ba804d248296348ce15c126b13a155dc6f7",
+        "size": 899968
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:69": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3f799303740b1577643a466b1fb5795cd96b75a04acbe7566b0ec234e9d45320",
+        "size": 899912
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:7": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3be2442ad2e43fa3785584db267332b908989c296d52ae10986a771ef7a7ed20",
+        "size": 899932
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 4915200,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:70": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "dfb27b8737a28875d80145c1db75e3679ae52328157a594b83e5f7044fa26d4c",
+        "size": 899960
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:71": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a980d9f20eca4b265ed2232c62041faf9762e6cf688c0f25534e3e3a69da5f93",
+        "size": 899904
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 7372800,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:72": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "1abbcdffd1460e728d1076846d418a5e7a3de111ac6b2e36b14fca3eda7790fc",
+        "size": 899860
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:73": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "73be474b2d9823775c3d7a36b79966c8a838b439dd4d676bedae29f6d87b89f7",
+        "size": 899836
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:74": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3d0d06b068c46929920f1fe87a656eb32885b2ab3a73f442cc995505eb1b3ac3",
+        "size": 899828
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:75": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "68c9cb21a64511d13ca0ffa99cbb88ed4a99864b99b7d082e8cfae0b89437ec0",
+        "size": 899904
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:76": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f0e896e8139a84eba801269575265fa705a04827aebc91d25ad37ba1554ebfda",
+        "size": 899928
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:77": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0d4597605e6b63eabca0ac1a65a888471f9e2efe963ab4758bb9f6892c94cdd6",
+        "size": 899880
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:78": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "44cadb1b74c6632327013d0cfa911fb6d603042b1673f0ecefe349f4c6368ee6",
+        "size": 899924
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:79": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "578b0647b02e1385d24f01facf8a684ad57290ca376b823c1d57861ae7f67b0f",
+        "size": 899892
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 1310720,
+          "wdth": 8192000,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:8": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "59306bcedf1422270e424e707015813bc9067c3baae73d714ac67090eaca9eaf",
+        "size": 900012
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:80": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "15cef614e58de83a09625bb6417926e20bc1efeeea59e3f9907b0f9a4c217131",
+        "size": 902484
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:81": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "f9479bc519737d66cf77bcb1d2ae951f2d37d6a1fe087f958e07039295998561",
+        "size": 902544
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:82": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "46d6bf017cceec2e930cd7f0df6296166db814b1ed1831f4bc9255954212ce49",
+        "size": 902556
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:83": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "210baea7991d2cff5d8fd3dce9bb6ed1e0a52589699cbe9b8e037b3709ebb399",
+        "size": 902696
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:84": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "ddd91d0d0191b02b1930c37bafaa579f9d54b040e01dca94b5ff618b6de1f6ab",
+        "size": 902696
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:85": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b8e700b5902b62d768faceaff3371e84ac3b3aff523403fe85e8e1bb7c05987b",
+        "size": 902680
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:86": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "42158e6f809861e5f9f9f21ecf2e51863ce87c290a417c388db39661ddd0222f",
+        "size": 902688
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:87": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "395d9cf85e9ac07810a4e9f37ea0f64e3c1c1bf76fa450a59b2b6870eba84461",
+        "size": 902592
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 4915200,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:88": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "92a75a0d8772b8ae9de7c3282a8b8fb470b284bd3993a808f209af730057679d",
+        "size": 902604
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:89": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "5564b30de45090e00530e9bde52dba1ffd45a4e117b0bb9b820a9ed95e30d08f",
+        "size": 902604
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:9": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4af814e92d10b53ac77563518fc73f0183d2069ccaed83bad94f3056edeed8ba",
+        "size": 899980
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 0,
+          "opsz": 4718592,
+          "wdth": 5734400,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:90": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b042764a7ebf20091a9fc6244506e525e767e085103a4003be987af1e8b23f16",
+        "size": 902580
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:91": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "8441226edd04c2a3092bf1a7cc1adc15d37400ecacf8747af597a0db5fc2b024",
+        "size": 902680
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:92": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "251db1f8ff2de595e4492975e0287f048b1ac5b24599d36419fd5332f8d2e4e0",
+        "size": 902696
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:93": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "fff8916c2651db4935b06623810689e2eec9087d5bc9ee67d3c0102f54405eff",
+        "size": 902712
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:94": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0d43a635e15abe414184d97bae460e6f8c47e4e39972005fb8f7b18b793d7f7f",
+        "size": 902728
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:95": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3b15555cf1ee087eb0c202176d54fcf0555b43e15b41c1e7e129313aa4cbcf77",
+        "size": 902684
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 5734400,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:96": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "00edf8cd2cc78cc4ff4c5ff84f57adf9265d4f8b24ef6d6212f22babf9f7ffe4",
+        "size": 901876
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:97": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4109ebfdefcb09bd0ce6c49cff57b01e8b3af49b42acf581914bcd6396b9f37a",
+        "size": 901916
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:98": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "ba99e9aea1baa75008bc85ede703d23b18d754496e7719e9c5a427e81c6cac17",
+        "size": 901900
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:99": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "df4734f69f5a43ca3913397dbb8880154f6a748d9b5bf8165a349b9c7469062f",
+        "size": 901968
+      },
+      "params": {
+        "coords_raw": {
+          "ital": 65536,
+          "opsz": 1310720,
+          "wdth": 6553600,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 797 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b86fed4af389a4c656a0f1b2084380b777d117c6fcdf5851985d29925266842b",
+        "size": 208268
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 797 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9df994b1d867258f80c5cc189aab6915fd67ace250ce00ded7b7912888001e53",
+        "size": 207336
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          113,
+          229,
+          310,
+          468,
+          7861,
+          8250,
+          64258
+        ]
+      }
+    }
+  },
+  "font": "mona-sans-vf-all-axes",
+  "source_format": "ttf",
+  "source_sha256": "ade8e0e711f2798266e12f02b271aba1c345c5a38be4e98cb72d198248ccc8a7",
+  "timestamp": 1735689600
+}

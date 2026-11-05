@@ -1,0 +1,135 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "6474969f396def928d771c425c3d1a7ce31732755c254ac804878250e784bdf8",
+        "size": 3621304
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "OS/2": "f94da0c14905ee3ab102fded25b899a8ae963da238a8edd88bc94c029fe1c162",
+          "cmap": "8ef5d27f9eca227f407e9ed5ad56ef5497cd2e731e8667ea83d014eb6572efb7",
+          "glyf": "c41e70d8bb5cca736ca53720cb4e459a46d723f44a3a2677cc9fd3363b73a6f2",
+          "head": "c0de207a35f0cc3eec9b685515e75995450f460088dee3ff0da590ca0a5e4c3a",
+          "hhea": "8cb08cbf962fb83dd9ae16b667d4f409c151384a7bc6ef761eb80b9d0751df39",
+          "hmtx": "a18787d9a38b167402ba968f4c2215d6af5a3edecc4ea85509af510fe4433cb9",
+          "loca": "f8c2e904ce9f76cbe102a3ed8e29c8543b999842c8fe0057de6d6e73b8be4293",
+          "maxp": "44ba94fda350fb42f03af228ecabf65634365f087911a209fc0fbac26d4a520a",
+          "name": "e5d6e0907e8c44789f83cb523374a1a9ea7c76392b95c4980993777d74e11dc5",
+          "post": "c7c3cbbc2c883efc626cf14259f4e9be0ffbc3c4bb72be1f86860469402218c4",
+          "vhea": "45ff0c6c47b14aae26d6762adb6bb89625449a594ca7ea27429cb70aa03a6546",
+          "vmtx": "0863f8a5fec4112b9b08ba97cfc8074552ef15a566ff643bc702779abd712466"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "399a113d01e65b3e39aa883b11d475fca0a626cc99ff6fc3284124487359de4d",
+        "size": 1571400
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "OS/2": "f94da0c14905ee3ab102fded25b899a8ae963da238a8edd88bc94c029fe1c162",
+          "cmap": "8ef5d27f9eca227f407e9ed5ad56ef5497cd2e731e8667ea83d014eb6572efb7",
+          "glyf": "a066a3e0e274de82bc7c256904e40d37517cc92e731989b7d8825455c8761379",
+          "head": "727a81dc3f2fdee1e11db37a5d98ea71e7ba69422e6caa1156635acb71bd1b50",
+          "hhea": "8cb08cbf962fb83dd9ae16b667d4f409c151384a7bc6ef761eb80b9d0751df39",
+          "hmtx": "a18787d9a38b167402ba968f4c2215d6af5a3edecc4ea85509af510fe4433cb9",
+          "loca": "e23f71a937c4e6b4902903fd98d27757945b96fd9420f9076053d5f23924b051",
+          "maxp": "44ba94fda350fb42f03af228ecabf65634365f087911a209fc0fbac26d4a520a",
+          "name": "e5d6e0907e8c44789f83cb523374a1a9ea7c76392b95c4980993777d74e11dc5",
+          "post": "c7c3cbbc2c883efc626cf14259f4e9be0ffbc3c4bb72be1f86860469402218c4",
+          "vhea": "45ff0c6c47b14aae26d6762adb6bb89625449a594ca7ea27429cb70aa03a6546",
+          "vmtx": "0863f8a5fec4112b9b08ba97cfc8074552ef15a566ff643bc702779abd712466"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "9981435dce996494806a1d3ebcb19dab35903921d67c19df67d30652a303ce01",
+        "size": 1019436
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 6923 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "12adce7140b01d519b8893ffa7ff7b2ff4d4d07637522948af7a81a5a4247d95",
+        "size": 64056
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 6923 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "172476bb275ef0fdb286f8159b9a202be376ae0eb0b3b66736cdc848778a2239",
+        "size": 68340
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          0,
+          95191,
+          96180,
+          97168,
+          98157,
+          99145,
+          100134,
+          128724
+        ]
+      }
+    }
+  },
+  "font": "noto-serif-tangut-regular",
+  "source_format": "ttf",
+  "source_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+  "timestamp": 1735689600
+}

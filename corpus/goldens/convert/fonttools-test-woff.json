@@ -1,0 +1,107 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "44f44826395864619fdc16b0cad52ae441c7d921173e341b8e510d58ed57a285",
+        "size": 2308
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "41a294cadaedf25daddd7f53a6844e49c9fecc7b5239221afd1d280d68b6ca97",
+        "size": 2236
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "CFF ": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "head": "8c35c89b40208d05e3ff4d0326234ba645099310e3b573e048967cbc877cfdf1",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "maxp": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
+          "name": "ebb5dff6e53ba8c6c44ab39e81de2ddb2575513870a09e877f194619690837c4",
+          "post": "77a232e4db6b60c21f7b76ccf821e3c80c519901f11d10efb8c8df04ca82a4e8"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "88e7b80c3c401f12d3fdc2a001dac2814f8c407e56d1da286ccf393ffd1e680d",
+        "size": 872
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "5403ceba026baccf2681c8bed2a830b3552b1bd500568a7b5472d75eb9705521",
+        "size": 1656
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "67c6312f80b6ee912dc0e3dbd6c9b667f5b3ff2b6ec7513a4003f6c1ec8dd0f8",
+        "size": 1788
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          0,
+          13,
+          32,
+          46,
+          8230
+        ]
+      }
+    }
+  },
+  "font": "fonttools-test-woff",
+  "source_format": "woff",
+  "source_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+  "timestamp": 1735689600
+}

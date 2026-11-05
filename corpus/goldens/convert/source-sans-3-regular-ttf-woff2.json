@@ -1,0 +1,121 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "502a04155b702f14f5e978bd73cc58dee4640b3c840c1297d21aeb58b6fade70",
+        "size": 568664
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "5282596b2b28bc8e1aad8564d5e2f9b461c46f22db8f3db6fa2a2f9cebdfa707",
+        "size": 329820
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
+          "GDEF": "60de4c9f79edc6340c0f6511cb3fa81af997625b40eb8631a1a3b5ddf4bc5718",
+          "GPOS": "ef96af43be5e180e7553ea5679d33bd0751630717072fa9b58002414c13b94ca",
+          "GSUB": "a7a37ef5c6549bb956545bc70ded05224edfa5c3a8483e9b701a37375df23da6",
+          "OS/2": "f161b737b96a7cfd7f66e1179c21f8fd10c9967c4a76793bddf1b20841f1985c",
+          "cmap": "5ec656eed350eaf5f5b19cd87ff14a282150f075e54ebbe2e310ebe493d8a9aa",
+          "glyf": "08ad5d17e51b58c2d205730892a80c43c097b543d6ea1b2576e4db3a6366a072",
+          "head": "d5b5d6f84513bf55a04271e366258b5a900389268c53c1c67c1ab90720be0fb6",
+          "hhea": "944d0454f16d2a5a9b893e3c6604669b0bb00699e54855f35f67d0526ef2c3c5",
+          "hmtx": "35b522b413597086486fa9cdb81efe6571de9cea7173b4d9639c1c13666b269e",
+          "loca": "99800ea4a6b2fc48c1623ea5f4f7b5c8cb19dc5e533795eabc3581aafcbadd42",
+          "maxp": "7285b1f96937e3e37e9a56b65a8ea7ad67304d6adda281c19e0691fadbabfeb2",
+          "name": "2f319951c1b63daba830a2ef913d5997d360f5db9ada3c5ceb0fc1e87e7b1c75",
+          "post": "781f10b0f72ed85d0e29fad5c6f1ef38b7626870e686df8d5eeb4c9ce6631fd6"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "a37befba41e2d9308f99a1fe8ea92958b55e752ca7d7ad986cf6e0d2a1d458c5",
+        "size": 158216
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 2478 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "bcd8162eeba9cc695e4d6bb268d3439fa26e950cb7e12cddf9aa9265f0fcf652",
+        "size": 169700
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 2478 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9e8b97c371844707cf4af8b4c85adf8d61da22a511870ee937d36c7143d0833d",
+        "size": 169080
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          295,
+          634,
+          1012,
+          7721,
+          8011,
+          8332,
+          129302
+        ]
+      }
+    }
+  },
+  "font": "source-sans-3-regular-ttf-woff2",
+  "source_format": "woff2",
+  "source_sha256": "53492fb3a0def77354f166a55d09b63a10855e91c206c7620a81cf56e97f8ec3",
+  "timestamp": 1735689600
+}

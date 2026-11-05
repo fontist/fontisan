@@ -1,0 +1,118 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "4cf27319219787c6b5ef1f8280e846c0343eff92c92d60794aa7a70c062de2c1",
+        "size": 334900
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "aff3c5e2e276a236ec653a9610664ba53361dada5ad03148804b7fc60fe6e672",
+        "size": 403344
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
+          "CFF ": "7ddec9f13bf43818ea226e5d933d81b895220160c795938d934705179d0a94bb",
+          "GDEF": "60de4c9f79edc6340c0f6511cb3fa81af997625b40eb8631a1a3b5ddf4bc5718",
+          "GPOS": "ef96af43be5e180e7553ea5679d33bd0751630717072fa9b58002414c13b94ca",
+          "GSUB": "a7a37ef5c6549bb956545bc70ded05224edfa5c3a8483e9b701a37375df23da6",
+          "OS/2": "f161b737b96a7cfd7f66e1179c21f8fd10c9967c4a76793bddf1b20841f1985c",
+          "cmap": "5ec656eed350eaf5f5b19cd87ff14a282150f075e54ebbe2e310ebe493d8a9aa",
+          "head": "95ba3edcf015b7f6151c4e272f11cf9af20ee7fef78d79e70fbc9ac339d7b000",
+          "hhea": "944d0454f16d2a5a9b893e3c6604669b0bb00699e54855f35f67d0526ef2c3c5",
+          "hmtx": "e9a7b2ace72164f05101127344ce39d361cd7e4dca0cc1dd5eb073500ce47920",
+          "maxp": "448cb467bdc273cd7239e8bdc841a0173d4bf2fb8a057b22503c330c26dbbf0b",
+          "name": "2f319951c1b63daba830a2ef913d5997d360f5db9ada3c5ceb0fc1e87e7b1c75",
+          "post": "a884d5ca6f3f1c957a513c4075d0f620ee618a243f428ec62013a314a9c77833"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "771ea6b1c8396718ae1fa220fc5e50017bcb20753cffd9eef9e269c90b8866c6",
+        "size": 195604
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "Layout: bad glyph count: N",
+      "ots": {
+        "detail": "member 0: ERROR: Layout: bad glyph count: 523 | ERROR: GPOS: Failed to parse coverage table 2",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "d395d8251a62cc05ac264d4957d931be79c762944b5989d704efc6a186d2f784",
+        "size": 145276
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "Layout: bad glyph count: N",
+      "ots": {
+        "detail": "member 0: ERROR: Layout: bad glyph count: 523 | ERROR: GPOS: Failed to parse coverage table 2",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "e94a357d675ab84e5b94ddd3dcdaf72c11179c94fbd844a6f25c4af7806f816f",
+        "size": 144524
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          295,
+          634,
+          1012,
+          7721,
+          8011,
+          8332,
+          129302
+        ]
+      }
+    }
+  },
+  "font": "source-sans-3-regular-otf-woff2",
+  "source_format": "woff2",
+  "source_sha256": "63de0da0cc05298e2e9c6e5cef506d8454ca665f6e668a99d94f51174b9256ed",
+  "timestamp": 1735689600
+}

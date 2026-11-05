@@ -1,0 +1,334 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "171ab68b16e0b7caf064be4632626ee937b975e4457c699359167ee6924c3749",
+        "size": 936492
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "55741939547df1b0452e00d2af66367984a85cfd6f64d5ac8dccfdee4da84b22",
+          "GPOS": "58bd7b04e01d3aea91ecd4411ead1bc71b8012f83de2ceb6b86d98b7e41215dc",
+          "GSUB": "27a3868cbcdbebcd6400ca0ffd3524e9a5c7084f5ad8f02cfe73f2211112cf13",
+          "OS/2": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+          "cmap": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
+          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+          "glyf": "6ce240a57ebb5818d7628568b22cd5edbe2bb196dd961849d09c4903def19a47",
+          "head": "b537b465139e37cfe0c0da40330ae6cdb25c946d3d9ad594d6f3749c502b68ce",
+          "hhea": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+          "hmtx": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
+          "loca": "a152bde30a8316cbde55df83081a853356ecea08ca1905db69db473a1c2e2e8d",
+          "maxp": "d3509db708e8aa3ff0a90b4ee3001da23f5af8124f917d7cf70d32ada4a62ace",
+          "name": "f343120d21b97473646c24c60173dc3f23311604466444260cca19f34add0b8d",
+          "post": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+          "prep": "907c4106ff9989c1805827d5581bdf107a253b098cb71eb374f5e47c35604452"
+        }
+      ],
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "fb20418e440b64976cf1ad4af5825bcd80034eea69ac5b0a53ceb2da622e451a",
+        "size": 314172
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "55741939547df1b0452e00d2af66367984a85cfd6f64d5ac8dccfdee4da84b22",
+          "GPOS": "58bd7b04e01d3aea91ecd4411ead1bc71b8012f83de2ceb6b86d98b7e41215dc",
+          "GSUB": "27a3868cbcdbebcd6400ca0ffd3524e9a5c7084f5ad8f02cfe73f2211112cf13",
+          "OS/2": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+          "cmap": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
+          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+          "glyf": "a82ffd2175fc5c3e95215c5939763bf0916966e6f12471a16dfa5c46ca0138e0",
+          "head": "14bbcc9e093cf438120579d33370424a22ff21e18760c5ba1e1a7b799a19c752",
+          "hhea": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+          "hmtx": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
+          "loca": "767fd4639aecb5f8d897601999d64974a81c6d87914fec419dd1ed2c2c9fcb3e",
+          "maxp": "d3509db708e8aa3ff0a90b4ee3001da23f5af8124f917d7cf70d32ada4a62ace",
+          "name": "f343120d21b97473646c24c60173dc3f23311604466444260cca19f34add0b8d",
+          "post": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+          "prep": "907c4106ff9989c1805827d5581bdf107a253b098cb71eb374f5e47c35604452"
+        }
+      ],
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "1c3c5024a6c8ed2fbf76936338d19d93a8a965102bb4392ab20894a68829cdcc",
+        "size": 201912
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "instance:0": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "394aa6aa48e462e0bfafc03a621fd617c188ad8e1d04d64e2192d2e2f4fe3187",
+        "size": 677208
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 6553600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:1": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "865daff888f0b75593a1074e1275a8ed198f9e5174202b32558fe0ac20204f8f",
+        "size": 677528
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:2": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0696d25e6039cb9aa5e7ae44ed5b730139a238234a49803878ed8bbf3761e8e0",
+        "size": 677724
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:3": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "67d21f3d4373a208f232f981fb9ff7c9dd1421e3313c2c7234c5dbe982458464",
+        "size": 677788
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:4": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9f78f03ace05f8c7f4e565544e79acabd976f499ddbea888bf5f2f097e6dd5a9",
+        "size": 677932
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:5": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "4a24ec850aa20613fa9d6ff0d56e391a655c8dba3bb684a111f5b9eb8b369fd8",
+        "size": 677928
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:6": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "0394de9a2d192c29bfd266ef5ffc1ec33cf4f2a7009f7e4bd6cdb0d63b0695fb",
+        "size": 677744
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:7": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "65b20d8fa8c9e7f396867f1168d76c9421cf0c7acb5c5393691d0b57f2811250",
+        "size": 677828
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 52428800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:8": {
+      "class": "exact",
+      "known_reference_bug": "Variations: Required fvar table is missing",
+      "ots": {
+        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "c6e6480b702fc422f01acf3bad97e617f6749e159356432de282ace73635cb23",
+        "size": 677508
+      },
+      "params": {
+        "coords_raw": {
+          "wdth": 6553600,
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 3884 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "33af64fdc9623cb018655257ff70da9b8c3c6e4055764453ffbb08d6a37fefeb",
+        "size": 238180
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 3884 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "b66f7059ef21da85c208fdd24bc8e9cb8558d422ae9d914ce21b40580c8375ca",
+        "size": 237460
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          0,
+          486,
+          918,
+          7297,
+          7841,
+          8287,
+          42633,
+          122654
+        ]
+      }
+    }
+  },
+  "font": "noto-sans-vf-wdth-wght",
+  "source_format": "ttf",
+  "source_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+  "timestamp": 1735689600
+}

@@ -1,0 +1,125 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "5ee635e4ce7a363a5f5df261b9e49b9cef2c23352fb977fbebefd95fb77b9866",
+        "size": 575356
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "a3965d4a715b9bd6c202ec607b62831ba724e68168da904d174235552ca053fe",
+        "size": 431196
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
+          "GDEF": "60de4c9f79edc6340c0f6511cb3fa81af997625b40eb8631a1a3b5ddf4bc5718",
+          "GPOS": "ef96af43be5e180e7553ea5679d33bd0751630717072fa9b58002414c13b94ca",
+          "GSUB": "a7a37ef5c6549bb956545bc70ded05224edfa5c3a8483e9b701a37375df23da6",
+          "OS/2": "f161b737b96a7cfd7f66e1179c21f8fd10c9967c4a76793bddf1b20841f1985c",
+          "cmap": "5ec656eed350eaf5f5b19cd87ff14a282150f075e54ebbe2e310ebe493d8a9aa",
+          "cvt ": "2acd5e995a7ffa3b3087461b2d73e5d2981991ee921781313c9e8ce4f0dd0949",
+          "fpgm": "08929844619198eaa9f4c265ba8521746c1b19ce3c9be38edd63c9cf5f11a5d2",
+          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+          "glyf": "a7b7a9e192fdb4373bff58e5f61355b291bb467eea205b621ac7ccd5cf169dc0",
+          "head": "b9593de3d9bc0d1ddd0c606c510fa54a95c82a6a44fc0e20aabd881202f491d8",
+          "hhea": "944d0454f16d2a5a9b893e3c6604669b0bb00699e54855f35f67d0526ef2c3c5",
+          "hmtx": "35b522b413597086486fa9cdb81efe6571de9cea7173b4d9639c1c13666b269e",
+          "loca": "ed3075701d58a2495e4ff5f9325f56fd805f3eb87ae5c3990b260c307788494b",
+          "maxp": "4ee59081566a17136a51a602fc48c26443220492dbd6578352039d07a5da4352",
+          "name": "79a4793de4f0a5a23a7abd157f753b0a74870e48a6d42d3dd6537e74c1bc0a86",
+          "post": "781f10b0f72ed85d0e29fad5c6f1ef38b7626870e686df8d5eeb4c9ce6631fd6",
+          "prep": "a3b0d28da9f1cfa3b4cd800c63c0d052f4e85d517311d3d32d0df408cd5ac27f"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "1f15ca7987b88b26a3a6a86f184095bbd0ab976eab2d5512ca021b1bb6866020",
+        "size": 138780
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 2478 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "cd45d306c6656a73ae35924636ad19936432dd6e487e8b873537f1dbf7fc2ea4",
+        "size": 174380
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 2478 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "9504896790aaaed024c4a75d89547c7afeb46b07a2d74a8d1febe77c4f082379",
+        "size": 172400
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          295,
+          634,
+          1012,
+          7721,
+          8011,
+          8332,
+          129302
+        ]
+      }
+    }
+  },
+  "font": "source-sans-3-regular-ttf-woff",
+  "source_format": "woff",
+  "source_sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+  "timestamp": 1735689600
+}

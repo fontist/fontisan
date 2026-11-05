@@ -1,0 +1,144 @@
+{
+  "cases": {
+    "format:ttf": {
+      "class": "exact",
+      "known_reference_bug": "glyf: zero-length table",
+      "ots": {
+        "detail": "member 0: ERROR: glyf: zero-length table | Failed to sanitize file!",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "838b54498fefb2b68e0ef420fccee1dcfcbd97af280d547d734720de486038ce",
+        "size": 378656
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "BASE": "09400594afa1759a688553a0e090a17bba6c143b8d7058f6c500d4e517b26866",
+          "CFF ": "5a660f91d6c947643d9fd4bff3fb96b0bd92c136d0b2eb1e415ac256cceff6ee",
+          "DSIG": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+          "GDEF": "cc08d969b7987dface5fc1fcd4755279ffacbc1a27e24ae0077e6a41fc7d651f",
+          "GPOS": "454f1802f05fbfd02e9b1ff41b24cefb94a17a742f1570c5d2f47bb24beecd4d",
+          "GSUB": "a1ba487e9d273319f08f927604053afab67b33cd323a181de7c3fa6c174d7266",
+          "OS/2": "03e6df253069c24235407f5c5af1caa498db39b4295829606b8d17e85f3734c8",
+          "VORG": "a6160b24eae032f46c8207b6b9b093948e340be9abdbc257fdfc364198cd7aa6",
+          "cmap": "a90ff22fdaeca3025612f03694dd7c74c9b9cc8295a75b2e3e695c7999844ac8",
+          "head": "273d88d251f3f30a81b59e2886236d8930461a049c67ae035c1823db01966d9d",
+          "hhea": "0dad710fba8765d129dab83dfc9fc2dc98006580568ad3daad8d72cbf6f78424",
+          "hmtx": "8efc017cef648ed1b93726273bfb1bb7d5ed1b703a01a1779cbc991144d10fa9",
+          "maxp": "500484c32b063010fc8405308244ff54673354991c6d368bbf9eeacb643c707f",
+          "name": "cf3f62633ac7199cd333963b27a80a728da40a6c026bd16fc970bcc9cb60543d",
+          "post": "22dd499f08932214bde96943f3882f3619324478217095c049b68a57c6c10693",
+          "vhea": "b732cc7ae408167a6613620d738e7cac8a22c92b907904a604136573fcd4f3fa",
+          "vmtx": "c8cf117539e2f8398fc64fd9a04e8ce7ad76c0346596ed8172f9f35a69bff6df"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "553595f8cdfbf726081eed4e89b851c204ad123dec1402faf237f552342a365b",
+        "size": 3883716
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "BASE": "09400594afa1759a688553a0e090a17bba6c143b8d7058f6c500d4e517b26866",
+          "CFF ": "5a660f91d6c947643d9fd4bff3fb96b0bd92c136d0b2eb1e415ac256cceff6ee",
+          "GDEF": "cc08d969b7987dface5fc1fcd4755279ffacbc1a27e24ae0077e6a41fc7d651f",
+          "GPOS": "454f1802f05fbfd02e9b1ff41b24cefb94a17a742f1570c5d2f47bb24beecd4d",
+          "GSUB": "a1ba487e9d273319f08f927604053afab67b33cd323a181de7c3fa6c174d7266",
+          "OS/2": "03e6df253069c24235407f5c5af1caa498db39b4295829606b8d17e85f3734c8",
+          "VORG": "a6160b24eae032f46c8207b6b9b093948e340be9abdbc257fdfc364198cd7aa6",
+          "cmap": "a90ff22fdaeca3025612f03694dd7c74c9b9cc8295a75b2e3e695c7999844ac8",
+          "head": "5ee480baf8c915d6cd33032da16aac78f296c84e21a220dcaa6dcfe846ca8c41",
+          "hhea": "0dad710fba8765d129dab83dfc9fc2dc98006580568ad3daad8d72cbf6f78424",
+          "hmtx": "8efc017cef648ed1b93726273bfb1bb7d5ed1b703a01a1779cbc991144d10fa9",
+          "maxp": "500484c32b063010fc8405308244ff54673354991c6d368bbf9eeacb643c707f",
+          "name": "cf3f62633ac7199cd333963b27a80a728da40a6c026bd16fc970bcc9cb60543d",
+          "post": "22dd499f08932214bde96943f3882f3619324478217095c049b68a57c6c10693",
+          "vhea": "b732cc7ae408167a6613620d738e7cac8a22c92b907904a604136573fcd4f3fa",
+          "vmtx": "c8cf117539e2f8398fc64fd9a04e8ce7ad76c0346596ed8172f9f35a69bff6df"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "d513e68b6c0318831cb25da33a56cef8dbf38dfcdfa3894fe3bca70f08a3b8cf",
+        "size": 3351144
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "Layout: bad glyph ID: N",
+      "ots": {
+        "detail": "member 0: ERROR: Layout: bad glyph ID: 255 | ERROR: GPOS: Failed to parse converge 1 table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "1adaab2c3d6dcfd0d48758644806e7bd6632ba66be940f01bb2afcfd2e768948",
+        "size": 68216
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "Layout: bad glyph ID: N",
+      "ots": {
+        "detail": "member 0: ERROR: Layout: bad glyph ID: 255 | ERROR: GPOS: Failed to parse converge 1 table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "0c4542ecddde2a96c6815497eb4f3f9e66e6bc18a397581f38acd07e7c8e222b",
+        "size": 68228
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          13234,
+          23134,
+          26820,
+          30788,
+          34691,
+          38878,
+          200812
+        ]
+      }
+    }
+  },
+  "font": "noto-sans-jp-subset-regular-otf",
+  "source_format": "otf",
+  "source_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+  "timestamp": 1735689600
+}

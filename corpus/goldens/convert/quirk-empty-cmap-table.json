@@ -1,0 +1,116 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "Conversion failed: Transformation failed: Output validation failed: Table 'cmap' failed validation, Table 'cmap' failed validation, Table 'cmap' failed validation"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "DSIG": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "fc2f81f8934b73335323dbb7cca3908f9665677e48292315679fc69d49324a20",
+          "head": "b1404cc47d33b8caee0f02c76fc1cbaf5155304f04011185a55bedc99480525c",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "9e6009da34db5fdaec8afabffbaa552129257426d5e198381784293e3e5fb072",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        }
+      ],
+      "known_reference_bug": "cmap: zero-length table",
+      "ots": {
+        "detail": "member 0: ERROR: cmap: zero-length table | Failed to sanitize file!",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "6f6d8eb731639bc4906c654d84481a994f1ade064268f88ba542ef17f363fef4",
+        "size": 1324
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "9ffdf9ae02082c6f8d1842950aac811c3d2e4db4db217d4b696c94f353f1ea67",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        }
+      ],
+      "known_reference_bug": "cmap: missing required table",
+      "ots": {
+        "detail": "member 0: ERROR: cmap: missing required table | Failed to sanitize file!",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "9e547c2bd483af176942eabb685ca5d4e6b90399335425bf923f6739f401b172",
+        "size": 776
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "None of the requested characters exist in quirk-empty-cmap-table.ttf"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "None of the requested characters exist in quirk-empty-cmap-table.ttf"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "subset",
+        "unicodes": []
+      }
+    }
+  },
+  "font": "quirk-empty-cmap-table",
+  "source_format": "ttf",
+  "source_sha256": "855d7f1aea73de6d5d337a7776039d36c99f943145ff7fd4d8c9c04325f7ec8a",
+  "timestamp": 1735689600
+}
