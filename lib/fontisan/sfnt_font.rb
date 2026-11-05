@@ -66,7 +66,15 @@ module Fontisan
     # silently miss due to encoding mismatch — BinData-derived tag
     # strings are ASCII-8BIT, literals callers pass are usually UTF-8,
     # and String#eql? is encoding-sensitive.
-    attr_reader :table_data
+    # Raw table bytes: the Hash of all tables, or one table's bytes when a
+    # tag is given (the WOFF classes already accept a tag; StaticFontBuilder
+    # calls it that way).
+    #
+    # @param tag [String, nil]
+    # @return [Hash{String=>String}, String, nil]
+    def table_data(tag = nil)
+      tag.nil? ? @table_data : @table_data&.[](tag)
+    end
 
     def table_data=(hash)
       @table_data = hash.transform_keys { |tag| normalize_tag(tag) }
