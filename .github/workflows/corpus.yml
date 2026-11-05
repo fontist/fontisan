@@ -6,6 +6,8 @@ on:
     paths:
       - "corpus/**"
       - "rakelib/corpus.rake"
+      - "rakelib/corpus_goldens.rake"
+      - "scripts/corpus/**"
       - "scripts/build-woff2.sh"
       - "spec/corpus/**"
       - ".github/workflows/corpus.yml"
@@ -14,6 +16,8 @@ on:
     paths:
       - "corpus/**"
       - "rakelib/corpus.rake"
+      - "rakelib/corpus_goldens.rake"
+      - "scripts/corpus/**"
       - "scripts/build-woff2.sh"
       - "spec/corpus/**"
       - ".github/workflows/corpus.yml"
@@ -74,6 +78,12 @@ jobs:
       - name: Cross-check WOFF2 with the pinned decoder
         run: bundle exec rake corpus:check_woff2
 
+      - name: Verify read goldens (compare only)
+        run: bundle exec rake corpus:verify
+
+      - name: Golden specs (verify, determinism, completeness)
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb
+
   large-tier:
     name: large tier (nightly)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -89,3 +99,20 @@ jobs:
 
       - name: Fetch large-tier corpus (sha256 verified)
         run: TIER=large bundle exec rake corpus:fetch
+
+      - name: Generate large-tier read goldens twice
+        run: |
+          TIER=large bundle exec rake corpus:regenerate
+          cp -R corpus/goldens/read-large "$RUNNER_TEMP/read-large-1"
+          TIER=large bundle exec rake corpus:regenerate
+
+      - name: Large-tier determinism and completeness
+        run: |
+          diff -r "$RUNNER_TEMP/read-large-1" corpus/goldens/read-large
+          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/completeness_spec.rb
+
+      - name: Upload large-tier read goldens
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-large-goldens
+          path: corpus/goldens/read-large
