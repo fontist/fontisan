@@ -47,10 +47,14 @@ jobs:
       # OTS (OpenType Sanitizer) is the independent validator the convert
       # cards (0c, 3a) run on every output. Installed here so the corpus job
       # proves it is available; no card in 0a calls it.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install OTS
         run: |
-          python3 -m pip install --user opentype-sanitizer
-          python3 -c "import ots; print('ots', ots.__file__)"
+          python -m pip install opentype-sanitizer
+          python -c "import ots; print('ots', ots.__file__)"
 
       - name: Cache pinned woff2_decompress
         uses: actions/cache@v4

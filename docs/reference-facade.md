@@ -24,7 +24,7 @@ is recorded in the row/entry. A non-path argument raises `TypeError`.
 | `convert(path, to:, output:, timestamp: nil)` | the `ConvertCommand` result Hash; runs quietly; `timestamp` is passed only when `to` is `woff2` |
 | `extract(path, index:, output_dir:)` | path of the extracted file (`UnpackCommand`) |
 | `instance(path, coords:, timestamp: nil)` | binary String (`Instancer#instance`); `timestamp` ignored |
-| `glyph_ids(path, unicodes:, text:)` | sorted unique gids; raises `Fontisan::Error` "None of the requested characters exist in <basename>" |
+| `glyph_ids(path, unicodes:, text:)` | sorted unique gids; raises `Fontisan::Error` "None of the requested characters exist in &lt;basename&gt;" |
 | `subset(path, unicodes:, text:, profile: "web", timestamp: nil)` | binary String; gids then `Subset::Builder`; `timestamp` ignored |
 
 Three additions to existing behaviour, nothing else: optional `timestamp:`
@@ -70,7 +70,7 @@ status, issues[severity, category, message, location], error_summary` = fontist'
 
 - `font_file`: what `FontFile.extract_font_info_from_path` would raise (only
   rows of the face it reads: non-collection or index 0), as `{class, message,
-  cause}`; message `"Font file could not be parsed: #<Class: msg>."`.
+  cause}`; message `"Font file could not be parsed: #&lt;Class: msg&gt;."`.
 - `collection_file`: what `CollectionFile.from_path` would raise for the file
   (same on every row of the file): "File is not a recognized font collection
   (TTC/OTC/dfont)" for non-collections, "Font collection could not be loaded: ..."
