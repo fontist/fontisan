@@ -97,6 +97,9 @@ Computed from the raw table bytes by `Fontisan::Reference::TableDigests`. A
 `font_revision` -> `font_revision_raw`, axis `min_value/default_value/max_value`
 -> `*_raw` (value x 65536, rounded).
 
+Object addresses in messages (`#<Class:0x000...>`, from checks that crash) become
+`#<Class>`, so the text is stable between runs.
+
 ## Scan row (one per face)
 
 `path, collection_index (nil for non-collections), sha256, format, is_collection,

@@ -279,7 +279,18 @@ module Fontisan
         data.delete("fontisan_version")
         data["font_revision_raw"] = fixed_raw(data.delete("font_revision"))
         data["axes"] = Array(data["axes"]).map { |axis| axis_raw(axis) }
-        data
+        mask_addresses(data)
+      end
+
+      # Messages of checks that crash embed `#<Class:0x000...>`; the address
+      # differs per run, so it is dropped: `#<Class>`.
+      def mask_addresses(value)
+        case value
+        when String then value.gsub(/#<([\w:]+):0x\h+>/, '#<\\1>')
+        when Array then value.map { |v| mask_addresses(v) }
+        when Hash then value.transform_values { |v| mask_addresses(v) }
+        else value
+        end
       end
 
       def axis_raw(axis)
