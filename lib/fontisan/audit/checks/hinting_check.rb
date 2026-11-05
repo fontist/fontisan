@@ -43,7 +43,7 @@ module Fontisan
           issues = []
           has_fpgm = font.has_table?("fpgm")
           has_prep = font.has_table?("prep")
-          has_cvt = font.has_table?("cvt")
+          has_cvt = font.has_table?("cvt ")
           has_glyf_data = table_has_data?(font, "glyf")
 
           if has_fpgm && has_glyf_data
