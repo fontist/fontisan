@@ -81,8 +81,14 @@ jobs:
       - name: Verify read goldens (compare only)
         run: bundle exec rake corpus:verify
 
+      - name: Verify scan goldens (compare only)
+        run: bundle exec rake corpus:scan:verify
+
       - name: Golden specs (verify, determinism, completeness)
-        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb spec/corpus/scan_goldens_spec.rb
+
+      - name: Scan parity with fontist (dev-only gem, pinned ref)
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/fontist_parity_spec.rb
 
   large-tier:
     name: large tier (nightly)
@@ -110,6 +116,14 @@ jobs:
         run: |
           diff -r "$RUNNER_TEMP/read-large-1" corpus/goldens/read-large
           TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/completeness_spec.rb
+
+      - name: Large-tier scan goldens, twice
+        run: |
+          TIER=large bundle exec rake corpus:scan:regenerate
+          cp -R corpus/goldens/scan-large "$RUNNER_TEMP/scan-large-1"
+          TIER=large bundle exec rake corpus:scan:regenerate
+          diff -r "$RUNNER_TEMP/scan-large-1" corpus/goldens/scan-large
+          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/scan_goldens_spec.rb
 
       - name: Upload large-tier read goldens
         uses: actions/upload-artifact@v4

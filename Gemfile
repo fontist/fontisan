@@ -28,3 +28,10 @@ gem "rubyzip"
 gem "sys-proctable", platforms: %i[mswin mingw mswin64]
 # win32ole was a default gem until Ruby 4.0 — pin it for Windows runners
 gem "win32ole", platforms: %i[mswin mingw mswin64]
+
+# Dev-only: the fontist parity spec (spec/corpus/fontist_parity_spec.rb) compares
+# Fontisan::Reference.scan rows with fontist's FontFile/CollectionFile at this ref.
+group :fontist_parity do
+  gem "fontist", git: "https://github.com/fontist/fontist.git",
+                 ref: "85e904c96fff60f60781ae0eb11a8c06e0c73816"
+end
