@@ -370,13 +370,9 @@ module Fontisan
       #   puts charstring.bounding_box
       #   charstring.to_commands.each { |cmd| puts cmd.inspect }
       def charstring_for_glyph(glyph_index, font_index = 0)
-        charstrings = charstrings_index(font_index)
+        charstrings, priv_dict, local_subr_index = glyph_sources(font_index)
         return nil unless charstrings
-
-        priv_dict = private_dict(font_index)
         return nil unless priv_dict
-
-        local_subr_index = local_subrs(font_index)
 
         charstrings.charstring_at(
           glyph_index,
@@ -481,6 +477,20 @@ module Fontisan
         Encoding.new(encoding_data, num_glyphs)
       rescue StandardError => e
         raise CorruptedTableError, "Failed to parse Encoding: #{e.message}"
+      end
+
+      private
+
+      # CharStrings INDEX, Private DICT and Local Subr INDEX of one font,
+      # parsed once. charstring_for_glyph is called per glyph, and re-parsing
+      # the whole INDEX each time made it quadratic in the glyph count.
+      def glyph_sources(font_index)
+        @glyph_sources ||= {}
+        @glyph_sources[font_index] ||= begin
+          charstrings = charstrings_index(font_index)
+          priv_dict = charstrings && private_dict(font_index)
+          [charstrings, priv_dict, priv_dict && local_subrs(font_index)]
+        end
       end
     end
   end
