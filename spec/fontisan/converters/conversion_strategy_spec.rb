@@ -15,9 +15,9 @@ RSpec.describe Fontisan::Converters::ConversionStrategy do
                              metadata_xml private_data])
     end
 
-    it "Woff2Encoder declares brotli_quality and transform_tables" do
+    it "Woff2Encoder declares brotli_quality, transform_tables and timestamp" do
       names = Fontisan::Converters::Woff2Encoder.supported_options.map(&:name)
-      expect(names).to eq(%i[brotli_quality transform_tables])
+      expect(names).to eq(%i[brotli_quality transform_tables timestamp])
     end
 
     it "TableCopier declares no options" do

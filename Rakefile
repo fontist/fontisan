@@ -146,7 +146,11 @@ namespace :fixtures do
 end
 
 # RSpec task depends on fixtures
-RSpec::Core::RakeTask.new(spec: "fixtures:download")
+# Corpus specs need `rake corpus:fetch` and run in the corpus workflow
+# (.github/workflows/corpus.yml), not in the default suite.
+RSpec::Core::RakeTask.new(spec: "fixtures:download") do |t|
+  t.exclude_pattern = "spec/corpus/**/*_spec.rb"
+end
 
 # Default task runs spec and rubocop
 task default: %i[spec rubocop]
