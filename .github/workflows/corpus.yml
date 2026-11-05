@@ -1,0 +1,87 @@
+name: corpus
+
+# Reference corpus (fontist/fontisan#157): per-PR `ci` tier, nightly `large` tier.
+on:
+  pull_request:
+    paths:
+      - "corpus/**"
+      - "rakelib/corpus.rake"
+      - "scripts/build-woff2.sh"
+      - "spec/corpus/**"
+      - ".github/workflows/corpus.yml"
+  push:
+    branches: [main]
+    paths:
+      - "corpus/**"
+      - "rakelib/corpus.rake"
+      - "scripts/build-woff2.sh"
+      - "spec/corpus/**"
+      - ".github/workflows/corpus.yml"
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corpus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-tier:
+    name: ci tier (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # OTS (OpenType Sanitizer) is the independent validator the convert
+      # cards (0c, 3a) run on every output. Installed here so the corpus job
+      # proves it is available; no card in 0a calls it.
+      - name: Install OTS
+        run: |
+          python3 -m pip install --user opentype-sanitizer
+          python3 -c "import ots; print('ots', ots.__file__)"
+
+      - name: Cache pinned woff2_decompress
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts/.tools/woff2
+          key: woff2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-woff2.sh') }}
+
+      - name: Build pinned woff2_decompress
+        run: scripts/build-woff2.sh
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        run: bundle exec rake corpus:fetch
+
+      - name: Manifest spec
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/manifest_spec.rb
+
+      - name: Cross-check WOFF2 with the pinned decoder
+        run: bundle exec rake corpus:check_woff2
+
+  large-tier:
+    name: large tier (nightly)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Fetch large-tier corpus (sha256 verified)
+        run: TIER=large bundle exec rake corpus:fetch
