@@ -47,7 +47,48 @@ integers, `instances` with `coordinates_raw`), `outlines` (`kind`, `count`,
 
 Per-glyph outline hash: glyf fonts hash the glyph's byte range of `glyf`, located
 via the parsed `loca` (empty glyph = hash of the empty string); CFF fonts hash the
-CharString bytes of the CharStrings INDEX entry. CFF2 is not covered yet.
+CharString bytes of the CharStrings INDEX entry; CFF2 fonts (`kind` "cff2")
+hash the CharStrings INDEX entries located through Top DICT operator 17 (the
+INDEX count is a uint32).
+
+Further `read` face fields (all nil when the table is absent or gated out):
+
+- `post`: `version_raw, italic_angle_raw, underline_position,
+  underline_thickness, is_fixed_pitch, min_mem_type42, max_mem_type42,
+  min_mem_type1, max_mem_type1`, `glyph_name_count` and `glyph_names_sha256`
+  (SHA-256 of the glyph names joined with "\n"), or `glyph_names_error`.
+- `layout`: `GSUB` / `GPOS` => `{scripts, features}` where `features` maps each
+  script tag to its feature tags, exactly as the table classes report them
+  (they answer `[]` when parsing fails; that is the reference behaviour).
+- `variation`: `gvar`, `HVAR`, `VVAR`, `MVAR`, `STAT` parsed digests, below;
+  `{"error"=>class}` when the table cannot be read.
+
+## Parsed table digests (`variation`)
+
+Computed from the raw table bytes by `Fontisan::Reference::TableDigests`. A
+"parts digest" is SHA-256 over the concatenated 32-byte SHA-256 of each part.
+
+- `gvar`: `version, axis_count, flags, glyph_count, glyphs_with_data,
+  shared_tuple_count, shared_tuples_sha256` (the `shared_tuple_count x
+  axis_count x 2` bytes at `sharedTuplesOffset`), `glyphs_digest` = parts
+  digest over each glyph's GlyphVariationData byte range (offset array
+  `u16*2` or `u32` by flag bit 0, relative to `glyphVariationDataArrayOffset`).
+- `item_variation_store` (HVAR, VVAR, MVAR): `region_count, item_data_count,
+  regions_sha256` (4 + regionCount x axisCount x 6 bytes), `data_sha256` (one
+  per ItemVariationData: 6 + 2 x regionIndexCount + itemCount x row bytes; row
+  = wordCount + regionIndexCount, or 4 x wordCount + 2 x (regionIndexCount -
+  wordCount) with the long-words flag), `data_digest` = parts digest of those.
+- `HVAR`/`VVAR`: `version`, `item_variation_store`, and `advance_mapping`,
+  `lsb_mapping`, `rsb_mapping` (nil when the offset is 0) each
+  `{format, entry_format, map_count, sha256}` over the whole DeltaSetIndexMap
+  (4 or 6 byte header + mapCount x entrySize).
+- `MVAR`: `version`, `value_records` (`tag, outer, inner`), `item_variation_store`
+  (Offset16 from the table start, per the OpenType spec).
+- `STAT`: `version, elided_fallback_name_id` (nil before 1.1), `axes` (`tag,
+  name_id, ordering`), `axis_values` in table order: formats 1-3 as
+  `format, axis_index, flags, value_name_id` plus `value_raw` /
+  `nominal_raw, range_min_raw, range_max_raw` / `value_raw, linked_value_raw`
+  (Fixed 16.16 integers); format 4 with `axis_values` (`axis_index, value`).
 
 ## Audit canonical form
 

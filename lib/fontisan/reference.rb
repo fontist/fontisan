@@ -42,6 +42,16 @@ module Fontisan
 
     FIXED_ONE = 65_536
 
+    VARIATION_DIGESTS = {
+      "gvar" => :gvar, "HVAR" => :hvar, "VVAR" => :hvar, "MVAR" => :mvar, "STAT" => :stat
+    }.freeze
+
+    POST_FIELDS = %i[version_raw italic_angle_raw underline_position underline_thickness
+                     is_fixed_pitch min_mem_type42 max_mem_type42 min_mem_type1
+                     max_mem_type1].freeze
+
+    autoload :TableDigests, "fontisan/reference/table_digests"
+
     class << self
       # Read the structure of every face in a font file.
       #
@@ -297,7 +307,62 @@ module Fontisan
           cmap: cmap_digest(font),
           fvar: fvar_data(font),
           outlines: outline_summary(font),
+          post: post_data(font),
+          layout: layout_data(font),
+          variation: variation_data(font),
         }
+      end
+
+      # post header fields plus a count and digest of the glyph names (names
+      # joined with "\n"); a failure to read the names is recorded, not raised.
+      def post_data(font)
+        table = available_table(font, "post")
+        return nil unless table
+
+        data = POST_FIELDS.to_h { |f| [f, table.public_send(f).to_i] }
+        begin
+          names = table.glyph_names
+          data[:glyph_name_count] = names.size
+          data[:glyph_names_sha256] = Digest::SHA256.hexdigest(names.join("\n"))
+        rescue StandardError => e
+          data[:glyph_names_error] = e.class.name
+        end
+        data
+      end
+
+      # GSUB/GPOS script tags and, per script, feature tags, as the table
+      # classes report them (they swallow parse errors and answer []).
+      def layout_data(font)
+        %w[GSUB GPOS].to_h do |tag|
+          table = available_table(font, tag)
+          next [tag, nil] unless table
+
+          scripts = table.scripts
+          [tag, {
+            scripts: scripts,
+            features: scripts.to_h { |s| [s, table.features(script_tag: s)] },
+          }]
+        end
+      end
+
+      # Parsed digests of the variation tables, from the raw table bytes
+      # (see {TableDigests}). A table that cannot be read records the error.
+      def variation_data(font)
+        VARIATION_DIGESTS.to_h do |tag, digest|
+          [tag, digest_table(font, tag, digest)]
+        end
+      end
+
+      def digest_table(font, tag, digest)
+        return nil unless font.has_table?(tag)
+
+        font.table(tag)
+        raw = raw_table(font, tag)
+        raw ? TableDigests.public_send(digest, raw) : nil
+      rescue ArgumentError
+        nil
+      rescue StandardError => e
+        { error: e.class.name }
       end
 
       # Digest of every table the loading mode makes available. A table that
@@ -439,6 +504,8 @@ module Fontisan
           { kind: "glyf", hashes: glyf_hashes(font) }
         elsif (cff = cff_table(font))
           { kind: "cff", hashes: cff_hashes(cff) }
+        elsif font.has_table?("CFF2") && (raw = raw_table(font, "CFF2"))
+          { kind: "cff2", hashes: TableDigests.cff2_charstrings(raw).map { |c| Digest::SHA256.hexdigest(c) } }
         else
           { kind: nil, hashes: [] }
         end
