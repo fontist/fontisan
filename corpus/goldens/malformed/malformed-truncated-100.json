@@ -197,17 +197,20 @@
   "id": "malformed-truncated-100",
   "kind": "truncated-100",
   "scan": {
-    "digest": "251cf7ffea37f4d573ba6caa012109e16fec359f41f54f683820b3b5ae2b2550",
+    "digest": "19594be1a1bc83ddab24c3727cc2035ac34bd715143c1b3a31e27103e5c8b8cd",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": {

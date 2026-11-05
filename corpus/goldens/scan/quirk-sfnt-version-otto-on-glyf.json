@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "quirk-sfnt-version-otto-on-glyf.ttf",
+  "font_sha256": "da253dcc3d3f5792c7750884d72ecf2edf3a44f23696beb913fea654311e8010",
+  "id": "quirk-sfnt-version-otto-on-glyf",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "quirk-sfnt-version-otto-on-glyf.ttf",
+      "sha256": "da253dcc3d3f5792c7750884d72ecf2edf3a44f23696beb913fea654311e8010",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

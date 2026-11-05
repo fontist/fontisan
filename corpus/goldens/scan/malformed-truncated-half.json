@@ -1,0 +1,73 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-truncated-half.ttf",
+  "font_sha256": "390e247781c6f88237d0d2690ddcedc171c341de6e925d375c07510a9275c1ac",
+  "id": "malformed-truncated-half",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "EOFError",
+            "message": "End of file reached"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<EOFError: End of file reached>."
+        }
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-truncated-half.ttf",
+      "sha256": "390e247781c6f88237d0d2690ddcedc171c341de6e925d375c07510a9275c1ac",
+      "validation": {
+        "error_summary": "check_execution: Exception during check execution: EOFError - End of file reached; check_execution: Exception during check execution: EOFError - End of file reached; check_execution: Exception during check execution: EOFError - End of file reached; check_execution: Exception during check execution: EOFError - End of file reached",
+        "issues": [
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: EOFError - End of file reached",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: EOFError - End of file reached",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: EOFError - End of file reached",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: EOFError - End of file reached",
+            "severity": "error"
+          }
+        ],
+        "profile": "indexability",
+        "status": "invalid",
+        "valid": false
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -130,17 +130,20 @@
   "id": "malformed-garbage",
   "kind": "garbage",
   "scan": {
-    "digest": "12eed375dada6c6f039ba3950c79704ed2ada9e859b2b757d65f1716bcb8c05e",
+    "digest": "21b955d7150fdc1d9e9df188d936108773e633623737ab299fa48ce0cb6722d3",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": {

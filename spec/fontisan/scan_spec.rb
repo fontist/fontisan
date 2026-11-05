@@ -56,8 +56,10 @@ RSpec.describe Fontisan::Scan do
     it "says a single font is not a collection the way CollectionFile does" do
       expect(row["errors"]["collection_file"]).to eq(
         "class" => "Fontist::Errors::FontFileError",
-        "message" => "File is not a recognized font collection (TTC/OTC/dfont)",
-        "cause" => nil,
+        "message" => "Font collection could not be loaded: " \
+                     "File is not a recognized font collection (TTC/OTC/dfont)",
+        "cause" => { "class" => "Fontist::Errors::FontFileError",
+                     "message" => "File is not a recognized font collection (TTC/OTC/dfont)" },
       )
     end
   end

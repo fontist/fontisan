@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "quirk-head-version-2.ttf",
+  "font_sha256": "874e934735ef145605a77d585a406a92febe011fc3c8f0db59948b8f9ad7d3ad",
+  "id": "quirk-head-version-2",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "quirk-head-version-2.ttf",
+      "sha256": "874e934735ef145605a77d585a406a92febe011fc3c8f0db59948b8f9ad7d3ad",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

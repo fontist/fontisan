@@ -1,0 +1,61 @@
+{
+  "comparison_class": "exact",
+  "file": "quirk-empty-name-table.ttf",
+  "font_sha256": "48f7c85a50a99ea13cad2a074d5bb87b11801bf9af9e9511492c3ddd0d083086",
+  "id": "quirk-empty-name-table",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": null,
+        "full_name": null,
+        "postscript_name": null,
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": null
+      },
+      "num_faces": 1,
+      "path": "quirk-empty-name-table.ttf",
+      "sha256": "48f7c85a50a99ea13cad2a074d5bb87b11801bf9af9e9511492c3ddd0d083086",
+      "validation": {
+        "error_summary": "table_validation: Table 'name' failed validation; table_validation: Table 'name' failed validation",
+        "issues": [
+          {
+            "category": "table_validation",
+            "location": "name",
+            "message": "Table 'name' failed validation",
+            "severity": "error"
+          },
+          {
+            "category": "table_validation",
+            "location": "name",
+            "message": "Table 'name' failed validation",
+            "severity": "error"
+          }
+        ],
+        "profile": "indexability",
+        "status": "invalid",
+        "valid": false
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -116,8 +116,9 @@ status, issues[severity, category, message, location], error_summary` = fontist'
   rows of the face it reads: non-collection or index 0), as `{class, message,
   cause}`; message `"Font file could not be parsed: #&lt;Class: msg&gt;."`.
 - `collection_file`: what `CollectionFile.from_path` would raise for the file
-  (same on every row of the file): "File is not a recognized font collection
-  (TTC/OTC/dfont)" for non-collections, "Font collection could not be loaded: ..."
-  or "Font collection failed indexability validation (first font): ...".
+  (same on every row of the file): "Font collection could not be loaded: ..."
+  (for a non-collection the text is "...: File is not a recognized font collection
+  (TTC/OTC/dfont)", because `CollectionFile` wraps its own raise; a collection with
+  no faces gets one row of its own, `num_faces` 0, to carry the error) or "Font collection failed indexability validation (first font): ...".
 - `collection_member`: error of the lazy:false metadata load that
   `CollectionFile#[]` performs for this face, `{class, message}`.

@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "TestWOFF.woff",
+  "font_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+  "id": "fonttools-test-woff",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "woff",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Test OTF",
+        "full_name": "Test OTF",
+        "postscript_name": "TestOTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "TestWOFF.woff",
+      "sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -17,7 +17,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "3f9f271507913909518b995393bebf75b015a99796d1afd1f82c2ef89618c788",
+          "digest": "895a15324345d66d702b82d560c3bca32f4733494f718d57125d962d1fa0fbfc",
           "faces": 1,
           "outcome": "ok"
         },
@@ -43,7 +43,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "93b5513eea25b94c533a66270d6b3d677eab063e78569c99740a3cb0ca67acba",
+          "digest": "6c9e7839bf354ca92caddfb8cac067fd8ace2e71366c9bacefc5e457b23a9ba5",
           "faces": 1,
           "outcome": "ok"
         },
@@ -69,7 +69,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "61490095c5aa9478c1207d7c72e7e31acdf59b004419732ca7ed58b73d412d65",
+          "digest": "e3019f934ae85978a4e8b74efcab71a3d06a3502a23351234f32524616e788b4",
           "faces": 1,
           "outcome": "ok"
         },
@@ -91,7 +91,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "0662195c3f5331e630811cae3ad97556c88845bd141b3a95177a54855a989b13",
+          "digest": "f83481a284d277f55489365318a76ddf82dd9778ce8eab39c08c714ae187fde6",
           "faces": 1,
           "outcome": "ok"
         },
@@ -108,17 +108,20 @@
   "id": "malformed-bad-checksum",
   "kind": "bad-checksum",
   "scan": {
-    "digest": "c6f9a78b20d28fea49bc7fd9928869438b745fd14afc188ccef354b32a787569",
+    "digest": "14497cf77f1737757c096b3d31c77b0904a372b95817f5d33241a496b16ff476",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": null

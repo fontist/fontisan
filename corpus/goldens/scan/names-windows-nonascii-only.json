@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "names-windows-nonascii-only.ttf",
+  "font_sha256": "110a7c634f735d0b16bf2dba2134ec1dae4814a1266a6e63179f7c511fff5d6c",
+  "id": "names-windows-nonascii-only",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "テストフォント Тест",
+        "full_name": "テストフォント Тест Regular",
+        "postscript_name": "TestNonAscii-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "names-windows-nonascii-only.ttf",
+      "sha256": "110a7c634f735d0b16bf2dba2134ec1dae4814a1266a6e63179f7c511fff5d6c",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

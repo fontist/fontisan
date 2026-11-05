@@ -1,0 +1,97 @@
+{
+  "comparison_class": "exact",
+  "file": "TestT1-Regular.pfb",
+  "font_sha256": "ccc479c812b34808de53db44c4dc080461d006e5a51e87a8b0662a57aa802410",
+  "id": "fonttools-test-t1-pfb",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "NoMethodError",
+            "message": "undefined method 'table' for an instance of Fontisan::Type1Font"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<NoMethodError: undefined method 'table' for an instance of Fontisan::Type1Font>."
+        }
+      },
+      "format": "pfb",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "TestT1-Regular.pfb",
+      "sha256": "ccc479c812b34808de53db44c4dc080461d006e5a51e87a8b0662a57aa802410",
+      "validation": {
+        "error_summary": "check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font; check_execution: Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+        "issues": [
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          },
+          {
+            "category": "check_execution",
+            "location": null,
+            "message": "Exception during check execution: NoMethodError - undefined method 'table' for an instance of Fontisan::Type1Font",
+            "severity": "error"
+          }
+        ],
+        "profile": "indexability",
+        "status": "invalid",
+        "valid": false
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

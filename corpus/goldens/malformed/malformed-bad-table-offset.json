@@ -17,7 +17,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "f1b1320c47ad1615dc73b1adb3017f3a771bf6df1a7e4e5c229e4f92369fe15c",
+          "digest": "df9bc876fbad427377ab8e2f9fd7e2f7ca481a34cc4807f680f6df9524abc809",
           "faces": 1,
           "outcome": "ok"
         },
@@ -43,7 +43,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "cb7ac866d452c58c2169e7f4cca5732288213343438964a6413256565f362be4",
+          "digest": "2d5beb4a76c75d060abdfc74391c2dd8016e531be9f6887953f03e5a0308783d",
           "faces": 1,
           "outcome": "ok"
         },
@@ -69,7 +69,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "22156aa80138cc0bde5cb832eeb6b2ba37b99a9f74f56c21d96f17107676eed7",
+          "digest": "cc019c20e4defbed9a9c3fd0ef9da5c24a9cae7e1d3de9e488c133c10f64872d",
           "faces": 1,
           "outcome": "ok"
         },
@@ -91,7 +91,7 @@
           "outcome": "ok"
         },
         "read": {
-          "digest": "36667401c76753202fa8c2001c86ce9c4937e102da517a8b46e729f43fea42a9",
+          "digest": "67aaf9bb367503dbe2ec59c214ce772996819894b9eed770af770ea6fd21b17f",
           "faces": 1,
           "outcome": "ok"
         },
@@ -108,17 +108,20 @@
   "id": "malformed-bad-table-offset",
   "kind": "bad-table-offset",
   "scan": {
-    "digest": "4cc2a493159a68c5cdf3dfe12e690f7603abf3a868c9c6658aafccf1abd47dbc",
+    "digest": "2424fd6e0ccd9ac331603a0a31f15a16dbbebb8e9a4fd73a0bdd0923e85c23a0",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": null

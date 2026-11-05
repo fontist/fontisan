@@ -30,10 +30,15 @@ module Fontisan
 
     FONT_FILE_ERROR = "Fontist::Errors::FontFileError"
     INDEXABILITY_ERROR = "Fontist::Errors::FontIndexabilityValidationError"
+    # CollectionFile raises this inside the method whose blanket rescue wraps
+    # every non-indexability failure, so it surfaces as "could not be loaded"
+    # with the original FontFileError as its cause.
     NOT_A_COLLECTION = {
       class: FONT_FILE_ERROR,
-      message: "File is not a recognized font collection (TTC/OTC/dfont)",
-      cause: nil,
+      message: "Font collection could not be loaded: " \
+               "File is not a recognized font collection (TTC/OTC/dfont)",
+      cause: { class: FONT_FILE_ERROR,
+               message: "File is not a recognized font collection (TTC/OTC/dfont)" },
     }.freeze
 
     # @param paths [Array<String>] font file paths
@@ -108,7 +113,19 @@ module Fontisan
       end
 
       count = collection.num_fonts
+      return [empty_collection_row(facts)] if count.zero?
+
       Array.new(count) { |index| face_row(facts, index, count) }
+    end
+
+    # A collection without faces has no row to hold what fontist raises for it
+    # (the first face cannot be loaded), so it gets one of its own.
+    def empty_collection_row(facts)
+      row = base_row(facts, nil, 0)
+      first = load_face(0, lazy: true)
+      row[:errors][:font_file] = font_file_error(first) if first.is_a?(StandardError)
+      row[:errors][:collection_file] = first_face_error
+      row
     end
 
     # ---- one face -------------------------------------------------------

@@ -1,0 +1,162 @@
+{
+  "comparison_class": "exact",
+  "file": "woff2-collection-4members.woff2",
+  "font_sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+  "id": "woff2-collection-4members",
+  "rows": [
+    {
+      "collection_index": 0,
+      "english_names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "woff2_collection",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 4,
+      "path": "woff2-collection-4members.woff2",
+      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    },
+    {
+      "collection_index": 1,
+      "english_names": {
+        "family_name": "Shared Two",
+        "full_name": "Shared Two Regular",
+        "postscript_name": "SharedTwo-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "woff2_collection",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Shared Two",
+        "full_name": "Shared Two Regular",
+        "postscript_name": "SharedTwo-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 4,
+      "path": "woff2-collection-4members.woff2",
+      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    },
+    {
+      "collection_index": 2,
+      "english_names": {
+        "family_name": "Shared Three",
+        "full_name": "Shared Three Regular",
+        "postscript_name": "SharedThree-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "woff2_collection",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Shared Three",
+        "full_name": "Shared Three Regular",
+        "postscript_name": "SharedThree-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 4,
+      "path": "woff2-collection-4members.woff2",
+      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    },
+    {
+      "collection_index": 3,
+      "english_names": {
+        "family_name": "Test OTF",
+        "full_name": "Test OTF",
+        "postscript_name": "TestOTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "woff2_collection",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Test OTF",
+        "full_name": "Test OTF",
+        "postscript_name": "TestOTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 4,
+      "path": "woff2-collection-4members.woff2",
+      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

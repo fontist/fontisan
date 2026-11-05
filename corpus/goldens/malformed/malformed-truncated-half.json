@@ -148,17 +148,20 @@
   "id": "malformed-truncated-half",
   "kind": "truncated-half",
   "scan": {
-    "digest": "b87d635db22c3b4be365caa77aac015fe7fe03a397a956281f89bad11d5fb031",
+    "digest": "56791a7d8987492dc9479b25d7e908d3a91bee78c02bbcf8e7c6a36493bad75d",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": {

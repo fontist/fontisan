@@ -197,17 +197,20 @@
   "id": "malformed-bad-num-tables",
   "kind": "bad-num-tables",
   "scan": {
-    "digest": "18897f911805790c1024a94060c8b634e6be7757e5c3104e5940202996e2088a",
+    "digest": "939681ad905d3911b49b164830eb85f7bc642cbf7b7fe3ce6b8286be4f7cb77d",
     "outcome": "ok",
     "rows": 1,
     "summary": [
       {
         "errors": {
           "collection_file": {
-            "cause": null,
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
             "class": "Fontist::Errors::FontFileError",
             "markers": [],
-            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
           },
           "collection_member": null,
           "font_file": {

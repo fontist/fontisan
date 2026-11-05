@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "TestDFONT.dfont",
+  "font_sha256": "acacaa44936ec33623ced5210365a584e103afd0a37f72b0b0e9b30ea7f7b97c",
+  "id": "fonttools-test-dfont",
+  "rows": [
+    {
+      "collection_index": 0,
+      "english_names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "dfont",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "TestDFONT.dfont",
+      "sha256": "acacaa44936ec33623ced5210365a584e103afd0a37f72b0b0e9b30ea7f7b97c",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}
