@@ -563,3 +563,5 @@ module Fontisan
     end
   end
 end
+
+Fontisan::Engine.install(Fontisan::Reference)
