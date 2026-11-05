@@ -1,0 +1,43 @@
+{
+  "audit": {
+    "default": {
+      "error": {
+        "class": "Fontisan::InvalidFontError",
+        "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+      }
+    },
+    "validate": {
+      "error": {
+        "class": "Fontisan::InvalidFontError",
+        "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+      }
+    }
+  },
+  "comparison_class": "exact",
+  "file": "TestT1-Regular.pfa",
+  "font_sha256": "4231be15444404469e74678c0c3746325c521a2878686f970ea215e54f1982dc",
+  "generated_in": "any",
+  "id": "fonttools-test-t1-pfa",
+  "known_reference_bug": [
+    "T1-READ"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "full/lazy": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "error": {
+        "class": "Fontisan::InvalidFontError",
+        "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+      }
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}
