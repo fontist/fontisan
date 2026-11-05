@@ -303,7 +303,7 @@
               "y_superscript_y_size": 600
             },
             "head": {
-              "checksum_adjustment": 2989814336,
+              "checksum_adjustment": 1065650782,
               "created_raw": 3763026312,
               "flags": 2051,
               "font_direction_hint": 2,
@@ -1517,7 +1517,7 @@
           ],
           "outlines": {
             "count": 2478,
-            "digest": "a4ed1417b5a91798ae538f1fcee593844ccca5ec4f45327d7d1be18ad0e1e0c7",
+            "digest": "a4ef219cd1c7006298fdf4df9ce8164c27e128d152e96753e448ca272e167f7d",
             "kind": "glyf"
           },
           "post": {
@@ -1573,7 +1573,7 @@
             {
               "error": null,
               "length": 128228,
-              "sha256": "24dbc410c6cb8642e19108a91950c2e46c9cce543f7dc2a2a815410cb638de8d",
+              "sha256": "08ad5d17e51b58c2d205730892a80c43c097b543d6ea1b2576e4db3a6366a072",
               "tag": "glyf"
             },
             {
@@ -1585,7 +1585,7 @@
             {
               "error": null,
               "length": 54,
-              "sha256": "97c4fd97fd50297541eb0a38ba0372f37a58ef3515036e0e635b224c5275477a",
+              "sha256": "d5b5d6f84513bf55a04271e366258b5a900389268c53c1c67c1ab90720be0fb6",
               "tag": "head"
             },
             {
@@ -1691,7 +1691,7 @@
               "y_superscript_y_size": 600
             },
             "head": {
-              "checksum_adjustment": 2989814336,
+              "checksum_adjustment": 1065650782,
               "created_raw": 3763026312,
               "flags": 2051,
               "font_direction_hint": 2,
@@ -2724,7 +2724,7 @@
             {
               "error": null,
               "length": 54,
-              "sha256": "97c4fd97fd50297541eb0a38ba0372f37a58ef3515036e0e635b224c5275477a",
+              "sha256": "d5b5d6f84513bf55a04271e366258b5a900389268c53c1c67c1ab90720be0fb6",
               "tag": "head"
             },
             {

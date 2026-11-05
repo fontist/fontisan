@@ -84,8 +84,17 @@ jobs:
       - name: Verify scan goldens (compare only)
         run: bundle exec rake corpus:scan:verify
 
+      - name: Verify malformed and convert goldens (compare only)
+        run: |
+          bundle exec rake corpus:malformed:verify
+          bundle exec rake corpus:convert:verify
+        env:
+          OTS_PYTHON: python
+
       - name: Golden specs (verify, determinism, completeness)
-        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb spec/corpus/scan_goldens_spec.rb
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb spec/corpus/scan_goldens_spec.rb spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+        env:
+          OTS_PYTHON: python
 
       - name: Scan parity with fontist (dev-only gem, pinned ref)
         run: bundle exec rspec --options /dev/null --format progress spec/corpus/fontist_parity_spec.rb
