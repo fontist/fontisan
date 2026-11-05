@@ -33,6 +33,26 @@ RSpec.describe Fontisan::Audit::Checks::OpenTypeConformanceCheck do
       fs_issues = issues.select { |i| i.location&.include?("fs_selection") }
       expect(fs_issues).to be_empty
     end
+
+    it "does not report a loca size mismatch when loca matches its table directory length" do
+      issues = described_class.call(font)
+      loca_issues = issues.select { |i| i.message.include?("loca table size") }
+      expect(loca_issues).to be_empty
+    end
+
+    it "reports the table-directory loca length when it disagrees with the expected size" do
+      real_length = font.tables.find { |entry| entry.tag == "loca" }.table_length
+      shortened = Struct.new(:tag, :table_length).new("loca", real_length - 4)
+      allow(font).to receive(:tables).and_return(
+        font.tables.map { |entry| entry.tag == "loca" ? shortened : entry },
+      )
+
+      issues = described_class.call(font)
+      loca_messages = issues.map(&:message).select { |m| m.include?("loca table size") }
+      expect(loca_messages).to contain_exactly(
+        a_string_including("loca table size (#{real_length - 4} bytes)"),
+      )
+    end
   end
 
   describe ".code" do

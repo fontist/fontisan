@@ -65,7 +65,8 @@ module Fontisan
 
           head = font.table("head")
           loca = font.table("loca")
-          return [] unless head && loca
+          loca_entry = font.tables.find { |entry| entry.tag == "loca" }
+          return [] unless head && loca && loca_entry
 
           format = head.index_to_loc_format
           maxp = font.table("maxp")
@@ -73,7 +74,9 @@ module Fontisan
           return [] if num_glyphs.zero?
 
           expected_size = format.zero? ? (num_glyphs + 1) * 2 : (num_glyphs + 1) * 4
-          actual_size = loca.to_binary_s.bytesize
+          # The loca record is parsed lazily and serialises to 0 bytes, so the
+          # table directory length is the real size.
+          actual_size = loca_entry.table_length
           return [] if actual_size == expected_size
 
           [issue(severity: :warning,
