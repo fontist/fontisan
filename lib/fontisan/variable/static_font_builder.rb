@@ -40,6 +40,8 @@ module Fontisan
       #   { ascent: 2048, descent: -512, line_gap: 0 }
       # @param options [Hash] Build options
       # @option options [Boolean] :update_modified Update head modified timestamp
+      # @option options [Integer, Time] :timestamp Fixed value to stamp when
+      #   updating head.modified (nil = current time)
       # @return [String] Complete static font binary
       def build(varied_metrics = {}, font_metrics = {}, options = {})
         # Collect tables for static font
@@ -170,7 +172,8 @@ options = {})
         if options[:update_modified] == false
           original_data
         else
-          @table_updater.update_head_modified(original_data)
+          @table_updater.update_head_modified(original_data,
+                                              options[:timestamp])
         end
       end
 

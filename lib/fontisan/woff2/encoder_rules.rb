@@ -29,11 +29,13 @@ module Fontisan
       #
       # @param table_data [Hash{String => String}] Map of tag → binary
       #   table data. Mutated.
+      # @param timestamp [Integer, Time, nil] Fixed value for head.modified
+      #   (Unix seconds); nil stamps the current wall-clock time.
       # @return [Hash{String => String}] The same hash, for chaining.
-      def self.apply!(table_data)
+      def self.apply!(table_data, timestamp: nil)
         exclude_tables!(table_data)
         mark_lossless_modifying!(table_data)
-        touch_head_modified!(table_data)
+        touch_head_modified!(table_data, timestamp: timestamp)
         table_data
       end
 
@@ -94,11 +96,17 @@ module Fontisan
       # are included in the checksum.
       #
       # @param table_data [Hash{String => String}]
-      def self.touch_head_modified!(table_data)
+      # @param timestamp [Integer, Time, nil] Unix seconds to stamp instead of
+      #   the current time (reproducible output); nil keeps the clock.
+      def self.touch_head_modified!(table_data, timestamp: nil)
         return unless table_data.key?("head")
 
         head = Tables::Head.read(table_data["head"])
-        head.modified_raw = Tables::Head.now_longdatetime
+        head.modified_raw = if timestamp.nil?
+                              Tables::Head.now_longdatetime
+                            else
+                              Tables::Head.to_longdatetime(timestamp)
+                            end
         table_data["head"] = head.to_binary_s
       end
     end

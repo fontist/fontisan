@@ -444,11 +444,13 @@ conv_options = nil)
       #
       # @param fonts [Array<Font>] Fonts
       # @param output_path [String] Output path (.woff2)
-      # @param options [Hash] Options (looks for :brotli_quality)
+      # @param options [Hash] Options (looks for :brotli_quality, :timestamp)
       # @return [void]
       def repack_woff2_collection(fonts, output_path, options)
         brotli_quality = options.fetch(:brotli_quality, 11)
-        encoder = Woff2::CollectionEncoder.new(brotli_quality:)
+        encoder = Woff2::CollectionEncoder.new(
+          brotli_quality:, timestamp: options[:timestamp],
+        )
         bytes = encoder.encode_fonts(fonts)
         File.binwrite(output_path, bytes)
       end
