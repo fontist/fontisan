@@ -378,7 +378,7 @@ module Fontisan
           end
           if count > 1
             out << (flag | FLAG_REPEAT).chr(Encoding::BINARY)
-            out << count.chr(Encoding::BINARY)
+            out << (count - 1).chr(Encoding::BINARY)
             i += count
           else
             out << flag.chr(Encoding::BINARY)
