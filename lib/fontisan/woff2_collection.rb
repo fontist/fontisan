@@ -62,13 +62,14 @@ module Fontisan
     #
     # @param index [Integer] 0-based font index
     # @param _io [IO, nil] Ignored.
-    # @param _mode [Symbol] Ignored — full mode only (WOFF2 collections are
-    #   decoded eagerly).
+    # @param mode [Symbol] Loading mode, as for the TTC/OTC collections
+    #   (default: full). Decoding is eager, so mode only limits which tables
+    #   are kept on the returned font.
     # @return [TrueTypeFont, OpenTypeFont, nil] nil if index out of range
-    def font(index, _io = nil, _mode: LoadingModes::FULL)
+    def font(index, _io = nil, mode: LoadingModes::FULL)
       return nil if index >= num_fonts
 
-      build_font(decoded[index])
+      build_font(decoded[index], mode)
     end
 
     # Whether this object represents a font collection. WOFF2 collections
@@ -108,12 +109,13 @@ module Fontisan
     # Build a TrueTypeFont or OpenTypeFont from a decoded font entry.
     # Constructs an in-memory SFNT binary from the per-table data and
     # loads it through the normal font reader path.
-    def build_font(entry)
+    def build_font(entry, mode = LoadingModes::FULL)
       sfnt = SfntBuilder.build(flavor: entry[:flavor], tables: entry[:tables])
       sfnt_io = StringIO.new(sfnt)
       font_class = truetype_flavor?(entry[:flavor]) ? TrueTypeFont : OpenTypeFont
       font = font_class.read(sfnt_io)
       font.initialize_storage
+      font.loading_mode = mode
       font.read_table_data(StringIO.new(sfnt))
       font
     end
