@@ -115,9 +115,12 @@ jobs:
         if: runner.os != 'Windows'
         run: scripts/build-woff2.sh
 
+      # setup-ruby already unpacked its own MSYS2 to $RUNNER_TEMP\msys64; setup-msys2 refuses to
+      # install over it, so this one lives in its own directory.
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:
+          location: ${{ runner.temp }}\msys2-woff2
           msystem: MINGW64
           path-type: inherit
           install: git make mingw-w64-x86_64-gcc
