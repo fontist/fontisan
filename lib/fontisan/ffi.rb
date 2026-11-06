@@ -226,7 +226,7 @@ module Fontisan
       end
 
       def dir_entry(dir, row, validate)
-        rel = row["path"].delete_prefix("#{dir.chomp('/')}/")
+        rel = Reference.relative_row_path(dir, row["path"])
         seen_by(File.join(dir, rel), :ffi)
         case row["status"]
         when "ok" then { "path" => rel, "faces" => row["reports"] }

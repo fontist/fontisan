@@ -172,7 +172,7 @@ module Fontisan
       def audit_dir(dir, validate: false)
         dir = File.path(dir)
         native_audit_dir_rows(dir, validate ? true : false).filter_map do |row|
-          rel = row["path"].delete_prefix("#{dir}/")
+          rel = Fontisan::Reference.relative_row_path(dir, row["path"])
           next if rel.split("/").any? { |part| part.start_with?(".") }
 
           dir_entry(row, rel, validate)

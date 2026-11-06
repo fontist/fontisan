@@ -128,6 +128,23 @@ module Fontisan
         normalize(entries)
       end
 
+      # The path of an audit_dir row relative to +dir+, with "/" separators. An
+      # engine tier on Windows reports "D:/a/dir\\file.ttf" (the directory as
+      # given, then a native separator), so both sides are normalised before the
+      # prefix is removed; elsewhere a backslash is an ordinary file name byte.
+      #
+      # @param dir [String]
+      # @param path [String] the row's path, below +dir+
+      # @param alt_separator [String, nil] the platform's second separator
+      # @return [String]
+      def relative_row_path(dir, path, alt_separator: File::ALT_SEPARATOR)
+        if alt_separator
+          dir = dir.tr(alt_separator, "/")
+          path = path.tr(alt_separator, "/")
+        end
+        path.delete_prefix("#{dir.chomp('/')}/")
+      end
+
       # One row per font face for every path (see {Fontisan::Scan}).
       #
       # @param paths [Array<String>]
