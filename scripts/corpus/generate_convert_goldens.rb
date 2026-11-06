@@ -119,12 +119,32 @@ module ConvertGoldens
   end
 
   def sample_codepoints(path)
-    face = Fontisan::FontLoader.load(path, mode: :full, lazy: false)
-    cps = face.table("cmap").unicode_mappings.keys.sort
+    cps = cmap_codepoints(path)
     return cps if cps.size <= SUBSET_SAMPLE
 
     step = (cps.size - 1).fdiv(SUBSET_SAMPLE - 1)
     Array.new(SUBSET_SAMPLE) { |i| cps[(i * step).round] }.uniq
+  end
+
+  # Codepoints of a face's cmap. A WOFF2 input on a platform without the `brotli`
+  # gem (the java gem on JRuby) is decoded by the pinned woff2_decompress first,
+  # so the sample does not depend on the tier under test.
+  def cmap_codepoints(path)
+    return load_codepoints(path) unless File.binread(path, 4) == "wOF2" && !Fontisan::Utilities::BrotliWrapper.available?
+
+    Dir.mktmpdir("sample-cps") do |tmp|
+      input = File.join(tmp, "in.woff2")
+      FileUtils.cp(path, input)
+      _out, err, status = Open3.capture3(woff2_decompress, input)
+      decoded = File.join(tmp, "in.ttf")
+      raise "woff2_decompress failed: #{err.strip}" unless status.success? && File.exist?(decoded)
+
+      load_codepoints(decoded)
+    end
+  end
+
+  def load_codepoints(path)
+    Fontisan::FontLoader.load(path, mode: :full, lazy: false).table("cmap").unicode_mappings.keys.sort
   end
 
   # --- tools ----------------------------------------------------------------

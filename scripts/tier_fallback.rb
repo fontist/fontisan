@@ -128,6 +128,17 @@ scan_corpus = lambda do |allowed|
   served = Hash.new(0)
   entries.each do |entry|
     path = font_path.call(entry)
+    # The java gem has no brotli: with the ffi tier sabotaged nothing can read a WOFF2,
+    # and the engine says so instead of falling back to a Ruby that cannot serve it.
+    if File.extname(path).casecmp?(".woff2") && allowed.call(path) == ["ruby"] && !Fontisan::Utilities::BrotliWrapper.available?
+      begin
+        Fontisan::Engine.scan([path])
+        problems << "#{entry['id']}: WOFF2 scan with no ffi tier and no brotli did not raise Woff2Unavailable"
+      rescue Fontisan::Engine::Woff2Unavailable
+        served["unavailable"] += 1
+      end
+      next
+    end
     rows = Fontisan::Engine.scan([path])
     problems << "#{entry['id']}: rows differ from the golden" unless plain.call(rows) == golden.call(entry)
     rows.each do |row|
