@@ -2766,6 +2766,26 @@ bundle exec rake fixtures:clean     # Remove downloaded fonts
 ----
 
 
+=== Reference corpus and benchmarks
+
+`corpus/` holds the golden outputs of the pure-Ruby engine (fontist/fontisan#157).
+The fonts themselves are not in git: `corpus/manifest.json` pins each source
+by URL and SHA-256, and `rake corpus:fetch` downloads and verifies them into
+`corpus/fonts/`. `corpus:verify` and `bench` run the fetch themselves, so a
+fresh clone needs no manual step.
+
+[source,shell]
+----
+bundle exec rake corpus:fetch    # download + checksum the ci tier (TIER=ci|large|all)
+bundle exec rake corpus:verify   # compare read goldens; never writes
+bundle exec rake bench           # run the benches, print the report, write BENCHMARKS.md
+----
+
+Goldens are compared, never regenerated, by the tests. `corpus:regenerate` is
+the one explicit rewrite and belongs in a PR that shows the golden diff.
+Baseline numbers are in link:BENCHMARKS.md[BENCHMARKS.md]; the `Perf Gate`
+workflow fails a PR that makes an operation more than 25% slower than its base.
+
 == Copyright and license
 
 Copyright https://www.ribose.com[Ribose].
