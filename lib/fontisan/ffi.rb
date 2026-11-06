@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "json"
+require "tmpdir"
 require "rbconfig"
 require "fontisan/ffi_platform"
 
@@ -158,9 +159,33 @@ module Fontisan
       def serve_subset(path, unicodes: nil, text: nil, profile: "web", timestamp: nil)
         _ = timestamp
         path = File.path(path)
-        gids = ruby(:glyph_ids, path, unicodes: unicodes, text: text)
+        gids = subset_glyph_ids(path, unicodes, text)
         head = [SUBSET_PROFILE_CODES.fetch(profile.to_s), gids.size, 0, 0].pack("NNNN")
         byte_op(OP_SUBSET, head + gids.pack("N*") + File.binread(path))
+      end
+
+      # Glyph ids of a subset request. A WOFF2 source on a platform without the
+      # `brotli` gem (the java gem on JRuby) cannot be read by the Ruby tier, so
+      # the engine decodes it (a convert to the same flavor) and the Ruby tier
+      # reads the cmap of that SFNT, under the source's own basename.
+      def subset_glyph_ids(path, unicodes, text)
+        return ruby(:glyph_ids, path, unicodes: unicodes, text: text) unless woff2_without_brotli?(path)
+
+        Dir.mktmpdir("fontisan-ffi-subset") do |dir|
+          decoded = File.join(dir, File.basename(path))
+          File.binwrite(decoded, decode_woff2(path))
+          ruby(:glyph_ids, decoded, unicodes: unicodes, text: text)
+        end
+      end
+
+      def woff2_without_brotli?(path)
+        File.binread(path, 4) == "wOF2" && !Utilities::BrotliWrapper.available?
+      end
+
+      def decode_woff2(path)
+        input = File.binread(path)
+        target = input.byteslice(4, 4) == "OTTO" ? :otf : :ttf
+        byte_op(OP_CONVERT, [ByteOps::TARGET_CODES.fetch(target), 0, 0].pack("NNq>") + input)
       end
 
       # The payload of a byte operation; a failure is raised as the Ruby

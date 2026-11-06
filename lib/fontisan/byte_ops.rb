@@ -125,7 +125,7 @@ module Fontisan
     # Collections report `num_fonts`; single fonts the variation strategy
     # (an fvar font is converted as an instance, the rest are preserved).
     def convert_tail(path)
-      return { num_fonts: FontLoader.load_collection(path).num_fonts } if collection_file?(path)
+      return { num_fonts: collection_font_count(path) } if collection_file?(path)
 
       { variation_strategy: variable_font?(path) ? :instance : :preserve }
     end
@@ -134,11 +134,33 @@ module Fontisan
       FontLoader.detect_format(path)
     end
 
+    # A WOFF2 collection is counted from its directory, not decoded: the
+    # decode needs `brotli`, which the java platform (JRuby) does not have, and
+    # the engine has already served the convert.
+    def collection_font_count(path)
+      if File.binread(path, 4) == "wOF2"
+        return Woff2::CollectionDecoder.new(File.binread(path)).font_count
+      end
+
+      FontLoader.load_collection(path).num_fonts
+    end
+
     def variable_font?(path)
+      return woff2_tags(path).include?("fvar") if File.binread(path, 4) == "wOF2"
+
       font = FontLoader.load(path, mode: :metadata, lazy: true)
       font.has_table?("fvar")
     ensure
       font.close if font.respond_to?(:close)
+    end
+
+    # Table tags from the WOFF2 table directory, which is stored uncompressed
+    # (no `brotli` needed, unlike loading the font).
+    def woff2_tags(path)
+      File.open(path, "rb") do |io|
+        header = Woff2::Woff2Header.read(io)
+        Woff2Font.read_table_directory_from_io(io, header).map(&:tag)
+      end
     end
 
     def unix_seconds(timestamp)
