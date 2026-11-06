@@ -91,10 +91,10 @@ module Fontisan
       end
 
       # Tier (Symbol) that serves +operation+ for +path+ under the current config.
-      def resolve(operation, path = nil)
+      def resolve(operation, path = nil, options = nil)
         config = setup!
         candidates(config).find do |name|
-          available?(name) && supports?(name, operation, path)
+          available?(name) && supports?(name, operation, path, options)
         end || :ruby
       end
 
@@ -117,9 +117,10 @@ module Fontisan
         end
       end
 
-      # audit_dir entries with a "served_by" tier name per entry (the tier
-      # that audited that file; a natively served audit_dir tags every
-      # entry with that tier).
+      # audit_dir entries with a "served_by" tier name per entry: the tier
+      # that audited that file. A file the serving tier hands back to Ruby
+      # (dfont, Type 1 inside a native audit_dir) is recorded as :ruby by the
+      # nested call; every other entry carries the tier that served the call.
       def audit_dir(dir, validate: false)
         dir_path = File.path(dir)
         whole = resolve(:audit_dir, dir_path)
@@ -128,7 +129,7 @@ module Fontisan
           Reference.audit_dir(dir, validate: validate)
         end
         entries.map do |entry|
-          tier = whole == :ruby ? tier_for(seen, dir_path, entry["path"]) : whole
+          tier = seen[File.join(dir_path, entry["path"])] || whole
           entry.merge("served_by" => tier.to_s)
         end
       end
@@ -140,7 +141,7 @@ module Fontisan
         path = nil unless path.is_a?(String)
         return scan_rows(args, kwargs) if operation == :scan && !args.empty?
 
-        tier = resolve(operation, path)
+        tier = resolve(operation, path, kwargs)
         run(tier, operation, path, args, kwargs, &)
       end
 
@@ -215,8 +216,13 @@ module Fontisan
         false
       end
 
-      def supports?(name, operation, path)
-        tier_object(name).supports?(operation, path) || false
+      # A tier may also vet the call's keyword options (`supports_options?`).
+      def supports?(name, operation, path, options = nil)
+        tier = tier_object(name)
+        return false unless tier.supports?(operation, path)
+        return true unless options && tier.respond_to?(:supports_options?)
+
+        tier.supports_options?(operation, options) || false
       rescue StandardError, ScriptError
         false
       end
@@ -260,10 +266,6 @@ module Fontisan
         yield
       ensure
         Thread.current[ROW_RECORDER] = previous
-      end
-
-      def tier_for(seen, dir_path, rel)
-        seen[File.join(dir_path, rel)] || :ruby
       end
     end
   end

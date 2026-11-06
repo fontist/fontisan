@@ -18,6 +18,7 @@ gem "get_process_mem", "~> 0.2"
 gem "octokit", group: :test
 gem "openssl", "~> 3.0"
 gem "rake"
+gem "rake-compiler"
 gem "rspec"
 gem "rubocop"
 gem "rubocop-performance"

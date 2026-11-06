@@ -37,6 +37,9 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  # The :native tier. extconf.rb writes a no-op Makefile without cargo, so a
+  # source install on a machine with no Rust toolchain still works (:ruby tier).
+  spec.extensions = ["ext/fontisan_native/extconf.rb"]
 
   spec.add_dependency "base64"
   spec.add_dependency "bindata", "~> 2.5"
@@ -44,5 +47,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "logger"
   spec.add_dependency "lutaml-model", "~> 0.8"
   spec.add_dependency "nokogiri", "~> 1.16"
+  spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_dependency "thor", "~> 1.3"
 end

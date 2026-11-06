@@ -58,3 +58,9 @@ CLAUDE.md
 
 # Fetched corpus fonts (rake corpus:fetch)
 corpus/fonts/
+
+# :native tier build output
+/lib/fontisan/native/*.bundle
+/lib/fontisan/native/*.so
+/lib/fontisan/native/*.dll
+/ext/fontisan_native/target/

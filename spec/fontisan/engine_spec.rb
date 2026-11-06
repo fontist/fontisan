@@ -14,7 +14,6 @@ RSpec.describe Fontisan::Engine do
                      __dir__)
   end
   let(:out) { Dir.mktmpdir("engine-spec") }
-
   # A tier that is available, serves every operation except for paths matching
   # +skip+, and answers with a marker instead of doing any work.
   let(:fake_class) do
@@ -39,7 +38,6 @@ RSpec.describe Fontisan::Engine do
       end
     end
   end
-
   # Every Reference operation with arguments cheap enough to run for real.
   let(:op_calls) do
     {
@@ -59,6 +57,13 @@ RSpec.describe Fontisan::Engine do
       glyph_ids: -> { Fontisan::Reference.glyph_ids(ttf, text: ".") },
       subset: -> { Fontisan::Reference.subset(ttf, text: ".") },
     }
+  end
+
+  # These examples use fake tiers; the real extension (spec/fontisan/native_spec.rb)
+  # must not answer, so it is hidden even when built.
+  before do
+    allow(Fontisan::Native).to receive(:load_extension).and_raise(LoadError)
+    Fontisan::Native.reset!
   end
 
   around do |example|
@@ -91,7 +96,7 @@ RSpec.describe Fontisan::Engine do
       expect(described_class.counters.keys).to eq([:ruby])
     end
 
-    it "has no native or ffi tier available yet" do
+    it "has no native or ffi tier available when the extensions do not load" do
       expect(Fontisan::Native.available?).to be(false)
       expect(Fontisan::Ffi.available?).to be(false)
     end
