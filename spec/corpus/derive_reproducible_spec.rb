@@ -13,7 +13,7 @@ require "rbconfig"
 #
 # Needs the fetched sources: `bundle exec rake corpus:fetch`.
 RSpec.describe "corpus:derive reproducibility" do
-  scripts = %w[quirks malformed fuzz ttc_multi woff2_collection]
+  scripts = %w[quirks malformed malformed_woff fuzz ttc_multi woff2_collection]
   let(:derived_dir) { File.join(CorpusPaths::ROOT, "corpus", "derived") }
 
   scripts.each do |name|

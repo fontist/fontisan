@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-woff2-truncated-half.woff2",
+  "font_sha256": "5ed9e3df5d45674752877b6a688b7ccc3ccbb408aff2609a82250fd4df97ab8b",
+  "id": "malformed-woff2-truncated-half",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "Invalid WOFF2 file: woff: brotli stream is corrupt"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: Invalid WOFF2 file: woff: brotli stream is corrupt>."
+        }
+      },
+      "format": "woff2",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-woff2-truncated-half.woff2",
+      "sha256": "5ed9e3df5d45674752877b6a688b7ccc3ccbb408aff2609a82250fd4df97ab8b",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

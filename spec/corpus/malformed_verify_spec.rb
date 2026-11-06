@@ -11,14 +11,16 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   let(:entries) { described_class.entries }
   let(:kinds) do
     %w[truncated-10 truncated-100 truncated-half garbage empty bad-table-offset bad-checksum bad-num-tables
-       fuzz-cmap12-u32-span fuzz-cff2-huge-count fuzz-ttc-head-offset]
+       fuzz-cmap12-u32-span fuzz-cff2-huge-count fuzz-ttc-head-offset
+       woff-corrupt-deflate woff-zero-table-dir woff-truncated-half
+       woff2-corrupt-brotli woff2-zero-table-dir woff2-truncated-half]
   end
 
   def golden_for(entry)
     JSON.parse(File.read(described_class.golden_path(entry)))
   end
 
-  it "covers all eleven malformed kinds" do
+  it "covers all seventeen malformed kinds" do
     expect(entries.map { |e| e["malformed_kind"] }).to match_array(kinds)
   end
 

@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-woff-corrupt-deflate.woff",
+  "font_sha256": "8468015af5cd9330f23e7514adeae7912dda74ae5037788cdd783ae9db0858f0",
+  "id": "malformed-woff-corrupt-deflate",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "woff: zlib stream is corrupt or too long"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: woff: zlib stream is corrupt or too long>."
+        }
+      },
+      "format": "woff",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-woff-corrupt-deflate.woff",
+      "sha256": "8468015af5cd9330f23e7514adeae7912dda74ae5037788cdd783ae9db0858f0",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}
