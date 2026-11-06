@@ -15,7 +15,7 @@ namespace :cdylib do
       require "rb_sys/toolchain_info"
       triple = RbSys::ToolchainInfo.new(ENV.fetch("RUBY_TARGET")).rust_target
     end
-    args = ["cargo", "build", "--release", "--manifest-path", File.join(ext, "Cargo.toml")]
+    args = ["cargo", "build", "--release", "--locked", "--manifest-path", File.join(ext, "Cargo.toml")]
     args += ["--target", triple] if triple
     sh(*args)
     release = File.join(ENV.fetch("CARGO_TARGET_DIR", File.join(ext, "target")), triple.to_s, "release")
