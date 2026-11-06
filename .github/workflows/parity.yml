@@ -170,7 +170,7 @@ jobs:
             -e FONTISAN_ENGINE=${{ matrix.tier }} \
             -e FONTISAN_ENGINE_STRICT=${{ matrix.tier == 'ruby' && '0' || '1' }} \
             ruby:3.4-alpine sh -ec '
-              apk add --no-cache build-base git make bash python3 py3-pip
+              apk add --no-cache build-base git make bash python3 py3-pip openssl-dev yaml-dev
               python3 -m venv /ots && /ots/bin/pip install opentype-sanitizer
               export OTS_PYTHON=/ots/bin/python WOFF2_DECOMPRESS=/w/corpus/fonts/.tools/woff2/bin/woff2_decompress
               if [ "$FONTISAN_ENGINE" != ruby ]; then
@@ -306,7 +306,7 @@ jobs:
 
       - run: |
           docker run --rm -v "$PWD:/w" -w /w ruby:3.4-alpine sh -ec '
-            apk add --no-cache build-base git bash
+            apk add --no-cache build-base git bash openssl-dev yaml-dev
             bundle config set --local without fontist_parity
             bundle install --jobs 4
             bundle exec rake corpus:fetch
