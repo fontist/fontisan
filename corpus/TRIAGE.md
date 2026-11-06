@@ -32,6 +32,7 @@ are triaged by card 0e.
 | NAME-FORMAT1 | known_reference_bug | name format 1 storage is misread. | quirk-name-format-1 |
 | NAME-MAC-DECODE | known_reference_bug | Mac names are decoded as ASCII with replacement characters (the facade copies fontist on purpose). | names-mac-roman-only |
 | NAME-FULL-REGULAR | known_reference_bug | the info-level full-name check fires when the full name omits "Regular" (arguably a false positive). Tagged automatically from the audit message. | every font whose validate audit has "Full name ... doesn't match Family + Subfamily" |
+| CHECKSUM-BINDATA | known_reference_bug | `table_directory` check `validate_checksums` calls `entry.checksum.to_s(16)` on a `BinData::Uint32be`, which takes no argument, so `audit(validate: true)` on a bad checksum yields one fatal "Check table_directory failed to execute: ArgumentError". Pinned in `read/_diverge/bad-checksum-validate.json`. | malformed-bad-checksum |
 
 ## Reviewed, no entry
 

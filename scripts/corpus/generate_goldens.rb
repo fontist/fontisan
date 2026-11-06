@@ -24,6 +24,7 @@ module CorpusGoldens
   MANIFEST = File.join(ROOT, "corpus", "manifest.json")
   GOLDEN_DIRS = { "ci" => "read", "large" => "read-large" }.freeze
   SWALLOW_DIR = File.join(ROOT, "corpus", "goldens", "read", "_swallow")
+  DIVERGE_DIR = File.join(ROOT, "corpus", "goldens", "read", "_diverge")
   MALFORMED = /\Amalformed-/
   VARIANTS = [[:metadata, true], [:metadata, false], [:full, true], [:full, false]].freeze
   SCHEMA = 1
@@ -178,11 +179,61 @@ module CorpusGoldens
     end
   end
 
+  # Divergences found after Phase 0 that the dedupe above or the malformed
+  # goldens never exercised (fontisan-rs docs/divergences.md):
+  #
+  # 1. WOFF1 `read` echoes the requested mode in each face's "mode". The read
+  #    goldens collapse variants with `same_as` and strip `mode` first, so it
+  #    was never compared for WOFF1. woff1-mode.json keeps all four variants
+  #    explicit, with no dedupe, for every WOFF1 font in the ci tier.
+  # 2. audit(validate: true) on a bad table checksum yields one fatal
+  #    "Check table_directory failed to execute" (BinData::Uint32be#to_s(16)
+  #    takes no argument). Tagged CHECKSUM-BINDATA: Rust reproduces it.
+  BAD_CHECKSUM = "malformed-bad-checksum"
+  CHECKSUM_TAG = "CHECKSUM-BINDATA"
+
+  def woff1_entries
+    entries("ci").select { |e| e["file"].end_with?(".woff") }
+  end
+
+  def woff1_mode_golden
+    cases = woff1_entries.to_h do |e|
+      path = font_path(e)
+      variants = VARIANTS.to_h do |mode, lazy|
+        key = "#{mode}/#{lazy ? 'lazy' : 'eager'}"
+        [key, outcome(path) { Fontisan::Reference.read(path, mode: mode, lazy: lazy) }]
+      end
+      [e["id"], { "font_sha256" => e.fetch("sha256"), "read" => variants }]
+    end
+    Fontisan::Reference.canonical_json(
+      "schema" => SCHEMA, "case" => "woff1-mode", "comparison_class" => "exact",
+      "known_reference_bug" => [], "cases" => cases
+    )
+  end
+
+  def bad_checksum_golden
+    entry = manifest.find { |e| e["id"] == BAD_CHECKSUM }
+    path = font_path(entry)
+    Fontisan::Reference.canonical_json(
+      "schema" => SCHEMA, "case" => "bad-checksum-validate", "source" => BAD_CHECKSUM,
+      "file" => File.basename(path), "font_sha256" => entry.fetch("sha256"),
+      "comparison_class" => "exact", "known_reference_bug" => [CHECKSUM_TAG],
+      "audit" => audit_variants(path)
+    )
+  end
+
+  def diverge
+    {
+      File.join(DIVERGE_DIR, "woff1-mode.json") => woff1_mode_golden,
+      File.join(DIVERGE_DIR, "bad-checksum-validate.json") => bad_checksum_golden,
+    }
+  end
+
   # Every golden of a tier as { path => bytes }, generated fresh.
   def generate(tier)
     assert_clean_env!
     out = entries(tier).to_h { |e| [golden_path(tier, e["id"]), golden(e, tier)] }
-    out.merge!(swallow) if tier == "ci"
+    out.merge!(swallow).merge!(diverge) if tier == "ci"
     out
   end
 
