@@ -108,8 +108,14 @@ module Fontisan
       array :name_records, type: :name_record, initial_length: :record_count
       rest :string_storage
 
-      # Cache for decoded names
-      attr_accessor :decoded_names_cache
+      # Cache for decoded names. Created on first use: do_read does not set
+      # it up when the table is empty, and english_name then raised
+      # NoMethodError on nil.
+      attr_writer :decoded_names_cache
+
+      def decoded_names_cache
+        @decoded_names_cache ||= {}
+      end
 
       # Hook that gets called after all fields are read
       def after_read_hook
@@ -168,7 +174,7 @@ module Fontisan
       # @return [String, nil] The decoded string or nil if not found
       def english_name(name_id)
         # Check cache first
-        return @decoded_names_cache[name_id] if @decoded_names_cache.key?(name_id)
+        return decoded_names_cache[name_id] if decoded_names_cache.key?(name_id)
 
         # Find record (don't decode yet)
         record = find_name_record(
@@ -187,7 +193,7 @@ module Fontisan
 
         # Decode only this one record
         decoded = decode_name_record(record)
-        @decoded_names_cache[name_id] = decoded
+        decoded_names_cache[name_id] = decoded
         decoded
       end
 

@@ -1,0 +1,121 @@
+{
+  "cases": {
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "3f7a9cef66694bf9036f2c7768170d2ee3f0d312691f922407d3df7d0c22c541",
+        "size": 2236
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "CFF ": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
+          "DSIG": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "head": "0dd0a2d182d5b8c05ef12a7486999ac200ec4eaf1e06d0bd7e1904d7d908b473",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "maxp": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
+          "name": "ebb5dff6e53ba8c6c44ab39e81de2ddb2575513870a09e877f194619690837c4",
+          "post": "77a232e4db6b60c21f7b76ccf821e3c80c519901f11d10efb8c8df04ca82a4e8"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "45506d5c1e158c123f0287f2cde81f1ba7b4ef986cb21b4d41feb14d70adc45b",
+        "size": 1356
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "CFF ": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "head": "8c35c89b40208d05e3ff4d0326234ba645099310e3b573e048967cbc877cfdf1",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "maxp": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
+          "name": "ebb5dff6e53ba8c6c44ab39e81de2ddb2575513870a09e877f194619690837c4",
+          "post": "77a232e4db6b60c21f7b76ccf821e3c80c519901f11d10efb8c8df04ca82a4e8"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "88e7b80c3c401f12d3fdc2a001dac2814f8c407e56d1da286ccf393ffd1e680d",
+        "size": 872
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "56b4e2262a91868e0c367233b7187d9b0e41d248e8c95655356ed75b3258134a",
+        "size": 1656
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "b43d0a7f7dc0e4337583a498f8b227504b64d9bf215da7587787c01a375b01ea",
+        "size": 1788
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          0,
+          13,
+          32,
+          46,
+          8230
+        ]
+      }
+    }
+  },
+  "font": "fonttools-test-otf",
+  "source_format": "otf",
+  "source_sha256": "21c56133f7c02e2d9acc4b6aaa2965fe63572a212393ad369d3afb3da453d591",
+  "timestamp": 1735689600
+}

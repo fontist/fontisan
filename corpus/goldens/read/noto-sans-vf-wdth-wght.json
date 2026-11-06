@@ -1,0 +1,2094 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [
+            {
+              "default_value_raw": 26214400,
+              "max_value_raw": 58982400,
+              "min_value_raw": 6553600,
+              "name_id": 256,
+              "tag": "wght"
+            },
+            {
+              "default_value_raw": 6553600,
+              "max_value_raw": 6553600,
+              "min_value_raw": 4096000,
+              "name_id": 257,
+              "tag": "wdth"
+            }
+          ],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            12
+          ],
+          "family_name": "Noto Sans",
+          "features": [
+            "aalt",
+            "c2sc",
+            "case",
+            "ccmp",
+            "dnom",
+            "frac",
+            "kern",
+            "liga",
+            "lnum",
+            "locl",
+            "mark",
+            "mkmk",
+            "numr",
+            "onum",
+            "ordn",
+            "pnum",
+            "rtlm",
+            "salt",
+            "sinf",
+            "smcp",
+            "ss03",
+            "ss04",
+            "ss06",
+            "ss07",
+            "subs",
+            "sups",
+            "tnum",
+            "zero"
+          ],
+          "font_revision_raw": 132055,
+          "full_name": "Noto Sans Regular",
+          "is_variable": true,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "latn"
+          ],
+          "panose": "2 11 5 2 4 5 4 2 2 4",
+          "postscript_name": "NotoSans-Regular",
+          "source_file": "NotoSans[wdth,wght].ttf",
+          "source_format": "ttf",
+          "source_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+          "subfamily_name": "Regular",
+          "total_codepoints": 2965,
+          "total_glyphs": 3884,
+          "version": "Version 2.015",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [
+            {
+              "default_value_raw": 26214400,
+              "max_value_raw": 58982400,
+              "min_value_raw": 6553600,
+              "name_id": 256,
+              "tag": "wght"
+            },
+            {
+              "default_value_raw": 6553600,
+              "max_value_raw": 6553600,
+              "min_value_raw": 4096000,
+              "name_id": 257,
+              "tag": "wdth"
+            }
+          ],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            12
+          ],
+          "family_name": "Noto Sans",
+          "features": [
+            "aalt",
+            "c2sc",
+            "case",
+            "ccmp",
+            "dnom",
+            "frac",
+            "kern",
+            "liga",
+            "lnum",
+            "locl",
+            "mark",
+            "mkmk",
+            "numr",
+            "onum",
+            "ordn",
+            "pnum",
+            "rtlm",
+            "salt",
+            "sinf",
+            "smcp",
+            "ss03",
+            "ss04",
+            "ss06",
+            "ss07",
+            "subs",
+            "sups",
+            "tnum",
+            "zero"
+          ],
+          "font_revision_raw": 132055,
+          "full_name": "Noto Sans Regular",
+          "is_variable": true,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "latn"
+          ],
+          "panose": "2 11 5 2 4 5 4 2 2 4",
+          "postscript_name": "NotoSans-Regular",
+          "source_file": "NotoSans[wdth,wght].ttf",
+          "source_format": "ttf",
+          "source_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+          "subfamily_name": "Regular",
+          "total_codepoints": 2965,
+          "total_glyphs": 3884,
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 0,
+            "info_count": 0,
+            "passed": true,
+            "total": 0,
+            "warning_count": 0
+          },
+          "version": "Version 2.015",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "NotoSans[wdth,wght].ttf",
+  "font_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+  "generated_in": "any",
+  "id": "noto-sans-vf-wdth-wght",
+  "known_reference_bug": [
+    "MVAR-OFFSET"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "full/lazy"
+    },
+    "full/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 2965,
+            "sha256": "de201e98ce7d09038f23dd40e98ec7853bf47ea5be9ae0baa12c54806244d141",
+            "subtable_formats": [
+              4,
+              12
+            ]
+          },
+          "file_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+          "format": "ttf",
+          "fvar": {
+            "axes": [
+              {
+                "axis_name_id": 256,
+                "axis_tag": "wght",
+                "default_value_raw": 26214400,
+                "flags": 0,
+                "max_value_raw": 58982400,
+                "min_value_raw": 6553600
+              },
+              {
+                "axis_name_id": 257,
+                "axis_tag": "wdth",
+                "default_value_raw": 6553600,
+                "flags": 0,
+                "max_value_raw": 6553600,
+                "min_value_raw": 4096000
+              }
+            ],
+            "instances": [
+              {
+                "coordinates_raw": [
+                  6553600,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 297,
+                "postscript_name_id": 298
+              },
+              {
+                "coordinates_raw": [
+                  13107200,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 299,
+                "postscript_name_id": 300
+              },
+              {
+                "coordinates_raw": [
+                  19660800,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 301,
+                "postscript_name_id": 302
+              },
+              {
+                "coordinates_raw": [
+                  26214400,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 303,
+                "postscript_name_id": 304
+              },
+              {
+                "coordinates_raw": [
+                  32768000,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 305,
+                "postscript_name_id": 306
+              },
+              {
+                "coordinates_raw": [
+                  39321600,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 307,
+                "postscript_name_id": 308
+              },
+              {
+                "coordinates_raw": [
+                  45875200,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 309,
+                "postscript_name_id": 310
+              },
+              {
+                "coordinates_raw": [
+                  52428800,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 311,
+                "postscript_name_id": 312
+              },
+              {
+                "coordinates_raw": [
+                  58982400,
+                  6553600
+                ],
+                "flags": 0,
+                "name_id": 313,
+                "postscript_name_id": 314
+              }
+            ]
+          },
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                5,
+                2,
+                4,
+                5,
+                4,
+                2,
+                2,
+                4
+              ],
+              "s_cap_height": 714,
+              "s_family_class": 0,
+              "s_typo_ascender": 1069,
+              "s_typo_descender": -293,
+              "s_typo_line_gap": 0,
+              "sx_height": 536,
+              "ul_code_page_range1": 415,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 3758097151,
+              "ul_unicode_range2": 1073750047,
+              "ul_unicode_range3": 134217769,
+              "ul_unicode_range4": 1048576,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 65535,
+              "us_max_context": 4,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 1124,
+              "us_win_descent": 395,
+              "version": 4,
+              "x_avg_char_width": 577,
+              "y_strikeout_position": 322,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 3866326006,
+              "created_raw": 3716207591,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 132055,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 1,
+              "lowest_rec_ppem": 6,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3814965212,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 2800,
+              "x_min": -621,
+              "y_max": 1067,
+              "y_min": -389
+            },
+            "hhea": {
+              "advance_width_max": 2840,
+              "ascent": 1069,
+              "caret_offset": 0,
+              "caret_slope_rise": 1000,
+              "caret_slope_run": 0,
+              "descent": -293,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": -621,
+              "min_right_side_bearing": -620,
+              "number_of_h_metrics": 3884,
+              "version_raw": 65536,
+              "x_max_extent": 2800
+            },
+            "maxp": {
+              "max_component_depth": 1,
+              "max_component_elements": 4,
+              "max_composite_contours": 6,
+              "max_composite_points": 113,
+              "max_contours": 24,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 273,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 3884,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": {
+              "features": {
+                "DFLT": [
+                  "kern",
+                  "mark",
+                  "mkmk"
+                ],
+                "cyrl": [
+                  "kern",
+                  "mark",
+                  "mkmk"
+                ],
+                "grek": [
+                  "kern",
+                  "mark",
+                  "mkmk"
+                ],
+                "latn": [
+                  "kern",
+                  "mark",
+                  "mkmk"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "latn"
+              ]
+            },
+            "GSUB": {
+              "features": {
+                "DFLT": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "dnom",
+                  "frac",
+                  "liga",
+                  "lnum",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "rtlm",
+                  "sinf",
+                  "smcp",
+                  "ss03",
+                  "ss06",
+                  "ss07",
+                  "subs",
+                  "sups",
+                  "tnum",
+                  "zero"
+                ],
+                "cyrl": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "dnom",
+                  "frac",
+                  "liga",
+                  "lnum",
+                  "locl",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "rtlm",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss03",
+                  "ss04",
+                  "ss06",
+                  "ss07",
+                  "subs",
+                  "sups",
+                  "tnum",
+                  "zero"
+                ],
+                "grek": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "dnom",
+                  "frac",
+                  "liga",
+                  "lnum",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "rtlm",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss03",
+                  "ss04",
+                  "ss06",
+                  "ss07",
+                  "subs",
+                  "sups",
+                  "tnum",
+                  "zero",
+                  "locl"
+                ],
+                "latn": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "dnom",
+                  "frac",
+                  "liga",
+                  "lnum",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "rtlm",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss03",
+                  "ss04",
+                  "ss06",
+                  "ss07",
+                  "subs",
+                  "sups",
+                  "tnum",
+                  "zero",
+                  "locl"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "latn"
+              ]
+            }
+          },
+          "lazy": true,
+          "mode": "full",
+          "names": [
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 297,
+              "platform_id": 1,
+              "string": "Thin"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 298,
+              "platform_id": 1,
+              "string": "NotoSans-Thin"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 299,
+              "platform_id": 1,
+              "string": "ExtraLight"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 300,
+              "platform_id": 1,
+              "string": "NotoSans-ExtraLight"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 301,
+              "platform_id": 1,
+              "string": "Light"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 302,
+              "platform_id": 1,
+              "string": "NotoSans-Light"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 303,
+              "platform_id": 1,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 304,
+              "platform_id": 1,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 305,
+              "platform_id": 1,
+              "string": "Medium"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 306,
+              "platform_id": 1,
+              "string": "NotoSans-Medium"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 307,
+              "platform_id": 1,
+              "string": "SemiBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 308,
+              "platform_id": 1,
+              "string": "NotoSans-SemiBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 309,
+              "platform_id": 1,
+              "string": "Bold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 310,
+              "platform_id": 1,
+              "string": "NotoSans-Bold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 311,
+              "platform_id": 1,
+              "string": "ExtraBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 312,
+              "platform_id": 1,
+              "string": "NotoSans-ExtraBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 313,
+              "platform_id": 1,
+              "string": "Black"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 314,
+              "platform_id": 1,
+              "string": "NotoSans-Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.015;GOOG;NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.015"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google LLC."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Monotype Imaging Inc."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "Monotype Design Team"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "Designed by Monotype design team, Irene Vlachou."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "http://www.monotype.com/studio"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://openfontlicense.org"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 25,
+              "platform_id": 3,
+              "string": "NotoSans"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Weight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Width"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 293,
+              "platform_id": 3,
+              "string": "florin symbol"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 294,
+              "platform_id": 3,
+              "string": "Titling Alternates I and J for titling and all cap settings"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 295,
+              "platform_id": 3,
+              "string": "Accented Greek SC"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 296,
+              "platform_id": 3,
+              "string": "iota adscript"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 297,
+              "platform_id": 3,
+              "string": "Thin"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 298,
+              "platform_id": 3,
+              "string": "NotoSans-Thin"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 299,
+              "platform_id": 3,
+              "string": "ExtraLight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 300,
+              "platform_id": 3,
+              "string": "NotoSans-ExtraLight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 301,
+              "platform_id": 3,
+              "string": "Light"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 302,
+              "platform_id": 3,
+              "string": "NotoSans-Light"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 303,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 304,
+              "platform_id": 3,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 305,
+              "platform_id": 3,
+              "string": "Medium"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 306,
+              "platform_id": 3,
+              "string": "NotoSans-Medium"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 307,
+              "platform_id": 3,
+              "string": "SemiBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 308,
+              "platform_id": 3,
+              "string": "NotoSans-SemiBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 309,
+              "platform_id": 3,
+              "string": "Bold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 310,
+              "platform_id": 3,
+              "string": "NotoSans-Bold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 311,
+              "platform_id": 3,
+              "string": "ExtraBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 312,
+              "platform_id": 3,
+              "string": "NotoSans-ExtraBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 313,
+              "platform_id": 3,
+              "string": "Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 314,
+              "platform_id": 3,
+              "string": "NotoSans-Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 315,
+              "platform_id": 3,
+              "string": "ExtraCondensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 316,
+              "platform_id": 3,
+              "string": "Condensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 317,
+              "platform_id": 3,
+              "string": "SemiCondensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 318,
+              "platform_id": 3,
+              "string": "Normal"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 319,
+              "platform_id": 3,
+              "string": "Italic"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 320,
+              "platform_id": 3,
+              "string": "Roman"
+            }
+          ],
+          "outlines": {
+            "count": 3884,
+            "digest": "cb32668dedc3aed316e63e0423d11e0d5419bdf3edd59cd3ae723c3c299b6216",
+            "kind": "glyf"
+          },
+          "post": {
+            "glyph_name_count": 3884,
+            "glyph_names_sha256": "87a3f1332122e47de237aea7efd603b5b0bd4196be1c601ed5fa5d74066ac1c3",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -100,
+            "underline_thickness": 50,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 24391,
+              "sha256": "55741939547df1b0452e00d2af66367984a85cfd6f64d5ac8dccfdee4da84b22",
+              "tag": "GDEF"
+            },
+            {
+              "error": null,
+              "length": 178006,
+              "sha256": "58bd7b04e01d3aea91ecd4411ead1bc71b8012f83de2ceb6b86d98b7e41215dc",
+              "tag": "GPOS"
+            },
+            {
+              "error": null,
+              "length": 11960,
+              "sha256": "27a3868cbcdbebcd6400ca0ffd3524e9a5c7084f5ad8f02cfe73f2211112cf13",
+              "tag": "GSUB"
+            },
+            {
+              "error": null,
+              "length": 18603,
+              "sha256": "92ce6f68cbe599a91b6f69910c6d0651ca1ad58f97cd1ece6fd328ab5b3e103f",
+              "tag": "HVAR"
+            },
+            {
+              "error": null,
+              "length": 130,
+              "sha256": "38294fbf7c1ead01ab88db2d63700f1c2657f12c6d00b39a3e6e36febbc40207",
+              "tag": "MVAR"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 248,
+              "sha256": "18b7467499d22841c4bdaa1d29993c7a89e2fccafda5770f110ad948f3aa1f2f",
+              "tag": "STAT"
+            },
+            {
+              "error": null,
+              "length": 68,
+              "sha256": "c3d2c163db57497211b1b53e78c3796dfedb43fc66dcfe8482e17091833df4e0",
+              "tag": "avar"
+            },
+            {
+              "error": null,
+              "length": 12760,
+              "sha256": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 182,
+              "sha256": "fb999a3065f1d1b7c0197ef7a4df7493dfdb731b768061ecc5ce18a3b651e2be",
+              "tag": "fvar"
+            },
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+              "tag": "gasp"
+            },
+            {
+              "error": null,
+              "length": 260037,
+              "sha256": "2fbab70c9a456005abff47dabfc3f620673e9f5fdc834a1c9b633fee747ea33d",
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 998112,
+              "sha256": "907d87ae095f181f5c17c4a345c1d141dcf6cc40f3240efb2d9cd21b16738ca3",
+              "tag": "gvar"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "b537b465139e37cfe0c0da40330ae6cdb25c946d3d9ad594d6f3749c502b68ce",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 15536,
+              "sha256": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 15540,
+              "sha256": "193ecbb547558ea0dba3b89722dfcbd2860ecdc877ca058afef0cad222f2ebbf",
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "d3509db708e8aa3ff0a90b4ee3001da23f5af8124f917d7cf70d32ada4a62ace",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 2739,
+              "sha256": "c9a669b88c71496e69e32a4563b8eaad6b9aaa2a715057970b756fb35e3c8e97",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 42975,
+              "sha256": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": 7,
+              "sha256": "907c4106ff9989c1805827d5581bdf107a253b098cb71eb374f5e47c35604452",
+              "tag": "prep"
+            }
+          ],
+          "variation": {
+            "HVAR": {
+              "advance_mapping": {
+                "entry_format": 24,
+                "format": 0,
+                "map_count": 3884,
+                "sha256": "4532e25a832c55c580b5ddd2b1a22bd01c2de3539097e4310a36d930c25070df"
+              },
+              "item_variation_store": {
+                "data_digest": "2dd29dcc38e7014ca7a19ee98d9476d56789f09dabb628c27249381561e20e54",
+                "data_sha256": [
+                  "0b587ed53ae194d64829e24ad2775c7db2ecba4d2b99ff5b8ee3d238fa73fda8",
+                  "9d3061f2fe6075e6cf0ab29316d9585ae502a4ab2970679d37950c0fbaa89d6b",
+                  "a33aaed125c2f1f79415319f2b14f79cce716612b4cf94ad68da71aec3813426",
+                  "edcc76f718597a63856bde237106b76fb3a86ae3df68393c1cf6a165f7e23c60",
+                  "209028c2d2bd1bf3b9a7583ee480c54449b5b4f08f8fc0ac78fcc2c715168b87",
+                  "e8654c89addca68d12f572a3aaaa2a8cd5877b33a8c715f83ee7863c0181dac2",
+                  "142725d0e17b372726edc24b28450e60066855d5a97490713d569668a604ff54",
+                  "4780174d00dc395aae6a29ae5385e924d8e68a869d1513681e9870759a8f3c90",
+                  "cc1eb43bdf1cae229e05fdb4c20f8550a21f29d863d03940b6a00b6ee3576a47",
+                  "d4602baf23c09f41df0b97a087cb4c4928894cb0ff3548f934a3c6924d9418f3",
+                  "9a00c39630ced6e5d9207368c2f50d23c9aed50859042b18f454dc2826b0fb1c",
+                  "3189bea8e14b9a99c3f2db11bf1307d940de903c1a85c76ad8104d8628b0fc36",
+                  "248d9929127bacaefbf00a8dda3b5213feb2498e501dbea2ab7d495fb8ab5fd6",
+                  "8da17edde48bab3a03b6eff49f9430c4e474bd5ed6795dbe6792b39c93df755a",
+                  "9432cfabd550c3f190e15bce7fa334be23f9c79077cdef38c767f0a1b66a016d",
+                  "b3d1dc92ac2503675f8ef688b420608830676deecc2282b57d3bc16fcb363ada",
+                  "312d0cd07468f6413efcef90f43f0adbe0f06e9c853b1b69db85d9b8e8a948ed",
+                  "2f525c61fae7afcb721d8d2d2ef5a3bcbe1d1045fabf751cc6c3c3910a59ac45",
+                  "a918fd7171ff50119fbb4b337066799eb29e77aef5224b7b64625c2289353cbf",
+                  "a4446aaa5f9d3c5e957ae1c936dcd273aadb86d007326baac1d38f7ba5771f08",
+                  "84bee55da67c0bf16544a68c427b89475aae91679afe7c871497061d5a75d0d8",
+                  "edf193e25e3996cacab46203080c9d923992b0517afc2119c92b44b229f6eae2"
+                ],
+                "item_data_count": 22,
+                "region_count": 9,
+                "regions_sha256": "b4267a94ccab4d6149f5fa2bc960dd2fc787b822d2084c38e096da98524083c0"
+              },
+              "lsb_mapping": null,
+              "rsb_mapping": null,
+              "version": [
+                1,
+                0
+              ]
+            },
+            "MVAR": {
+              "item_variation_store": {
+                "data_digest": "4d7693bb4cc412dc564565f39bd4e0b7e39ba91ea247f1d43a9e060e93f5f373",
+                "data_sha256": [
+                  "6738db528ce9033c376e599712bdae795807da9eaa4a1caf6828bde20a02be5d"
+                ],
+                "item_data_count": 1,
+                "region_count": 5,
+                "regions_sha256": "6f32ccfa4bcc8ec115c7ff32d2ca03d65fec9dbd0aa5d6fcce151d773ec20d88"
+              },
+              "value_records": [
+                {
+                  "inner": 1,
+                  "outer": 0,
+                  "tag": "stro"
+                },
+                {
+                  "inner": 0,
+                  "outer": 0,
+                  "tag": "xhgt"
+                }
+              ],
+              "version": [
+                1,
+                0
+              ]
+            },
+            "STAT": {
+              "axes": [
+                {
+                  "name_id": 256,
+                  "ordering": 0,
+                  "tag": "wght"
+                },
+                {
+                  "name_id": 257,
+                  "ordering": 1,
+                  "tag": "wdth"
+                },
+                {
+                  "name_id": 319,
+                  "ordering": 2,
+                  "tag": "ital"
+                }
+              ],
+              "axis_values": [
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 297,
+                  "value_raw": 6553600
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 299,
+                  "value_raw": 13107200
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 301,
+                  "value_raw": 19660800
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 2,
+                  "format": 3,
+                  "linked_value_raw": 45875200,
+                  "value_name_id": 2,
+                  "value_raw": 26214400
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 305,
+                  "value_raw": 32768000
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 307,
+                  "value_raw": 39321600
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 309,
+                  "value_raw": 45875200
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 311,
+                  "value_raw": 52428800
+                },
+                {
+                  "axis_index": 0,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 313,
+                  "value_raw": 58982400
+                },
+                {
+                  "axis_index": 1,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 315,
+                  "value_raw": 4096000
+                },
+                {
+                  "axis_index": 1,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 316,
+                  "value_raw": 4915200
+                },
+                {
+                  "axis_index": 1,
+                  "flags": 0,
+                  "format": 1,
+                  "value_name_id": 317,
+                  "value_raw": 5734400
+                },
+                {
+                  "axis_index": 1,
+                  "flags": 2,
+                  "format": 1,
+                  "value_name_id": 318,
+                  "value_raw": 6553600
+                },
+                {
+                  "axis_index": 2,
+                  "flags": 2,
+                  "format": 3,
+                  "linked_value_raw": 65536,
+                  "value_name_id": 320,
+                  "value_raw": 0
+                }
+              ],
+              "elided_fallback_name_id": 2,
+              "version": [
+                1,
+                1
+              ]
+            },
+            "VVAR": null,
+            "gvar": {
+              "axis_count": 2,
+              "flags": 1,
+              "glyph_count": 3884,
+              "glyphs_digest": "621dd2b7bc2e94fc7ae467d7b006a93f809998ab20cb642681c680dffe8307bc",
+              "glyphs_with_data": 3642,
+              "shared_tuple_count": 7,
+              "shared_tuples_sha256": "eb28b4b01e504ba44abc5c6ccaadb0c1f417b3a30887d41166f200f195ac5116",
+              "version": [
+                1,
+                0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": null,
+          "file_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+          "format": "ttf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                5,
+                2,
+                4,
+                5,
+                4,
+                2,
+                2,
+                4
+              ],
+              "s_cap_height": 714,
+              "s_family_class": 0,
+              "s_typo_ascender": 1069,
+              "s_typo_descender": -293,
+              "s_typo_line_gap": 0,
+              "sx_height": 536,
+              "ul_code_page_range1": 415,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 3758097151,
+              "ul_unicode_range2": 1073750047,
+              "ul_unicode_range3": 134217769,
+              "ul_unicode_range4": 1048576,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 65535,
+              "us_max_context": 4,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 1124,
+              "us_win_descent": 395,
+              "version": 4,
+              "x_avg_char_width": 577,
+              "y_strikeout_position": 322,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 3866326006,
+              "created_raw": 3716207591,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 132055,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 1,
+              "lowest_rec_ppem": 6,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3814965212,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 2800,
+              "x_min": -621,
+              "y_max": 1067,
+              "y_min": -389
+            },
+            "hhea": {
+              "advance_width_max": 2840,
+              "ascent": 1069,
+              "caret_offset": 0,
+              "caret_slope_rise": 1000,
+              "caret_slope_run": 0,
+              "descent": -293,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": -621,
+              "min_right_side_bearing": -620,
+              "number_of_h_metrics": 3884,
+              "version_raw": 65536,
+              "x_max_extent": 2800
+            },
+            "maxp": {
+              "max_component_depth": 1,
+              "max_component_elements": 4,
+              "max_composite_contours": 6,
+              "max_composite_points": 113,
+              "max_contours": 24,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 273,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 3884,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 297,
+              "platform_id": 1,
+              "string": "Thin"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 298,
+              "platform_id": 1,
+              "string": "NotoSans-Thin"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 299,
+              "platform_id": 1,
+              "string": "ExtraLight"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 300,
+              "platform_id": 1,
+              "string": "NotoSans-ExtraLight"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 301,
+              "platform_id": 1,
+              "string": "Light"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 302,
+              "platform_id": 1,
+              "string": "NotoSans-Light"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 303,
+              "platform_id": 1,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 304,
+              "platform_id": 1,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 305,
+              "platform_id": 1,
+              "string": "Medium"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 306,
+              "platform_id": 1,
+              "string": "NotoSans-Medium"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 307,
+              "platform_id": 1,
+              "string": "SemiBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 308,
+              "platform_id": 1,
+              "string": "NotoSans-SemiBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 309,
+              "platform_id": 1,
+              "string": "Bold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 310,
+              "platform_id": 1,
+              "string": "NotoSans-Bold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 311,
+              "platform_id": 1,
+              "string": "ExtraBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 312,
+              "platform_id": 1,
+              "string": "NotoSans-ExtraBold"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 313,
+              "platform_id": 1,
+              "string": "Black"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 314,
+              "platform_id": 1,
+              "string": "NotoSans-Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.015;GOOG;NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.015"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google LLC."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Monotype Imaging Inc."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "Monotype Design Team"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "Designed by Monotype design team, Irene Vlachou."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "http://www.monotype.com/studio"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://openfontlicense.org"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 25,
+              "platform_id": 3,
+              "string": "NotoSans"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Weight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Width"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 293,
+              "platform_id": 3,
+              "string": "florin symbol"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 294,
+              "platform_id": 3,
+              "string": "Titling Alternates I and J for titling and all cap settings"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 295,
+              "platform_id": 3,
+              "string": "Accented Greek SC"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 296,
+              "platform_id": 3,
+              "string": "iota adscript"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 297,
+              "platform_id": 3,
+              "string": "Thin"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 298,
+              "platform_id": 3,
+              "string": "NotoSans-Thin"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 299,
+              "platform_id": 3,
+              "string": "ExtraLight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 300,
+              "platform_id": 3,
+              "string": "NotoSans-ExtraLight"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 301,
+              "platform_id": 3,
+              "string": "Light"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 302,
+              "platform_id": 3,
+              "string": "NotoSans-Light"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 303,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 304,
+              "platform_id": 3,
+              "string": "NotoSans-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 305,
+              "platform_id": 3,
+              "string": "Medium"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 306,
+              "platform_id": 3,
+              "string": "NotoSans-Medium"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 307,
+              "platform_id": 3,
+              "string": "SemiBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 308,
+              "platform_id": 3,
+              "string": "NotoSans-SemiBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 309,
+              "platform_id": 3,
+              "string": "Bold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 310,
+              "platform_id": 3,
+              "string": "NotoSans-Bold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 311,
+              "platform_id": 3,
+              "string": "ExtraBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 312,
+              "platform_id": 3,
+              "string": "NotoSans-ExtraBold"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 313,
+              "platform_id": 3,
+              "string": "Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 314,
+              "platform_id": 3,
+              "string": "NotoSans-Black"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 315,
+              "platform_id": 3,
+              "string": "ExtraCondensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 316,
+              "platform_id": 3,
+              "string": "Condensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 317,
+              "platform_id": 3,
+              "string": "SemiCondensed"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 318,
+              "platform_id": 3,
+              "string": "Normal"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 319,
+              "platform_id": 3,
+              "string": "Italic"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 320,
+              "platform_id": 3,
+              "string": "Roman"
+            }
+          ],
+          "outlines": {
+            "count": 0,
+            "digest": null,
+            "kind": null
+          },
+          "post": {
+            "glyph_name_count": 3884,
+            "glyph_names_sha256": "87a3f1332122e47de237aea7efd603b5b0bd4196be1c601ed5fa5d74066ac1c3",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -100,
+            "underline_thickness": 50,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GDEF"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GPOS"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GSUB"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "HVAR"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "MVAR"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "STAT"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "avar"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "fvar"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "gasp"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "gvar"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "b537b465139e37cfe0c0da40330ae6cdb25c946d3d9ad594d6f3749c502b68ce",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "d3509db708e8aa3ff0a90b4ee3001da23f5af8124f917d7cf70d32ada4a62ace",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 2739,
+              "sha256": "c9a669b88c71496e69e32a4563b8eaad6b9aaa2a715057970b756fb35e3c8e97",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 42975,
+              "sha256": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "prep"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

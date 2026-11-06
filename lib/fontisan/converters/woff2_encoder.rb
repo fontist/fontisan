@@ -54,6 +54,11 @@ module Fontisan
                                 cli: "--[no-]transform-tables",
                                 desc: "apply glyf/loca and hmtx transformations"
 
+      option :timestamp, type: :integer, default: nil,
+                         cli: "--timestamp=SECONDS",
+                         desc: "fixed head.modified (Unix seconds) for " \
+                               "reproducible output; default is the clock"
+
       # Convert font to WOFF2 format.
       #
       # @param font [TrueTypeFont, OpenTypeFont] Source font
@@ -77,7 +82,8 @@ module Fontisan
 
         flavor = detect_flavor(font)
         table_data = collect_tables(font, options)
-        Woff2::EncoderRules.apply!(table_data)
+        Woff2::EncoderRules.apply!(table_data,
+                                   timestamp: resolved[:timestamp])
 
         glyf_transform = apply_glyf_loca_transform!(table_data, font)
 

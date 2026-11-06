@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-bad-num-tables.ttf",
+  "font_sha256": "275bff491132b61ee04a20a4c0ace950745dc36c145e010a58ce291afab067b7",
+  "id": "malformed-bad-num-tables",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "RuntimeError",
+            "message": "Invalid TrueTypeFont file: End of file reached"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<RuntimeError: Invalid TrueTypeFont file: End of file reached>."
+        }
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-bad-num-tables.ttf",
+      "sha256": "275bff491132b61ee04a20a4c0ace950745dc36c145e010a58ce291afab067b7",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

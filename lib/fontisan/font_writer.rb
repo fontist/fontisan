@@ -162,7 +162,7 @@ module Fontisan
 
       tags.each do |tag|
         data = @tables[tag]
-        checksum = calculate_table_checksum(data)
+        checksum = calculate_table_checksum(directory_checksum_source(tag, data))
 
         # Calculate padding to 4-byte boundary
         padding_length = Utilities::Padding.boundary(data.bytesize)
@@ -225,6 +225,18 @@ module Fontisan
         entry[:offset],    # uint32 - offset
         entry[:length], # uint32 - length
       ].pack("a4 N N N")
+    end
+
+    # The bytes a table's directory checksum is computed over. The OpenType
+    # spec computes the head checksum with checkSumAdjustment (offset 8) as
+    # zero; using the source font's value made write -> reload -> write
+    # produce different bytes.
+    def directory_checksum_source(tag, data)
+      return data unless tag == "head" && data.bytesize >= 12
+
+      zeroed = data.b
+      zeroed[8, 4] = "\x00\x00\x00\x00".b
+      zeroed
     end
 
     # Calculate checksum for a table

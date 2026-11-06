@@ -1,0 +1,837 @@
+{
+  "schema": 1,
+  "tiers": [
+    "ci",
+    "large"
+  ],
+  "licence_whitelist": [
+    "OFL-1.1",
+    "Apache-2.0",
+    "MIT"
+  ],
+  "fonts": [
+    {
+      "id": "fonttools-test-ttf",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestTTF.ttf",
+      "covers": [
+        "static-ttf-small",
+        "static-ttf-hinted"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestTTF.ttf"
+      },
+      "sha256": "c4e8ce309f44a131d061d73b2580e922a7f5ecc8d7109797ac0ff58bf8723b7b",
+      "size": 2336
+    },
+    {
+      "id": "fonttools-test-otf",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestOTF.otf",
+      "covers": [
+        "static-otf-small"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestOTF.otf"
+      },
+      "sha256": "21c56133f7c02e2d9acc4b6aaa2965fe63572a212393ad369d3afb3da453d591",
+      "size": 2308
+    },
+    {
+      "id": "fonttools-test-ttc",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestTTC.ttc",
+      "covers": [
+        "ttc-2-members"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestTTC.ttc"
+      },
+      "sha256": "a8521588045ed5f1f8b07eecaac06ed3186c644655bfac00dd4507cd316fbdc5",
+      "size": 2608
+    },
+    {
+      "id": "fonttools-test-ttc-v2",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestTTCv2.ttc",
+      "covers": [
+        "ttc-2-members",
+        "ttc-header-v2"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestTTCv2.ttc"
+      },
+      "sha256": "0b2f45464ed3e94c255e829d6ffc40e0c5b63f6410dc996698482de422d254fb",
+      "size": 2628
+    },
+    {
+      "id": "fonttools-test-woff",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestWOFF.woff",
+      "covers": [
+        "woff"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestWOFF.woff"
+      },
+      "sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+      "size": 1328
+    },
+    {
+      "id": "fonttools-test-woff2",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestWOFF2.woff2",
+      "covers": [
+        "woff2"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestWOFF2.woff2"
+      },
+      "woff2_decode": true,
+      "sha256": "d4d6a624b2a1ce317702dd2be6742b05244087984d5b30fd0a8917b1be616a8a",
+      "size": 808
+    },
+    {
+      "id": "fonttools-test-dfont",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestDFONT.dfont",
+      "covers": [
+        "routing-dfont"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/ttx/data/TestDFONT.dfont"
+      },
+      "sha256": "acacaa44936ec33623ced5210365a584e103afd0a37f72b0b0e9b30ea7f7b97c",
+      "size": 3505
+    },
+    {
+      "id": "fonttools-test-t1-pfb",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestT1-Regular.pfb",
+      "covers": [
+        "routing-type1"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/t1Lib/data/TestT1-Regular.pfb"
+      },
+      "sha256": "ccc479c812b34808de53db44c4dc080461d006e5a51e87a8b0662a57aa802410",
+      "size": 2263
+    },
+    {
+      "id": "fonttools-test-t1-pfa",
+      "type": "source",
+      "tier": "ci",
+      "file": "TestT1-Regular.pfa",
+      "covers": [
+        "routing-type1"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "source": {
+        "repo": "fonttools/fonttools",
+        "pin": "1ff10daa33d4e40af00a76cda7fa804af4200b30",
+        "url": "https://raw.githubusercontent.com/fonttools/fonttools/1ff10daa33d4e40af00a76cda7fa804af4200b30/Tests/t1Lib/data/TestT1-Regular.pfa"
+      },
+      "sha256": "4231be15444404469e74678c0c3746325c521a2878686f970ea215e54f1982dc",
+      "size": 3229
+    },
+    {
+      "id": "source-sans-3-regular-ttf",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.ttf",
+      "covers": [
+        "static-ttf-small",
+        "static-ttf-hinted"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/TTF/SourceSans3-Regular.ttf"
+      },
+      "sha256": "4644c81b86ec9caaa76b634889968ed3c4f4f52f054855933acc7c2b21e53b0f",
+      "size": 431196
+    },
+    {
+      "id": "source-sans-3-regular-otf",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.otf",
+      "covers": [
+        "static-otf-small"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/OTF/SourceSans3-Regular.otf"
+      },
+      "sha256": "08df266400933d3178d081a45f94a08814c3e55b4b7dd2e0ff69cb1329f13ab6",
+      "size": 334924
+    },
+    {
+      "id": "source-sans-3-regular-ttf-woff",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.ttf.woff",
+      "covers": [
+        "woff"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/WOFF/TTF/SourceSans3-Regular.ttf.woff"
+      },
+      "sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+      "size": 188176
+    },
+    {
+      "id": "source-sans-3-regular-otf-woff",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.otf.woff",
+      "covers": [
+        "woff"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/WOFF/OTF/SourceSans3-Regular.otf.woff"
+      },
+      "sha256": "1e4d7d425e9ace7d40defb608000157205b82b5edb2f966bbcd04b55d674b719",
+      "size": 185420
+    },
+    {
+      "id": "source-sans-3-regular-ttf-woff2",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.ttf.woff2",
+      "covers": [
+        "woff2"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/WOFF2/TTF/SourceSans3-Regular.ttf.woff2"
+      },
+      "woff2_decode": true,
+      "sha256": "53492fb3a0def77354f166a55d09b63a10855e91c206c7620a81cf56e97f8ec3",
+      "size": 109632
+    },
+    {
+      "id": "source-sans-3-regular-otf-woff2",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3-Regular.otf.woff2",
+      "covers": [
+        "woff2"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/WOFF2/OTF/SourceSans3-Regular.otf.woff2"
+      },
+      "woff2_decode": true,
+      "sha256": "63de0da0cc05298e2e9c6e5cef506d8454ca665f6e668a99d94f51174b9256ed",
+      "size": 153800
+    },
+    {
+      "id": "source-sans-3-vf-upright-ttf",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3VF-Upright.ttf",
+      "covers": [
+        "vf-fvar-gvar-hvar",
+        "vf-named-weight"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/VF/SourceSans3VF-Upright.ttf"
+      },
+      "sha256": "1147db9a3f0edd4956068de77930148acce2742dd76d57f7239b2b1c687ac63f",
+      "size": 646540
+    },
+    {
+      "id": "source-sans-3-vf-italic-ttf",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3VF-Italic.ttf",
+      "covers": [
+        "vf-fvar-gvar-hvar",
+        "vf-named-weight",
+        "vf-named-italic"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/VF/SourceSans3VF-Italic.ttf"
+      },
+      "sha256": "c34791f4f889af43d84e2f84ebeb02e6eed07058aca21e6729d26e6436d18965",
+      "size": 395500
+    },
+    {
+      "id": "source-sans-3-vf-upright-cff2",
+      "type": "source",
+      "tier": "ci",
+      "file": "SourceSans3VF-Upright.otf",
+      "covers": [
+        "cff2",
+        "vf-named-weight"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-source-sans-3.txt",
+      "source": {
+        "repo": "adobe-fonts/source-sans",
+        "pin": "87b37a2daaed80fcb8e8ccb0085c4d72ddade12e",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-sans/87b37a2daaed80fcb8e8ccb0085c4d72ddade12e/VF/SourceSans3VF-Upright.otf"
+      },
+      "sha256": "3d0dfd6a3a644ab3d462a737923ffac41fb0ae007ce9ba83c24e6bfa76aa56c7",
+      "size": 538164
+    },
+    {
+      "id": "noto-sans-hinted-regular",
+      "type": "source",
+      "tier": "ci",
+      "file": "NotoSans-Regular.ttf",
+      "covers": [
+        "static-ttf-hinted"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-fonts.txt",
+      "source": {
+        "repo": "notofonts/notofonts.github.io",
+        "pin": "ac9cdcd317b3c34c7578f609189c963c7eeff3c5",
+        "url": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/ac9cdcd317b3c34c7578f609189c963c7eeff3c5/fonts/NotoSans/hinted/ttf/NotoSans-Regular.ttf"
+      },
+      "sha256": "478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823",
+      "size": 621572
+    },
+    {
+      "id": "noto-serif-tangut-regular",
+      "type": "source",
+      "tier": "ci",
+      "file": "NotoSerifTangut-Regular.ttf",
+      "covers": [
+        "static-ttf-large"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-fonts.txt",
+      "source": {
+        "repo": "notofonts/notofonts.github.io",
+        "pin": "ac9cdcd317b3c34c7578f609189c963c7eeff3c5",
+        "url": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/ac9cdcd317b3c34c7578f609189c963c7eeff3c5/fonts/NotoSerifTangut/hinted/ttf/NotoSerifTangut-Regular.ttf"
+      },
+      "sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+      "size": 3065476
+    },
+    {
+      "id": "noto-sans-vf-wdth-wght",
+      "type": "source",
+      "tier": "ci",
+      "file": "NotoSans[wdth,wght].ttf",
+      "covers": [
+        "vf-fvar-gvar-hvar",
+        "vf-named-weight",
+        "vf-named-width"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-fonts.txt",
+      "source": {
+        "repo": "notofonts/notofonts.github.io",
+        "pin": "ac9cdcd317b3c34c7578f609189c963c7eeff3c5",
+        "url": "https://raw.githubusercontent.com/notofonts/notofonts.github.io/ac9cdcd317b3c34c7578f609189c963c7eeff3c5/fonts/NotoSans/unhinted/variable-ttf/NotoSans%5Bwdth,wght%5D.ttf"
+      },
+      "sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+      "size": 1581884
+    },
+    {
+      "id": "mona-sans-vf-all-axes",
+      "type": "source",
+      "tier": "ci",
+      "file": "MonaSansVF[wdth,wght,opsz,ital].ttf",
+      "covers": [
+        "vf-named-weight",
+        "vf-named-width",
+        "vf-named-italic"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-mona-sans.txt",
+      "source": {
+        "repo": "github/mona-sans",
+        "pin": "4bc6ba8b354c36b4fb66d32cd67b4c1f2beb0a06",
+        "url": "https://raw.githubusercontent.com/github/mona-sans/4bc6ba8b354c36b4fb66d32cd67b4c1f2beb0a06/fonts/variable/MonaSansVF%5Bwdth,wght,opsz,ital%5D.ttf"
+      },
+      "note": "fvar/gvar but no HVAR (measured)",
+      "sha256": "ade8e0e711f2798266e12f02b271aba1c345c5a38be4e98cb72d198248ccc8a7",
+      "size": 1372268
+    },
+    {
+      "id": "noto-sans-jp-subset-regular-otf",
+      "type": "source",
+      "tier": "ci",
+      "file": "NotoSansJP-Regular.otf",
+      "covers": [
+        "static-otf-large"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-cjk.txt",
+      "source": {
+        "repo": "notofonts/noto-cjk",
+        "pin": "f8d157532fbfaeda587e826d4cd5b21a49186f7c",
+        "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
+      },
+      "sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+      "size": 4533028
+    },
+    {
+      "id": "noto-serif-cjk-ttc",
+      "type": "source",
+      "tier": "large",
+      "file": "NotoSerifCJK.ttc",
+      "covers": [
+        "ttc-large-collection",
+        "static-otf-large"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-cjk.txt",
+      "source": {
+        "repo": "notofonts/noto-cjk",
+        "pin": "release Serif2.003",
+        "url": "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/01_NotoSerifCJK.ttc.zip",
+        "archive_member": "NotoSerifCJK.ttc"
+      },
+      "sha256": "8d1c98899967d431422c21a7a4309cb8b14bae4610ed8ececdb782b9133cb209",
+      "size": 170490612
+    },
+    {
+      "id": "noto-serif-cjk-vf-otc",
+      "type": "source",
+      "tier": "large",
+      "file": "NotoSerifCJK-VF.otf.ttc",
+      "covers": [
+        "ttc-large-collection",
+        "cff2",
+        "vf-named-weight"
+      ],
+      "licence": "OFL-1.1",
+      "licence_file": "corpus/LICENSES/OFL-1.1-noto-cjk.txt",
+      "source": {
+        "repo": "notofonts/noto-cjk",
+        "pin": "release Serif2.003",
+        "url": "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/02_NotoSerifCJK-OTF-VF.zip",
+        "archive_member": "Variable/OTC/NotoSerifCJK-VF.otf.ttc"
+      },
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "size": 57488648
+    },
+    {
+      "id": "ttc-4members-shared",
+      "type": "derived",
+      "tier": "ci",
+      "file": "ttc-4members-shared.ttc",
+      "covers": [
+        "ttc-more-members"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/ttc_multi.rb",
+      "inputs": [
+        "fonttools-test-ttf",
+        "fonttools-test-otf"
+      ],
+      "sha256": "58f8ce687dba6990cb7e5c98e49240226d78633d7a577488c54fba727774a115",
+      "size": 4832
+    },
+    {
+      "id": "woff2-collection-4members",
+      "type": "derived",
+      "tier": "ci",
+      "file": "woff2-collection-4members.woff2",
+      "covers": [
+        "woff2-collection"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/woff2_collection.rb",
+      "inputs": [
+        "ttc-4members-shared"
+      ],
+      "woff2_decode": true,
+      "woff2_decoded_equals": "ttc-4members-shared",
+      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "size": 1224
+    },
+    {
+      "id": "quirk-empty-optional-tables",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-empty-optional-tables.ttf",
+      "covers": [
+        "empty-tables"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "1869ba6b122ca0aa5399e540e1c4edf69e11987d3437adc3524de64009a2495f",
+      "size": 2384
+    },
+    {
+      "id": "quirk-empty-name-table",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-empty-name-table.ttf",
+      "covers": [
+        "empty-tables"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "48f7c85a50a99ea13cad2a074d5bb87b11801bf9af9e9511492c3ddd0d083086",
+      "size": 1212
+    },
+    {
+      "id": "quirk-empty-cmap-table",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-empty-cmap-table.ttf",
+      "covers": [
+        "empty-tables"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "855d7f1aea73de6d5d337a7776039d36c99f943145ff7fd4d8c9c04325f7ec8a",
+      "size": 1828
+    },
+    {
+      "id": "quirk-sfnt-version-true",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-sfnt-version-true.ttf",
+      "covers": [
+        "version-quirks"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "cded43f7cbeb56bb1a8dbd38e721b1c78048ecef645ccfc8b52ee4e45812da59",
+      "size": 2336
+    },
+    {
+      "id": "quirk-sfnt-version-otto-on-glyf",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-sfnt-version-otto-on-glyf.ttf",
+      "covers": [
+        "version-quirks"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "da253dcc3d3f5792c7750884d72ecf2edf3a44f23696beb913fea654311e8010",
+      "size": 2336
+    },
+    {
+      "id": "quirk-os2-version-0",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-os2-version-0.ttf",
+      "covers": [
+        "version-quirks"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+      "size": 2320
+    },
+    {
+      "id": "quirk-head-version-2",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-head-version-2.ttf",
+      "covers": [
+        "version-quirks"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "874e934735ef145605a77d585a406a92febe011fc3c8f0db59948b8f9ad7d3ad",
+      "size": 2336
+    },
+    {
+      "id": "quirk-name-format-1",
+      "type": "derived",
+      "tier": "ci",
+      "file": "quirk-name-format-1.ttf",
+      "covers": [
+        "version-quirks"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "289eb6bc2416300f597522897273bc11fe9831a42cbcbf7056ffe035278c6ed6",
+      "size": 1420
+    },
+    {
+      "id": "names-mac-roman-only",
+      "type": "derived",
+      "tier": "ci",
+      "file": "names-mac-roman-only.ttf",
+      "covers": [
+        "name-mac-nonascii"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "a863c10c6fed83cad09f12d816ee67d6c801188ee9890d5e0bf38498d0bf7ecf",
+      "size": 1356
+    },
+    {
+      "id": "names-windows-nonascii-only",
+      "type": "derived",
+      "tier": "ci",
+      "file": "names-windows-nonascii-only.ttf",
+      "covers": [
+        "name-windows-nonascii"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "110a7c634f735d0b16bf2dba2134ec1dae4814a1266a6e63179f7c511fff5d6c",
+      "size": 1488
+    },
+    {
+      "id": "names-mac-and-windows-mixed",
+      "type": "derived",
+      "tier": "ci",
+      "file": "names-mac-and-windows-mixed.ttf",
+      "covers": [
+        "name-mac-nonascii",
+        "name-windows-nonascii"
+      ],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/quirks.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "sha256": "df76ae6cae97942a3c8bb39e70b58e9f0332f6445f1a693f55034298b2e381c0",
+      "size": 1648
+    },
+    {
+      "id": "malformed-truncated-10",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-truncated-10.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "truncated-10",
+      "sha256": "57190d437943ddc5a7a367a339b66c2ffee782baabf4b80e1d055cf3685a864a",
+      "size": 10
+    },
+    {
+      "id": "malformed-truncated-100",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-truncated-100.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "truncated-100",
+      "sha256": "548caeb76df5e39af9100c75473ba30ae3a71721c31e8c3f7fbe1a5e281e47f7",
+      "size": 100
+    },
+    {
+      "id": "malformed-truncated-half",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-truncated-half.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "truncated-half",
+      "sha256": "390e247781c6f88237d0d2690ddcedc171c341de6e925d375c07510a9275c1ac",
+      "size": 1168
+    },
+    {
+      "id": "malformed-garbage",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-garbage.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "garbage",
+      "sha256": "28496e939d928ebe96cda9125f1b075cea500bbb4826106a6448c82ca451864f",
+      "size": 512
+    },
+    {
+      "id": "malformed-empty",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-empty.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "empty",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "id": "malformed-bad-table-offset",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-bad-table-offset.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "bad-table-offset",
+      "sha256": "a7a85440f4b8b879bf71c6f07fe3d9ac689fbe545182caa377c014b15a5ffe8a",
+      "size": 2336
+    },
+    {
+      "id": "malformed-bad-checksum",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-bad-checksum.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "bad-checksum",
+      "sha256": "42c96846da3904330498ceaf04812994697bdbba9da660819607ce1dd6537eca",
+      "size": 2336
+    },
+    {
+      "id": "malformed-bad-num-tables",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-bad-num-tables.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "bad-num-tables",
+      "sha256": "275bff491132b61ee04a20a4c0ace950745dc36c145e010a58ce291afab067b7",
+      "size": 2336
+    }
+  ]
+}

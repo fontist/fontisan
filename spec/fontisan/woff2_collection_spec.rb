@@ -97,5 +97,34 @@ RSpec.describe Fontisan::Woff2Collection do
         expect(described_class.from_file(path).font(99)).to be_nil
       end
     end
+
+    it "accepts mode: and honours metadata loading" do
+      with_woff2_collection do |path|
+        font = described_class.from_file(path).font(0, nil,
+                                                    mode: Fontisan::LoadingModes::METADATA)
+        expect(font.loading_mode).to eq(Fontisan::LoadingModes::METADATA)
+        expect(font.table("head")).not_to be_nil
+        expect { font.table("glyf") }
+          .to raise_error(ArgumentError, /not available in metadata mode/)
+      end
+    end
+
+    it "defaults to full mode when mode: is omitted" do
+      with_woff2_collection do |path|
+        font = described_class.from_file(path).font(0)
+        expect(font.loading_mode).to eq(Fontisan::LoadingModes::FULL)
+        expect(font.table("glyf")).not_to be_nil
+      end
+    end
+  end
+
+  describe "FontLoader.load of a WOFF2 collection" do
+    it "loads one font by font_index: without raising" do
+      with_woff2_collection do |path|
+        font = Fontisan::FontLoader.load(path, font_index: 0)
+        expect(font).to be_a(Fontisan::TrueTypeFont)
+        expect(font.table("head")).not_to be_nil
+      end
+    end
   end
 end

@@ -119,6 +119,8 @@ module Fontisan
   autoload :SfntSource, "fontisan/sfnt_source"
   autoload :SfntTable, "fontisan/sfnt_table"
   autoload :SfntBuilder, "fontisan/sfnt_builder"
+  autoload :Reference, "fontisan/reference"
+  autoload :Scan, "fontisan/scan"
   autoload :Stitcher, "fontisan/stitcher"
   autoload :StitcherCli, "fontisan/stitcher_cli"
   autoload :TrueTypeCollection, "fontisan/true_type_collection"
@@ -213,6 +215,16 @@ module Fontisan
   #   Fontisan.convert("f.ttf", to: :woff, output: "f.woff", uncompressed: true)
   def self.convert(path, to:, output:, **)
     Commands::ConvertCommand.new(path, { to: to, output: output, ** }).run
+  end
+
+  # Scan font files into one row per font face, with the names, indexability
+  # result and variable instances an indexer needs. Delegates to
+  # {Reference.scan}; never raises for a bad font (the failure is in the row).
+  #
+  # @param paths [Array<String>] font file paths
+  # @return [Array<Hash>] rows (see docs/reference-facade.md)
+  def self.scan(paths)
+    Reference.scan(paths)
   end
 
   # Validate a font file using specified profile

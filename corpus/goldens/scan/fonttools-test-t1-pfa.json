@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "TestT1-Regular.pfa",
+  "font_sha256": "4231be15444404469e74678c0c3746325c521a2878686f970ea215e54f1982dc",
+  "id": "fonttools-test-t1-pfa",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file.>."
+        }
+      },
+      "format": null,
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "TestT1-Regular.pfa",
+      "sha256": "4231be15444404469e74678c0c3746325c521a2878686f970ea215e54f1982dc",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -46,6 +46,13 @@ module Fontisan
 
         def self.validate_header(raw)
           issues = []
+          if raw.bytesize < 4
+            return [issue(severity: :error,
+                          message: "cmap table is #{raw.bytesize} bytes, " \
+                                   "shorter than its 4-byte header",
+                          location: "cmap.header")]
+          end
+
           version, num_tables = raw.unpack("nn")
           if version != 0
             issues << issue(severity: :error,

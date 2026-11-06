@@ -157,9 +157,11 @@ module Fontisan
       # Update head table's modified timestamp
       #
       # @param original_data [String] Original head table binary
-      # @param timestamp [Time] New modification time
+      # @param timestamp [Time, Integer, nil] New modification time (Time or
+      #   Unix seconds); nil uses the current time
       # @return [String] Updated head table binary
-      def update_head_modified(original_data, timestamp = Time.now)
+      def update_head_modified(original_data, timestamp = nil)
+        timestamp ||= Time.now
         io = StringIO.new(original_data)
         io.set_encoding(Encoding::BINARY)
 

@@ -1,0 +1,43 @@
+{
+  "audit": {
+    "default": {
+      "error": {
+        "class": "NoMethodError",
+        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+      }
+    },
+    "validate": {
+      "error": {
+        "class": "NoMethodError",
+        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+      }
+    }
+  },
+  "comparison_class": "exact",
+  "file": "TestT1-Regular.pfb",
+  "font_sha256": "ccc479c812b34808de53db44c4dc080461d006e5a51e87a8b0662a57aa802410",
+  "generated_in": "any",
+  "id": "fonttools-test-t1-pfb",
+  "known_reference_bug": [
+    "T1-READ"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "full/lazy": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "error": {
+        "class": "NoMethodError",
+        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+      }
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

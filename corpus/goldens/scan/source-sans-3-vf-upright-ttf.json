@@ -1,0 +1,84 @@
+{
+  "comparison_class": "exact",
+  "file": "SourceSans3VF-Upright.ttf",
+  "font_sha256": "1147db9a3f0edd4956068de77930148acce2742dd76d57f7239b2b1c687ac63f",
+  "id": "source-sans-3-vf-upright-ttf",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": true,
+      "is_collection": false,
+      "names": {
+        "family_name": "SourceSans3VF",
+        "full_name": "SourceSans3VF",
+        "postscript_name": "SourceSans3VF-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "SourceSans3VF-Upright.ttf",
+      "sha256": "1147db9a3f0edd4956068de77930148acce2742dd76d57f7239b2b1c687ac63f",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "SourceSans3VF ExtraLight",
+          "full_name": "SourceSans3VF ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF Light",
+          "full_name": "SourceSans3VF Light",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF",
+          "full_name": "SourceSans3VF Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF Medium",
+          "full_name": "SourceSans3VF Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF Semibold",
+          "full_name": "SourceSans3VF Semibold",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF",
+          "full_name": "SourceSans3VF Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "SourceSans3VF Black",
+          "full_name": "SourceSans3VF Black",
+          "style": "Regular"
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

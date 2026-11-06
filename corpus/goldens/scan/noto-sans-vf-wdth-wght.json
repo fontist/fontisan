@@ -1,0 +1,94 @@
+{
+  "comparison_class": "exact",
+  "file": "NotoSans[wdth,wght].ttf",
+  "font_sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+  "id": "noto-sans-vf-wdth-wght",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": true,
+      "is_collection": false,
+      "names": {
+        "family_name": "Noto Sans",
+        "full_name": "Noto Sans Regular",
+        "postscript_name": "NotoSans-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "NotoSans[wdth,wght].ttf",
+      "sha256": "511cc04b442ffcc3b24d65c2cc780bdffaf482b20ba0aebdc8f27b37017ff0f5",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Sans Thin",
+          "full_name": "Noto Sans Thin",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans ExtraLight",
+          "full_name": "Noto Sans ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans Light",
+          "full_name": "Noto Sans Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans",
+          "full_name": "Noto Sans Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans Medium",
+          "full_name": "Noto Sans Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans SemiBold",
+          "full_name": "Noto Sans SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans",
+          "full_name": "Noto Sans Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Sans ExtraBold",
+          "full_name": "Noto Sans ExtraBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Sans Black",
+          "full_name": "Noto Sans Black",
+          "style": "Regular"
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -1,0 +1,86 @@
+{
+  "comparison_class": "exact",
+  "file": "TestTTC.ttc",
+  "font_sha256": "a8521588045ed5f1f8b07eecaac06ed3186c644655bfac00dd4507cd316fbdc5",
+  "id": "fonttools-test-ttc",
+  "rows": [
+    {
+      "collection_index": 0,
+      "english_names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttc",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 2,
+      "path": "TestTTC.ttc",
+      "sha256": "a8521588045ed5f1f8b07eecaac06ed3186c644655bfac00dd4507cd316fbdc5",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    },
+    {
+      "collection_index": 1,
+      "english_names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttc",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 2,
+      "path": "TestTTC.ttc",
+      "sha256": "a8521588045ed5f1f8b07eecaac06ed3186c644655bfac00dd4507cd316fbdc5",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

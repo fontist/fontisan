@@ -1,0 +1,135 @@
+{
+  "audit": {
+    "digest": "31cd2015cdbf649651b1f08d755a649a70411f09600957e20f5bebacf4f5f62f",
+    "faces": 1,
+    "outcome": "ok"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": null,
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "family": "Test TTF",
+          "outcome": "ok"
+        },
+        "read": {
+          "digest": "df9bc876fbad427377ab8e2f9fd7e2f7ca481a34cc4807f680f6df9524abc809",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_cmap": {
+          "mappings": 5,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": null,
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "family": "Test TTF",
+          "outcome": "ok"
+        },
+        "read": {
+          "digest": "2d5beb4a76c75d060abdfc74391c2dd8016e531be9f6887953f03e5a0308783d",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_cmap": {
+          "mappings": 5,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": null,
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "family": "Test TTF",
+          "outcome": "ok"
+        },
+        "read": {
+          "digest": "cc019c20e4defbed9a9c3fd0ef9da5c24a9cae7e1d3de9e488c133c10f64872d",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": null,
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "family": "Test TTF",
+          "outcome": "ok"
+        },
+        "read": {
+          "digest": "67aaf9bb367503dbe2ec59c214ce772996819894b9eed770af770ea6fd21b17f",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "outcome": "ok",
+          "units_per_em": 1000
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-bad-table-offset.ttf",
+  "file_sha256": "a7a85440f4b8b879bf71c6f07fe3d9ac689fbe545182caa377c014b15a5ffe8a",
+  "id": "malformed-bad-table-offset",
+  "kind": "bad-table-offset",
+  "scan": {
+    "digest": "2424fd6e0ccd9ac331603a0a31f15a16dbbebb8e9a4fd73a0bdd0923e85c23a0",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": null
+        },
+        "format": "ttf",
+        "num_faces": 1,
+        "validation_status": "valid"
+      }
+    ]
+  }
+}

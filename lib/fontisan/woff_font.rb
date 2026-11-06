@@ -388,19 +388,7 @@ module Fontisan
     # @param tag [String] The table tag
     # @return [Class, nil] Table parser class or nil
     def table_class_for(tag)
-      {
-        Constants::HEAD_TAG => Tables::Head,
-        Constants::HHEA_TAG => Tables::Hhea,
-        Constants::HMTX_TAG => Tables::Hmtx,
-        Constants::MAXP_TAG => Tables::Maxp,
-        Constants::NAME_TAG => Tables::Name,
-        Constants::OS2_TAG => Tables::Os2,
-        Constants::POST_TAG => Tables::Post,
-        Constants::CMAP_TAG => Tables::Cmap,
-        Constants::FVAR_TAG => Tables::Fvar,
-        Constants::GSUB_TAG => Tables::Gsub,
-        Constants::GPOS_TAG => Tables::Gpos,
-      }[tag]
+      SfntFont::TABLE_CLASS_MAP[tag] || (Tables::Cff if tag == "CFF ")
     end
 
     # Build an SFNT font file (TTF or OTF) from decompressed WOFF data

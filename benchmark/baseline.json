@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "reference_commit": "caa14881c355253be49a6d7ce3ee2c1080d9825d",
+  "note": "fontisan main at 0.4.47, before the Reference facade. The weekly gate compares head with this commit in one job; ops this commit cannot run are reported new. Move it deliberately in a reviewed change."
+}

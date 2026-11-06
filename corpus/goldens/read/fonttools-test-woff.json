@@ -1,0 +1,503 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test OTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test OTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestOTF-Regular",
+          "source_file": "TestWOFF.woff",
+          "source_format": "woff",
+          "source_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test OTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test OTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestOTF-Regular",
+          "source_file": "TestWOFF.woff",
+          "source_format": "woff",
+          "source_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "validation_issues": [
+            {
+              "category": "table_directory",
+              "message": "Check table_directory failed to execute: NoMethodError: undefined method 'search_range' for #<Fontisan::WoffHeader>",
+              "severity": "fatal"
+            },
+            {
+              "category": "hinting",
+              "location": "cff.private_dict",
+              "message": "CFF Private DICT has no BlueValues or StdHW/StdVW — alignment zones and stem widths are the primary hinting mechanism for CFF outlines",
+              "severity": "info"
+            },
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Test OTF' doesn't match Family + Subfamily 'Test OTF Regular'",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 1,
+            "info_count": 2,
+            "passed": false,
+            "total": 3,
+            "warning_count": 0
+          },
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "TestWOFF.woff",
+  "font_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+  "generated_in": "any",
+  "id": "fonttools-test-woff",
+  "known_reference_bug": [
+    "NAME-FULL-REGULAR",
+    "WOFF-CHECKS"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "full/lazy": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 5,
+            "sha256": "c91c5ae2111aadb10f7466de96d2adaf0366ac4355d7b69292bb0263ded94d27",
+            "subtable_formats": [
+              4,
+              6
+            ]
+          },
+          "file_sha256": "d61259880ec1f7226de94ddd8e08a097ddf0b0b313049890708abce5e22fea0a",
+          "format": "woff",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "NONE",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                6,
+                4,
+                4,
+                2,
+                7,
+                8,
+                1,
+                4
+              ],
+              "s_cap_height": 700,
+              "s_family_class": 2050,
+              "s_typo_ascender": 750,
+              "s_typo_descender": -250,
+              "s_typo_line_gap": 200,
+              "sx_height": 500,
+              "ul_code_page_range1": 1,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 2147483649,
+              "ul_unicode_range2": 0,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 8230,
+              "us_max_context": 0,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 900,
+              "us_win_descent": 300,
+              "version": 4,
+              "x_avg_char_width": 392,
+              "y_strikeout_position": 250,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 700,
+              "y_subscript_y_offset": 140,
+              "y_subscript_y_size": 650,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 700,
+              "y_superscript_y_offset": 477,
+              "y_superscript_y_size": 650
+            },
+            "head": {
+              "checksum_adjustment": 1314803227,
+              "created_raw": 3516272951,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 65536,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 0,
+              "lowest_rec_ppem": 9,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3573446670,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 668,
+              "x_min": 50,
+              "y_max": 750,
+              "y_min": 0
+            },
+            "hhea": {
+              "advance_width_max": 723,
+              "ascent": 900,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -300,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": 50,
+              "min_right_side_bearing": 50,
+              "number_of_h_metrics": 6,
+              "version_raw": 65536,
+              "x_max_extent": 668
+            },
+            "maxp": {
+              "num_glyphs": 6,
+              "version_raw": 20480
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 0,
+              "platform_id": 1,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 1,
+              "platform_id": 1,
+              "string": "Test OTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 2,
+              "platform_id": 1,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 3,
+              "platform_id": 1,
+              "string": "FontTools: Test OTF: 2015"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 4,
+              "platform_id": 1,
+              "string": "Test OTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 5,
+              "platform_id": 1,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 6,
+              "platform_id": 1,
+              "string": "TestOTF-Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 7,
+              "platform_id": 1,
+              "string": "Test OTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 8,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 9,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 11,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 12,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 14,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 18,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Test OTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "FontTools: Test OTF: 2015"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Test OTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "TestOTF-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Test OTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            }
+          ],
+          "outlines": {
+            "count": 6,
+            "digest": "60ad7ecae696e48edcd4cfc9b7c0e5b197a7317ac7e20a151ea12c219638ae36",
+            "kind": "cff"
+          },
+          "post": {
+            "glyph_name_count": 0,
+            "glyph_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -75,
+            "underline_thickness": 50,
+            "version_raw": 196608
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 235,
+              "sha256": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
+              "tag": "CFF "
+            },
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 506,
+              "sha256": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "bbd0e66580ee56ca73809d8e5cf7ed26a558d18ebbb356357cc1ef9262b619f0",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 24,
+              "sha256": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 6,
+              "sha256": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 1130,
+              "sha256": "ebb5dff6e53ba8c6c44ab39e81de2ddb2575513870a09e877f194619690837c4",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "77a232e4db6b60c21f7b76ccf821e3c80c519901f11d10efb8c8df04ca82a4e8",
+              "tag": "post"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

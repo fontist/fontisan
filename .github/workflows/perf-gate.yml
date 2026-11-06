@@ -1,0 +1,77 @@
+name: Perf Gate
+
+# Performance gate for the reference corpus benches (fontist/fontisan#157).
+#
+# pull_request: head vs the PR base, same job, interleaved, median-of-5, each
+#   side from its own `git archive` copy with its own bundle. Fails when head
+#   is more than 25% slower. Ops the base cannot run are reported "new".
+# schedule + workflow_dispatch: the full set, head vs the pinned reference
+#   commit in benchmark/baseline.json, same job (ratios, not absolute times).
+#   A missing reference fails. workflow_dispatch only runs from the default
+#   branch.
+# Ported from parsanol-ruby's perf-gate.yml (same steps, upload, summary), with
+# the cached baseline replaced by a commit measured in the same job.
+
+on:
+  pull_request:
+    paths:
+      - "lib/**"
+      - "benchmark/**"
+      - "corpus/**"
+      - "rakelib/**"
+      - "Gemfile"
+      - "fontisan.gemspec"
+      - ".github/workflows/perf-gate.yml"
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Fetch ci-tier corpus
+        run: bundle exec rake corpus:fetch
+
+      - name: Run gate
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bundle exec ruby benchmark/ci_gate.rb --mode pr --base "$BASE_SHA" \
+              --head "${{ github.event.pull_request.head.sha }}" --save perf-new.json | tee gate-output.md
+          else
+            bundle exec ruby benchmark/ci_gate.rb --mode weekly --head "$GITHUB_SHA" \
+              --save perf-new.json | tee gate-output.md
+          fi
+
+      - name: Upload gate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-gate-results
+          path: |
+            perf-new.json
+            gate-output.md
+          retention-days: 90
+
+      - name: Job summary
+        if: always()
+        run: cat gate-output.md >> "$GITHUB_STEP_SUMMARY"

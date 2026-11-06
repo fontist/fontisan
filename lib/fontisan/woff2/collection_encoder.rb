@@ -23,8 +23,11 @@ module Fontisan
       TTC_FLAVOR = 0x74746366 # 'ttcf'
 
       # @param brotli_quality [Integer] 0-11
-      def initialize(brotli_quality: 11)
+      # @param timestamp [Integer, nil] Unix seconds stamped into every
+      #   head.modified; nil uses the clock
+      def initialize(brotli_quality: 11, timestamp: nil)
         @brotli_quality = brotli_quality
+        @timestamp = timestamp
       end
 
       # Encode an array of fonts as a WOFF2 collection.
@@ -58,7 +61,7 @@ module Fontisan
           tables[tag] = data
         end
 
-        EncoderRules.apply!(tables)
+        EncoderRules.apply!(tables, timestamp: @timestamp)
         loca_orig_length = apply_glyf_loca_transform!(tables, font)
 
         { index:, tables:, loca_orig_length: }

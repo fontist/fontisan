@@ -1,0 +1,1092 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6,
+            12,
+            14
+          ],
+          "family_name": "Noto Sans JP",
+          "features": [
+            "aalt",
+            "ccmp",
+            "dlig",
+            "fwid",
+            "halt",
+            "hist",
+            "hwid",
+            "jp78",
+            "jp83",
+            "jp90",
+            "kern",
+            "liga",
+            "locl",
+            "mark",
+            "nlck",
+            "palt",
+            "pwid",
+            "ruby",
+            "vert",
+            "vhal",
+            "vkrn",
+            "vpal",
+            "vrt2"
+          ],
+          "font_revision_raw": 131334,
+          "full_name": "Noto Sans JP",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "hani",
+            "kana",
+            "latn"
+          ],
+          "panose": "2 11 5 0 0 0 0 0 0 0",
+          "postscript_name": "NotoSansJP-Regular",
+          "source_file": "NotoSansJP-Regular.otf",
+          "source_format": "otf",
+          "source_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+          "subfamily_name": "Regular",
+          "total_codepoints": 16732,
+          "total_glyphs": 17936,
+          "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6,
+            12,
+            14
+          ],
+          "family_name": "Noto Sans JP",
+          "features": [
+            "aalt",
+            "ccmp",
+            "dlig",
+            "fwid",
+            "halt",
+            "hist",
+            "hwid",
+            "jp78",
+            "jp83",
+            "jp90",
+            "kern",
+            "liga",
+            "locl",
+            "mark",
+            "nlck",
+            "palt",
+            "pwid",
+            "ruby",
+            "vert",
+            "vhal",
+            "vkrn",
+            "vpal",
+            "vrt2"
+          ],
+          "font_revision_raw": 131334,
+          "full_name": "Noto Sans JP",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "hani",
+            "kana",
+            "latn"
+          ],
+          "panose": "2 11 5 0 0 0 0 0 0 0",
+          "postscript_name": "NotoSansJP-Regular",
+          "source_file": "NotoSansJP-Regular.otf",
+          "source_format": "otf",
+          "source_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+          "subfamily_name": "Regular",
+          "total_codepoints": 16732,
+          "total_glyphs": 17936,
+          "validation_issues": [
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Noto Sans JP' doesn't match Family + Subfamily 'Noto Sans JP Regular'",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 0,
+            "info_count": 1,
+            "passed": true,
+            "total": 1,
+            "warning_count": 0
+          },
+          "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "NotoSansJP-Regular.otf",
+  "font_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+  "generated_in": "any",
+  "id": "noto-sans-jp-subset-regular-otf",
+  "known_reference_bug": [
+    "NAME-FULL-REGULAR"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "full/lazy"
+    },
+    "full/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 16732,
+            "sha256": "fd03a1c2657a16dff376964c0b8ef26321206b861422f76ef52eafbb286e5c21",
+            "subtable_formats": [
+              4,
+              6,
+              12,
+              14
+            ]
+          },
+          "file_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+          "format": "otf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 64,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "s_cap_height": 733,
+              "s_family_class": 0,
+              "s_typo_ascender": 880,
+              "s_typo_descender": -120,
+              "s_typo_line_gap": 0,
+              "sx_height": 543,
+              "ul_code_page_range1": 1611006215,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 536871043,
+              "ul_unicode_range2": 719272976,
+              "ul_unicode_range3": 22,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 32,
+              "us_last_char_index": 65535,
+              "us_max_context": 6,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 1160,
+              "us_win_descent": 288,
+              "version": 3,
+              "x_avg_char_width": 982,
+              "y_strikeout_position": 325,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 2339799840,
+              "created_raw": 3702559297,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 131334,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 0,
+              "lowest_rec_ppem": 3,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3702559297,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 2928,
+              "x_min": -1002,
+              "y_max": 1808,
+              "y_min": -1048
+            },
+            "hhea": {
+              "advance_width_max": 3000,
+              "ascent": 1160,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -288,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": -1002,
+              "min_right_side_bearing": -551,
+              "number_of_h_metrics": 17936,
+              "version_raw": 65536,
+              "x_max_extent": 2928
+            },
+            "maxp": {
+              "num_glyphs": 17936,
+              "version_raw": 20480
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": {
+              "features": {
+                "DFLT": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ],
+                "cyrl": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ],
+                "grek": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ],
+                "hani": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ],
+                "kana": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ],
+                "latn": [
+                  "halt",
+                  "kern",
+                  "mark",
+                  "palt",
+                  "vert",
+                  "vhal",
+                  "vkrn",
+                  "vpal"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "hani",
+                "kana",
+                "latn"
+              ]
+            },
+            "GSUB": {
+              "features": {
+                "DFLT": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2"
+                ],
+                "cyrl": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "locl",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2"
+                ],
+                "grek": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "locl",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2"
+                ],
+                "hani": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2",
+                  "locl"
+                ],
+                "kana": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2",
+                  "locl"
+                ],
+                "latn": [
+                  "aalt",
+                  "ccmp",
+                  "dlig",
+                  "fwid",
+                  "hist",
+                  "hwid",
+                  "jp78",
+                  "jp83",
+                  "jp90",
+                  "liga",
+                  "locl",
+                  "nlck",
+                  "pwid",
+                  "ruby",
+                  "vert",
+                  "vrt2"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "hani",
+                "kana",
+                "latn"
+              ]
+            }
+          },
+          "lazy": true,
+          "mode": "full",
+          "names": [
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "© 2014-2021 Adobe (http://www.adobe.com/)."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.004;GOOG;NotoSansJP-Regular;ADOBE"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSansJP-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google Inc."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Adobe"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "Ryoko NISHIZUKA 西塚涼子 (kana, bopomofo & ideographs); Paul D. Hunt (Latin, Greek & Cyrillic); Sandoll Communications 산돌커뮤니케이션, Soo-young JANG 장수영 & Joo-yeon KANG 강주연 (hangul elements, letters & syllables)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "Dr. Ken Lunde (project architect, glyph set definition & overall production); Masataka HATTORI 服部正貴 (production & ideograph elements)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "http://www.adobe.com/type/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "http://scripts.sil.org/OFL"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            }
+          ],
+          "outlines": {
+            "count": 17936,
+            "digest": "0a017a418ed5fa50c49fb8878cdd3e359c8263b6facbc1be16f53ce537605a32",
+            "kind": "cff"
+          },
+          "post": {
+            "glyph_name_count": 0,
+            "glyph_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -125,
+            "underline_thickness": 50,
+            "version_raw": 196608
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 228,
+              "sha256": "09400594afa1759a688553a0e090a17bba6c143b8d7058f6c500d4e517b26866",
+              "tag": "BASE"
+            },
+            {
+              "error": null,
+              "length": 4190285,
+              "sha256": "5a660f91d6c947643d9fd4bff3fb96b0bd92c136d0b2eb1e415ac256cceff6ee",
+              "tag": "CFF "
+            },
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": 28,
+              "sha256": "cc08d969b7987dface5fc1fcd4755279ffacbc1a27e24ae0077e6a41fc7d651f",
+              "tag": "GDEF"
+            },
+            {
+              "error": null,
+              "length": 43996,
+              "sha256": "454f1802f05fbfd02e9b1ff41b24cefb94a17a742f1570c5d2f47bb24beecd4d",
+              "tag": "GPOS"
+            },
+            {
+              "error": null,
+              "length": 21310,
+              "sha256": "a1ba487e9d273319f08f927604053afab67b33cd323a181de7c3fa6c174d7266",
+              "tag": "GSUB"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "03e6df253069c24235407f5c5af1caa498db39b4295829606b8d17e85f3734c8",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 920,
+              "sha256": "a6160b24eae032f46c8207b6b9b093948e340be9abdbc257fdfc364198cd7aa6",
+              "tag": "VORG"
+            },
+            {
+              "error": null,
+              "length": 130739,
+              "sha256": "a90ff22fdaeca3025612f03694dd7c74c9b9cc8295a75b2e3e695c7999844ac8",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "273d88d251f3f30a81b59e2886236d8930461a049c67ae035c1823db01966d9d",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "0dad710fba8765d129dab83dfc9fc2dc98006580568ad3daad8d72cbf6f78424",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 71744,
+              "sha256": "8efc017cef648ed1b93726273bfb1bb7d5ed1b703a01a1779cbc991144d10fa9",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 6,
+              "sha256": "500484c32b063010fc8405308244ff54673354991c6d368bbf9eeacb643c707f",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 2126,
+              "sha256": "cf3f62633ac7199cd333963b27a80a728da40a6c026bd16fc970bcc9cb60543d",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "22dd499f08932214bde96943f3882f3619324478217095c049b68a57c6c10693",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "b732cc7ae408167a6613620d738e7cac8a22c92b907904a604136573fcd4f3fa",
+              "tag": "vhea"
+            },
+            {
+              "error": null,
+              "length": 71088,
+              "sha256": "c8cf117539e2f8398fc64fd9a04e8ce7ad76c0346596ed8172f9f35a69bff6df",
+              "tag": "vmtx"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": null,
+          "file_sha256": "dff723ba59d57d136764a04b9b2d03205544f7cd785a711442d6d2d085ac5073",
+          "format": "otf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 64,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "s_cap_height": 733,
+              "s_family_class": 0,
+              "s_typo_ascender": 880,
+              "s_typo_descender": -120,
+              "s_typo_line_gap": 0,
+              "sx_height": 543,
+              "ul_code_page_range1": 1611006215,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 536871043,
+              "ul_unicode_range2": 719272976,
+              "ul_unicode_range3": 22,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 32,
+              "us_last_char_index": 65535,
+              "us_max_context": 6,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 1160,
+              "us_win_descent": 288,
+              "version": 3,
+              "x_avg_char_width": 982,
+              "y_strikeout_position": 325,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 2339799840,
+              "created_raw": 3702559297,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 131334,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 0,
+              "lowest_rec_ppem": 3,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3702559297,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 2928,
+              "x_min": -1002,
+              "y_max": 1808,
+              "y_min": -1048
+            },
+            "hhea": {
+              "advance_width_max": 3000,
+              "ascent": 1160,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -288,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": -1002,
+              "min_right_side_bearing": -551,
+              "number_of_h_metrics": 17936,
+              "version_raw": 65536,
+              "x_max_extent": 2928
+            },
+            "maxp": {
+              "num_glyphs": 17936,
+              "version_raw": 20480
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "© 2014-2021 Adobe (http://www.adobe.com/)."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.004;GOOG;NotoSansJP-Regular;ADOBE"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSansJP-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google Inc."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Adobe"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "Ryoko NISHIZUKA 西塚涼子 (kana, bopomofo & ideographs); Paul D. Hunt (Latin, Greek & Cyrillic); Sandoll Communications 산돌커뮤니케이션, Soo-young JANG 장수영 & Joo-yeon KANG 강주연 (hangul elements, letters & syllables)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "Dr. Ken Lunde (project architect, glyph set definition & overall production); Masataka HATTORI 服部正貴 (production & ideograph elements)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "http://www.adobe.com/type/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "http://scripts.sil.org/OFL"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1041,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Sans JP"
+            }
+          ],
+          "outlines": {
+            "count": 0,
+            "digest": null,
+            "kind": null
+          },
+          "post": {
+            "glyph_name_count": 0,
+            "glyph_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -125,
+            "underline_thickness": 50,
+            "version_raw": 196608
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "BASE"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "CFF "
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GDEF"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GPOS"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "GSUB"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "03e6df253069c24235407f5c5af1caa498db39b4295829606b8d17e85f3734c8",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "VORG"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "273d88d251f3f30a81b59e2886236d8930461a049c67ae035c1823db01966d9d",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "0dad710fba8765d129dab83dfc9fc2dc98006580568ad3daad8d72cbf6f78424",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 6,
+              "sha256": "500484c32b063010fc8405308244ff54673354991c6d368bbf9eeacb643c707f",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 2126,
+              "sha256": "cf3f62633ac7199cd333963b27a80a728da40a6c026bd16fc970bcc9cb60543d",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "22dd499f08932214bde96943f3882f3619324478217095c049b68a57c6c10693",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "vhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "vmtx"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

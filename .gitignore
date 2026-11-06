@@ -55,3 +55,6 @@ CLAUDE.md
 
 # Transient browser-based font verification scripts
 /scripts/test-*.mjs
+
+# Fetched corpus fonts (rake corpus:fetch)
+corpus/fonts/

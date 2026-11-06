@@ -1,0 +1,84 @@
+{
+  "comparison_class": "exact",
+  "file": "SourceSans3VF-Italic.ttf",
+  "font_sha256": "c34791f4f889af43d84e2f84ebeb02e6eed07058aca21e6729d26e6436d18965",
+  "id": "source-sans-3-vf-italic-ttf",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": true,
+      "is_collection": false,
+      "names": {
+        "family_name": "SourceSans3VF",
+        "full_name": "SourceSans3VF Italic",
+        "postscript_name": "SourceSans3VF-ExtraLightItalic",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Italic"
+      },
+      "num_faces": 1,
+      "path": "SourceSans3VF-Italic.ttf",
+      "sha256": "c34791f4f889af43d84e2f84ebeb02e6eed07058aca21e6729d26e6436d18965",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "SourceSans3VF ExtraLight Italic",
+          "full_name": "SourceSans3VF ExtraLight Italic",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF Light Italic",
+          "full_name": "SourceSans3VF Light Italic",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF",
+          "full_name": "SourceSans3VF Italic",
+          "style": "Italic"
+        },
+        {
+          "family": "SourceSans3VF Medium Italic",
+          "full_name": "SourceSans3VF Medium Italic",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF Semibold Italic",
+          "full_name": "SourceSans3VF Semibold Italic",
+          "style": "Regular"
+        },
+        {
+          "family": "SourceSans3VF",
+          "full_name": "SourceSans3VF Bold Italic",
+          "style": "Bold Italic"
+        },
+        {
+          "family": "SourceSans3VF Black Italic",
+          "full_name": "SourceSans3VF Black Italic",
+          "style": "Regular"
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

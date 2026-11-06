@@ -1,0 +1,951 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "quirk-os2-version-0.ttf",
+          "source_format": "ttf",
+          "source_sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "quirk-os2-version-0.ttf",
+          "source_format": "ttf",
+          "source_sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "validation_issues": [
+            {
+              "category": "hinting",
+              "location": "maxp.max_stack_elements",
+              "message": "maxp.maxStackElements is 0 but the font has hinting instructions — rendering may fail",
+              "severity": "warning"
+            },
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Test TTF' doesn't match Family + Subfamily 'Test TTF Regular'",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 0,
+            "info_count": 1,
+            "passed": true,
+            "total": 2,
+            "warning_count": 1
+          },
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "quirk-os2-version-0.ttf",
+  "font_sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+  "generated_in": "any",
+  "id": "quirk-os2-version-0",
+  "known_reference_bug": [
+    "NAME-FULL-REGULAR"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "full/lazy"
+    },
+    "full/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 5,
+            "sha256": "c91c5ae2111aadb10f7466de96d2adaf0366ac4355d7b69292bb0263ded94d27",
+            "subtable_formats": [
+              4,
+              6
+            ]
+          },
+          "file_sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+          "format": "ttf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "NONE",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                6,
+                4,
+                4,
+                2,
+                7,
+                8,
+                1,
+                4
+              ],
+              "s_family_class": 2050,
+              "s_typo_ascender": 750,
+              "s_typo_descender": -250,
+              "s_typo_line_gap": 200,
+              "ul_unicode_range1": 2147483649,
+              "ul_unicode_range2": 0,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 8230,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 900,
+              "us_win_descent": 300,
+              "version": 0,
+              "x_avg_char_width": 392,
+              "y_strikeout_position": 250,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 700,
+              "y_subscript_y_offset": 140,
+              "y_subscript_y_size": 650,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 700,
+              "y_superscript_y_offset": 477,
+              "y_superscript_y_size": 650
+            },
+            "head": {
+              "checksum_adjustment": 779541980,
+              "created_raw": 3516272951,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 65536,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 0,
+              "lowest_rec_ppem": 9,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3573411749,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 668,
+              "x_min": 50,
+              "y_max": 750,
+              "y_min": 0
+            },
+            "hhea": {
+              "advance_width_max": 723,
+              "ascent": 900,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -300,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": 50,
+              "min_right_side_bearing": 50,
+              "number_of_h_metrics": 6,
+              "version_raw": 65536,
+              "x_max_extent": 668
+            },
+            "maxp": {
+              "max_component_depth": 1,
+              "max_component_elements": 3,
+              "max_composite_contours": 3,
+              "max_composite_points": 12,
+              "max_contours": 2,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 8,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 6,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "full",
+          "names": [
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 0,
+              "platform_id": 1,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 1,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 2,
+              "platform_id": 1,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 3,
+              "platform_id": 1,
+              "string": "FontTools: Test TTF: 2015"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 4,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 5,
+              "platform_id": 1,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 6,
+              "platform_id": 1,
+              "string": "TestTTF-Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 7,
+              "platform_id": 1,
+              "string": "Test TTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 8,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 9,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 11,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 12,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 14,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 18,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "FontTools: Test TTF: 2015"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "TestTTF-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Test TTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            }
+          ],
+          "outlines": {
+            "count": 6,
+            "digest": "00fb18acd96feedf03f7ea4fd213d0387da48e8f2e19ed29b60a30215ba0dc83",
+            "kind": "glyf"
+          },
+          "post": {
+            "glyph_name_count": 6,
+            "glyph_names_sha256": "9ed46dedee93dd25b373b1b21b1bec43e153d6b4ebce0c80fef94431763f1a71",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -75,
+            "underline_thickness": 50,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": 78,
+              "sha256": "4e3cafc6f66bc26280958cab0492c6ee1fa9a6b7dca38709e5baeb97fcc5aaab",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 506,
+              "sha256": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 2,
+              "sha256": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+              "tag": "cvt "
+            },
+            {
+              "error": null,
+              "length": 1,
+              "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+              "tag": "fpgm"
+            },
+            {
+              "error": null,
+              "length": 12,
+              "sha256": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+              "tag": "gasp"
+            },
+            {
+              "error": null,
+              "length": 104,
+              "sha256": "fc2f81f8934b73335323dbb7cca3908f9665677e48292315679fc69d49324a20",
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "53188af9d2bbb56dd0d7d972ef573ced3f19490eea92c1f54740731d38bc1936",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 24,
+              "sha256": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 14,
+              "sha256": "9e6009da34db5fdaec8afabffbaa552129257426d5e198381784293e3e5fb072",
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 1122,
+              "sha256": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 55,
+              "sha256": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": 1,
+              "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+              "tag": "prep"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": null,
+          "file_sha256": "2687af05cf4a5029466c3d811065ff4f344a5b8d285fdb50fb468a794d65817f",
+          "format": "ttf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "NONE",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                6,
+                4,
+                4,
+                2,
+                7,
+                8,
+                1,
+                4
+              ],
+              "s_family_class": 2050,
+              "s_typo_ascender": 750,
+              "s_typo_descender": -250,
+              "s_typo_line_gap": 200,
+              "ul_unicode_range1": 2147483649,
+              "ul_unicode_range2": 0,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 8230,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 900,
+              "us_win_descent": 300,
+              "version": 0,
+              "x_avg_char_width": 392,
+              "y_strikeout_position": 250,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 700,
+              "y_subscript_y_offset": 140,
+              "y_subscript_y_size": 650,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 700,
+              "y_superscript_y_offset": 477,
+              "y_superscript_y_size": 650
+            },
+            "head": {
+              "checksum_adjustment": 779541980,
+              "created_raw": 3516272951,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 65536,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 0,
+              "lowest_rec_ppem": 9,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3573411749,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 668,
+              "x_min": 50,
+              "y_max": 750,
+              "y_min": 0
+            },
+            "hhea": {
+              "advance_width_max": 723,
+              "ascent": 900,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -300,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": 50,
+              "min_right_side_bearing": 50,
+              "number_of_h_metrics": 6,
+              "version_raw": 65536,
+              "x_max_extent": 668
+            },
+            "maxp": {
+              "max_component_depth": 1,
+              "max_component_elements": 3,
+              "max_composite_contours": 3,
+              "max_composite_points": 12,
+              "max_contours": 2,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 8,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 6,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 0,
+              "platform_id": 1,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 1,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 2,
+              "platform_id": 1,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 3,
+              "platform_id": 1,
+              "string": "FontTools: Test TTF: 2015"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 4,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 5,
+              "platform_id": 1,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 6,
+              "platform_id": 1,
+              "string": "TestTTF-Regular"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 7,
+              "platform_id": 1,
+              "string": "Test TTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 8,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 9,
+              "platform_id": 1,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 11,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 12,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 14,
+              "platform_id": 1,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            },
+            {
+              "encoding_id": 0,
+              "language_id": 0,
+              "name_id": 18,
+              "platform_id": 1,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright (c) 2015 by FontTools. No rights reserved."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "FontTools: Test TTF: 2015"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Test TTF"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 1.000"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "TestTTF-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Test TTF is not a trademark of FontTools."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "FontTools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 12,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://github.com/behdad/fonttools/blob/master/LICENSE.txt"
+            }
+          ],
+          "outlines": {
+            "count": 0,
+            "digest": null,
+            "kind": null
+          },
+          "post": {
+            "glyph_name_count": 6,
+            "glyph_names_sha256": "9ed46dedee93dd25b373b1b21b1bec43e153d6b4ebce0c80fef94431763f1a71",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -75,
+            "underline_thickness": 50,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": 78,
+              "sha256": "4e3cafc6f66bc26280958cab0492c6ee1fa9a6b7dca38709e5baeb97fcc5aaab",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "cvt "
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "fpgm"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "gasp"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "53188af9d2bbb56dd0d7d972ef573ced3f19490eea92c1f54740731d38bc1936",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 1122,
+              "sha256": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 55,
+              "sha256": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "prep"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

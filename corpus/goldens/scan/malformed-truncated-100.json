@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-truncated-100.ttf",
+  "font_sha256": "548caeb76df5e39af9100c75473ba30ae3a71721c31e8c3f7fbe1a5e281e47f7",
+  "id": "malformed-truncated-100",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "RuntimeError",
+            "message": "Invalid TrueTypeFont file: End of file reached"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<RuntimeError: Invalid TrueTypeFont file: End of file reached>."
+        }
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-truncated-100.ttf",
+      "sha256": "548caeb76df5e39af9100c75473ba30ae3a71721c31e8c3f7fbe1a5e281e47f7",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

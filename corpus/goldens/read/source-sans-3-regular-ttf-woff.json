@@ -1,0 +1,1659 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6,
+            12
+          ],
+          "family_name": "Source Sans 3",
+          "features": [
+            "aalt",
+            "c2sc",
+            "case",
+            "ccmp",
+            "cv01",
+            "cv02",
+            "cv03",
+            "cv04",
+            "cv05",
+            "cv06",
+            "cv07",
+            "cv08",
+            "cv09",
+            "cv10",
+            "cv11",
+            "cv12",
+            "cv13",
+            "cv14",
+            "cv15",
+            "cv16",
+            "cv17",
+            "cv18",
+            "cv19",
+            "dlig",
+            "dnom",
+            "frac",
+            "hlig",
+            "kern",
+            "liga",
+            "locl",
+            "mark",
+            "mkmk",
+            "numr",
+            "onum",
+            "ordn",
+            "pnum",
+            "salt",
+            "sinf",
+            "size",
+            "smcp",
+            "ss01",
+            "ss02",
+            "ss03",
+            "ss04",
+            "ss05",
+            "ss06",
+            "ss07",
+            "ss08",
+            "ss09",
+            "ss10",
+            "subs",
+            "sups",
+            "titl",
+            "zero"
+          ],
+          "font_revision_raw": 200015,
+          "full_name": "Source Sans 3",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "latn"
+          ],
+          "panose": "2 11 5 3 3 4 3 2 2 4",
+          "postscript_name": "SourceSans3-Regular",
+          "source_file": "SourceSans3-Regular.ttf.woff",
+          "source_format": "woff",
+          "source_sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+          "subfamily_name": "Regular",
+          "total_codepoints": 1614,
+          "total_glyphs": 2478,
+          "version": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6,
+            12
+          ],
+          "family_name": "Source Sans 3",
+          "features": [
+            "aalt",
+            "c2sc",
+            "case",
+            "ccmp",
+            "cv01",
+            "cv02",
+            "cv03",
+            "cv04",
+            "cv05",
+            "cv06",
+            "cv07",
+            "cv08",
+            "cv09",
+            "cv10",
+            "cv11",
+            "cv12",
+            "cv13",
+            "cv14",
+            "cv15",
+            "cv16",
+            "cv17",
+            "cv18",
+            "cv19",
+            "dlig",
+            "dnom",
+            "frac",
+            "hlig",
+            "kern",
+            "liga",
+            "locl",
+            "mark",
+            "mkmk",
+            "numr",
+            "onum",
+            "ordn",
+            "pnum",
+            "salt",
+            "sinf",
+            "size",
+            "smcp",
+            "ss01",
+            "ss02",
+            "ss03",
+            "ss04",
+            "ss05",
+            "ss06",
+            "ss07",
+            "ss08",
+            "ss09",
+            "ss10",
+            "subs",
+            "sups",
+            "titl",
+            "zero"
+          ],
+          "font_revision_raw": 200015,
+          "full_name": "Source Sans 3",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "opentype_scripts": [
+            "DFLT",
+            "cyrl",
+            "grek",
+            "latn"
+          ],
+          "panose": "2 11 5 3 3 4 3 2 2 4",
+          "postscript_name": "SourceSans3-Regular",
+          "source_file": "SourceSans3-Regular.ttf.woff",
+          "source_format": "woff",
+          "source_sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+          "subfamily_name": "Regular",
+          "total_codepoints": 1614,
+          "total_glyphs": 2478,
+          "validation_issues": [
+            {
+              "category": "table_directory",
+              "message": "Check table_directory failed to execute: NoMethodError: undefined method 'search_range' for #<Fontisan::WoffHeader>",
+              "severity": "fatal"
+            },
+            {
+              "category": "opentype_conformance",
+              "message": "Check opentype_conformance failed to execute: NoMethodError: undefined method 'tables' for #<Fontisan::WoffFont>",
+              "severity": "fatal"
+            },
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Source Sans 3' doesn't match Family + Subfamily 'Source Sans 3 Regular'",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 2,
+            "info_count": 1,
+            "passed": false,
+            "total": 3,
+            "warning_count": 0
+          },
+          "version": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "SourceSans3-Regular.ttf.woff",
+  "font_sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+  "generated_in": "any",
+  "id": "source-sans-3-regular-ttf-woff",
+  "known_reference_bug": [
+    "NAME-FULL-REGULAR",
+    "WOFF-CHECKS"
+  ],
+  "read": {
+    "full/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "full/lazy": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 1614,
+            "sha256": "4725c6a9b462aee17761c8ea5b6c0b115477f57d933cb2ce165dc556197c7527",
+            "subtable_formats": [
+              4,
+              6,
+              12
+            ]
+          },
+          "file_sha256": "56413337e96f5764882f3e18eaa654eec27515ec7c3de3520eec9e36b25371b9",
+          "format": "woff",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "ADBO",
+              "fs_selection": 64,
+              "fs_type": 0,
+              "panose": [
+                2,
+                11,
+                5,
+                3,
+                3,
+                4,
+                3,
+                2,
+                2,
+                4
+              ],
+              "s_cap_height": 660,
+              "s_family_class": 0,
+              "s_typo_ascender": 1000,
+              "s_typo_descender": -326,
+              "s_typo_line_gap": 0,
+              "sx_height": 486,
+              "ul_code_page_range1": 536871327,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 3758097151,
+              "ul_unicode_range2": 8195,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 32,
+              "us_last_char_index": 65535,
+              "us_max_context": 5,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 1000,
+              "us_win_descent": 326,
+              "version": 3,
+              "x_avg_char_width": 519,
+              "y_strikeout_position": 291,
+              "y_strikeout_size": 50,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 3570471141,
+              "created_raw": 3763026312,
+              "flags": 7,
+              "font_direction_hint": 2,
+              "font_revision_raw": 200015,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 1,
+              "lowest_rec_ppem": 3,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3763423626,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 2159,
+              "x_min": -614,
+              "y_max": 958,
+              "y_min": -295
+            },
+            "hhea": {
+              "advance_width_max": 2200,
+              "ascent": 1000,
+              "caret_offset": 0,
+              "caret_slope_rise": 1,
+              "caret_slope_run": 0,
+              "descent": -326,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": -614,
+              "min_right_side_bearing": -454,
+              "number_of_h_metrics": 2477,
+              "version_raw": 65536,
+              "x_max_extent": 2159
+            },
+            "maxp": {
+              "max_component_depth": 3,
+              "max_component_elements": 4,
+              "max_composite_contours": 9,
+              "max_composite_points": 103,
+              "max_contours": 12,
+              "max_function_defs": 141,
+              "max_instruction_defs": 0,
+              "max_points": 140,
+              "max_size_of_instructions": 3596,
+              "max_stack_elements": 205,
+              "max_storage": 132,
+              "max_twilight_points": 72,
+              "max_zones": 2,
+              "num_glyphs": 2478,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": {
+              "features": {
+                "DFLT": [
+                  "kern",
+                  "mark",
+                  "mkmk",
+                  "size"
+                ],
+                "cyrl": [
+                  "kern",
+                  "mark",
+                  "mkmk",
+                  "size"
+                ],
+                "grek": [
+                  "kern",
+                  "mark",
+                  "mkmk",
+                  "size"
+                ],
+                "latn": [
+                  "kern",
+                  "mark",
+                  "mkmk",
+                  "size"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "latn"
+              ]
+            },
+            "GSUB": {
+              "features": {
+                "DFLT": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "cv01",
+                  "cv02",
+                  "cv03",
+                  "cv04",
+                  "cv05",
+                  "cv06",
+                  "cv07",
+                  "cv08",
+                  "cv09",
+                  "cv10",
+                  "cv11",
+                  "cv12",
+                  "cv13",
+                  "cv14",
+                  "cv15",
+                  "cv16",
+                  "cv17",
+                  "cv18",
+                  "cv19",
+                  "dlig",
+                  "dnom",
+                  "frac",
+                  "hlig",
+                  "liga",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss01",
+                  "ss02",
+                  "ss03",
+                  "ss04",
+                  "ss05",
+                  "ss06",
+                  "ss07",
+                  "ss08",
+                  "ss09",
+                  "ss10",
+                  "subs",
+                  "sups",
+                  "titl",
+                  "zero"
+                ],
+                "cyrl": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "cv01",
+                  "cv02",
+                  "cv03",
+                  "cv04",
+                  "cv05",
+                  "cv06",
+                  "cv07",
+                  "cv08",
+                  "cv09",
+                  "cv10",
+                  "cv11",
+                  "cv12",
+                  "cv13",
+                  "cv14",
+                  "cv15",
+                  "cv16",
+                  "cv17",
+                  "cv18",
+                  "cv19",
+                  "dlig",
+                  "dnom",
+                  "frac",
+                  "hlig",
+                  "liga",
+                  "locl",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss01",
+                  "ss02",
+                  "ss03",
+                  "ss04",
+                  "ss05",
+                  "ss06",
+                  "ss07",
+                  "ss08",
+                  "ss09",
+                  "ss10",
+                  "subs",
+                  "sups",
+                  "titl",
+                  "zero"
+                ],
+                "grek": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "cv01",
+                  "cv02",
+                  "cv03",
+                  "cv04",
+                  "cv05",
+                  "cv06",
+                  "cv07",
+                  "cv08",
+                  "cv09",
+                  "cv10",
+                  "cv11",
+                  "cv12",
+                  "cv13",
+                  "cv14",
+                  "cv15",
+                  "cv16",
+                  "cv17",
+                  "cv18",
+                  "cv19",
+                  "dlig",
+                  "dnom",
+                  "frac",
+                  "hlig",
+                  "liga",
+                  "locl",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss01",
+                  "ss02",
+                  "ss03",
+                  "ss04",
+                  "ss05",
+                  "ss06",
+                  "ss07",
+                  "ss08",
+                  "ss09",
+                  "ss10",
+                  "subs",
+                  "sups",
+                  "titl",
+                  "zero"
+                ],
+                "latn": [
+                  "aalt",
+                  "c2sc",
+                  "case",
+                  "ccmp",
+                  "cv01",
+                  "cv02",
+                  "cv03",
+                  "cv04",
+                  "cv05",
+                  "cv06",
+                  "cv07",
+                  "cv08",
+                  "cv09",
+                  "cv10",
+                  "cv11",
+                  "cv12",
+                  "cv13",
+                  "cv14",
+                  "cv15",
+                  "cv16",
+                  "cv17",
+                  "cv18",
+                  "cv19",
+                  "dlig",
+                  "dnom",
+                  "frac",
+                  "hlig",
+                  "liga",
+                  "locl",
+                  "numr",
+                  "onum",
+                  "ordn",
+                  "pnum",
+                  "salt",
+                  "sinf",
+                  "smcp",
+                  "ss01",
+                  "ss02",
+                  "ss03",
+                  "ss04",
+                  "ss05",
+                  "ss06",
+                  "ss07",
+                  "ss08",
+                  "ss09",
+                  "ss10",
+                  "subs",
+                  "sups",
+                  "titl",
+                  "zero"
+                ]
+              },
+              "scripts": [
+                "DFLT",
+                "cyrl",
+                "grek",
+                "latn"
+              ]
+            }
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Απλό λατινικό a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Απλό λατινικό g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 258,
+              "platform_id": 3,
+              "string": "Απλό λατινικό l (▼ L)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 259,
+              "platform_id": 3,
+              "string": "Λατινικό a με πατούρα"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 260,
+              "platform_id": 3,
+              "string": "Κεντρικά ογκονεκ [ Ą Ę ą ę ų ] (Να-Ντενέ)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 261,
+              "platform_id": 3,
+              "string": "Γράμμα Ενγκ σε σχήμα Ν [ Ŋ ] (Σάμη)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 262,
+              "platform_id": 3,
+              "string": "Εναλλακτικά φωνητικά γράμματα [ ɑ ꞵ ɣ ɩ ʊ ɸ ꭓ ] (ΔΦΑ)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 263,
+              "platform_id": 3,
+              "string": "Ρέων β"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 264,
+              "platform_id": 3,
+              "string": "Εναλλακτικό θ"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 265,
+              "platform_id": 3,
+              "string": "Εναλλακτικό φ"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 266,
+              "platform_id": 3,
+              "string": "Κυριλλικό μικρό γράμμα με κάθετη επέκταση [ ж к ю ] (Βουλγαρικά)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 267,
+              "platform_id": 3,
+              "string": "Κυριλλικό ρέων μπε [ б ] (Σέρβικα)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 268,
+              "platform_id": 3,
+              "string": "Κυριλλικά ρέων γράμματα [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 269,
+              "platform_id": 3,
+              "string": "Κυριλλικά γεωμετρικά γράμματα [ Д Л Љ д л љ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 270,
+              "platform_id": 3,
+              "string": "Κυριλλικά απλά γράμματα [ Ж К ж к ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 271,
+              "platform_id": 3,
+              "string": "Κεφαλαίοι αριθμοί"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 272,
+              "platform_id": 3,
+              "string": "Μηδέν με κεντρική τελεία [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 273,
+              "platform_id": 3,
+              "string": "Μηδέν με κάθετο [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 274,
+              "platform_id": 3,
+              "string": "Ι με πατούρα (▲ ι )"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 275,
+              "platform_id": 3,
+              "string": "Ι με πατούρα (▲ ι )"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 276,
+              "platform_id": 3,
+              "string": "Εναλλακτικά β θ φ"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 277,
+              "platform_id": 3,
+              "string": "Ρέων β"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 278,
+              "platform_id": 3,
+              "string": "Εναλλακτικό θ"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 279,
+              "platform_id": 3,
+              "string": "Εναλλακτικό φ"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 280,
+              "platform_id": 3,
+              "string": "Λατινικό a με πατούρα"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 281,
+              "platform_id": 3,
+              "string": "Κεντρικά ογκονεκ [ Ą Ę ą ę ų ] (Να-Ντενέ)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 282,
+              "platform_id": 3,
+              "string": "ΓράμμαΕνγκ σε σχήμα Ν [ Ŋ ] (Σάμη)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 283,
+              "platform_id": 3,
+              "string": "Κεφαλαίοι αριθμοί"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1032,
+              "name_id": 284,
+              "platform_id": 3,
+              "string": "Μηδέν με κεντρική τελεία [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "© 2023 Adobe (http://www.adobe.com/), with Reserved Font Name ‘Source’"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Source Sans 3"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "3.052;ADBO;SourceSans3-Regular;ADOBE"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Source Sans 3"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "SourceSans3-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Source is a trademark of Adobe in the United States and/or other countries."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Adobe"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "Paul D. Hunt"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.adobe.com/type"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL. This Font Software is distributed on an ‘AS IS’ BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "http://scripts.sil.org/OFL"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Simple a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Simple g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 258,
+              "platform_id": 3,
+              "string": "Simple l (▼ L)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 259,
+              "platform_id": 3,
+              "string": "Serifed a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 260,
+              "platform_id": 3,
+              "string": "Centered ogoneks [ Ą Ę ą ę ų ] (Na-Dené)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 261,
+              "platform_id": 3,
+              "string": "N-shaped Eng [ Ŋ ] (Sami)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 262,
+              "platform_id": 3,
+              "string": "Greek alternates for phonetics [ ɑ ꞵ ɣ ɩ ʊ ɸ ꭓ ] (IPA)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 263,
+              "platform_id": 3,
+              "string": "Greek cursive beta [ β ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 264,
+              "platform_id": 3,
+              "string": "Greek alternate theta [ θ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 265,
+              "platform_id": 3,
+              "string": "Greek alternate phi [ φ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 266,
+              "platform_id": 3,
+              "string": "Cyrillic lowercase alternates with ascenders [ ж к ю ] (Bulgarian)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 267,
+              "platform_id": 3,
+              "string": "Cyrillic cursive be [ б ] (Serbian)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 268,
+              "platform_id": 3,
+              "string": "Cyrillic cursive forms [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 269,
+              "platform_id": 3,
+              "string": "Cyrillic geometric forms [ Д Л Љ д л љ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 270,
+              "platform_id": 3,
+              "string": "Cyrillic simple forms [ Ж К ж к ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 271,
+              "platform_id": 3,
+              "string": "Capital figures"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 272,
+              "platform_id": 3,
+              "string": "Dotted zero [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 273,
+              "platform_id": 3,
+              "string": "Slashed zero [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 274,
+              "platform_id": 3,
+              "string": "Serifed I (▲ i)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 275,
+              "platform_id": 3,
+              "string": "Serifed I (▲ i)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 276,
+              "platform_id": 3,
+              "string": "Simple a g l"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 277,
+              "platform_id": 3,
+              "string": "Simple a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 278,
+              "platform_id": 3,
+              "string": "Simple g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 279,
+              "platform_id": 3,
+              "string": "Simple l (▼ L)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 280,
+              "platform_id": 3,
+              "string": "Serifed a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 281,
+              "platform_id": 3,
+              "string": "Centered ogoneks [ Ą Ę ą ę ų ] (Na-Dené)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 282,
+              "platform_id": 3,
+              "string": "N-shaped Eng [ Ŋ ] (Sami)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 283,
+              "platform_id": 3,
+              "string": "Capital figures"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 284,
+              "platform_id": 3,
+              "string": "Dotted zero [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Простая а"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Простая латинская g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 258,
+              "platform_id": 3,
+              "string": "Простая ӏ (▼ Ӏ)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 259,
+              "platform_id": 3,
+              "string": "а с засечкам"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 260,
+              "platform_id": 3,
+              "string": "Огонэки центрированные [ Ą Ę ą ę ų ] (На-Дене)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 261,
+              "platform_id": 3,
+              "string": "Энг N-образная [ Ŋ ] (Саамская)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 262,
+              "platform_id": 3,
+              "string": "Греческие альтернативные буквы для фонетики [ ɑ ꞵ ɣ ɩ ʊ ɸ ꭓ ] (МФА)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 263,
+              "platform_id": 3,
+              "string": "Греческая бета курсивная [ β ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 264,
+              "platform_id": 3,
+              "string": "Греческая тета альтернативная [ θ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 265,
+              "platform_id": 3,
+              "string": "Греческая фита альтернативная [ φ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 266,
+              "platform_id": 3,
+              "string": "Строчные альтернативные с восходящими [ ж к ю ] (Болгарские)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 267,
+              "platform_id": 3,
+              "string": "Курсивная б (Сербская)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 268,
+              "platform_id": 3,
+              "string": "Курсивные буквы [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 269,
+              "platform_id": 3,
+              "string": "Кириллические курсивные буквы [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 270,
+              "platform_id": 3,
+              "string": "Простые буквы [ Ж К ж к ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 271,
+              "platform_id": 3,
+              "string": "Заглавные цифры"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 272,
+              "platform_id": 3,
+              "string": "Ноль с пунктиром [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 273,
+              "platform_id": 3,
+              "string": "Перечеркнутый ноль [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 274,
+              "platform_id": 3,
+              "string": "І с засечками (▲ і)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 275,
+              "platform_id": 3,
+              "string": "І с засечками (▲ і)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 276,
+              "platform_id": 3,
+              "string": "Простые, геометрические буквы [ Д Ж К Л Љ д ж к л љ ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 277,
+              "platform_id": 3,
+              "string": "Простая а"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 278,
+              "platform_id": 3,
+              "string": "Кириллические курсивные буквы [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 279,
+              "platform_id": 3,
+              "string": "Простые буквы [ Ж К ж к ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 280,
+              "platform_id": 3,
+              "string": "а с засечкам"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 281,
+              "platform_id": 3,
+              "string": "Курсивные буквы [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 282,
+              "platform_id": 3,
+              "string": "Сербский б"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 283,
+              "platform_id": 3,
+              "string": "Заглавные цифры"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1049,
+              "name_id": 284,
+              "platform_id": 3,
+              "string": "Ноль с пунктиром [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 256,
+              "platform_id": 3,
+              "string": "Simple a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 257,
+              "platform_id": 3,
+              "string": "Simple g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 258,
+              "platform_id": 3,
+              "string": "Simple l (▼ L)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 259,
+              "platform_id": 3,
+              "string": "Serifed a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 260,
+              "platform_id": 3,
+              "string": "Centered ogoneks [ Ą Ę ą ę ų ] (Na-Dené)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 261,
+              "platform_id": 3,
+              "string": "N-shaped Eng [ Ŋ ] (Sami)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 262,
+              "platform_id": 3,
+              "string": "Greek alternates for phonetics [ ɑ ꞵ ɣ ɩ ʊ ɸ ꭓ ] (IPA)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 263,
+              "platform_id": 3,
+              "string": "Greek cursive beta [ β ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 264,
+              "platform_id": 3,
+              "string": "Greek alternate theta [ θ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 265,
+              "platform_id": 3,
+              "string": "Greek alternate phi [ φ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 266,
+              "platform_id": 3,
+              "string": "Cyrillic lowercase alternates with ascenders [ ж к ю ] (Bulgarian)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 267,
+              "platform_id": 3,
+              "string": "Cyrillic cursive be [ б ] (Serbian)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 268,
+              "platform_id": 3,
+              "string": "Cyrillic cursive forms [ в г д з и й п т ц ш щ ѝ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 269,
+              "platform_id": 3,
+              "string": "Cyrillic geometric forms [ Д Л Љ д л љ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 270,
+              "platform_id": 3,
+              "string": "Cyrillic simple forms [ Ж К ж к ӏ ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 271,
+              "platform_id": 3,
+              "string": "Capital figures"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 272,
+              "platform_id": 3,
+              "string": "Dotted zero [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 273,
+              "platform_id": 3,
+              "string": "Slashed zero [ 0 ]"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 274,
+              "platform_id": 3,
+              "string": "Serifed I (▲ i)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 275,
+              "platform_id": 3,
+              "string": "Serifed I (▲ i)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 276,
+              "platform_id": 3,
+              "string": "Simple a g l"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 277,
+              "platform_id": 3,
+              "string": "Simple a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 278,
+              "platform_id": 3,
+              "string": "Simple g"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 279,
+              "platform_id": 3,
+              "string": "Simple l (▼ L)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 280,
+              "platform_id": 3,
+              "string": "Serifed a"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 281,
+              "platform_id": 3,
+              "string": "Centered ogoneks [ Ą Ę ą ę ų ] (Na-Dené)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 282,
+              "platform_id": 3,
+              "string": "N-shaped Eng [ Ŋ ] (Sami)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 283,
+              "platform_id": 3,
+              "string": "Capital figures"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 2057,
+              "name_id": 284,
+              "platform_id": 3,
+              "string": "Dotted zero [ 0 ]"
+            }
+          ],
+          "outlines": {
+            "count": 2478,
+            "digest": "57f2cbb3fe3b37fd698534eb605ebc60b8462135ba9fd45ae1068b41d80b7bcc",
+            "kind": "glyf"
+          },
+          "post": {
+            "glyph_name_count": 2478,
+            "glyph_names_sha256": "a554d7b313eaacbffe653b84695eff06e5910ab20a116d1929e7965c70162a64",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -50,
+            "underline_thickness": 50,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 70,
+              "sha256": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
+              "tag": "BASE"
+            },
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "cbbc48750debb8535093b3deaf88ac7f4cff87425576a58de2bac754acdb4616",
+              "tag": "DSIG"
+            },
+            {
+              "error": null,
+              "length": 1514,
+              "sha256": "60de4c9f79edc6340c0f6511cb3fa81af997625b40eb8631a1a3b5ddf4bc5718",
+              "tag": "GDEF"
+            },
+            {
+              "error": null,
+              "length": 96520,
+              "sha256": "ef96af43be5e180e7553ea5679d33bd0751630717072fa9b58002414c13b94ca",
+              "tag": "GPOS"
+            },
+            {
+              "error": null,
+              "length": 39734,
+              "sha256": "a7a37ef5c6549bb956545bc70ded05224edfa5c3a8483e9b701a37375df23da6",
+              "tag": "GSUB"
+            },
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "f161b737b96a7cfd7f66e1179c21f8fd10c9967c4a76793bddf1b20841f1985c",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 17466,
+              "sha256": "5ec656eed350eaf5f5b19cd87ff14a282150f075e54ebbe2e310ebe493d8a9aa",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 304,
+              "sha256": "2acd5e995a7ffa3b3087461b2d73e5d2981991ee921781313c9e8ce4f0dd0949",
+              "tag": "cvt "
+            },
+            {
+              "error": null,
+              "length": 3596,
+              "sha256": "08929844619198eaa9f4c265ba8521746c1b19ce3c9be38edd63c9cf5f11a5d2",
+              "tag": "fpgm"
+            },
+            {
+              "error": null,
+              "length": 8,
+              "sha256": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+              "tag": "gasp"
+            },
+            {
+              "error": null,
+              "length": 217954,
+              "sha256": "b93713c427ecfe78ebc9a5f5a3aa93902d583a12cf401522e22df48eb31ad437",
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "1713c754ae2c42690be8cef17c0d23d881469a234ee2b0598b8c21d88e83af54",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "944d0454f16d2a5a9b893e3c6604669b0bb00699e54855f35f67d0526ef2c3c5",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 9910,
+              "sha256": "35b522b413597086486fa9cdb81efe6571de9cea7173b4d9639c1c13666b269e",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 9916,
+              "sha256": "5d5cbcaeb4d1a140c164aa26bed7d607497966ba4bd43f8dc69daf6f75a9eee5",
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "4ee59081566a17136a51a602fc48c26443220492dbd6578352039d07a5da4352",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 9034,
+              "sha256": "79a4793de4f0a5a23a7abd157f753b0a74870e48a6d42d3dd6537e74c1bc0a86",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 24347,
+              "sha256": "781f10b0f72ed85d0e29fad5c6f1ef38b7626870e686df8d5eeb4c9ce6631fd6",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": 261,
+              "sha256": "a3b0d28da9f1cfa3b4cd800c63c0d052f4e85d517311d3d32d0df408cd5ac27f",
+              "tag": "prep"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

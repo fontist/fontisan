@@ -1,0 +1,175 @@
+{
+  "cases": {
+    "format:ttf": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "error": {
+        "class": "Fontisan::Error",
+        "message": "Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "instance:0": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 13107200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:1": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 19660800
+        },
+        "op": "instance"
+      }
+    },
+    "instance:2": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 26214400
+        },
+        "op": "instance"
+      }
+    },
+    "instance:3": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 32768000
+        },
+        "op": "instance"
+      }
+    },
+    "instance:4": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 39321600
+        },
+        "op": "instance"
+      }
+    },
+    "instance:5": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 45875200
+        },
+        "op": "instance"
+      }
+    },
+    "instance:6": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingVariationTableError",
+        "message": "Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
+      },
+      "outcome": "error",
+      "params": {
+        "coords_raw": {
+          "wght": 58982400
+        },
+        "op": "instance"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingTableError",
+        "message": "Font has neither glyf nor CFF table"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "error": {
+        "class": "Fontisan::MissingTableError",
+        "message": "Font has neither glyf nor CFF table"
+      },
+      "outcome": "error",
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          32,
+          296,
+          634,
+          1012,
+          7720,
+          8011,
+          8331,
+          129302
+        ]
+      }
+    }
+  },
+  "font": "source-sans-3-vf-upright-cff2",
+  "source_format": "otf",
+  "source_sha256": "3d0dfd6a3a644ab3d462a737923ffac41fb0ae007ce9ba83c24e6bfa76aa56c7",
+  "timestamp": 1735689600
+}

@@ -1,0 +1,187 @@
+{
+  "cases": {
+    "extract:0": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "TestTTF-Regular.ttf",
+        "format": "ttf",
+        "sha256": "2b9b4e3cda12c14f82cc12daa5419d3f57642287a9880ae6fae86e6540a9843d",
+        "size": 2336
+      },
+      "params": {
+        "index": 0,
+        "op": "extract"
+      }
+    },
+    "extract:1": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "SharedTwo-Regular.ttf",
+        "format": "ttf",
+        "sha256": "6c6133f1bd5e4ecb23f0d29205ed9be0418c4e0d08897fac7babbb4731bebf3b",
+        "size": 1704
+      },
+      "params": {
+        "index": 1,
+        "op": "extract"
+      }
+    },
+    "extract:2": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "SharedThree-Regular.ttf",
+        "format": "ttf",
+        "sha256": "0f68395b774d69de8c4ef4aa5e487e3ad295aeb2f3da5a32964f721861d2c174",
+        "size": 1704
+      },
+      "params": {
+        "index": 2,
+        "op": "extract"
+      }
+    },
+    "extract:3": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "basename": "TestOTF-Regular.ttf",
+        "format": "otf",
+        "sha256": "3d5094f6641ccccac9a61f9d09fe47b20a2a564c2e8f89aea5e901bf57897ef6",
+        "size": 3616
+      },
+      "params": {
+        "index": 3,
+        "op": "extract"
+      }
+    },
+    "format:otc": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttc",
+        "sha256": "dccb2579d2a4dd78d23fa6ee797e1583c99248f40fa75e4a291a5bf9757f7298",
+        "size": 4836
+      },
+      "params": {
+        "op": "format",
+        "to": "otc"
+      }
+    },
+    "format:ttc": {
+      "class": "exact",
+      "known_reference_bug": "overlapping tables",
+      "ots": {
+        "detail": "member 0: ERROR: overlapping tables | Failed to sanitize file! ; member 1: ERROR: overlapping tables | Failed to sanitize file! ; member 2: ERROR: overlapping tables | Failed to sanitize file!",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttc",
+        "sha256": "58f8ce687dba6990cb7e5c98e49240226d78633d7a577488c54fba727774a115",
+        "size": 4832
+      },
+      "params": {
+        "op": "format",
+        "to": "ttc"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "4ae4f8bd2de8451297e31f209b971b027628afb5e965c12e5f17a4168928a58c",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "f1e8efaa5a571a78b3ef8d35e031769bd5f71823038f7f32cd3c13220c58f41e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        },
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "4ae4f8bd2de8451297e31f209b971b027628afb5e965c12e5f17a4168928a58c",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "05b633f93c6bda30a5ee37f6fd68882b67c5a353ea6f3482c4f8721f6d9fcd91",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        },
+        {
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
+          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
+          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
+          "head": "4ae4f8bd2de8451297e31f209b971b027628afb5e965c12e5f17a4168928a58c",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
+          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
+          "name": "4db9814a7d88a8426ee1e4ce78412422cc0defad507a0b69246c6d5cc3be354e",
+          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
+          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+        },
+        {
+          "CFF ": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
+          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
+          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
+          "head": "9948c9542969822f5dbc28869e0121d9b82972ad30f13d5fd0f601a7eb6c8270",
+          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
+          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
+          "maxp": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
+          "name": "ebb5dff6e53ba8c6c44ab39e81de2ddb2575513870a09e877f194619690837c4",
+          "post": "77a232e4db6b60c21f7b76ccf821e3c80c519901f11d10efb8c8df04ca82a4e8"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "6dbde6801b3bb803ac434b8c267d3ae3a30ab9bd5c38a5cebd561ef348e6eb34",
+        "size": 1220
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    }
+  },
+  "font": "ttc-4members-shared",
+  "source_format": "ttc",
+  "source_sha256": "58f8ce687dba6990cb7e5c98e49240226d78633d7a577488c54fba727774a115",
+  "timestamp": 1735689600
+}

@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "SourceSans3-Regular.otf",
+  "font_sha256": "08df266400933d3178d081a45f94a08814c3e55b4b7dd2e0ff69cb1329f13ab6",
+  "id": "source-sans-3-regular-otf",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Source Sans 3",
+        "full_name": "Source Sans 3",
+        "postscript_name": "SourceSans3-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "SourceSans3-Regular.otf",
+      "sha256": "08df266400933d3178d081a45f94a08814c3e55b4b7dd2e0ff69cb1329f13ab6",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

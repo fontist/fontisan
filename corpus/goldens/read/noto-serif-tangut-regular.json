@@ -1,0 +1,739 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            12
+          ],
+          "family_name": "Noto Serif Tangut",
+          "font_revision_raw": 142213,
+          "full_name": "Noto Serif Tangut Regular",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 0 5 0 0 0 0 0 0 0",
+          "postscript_name": "NotoSerifTangut-Regular",
+          "source_file": "NotoSerifTangut-Regular.ttf",
+          "source_format": "ttf",
+          "source_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+          "subfamily_name": "Regular",
+          "total_codepoints": 6920,
+          "total_glyphs": 6923,
+          "version": "Version 2.170",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            12
+          ],
+          "family_name": "Noto Serif Tangut",
+          "font_revision_raw": 142213,
+          "full_name": "Noto Serif Tangut Regular",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 0 5 0 0 0 0 0 0 0",
+          "postscript_name": "NotoSerifTangut-Regular",
+          "source_file": "NotoSerifTangut-Regular.ttf",
+          "source_format": "ttf",
+          "source_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+          "subfamily_name": "Regular",
+          "total_codepoints": 6920,
+          "total_glyphs": 6923,
+          "validation_issues": [
+            {
+              "category": "hinting",
+              "location": "tables.gasp",
+              "message": "TrueType font has no 'gasp' table — grid-fitting behavior per ppem is implementation-defined",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 0,
+            "info_count": 1,
+            "passed": true,
+            "total": 1,
+            "warning_count": 0
+          },
+          "version": "Version 2.170",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "comparison_class": "exact",
+  "file": "NotoSerifTangut-Regular.ttf",
+  "font_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+  "generated_in": "any",
+  "id": "noto-serif-tangut-regular",
+  "known_reference_bug": [],
+  "read": {
+    "full/eager": {
+      "same_as": "full/lazy"
+    },
+    "full/lazy": {
+      "ok": [
+        {
+          "cmap": {
+            "count": 6920,
+            "sha256": "b032fc09867106079c4ca68f6e52187e743c821c4ec65a60a7b8f1b4fc987e41",
+            "subtable_formats": [
+              4,
+              12
+            ]
+          },
+          "file_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+          "format": "ttf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                0,
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "s_cap_height": 712,
+              "s_family_class": 0,
+              "s_typo_ascender": 856,
+              "s_typo_descender": -150,
+              "s_typo_line_gap": 0,
+              "sx_height": 502,
+              "ul_code_page_range1": 1,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 3,
+              "ul_unicode_range2": 33554432,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 65535,
+              "us_max_context": 0,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 856,
+              "us_win_descent": 150,
+              "version": 4,
+              "x_avg_char_width": 1000,
+              "y_strikeout_position": 301,
+              "y_strikeout_size": 49,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 4231458511,
+              "created_raw": 3695254637,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 142213,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 1,
+              "lowest_rec_ppem": 6,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3835668535,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 1007,
+              "x_min": 4,
+              "y_max": 857,
+              "y_min": -114
+            },
+            "hhea": {
+              "advance_width_max": 1000,
+              "ascent": 856,
+              "caret_offset": 0,
+              "caret_slope_rise": 1000,
+              "caret_slope_run": 0,
+              "descent": -150,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": 4,
+              "min_right_side_bearing": -7,
+              "number_of_h_metrics": 6923,
+              "version_raw": 65536,
+              "x_max_extent": 1007
+            },
+            "maxp": {
+              "max_component_depth": 0,
+              "max_component_elements": 0,
+              "max_composite_contours": 0,
+              "max_composite_points": 0,
+              "max_contours": 33,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 513,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 6923,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "full",
+          "names": [
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/tangut)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Serif Tangut"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.170;GOOG;NotoSerifTangut-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Serif Tangut Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.170"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSerifTangut-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google LLC."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Liu Zhao Studio"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "YANG Xicheng"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "See README.md in https://github.com/notofonts/tangut for credits"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://scripts.sil.org/OFL"
+            }
+          ],
+          "outlines": {
+            "count": 6923,
+            "digest": "d2c2e41ba7325adfa77d59c1663e9e7d8fddb4eec68193523963790732a4ff28",
+            "kind": "glyf"
+          },
+          "post": {
+            "glyph_name_count": 6923,
+            "glyph_names_sha256": "92665807dfbdbe93133a84196dd59ac11b8f7130483a956752b41d9b504fb9f5",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -150,
+            "underline_thickness": 48,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "f94da0c14905ee3ab102fded25b899a8ae963da238a8edd88bc94c029fe1c162",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": 216,
+              "sha256": "8ef5d27f9eca227f407e9ed5ad56ef5497cd2e731e8667ea83d014eb6572efb7",
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": 2918175,
+              "sha256": "c41e70d8bb5cca736ca53720cb4e459a46d723f44a3a2677cc9fd3363b73a6f2",
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "c0de207a35f0cc3eec9b685515e75995450f460088dee3ff0da590ca0a5e4c3a",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "8cb08cbf962fb83dd9ae16b667d4f409c151384a7bc6ef761eb80b9d0751df39",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": 27692,
+              "sha256": "a18787d9a38b167402ba968f4c2215d6af5a3edecc4ea85509af510fe4433cb9",
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": 27696,
+              "sha256": "f8c2e904ce9f76cbe102a3ed8e29c8543b999842c8fe0057de6d6e73b8be4293",
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "44ba94fda350fb42f03af228ecabf65634365f087911a209fc0fbac26d4a520a",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 1222,
+              "sha256": "e5d6e0907e8c44789f83cb523374a1a9ea7c76392b95c4980993777d74e11dc5",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 62322,
+              "sha256": "c7c3cbbc2c883efc626cf14259f4e9be0ffbc3c4bb72be1f86860469402218c4",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "45ff0c6c47b14aae26d6762adb6bb89625449a594ca7ea27429cb70aa03a6546",
+              "tag": "vhea"
+            },
+            {
+              "error": null,
+              "length": 27688,
+              "sha256": "0863f8a5fec4112b9b08ba97cfc8074552ef15a566ff643bc702779abd712466",
+              "tag": "vmtx"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    },
+    "metadata/eager": {
+      "same_as": "metadata/lazy"
+    },
+    "metadata/lazy": {
+      "ok": [
+        {
+          "cmap": null,
+          "file_sha256": "edcc5b7727fa4d1345d2fca93305c8b90ad88d4975152d4aed79564c9117db91",
+          "format": "ttf",
+          "fvar": null,
+          "header_fields": {
+            "OS/2": {
+              "ach_vend_id": "GOOG",
+              "fs_selection": 192,
+              "fs_type": 0,
+              "panose": [
+                2,
+                0,
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "s_cap_height": 712,
+              "s_family_class": 0,
+              "s_typo_ascender": 856,
+              "s_typo_descender": -150,
+              "s_typo_line_gap": 0,
+              "sx_height": 502,
+              "ul_code_page_range1": 1,
+              "ul_code_page_range2": 0,
+              "ul_unicode_range1": 3,
+              "ul_unicode_range2": 33554432,
+              "ul_unicode_range3": 0,
+              "ul_unicode_range4": 0,
+              "us_break_char": 32,
+              "us_default_char": 0,
+              "us_first_char_index": 0,
+              "us_last_char_index": 65535,
+              "us_max_context": 0,
+              "us_weight_class": 400,
+              "us_width_class": 5,
+              "us_win_ascent": 856,
+              "us_win_descent": 150,
+              "version": 4,
+              "x_avg_char_width": 1000,
+              "y_strikeout_position": 301,
+              "y_strikeout_size": 49,
+              "y_subscript_x_offset": 0,
+              "y_subscript_x_size": 650,
+              "y_subscript_y_offset": 75,
+              "y_subscript_y_size": 600,
+              "y_superscript_x_offset": 0,
+              "y_superscript_x_size": 650,
+              "y_superscript_y_offset": 350,
+              "y_superscript_y_size": 600
+            },
+            "head": {
+              "checksum_adjustment": 4231458511,
+              "created_raw": 3695254637,
+              "flags": 3,
+              "font_direction_hint": 2,
+              "font_revision_raw": 142213,
+              "glyph_data_format": 0,
+              "index_to_loc_format": 1,
+              "lowest_rec_ppem": 6,
+              "mac_style": 0,
+              "magic_number": 1594834165,
+              "modified_raw": 3835668535,
+              "units_per_em": 1000,
+              "version_raw": 65536,
+              "x_max": 1007,
+              "x_min": 4,
+              "y_max": 857,
+              "y_min": -114
+            },
+            "hhea": {
+              "advance_width_max": 1000,
+              "ascent": 856,
+              "caret_offset": 0,
+              "caret_slope_rise": 1000,
+              "caret_slope_run": 0,
+              "descent": -150,
+              "line_gap": 0,
+              "metric_data_format": 0,
+              "min_left_side_bearing": 4,
+              "min_right_side_bearing": -7,
+              "number_of_h_metrics": 6923,
+              "version_raw": 65536,
+              "x_max_extent": 1007
+            },
+            "maxp": {
+              "max_component_depth": 0,
+              "max_component_elements": 0,
+              "max_composite_contours": 0,
+              "max_composite_points": 0,
+              "max_contours": 33,
+              "max_function_defs": 0,
+              "max_instruction_defs": 0,
+              "max_points": 513,
+              "max_size_of_instructions": 0,
+              "max_stack_elements": 0,
+              "max_storage": 0,
+              "max_twilight_points": 0,
+              "max_zones": 1,
+              "num_glyphs": 6923,
+              "version_raw": 65536
+            }
+          },
+          "index": 0,
+          "layout": {
+            "GPOS": null,
+            "GSUB": null
+          },
+          "lazy": true,
+          "mode": "metadata",
+          "names": [
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 0,
+              "platform_id": 3,
+              "string": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/tangut)"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 1,
+              "platform_id": 3,
+              "string": "Noto Serif Tangut"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 2,
+              "platform_id": 3,
+              "string": "Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 3,
+              "platform_id": 3,
+              "string": "2.170;GOOG;NotoSerifTangut-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 4,
+              "platform_id": 3,
+              "string": "Noto Serif Tangut Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 5,
+              "platform_id": 3,
+              "string": "Version 2.170"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 6,
+              "platform_id": 3,
+              "string": "NotoSerifTangut-Regular"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 7,
+              "platform_id": 3,
+              "string": "Noto is a trademark of Google LLC."
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 8,
+              "platform_id": 3,
+              "string": "Liu Zhao Studio"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 9,
+              "platform_id": 3,
+              "string": "YANG Xicheng"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 10,
+              "platform_id": 3,
+              "string": "See README.md in https://github.com/notofonts/tangut for credits"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 11,
+              "platform_id": 3,
+              "string": "http://www.google.com/get/noto/"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 13,
+              "platform_id": 3,
+              "string": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
+            },
+            {
+              "encoding_id": 1,
+              "language_id": 1033,
+              "name_id": 14,
+              "platform_id": 3,
+              "string": "https://scripts.sil.org/OFL"
+            }
+          ],
+          "outlines": {
+            "count": 0,
+            "digest": null,
+            "kind": null
+          },
+          "post": {
+            "glyph_name_count": 6923,
+            "glyph_names_sha256": "92665807dfbdbe93133a84196dd59ac11b8f7130483a956752b41d9b504fb9f5",
+            "is_fixed_pitch": 0,
+            "italic_angle_raw": 0,
+            "max_mem_type1": 0,
+            "max_mem_type42": 0,
+            "min_mem_type1": 0,
+            "min_mem_type42": 0,
+            "underline_position": -150,
+            "underline_thickness": 48,
+            "version_raw": 131072
+          },
+          "tables": [
+            {
+              "error": null,
+              "length": 96,
+              "sha256": "f94da0c14905ee3ab102fded25b899a8ae963da238a8edd88bc94c029fe1c162",
+              "tag": "OS/2"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "cmap"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "glyf"
+            },
+            {
+              "error": null,
+              "length": 54,
+              "sha256": "c0de207a35f0cc3eec9b685515e75995450f460088dee3ff0da590ca0a5e4c3a",
+              "tag": "head"
+            },
+            {
+              "error": null,
+              "length": 36,
+              "sha256": "8cb08cbf962fb83dd9ae16b667d4f409c151384a7bc6ef761eb80b9d0751df39",
+              "tag": "hhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "hmtx"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "loca"
+            },
+            {
+              "error": null,
+              "length": 32,
+              "sha256": "44ba94fda350fb42f03af228ecabf65634365f087911a209fc0fbac26d4a520a",
+              "tag": "maxp"
+            },
+            {
+              "error": null,
+              "length": 1222,
+              "sha256": "e5d6e0907e8c44789f83cb523374a1a9ea7c76392b95c4980993777d74e11dc5",
+              "tag": "name"
+            },
+            {
+              "error": null,
+              "length": 62322,
+              "sha256": "c7c3cbbc2c883efc626cf14259f4e9be0ffbc3c4bb72be1f86860469402218c4",
+              "tag": "post"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "vhea"
+            },
+            {
+              "error": null,
+              "length": null,
+              "sha256": null,
+              "tag": "vmtx"
+            }
+          ],
+          "variation": {
+            "HVAR": null,
+            "MVAR": null,
+            "STAT": null,
+            "VVAR": null,
+            "gvar": null
+          }
+        }
+      ]
+    }
+  },
+  "schema": 1,
+  "tier": "ci"
+}

@@ -1,0 +1,145 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed to parse Name INDEX data",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed to parse Name INDEX data | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "f0a15f4a75b628cb89d536038f1861b8cd545126abea5eee450d35cb29d32fc1",
+        "size": 758748
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:woff": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "b4b28b43f9c0d3f2b7457553cfff49ad01844a1f0bf4d7796fb0505104571b5d",
+          "GPOS": "0d5975d7dad7aeba5897c3d14095cca8ee4a953e46a3c2a2ce805951380bc50e",
+          "GSUB": "d1887693378fa2ce355a28be8fd9105aac457999b0be1c0b3ce593bf76dbe681",
+          "OS/2": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+          "cmap": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
+          "cvt ": "39fcd42fa379023fb86280ce6e6c240ce1c1ce42a9d53624e8d5e189444ced9d",
+          "fpgm": "08929844619198eaa9f4c265ba8521746c1b19ce3c9be38edd63c9cf5f11a5d2",
+          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+          "glyf": "a9deb644f7e0e1ae14fc46a08b51383868e511a2cd6a83c8fcd5698c91844d9c",
+          "head": "ec92e0c65c4dbe91f5e7874b83c81eef8aedc263d7ba7d1c2123352bdfe3dcfb",
+          "hhea": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+          "hmtx": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
+          "loca": "eb44e16018bd5e6046d95c21d752ece1ef3e8ba43a1ee9c9a9c62a334931a4a2",
+          "maxp": "561c9d340aa7650a04bbfe61cb93c3e969a48a2691b82e4d8e1f85d30d79d2a4",
+          "name": "3dfdd6578e3e54b5152b975738fb92971df378e2ab1bbc54e79e5f9187423307",
+          "post": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+          "prep": "daf5e56e08246829bde80241de2787993fd0b1203f582a8c0d30e2beabd133fc"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff",
+        "sha256": "704cc6b52241c4dc2cc49d92a7cb269f7b46c745833469df52ec17e7507ac635",
+        "size": 312556
+      },
+      "params": {
+        "op": "format",
+        "to": "woff"
+      }
+    },
+    "format:woff2": {
+      "class": "decoded-exact",
+      "decoded_tables": [
+        {
+          "GDEF": "b4b28b43f9c0d3f2b7457553cfff49ad01844a1f0bf4d7796fb0505104571b5d",
+          "GPOS": "0d5975d7dad7aeba5897c3d14095cca8ee4a953e46a3c2a2ce805951380bc50e",
+          "GSUB": "d1887693378fa2ce355a28be8fd9105aac457999b0be1c0b3ce593bf76dbe681",
+          "OS/2": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
+          "cmap": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
+          "cvt ": "39fcd42fa379023fb86280ce6e6c240ce1c1ce42a9d53624e8d5e189444ced9d",
+          "fpgm": "08929844619198eaa9f4c265ba8521746c1b19ce3c9be38edd63c9cf5f11a5d2",
+          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
+          "glyf": "690b520dbbbf209776e864f7c4897e6425ae775f2e5074f904f73f4eef00e625",
+          "head": "da45e1910dbd78bda33473fe6cea2bdf700b702f516d304aa27451e0842ffc70",
+          "hhea": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
+          "hmtx": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
+          "loca": "c42a891bdc295e47ae38eb74b5360b3e1fe4ed689463287d34ba0360640262d3",
+          "maxp": "561c9d340aa7650a04bbfe61cb93c3e969a48a2691b82e4d8e1f85d30d79d2a4",
+          "name": "3dfdd6578e3e54b5152b975738fb92971df378e2ab1bbc54e79e5f9187423307",
+          "post": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
+          "prep": "daf5e56e08246829bde80241de2787993fd0b1203f582a8c0d30e2beabd133fc"
+        }
+      ],
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "woff2",
+        "sha256": "f1d5ac246546a6b54fe4e60ef1ea61c17bbfe9dd233539f480a0d6504efdabff",
+        "size": 215824
+      },
+      "params": {
+        "op": "format",
+        "to": "woff2"
+      }
+    },
+    "subset:text-latin": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 3884 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "e84841c3161fa4237e539a4fa253dbaf873797086e84fd168539f83b9f3687b8",
+        "size": 146988
+      },
+      "params": {
+        "op": "subset",
+        "text": "Hamburgefonstiv 0123"
+      }
+    },
+    "subset:unicodes-sample": {
+      "class": "exact",
+      "known_reference_bug": "post: Bad number of glyphs: N",
+      "ots": {
+        "detail": "member 0: ERROR: post: Bad number of glyphs: 3884 | ERROR: post: Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "1f6fef5f78ab35f6688cd83fd27d7b1647df62a27ea8b494a3630d208b22821f",
+        "size": 145568
+      },
+      "params": {
+        "op": "subset",
+        "unicodes": [
+          0,
+          486,
+          918,
+          7297,
+          7841,
+          8287,
+          42633,
+          122654
+        ]
+      }
+    }
+  },
+  "font": "noto-sans-hinted-regular",
+  "source_format": "ttf",
+  "source_sha256": "478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823",
+  "timestamp": 1735689600
+}

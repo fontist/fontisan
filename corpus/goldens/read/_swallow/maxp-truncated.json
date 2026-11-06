@@ -1,0 +1,117 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "maxp-truncated.ttf",
+          "source_format": "ttf",
+          "source_sha256": "ae542dc444f3979aae29af95dc03071a72adae1f66a7c2416ad4622e5757f258",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 0,
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "maxp-truncated.ttf",
+          "source_format": "ttf",
+          "source_sha256": "ae542dc444f3979aae29af95dc03071a72adae1f66a7c2416ad4622e5757f258",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 0,
+          "validation_issues": [
+            {
+              "category": "ots_compatibility",
+              "message": "Check ots_compatibility failed to execute: EOFError: End of file reached",
+              "severity": "fatal"
+            },
+            {
+              "category": "hinting",
+              "message": "Check hinting failed to execute: EOFError: End of file reached",
+              "severity": "fatal"
+            },
+            {
+              "category": "opentype_conformance",
+              "message": "Check opentype_conformance failed to execute: EOFError: End of file reached",
+              "severity": "fatal"
+            },
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Test TTF' doesn't match Family + Subfamily 'Test TTF Regular'",
+              "severity": "info"
+            },
+            {
+              "category": "ot_maxp",
+              "message": "Check ot_maxp failed to execute: EOFError: End of file reached",
+              "severity": "fatal"
+            },
+            {
+              "category": "ot_glyf",
+              "message": "Check ot_glyf failed to execute: EOFError: End of file reached",
+              "severity": "fatal"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 5,
+            "info_count": 1,
+            "passed": false,
+            "total": 6,
+            "warning_count": 0
+          },
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "case": "maxp-truncated",
+  "comparison_class": "exact",
+  "font_sha256": "ae542dc444f3979aae29af95dc03071a72adae1f66a7c2416ad4622e5757f258",
+  "known_reference_bug": [],
+  "read": {
+    "full/eager": {
+      "error": {
+        "class": "EOFError",
+        "message": "End of file reached"
+      }
+    }
+  },
+  "schema": 1,
+  "source": "fonttools-test-ttf"
+}

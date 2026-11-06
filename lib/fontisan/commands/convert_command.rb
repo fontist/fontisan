@@ -64,6 +64,8 @@ module Fontisan
       # @option options [Boolean] :preserve_variation Preserve variation data (default: auto)
       # @option options [Boolean] :preserve_hints Preserve rendering hints (default: false)
       # @option options [String] :target_format Target outline format for collections: 'preserve' (default), 'ttf', or 'otf'
+      # @option options [Integer] :timestamp Fixed head.modified (Unix seconds)
+      #   for WOFF2 output; nil (default) stamps the current time
       # @option options [Boolean] :no_validate Skip output validation
       # @option options [Boolean] :verbose Verbose output
       # @option options [ConversionOptions] :options ConversionOptions object
@@ -268,6 +270,7 @@ module Fontisan
             output: @output_path,
             target_format: @collection_target_format,
             verbose: @options[:verbose],
+            timestamp: @options[:timestamp],
             options: @conv_options, # Pass ConversionOptions
           },
         )

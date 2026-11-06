@@ -1,0 +1,141 @@
+name: corpus
+
+# Reference corpus (fontist/fontisan#157): per-PR `ci` tier, nightly `large` tier.
+on:
+  pull_request:
+    paths:
+      - "corpus/**"
+      - "rakelib/corpus.rake"
+      - "rakelib/corpus_goldens.rake"
+      - "scripts/corpus/**"
+      - "scripts/build-woff2.sh"
+      - "spec/corpus/**"
+      - ".github/workflows/corpus.yml"
+  push:
+    branches: [main]
+    paths:
+      - "corpus/**"
+      - "rakelib/corpus.rake"
+      - "rakelib/corpus_goldens.rake"
+      - "scripts/corpus/**"
+      - "scripts/build-woff2.sh"
+      - "spec/corpus/**"
+      - ".github/workflows/corpus.yml"
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corpus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-tier:
+    name: ci tier (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # OTS (OpenType Sanitizer) is the independent validator the convert
+      # cards (0c, 3a) run on every output. Installed here so the corpus job
+      # proves it is available; no card in 0a calls it.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install OTS
+        run: |
+          python -m pip install opentype-sanitizer
+          python -c "import ots; print('ots', ots.__file__)"
+
+      - name: Cache pinned woff2_decompress
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts/.tools/woff2
+          key: woff2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-woff2.sh') }}
+
+      - name: Build pinned woff2_decompress
+        run: scripts/build-woff2.sh
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        run: bundle exec rake corpus:fetch
+
+      - name: Manifest spec
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/manifest_spec.rb
+
+      - name: Cross-check WOFF2 with the pinned decoder
+        run: bundle exec rake corpus:check_woff2
+
+      - name: Verify read goldens (compare only)
+        run: bundle exec rake corpus:verify
+
+      - name: Verify scan goldens (compare only)
+        run: bundle exec rake corpus:scan:verify
+
+      - name: Verify malformed and convert goldens (compare only)
+        run: |
+          bundle exec rake corpus:malformed:verify
+          bundle exec rake corpus:convert:verify
+        env:
+          OTS_PYTHON: python
+
+      - name: Golden specs (verify, determinism, completeness)
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/verify_spec.rb spec/corpus/determinism_spec.rb spec/corpus/completeness_spec.rb spec/corpus/scan_goldens_spec.rb spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+        env:
+          OTS_PYTHON: python
+
+      - name: Scan parity with fontist (dev-only gem, pinned ref)
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/fontist_parity_spec.rb
+
+  large-tier:
+    name: large tier (nightly)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Fetch large-tier corpus (sha256 verified)
+        run: TIER=large bundle exec rake corpus:fetch
+
+      - name: Generate large-tier read goldens twice
+        run: |
+          TIER=large bundle exec rake corpus:regenerate
+          cp -R corpus/goldens/read-large "$RUNNER_TEMP/read-large-1"
+          TIER=large bundle exec rake corpus:regenerate
+
+      - name: Large-tier determinism and completeness
+        run: |
+          diff -r "$RUNNER_TEMP/read-large-1" corpus/goldens/read-large
+          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/completeness_spec.rb
+
+      - name: Large-tier scan goldens, twice
+        run: |
+          TIER=large bundle exec rake corpus:scan:regenerate
+          cp -R corpus/goldens/scan-large "$RUNNER_TEMP/scan-large-1"
+          TIER=large bundle exec rake corpus:scan:regenerate
+          diff -r "$RUNNER_TEMP/scan-large-1" corpus/goldens/scan-large
+          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/scan_goldens_spec.rb
+
+      - name: Upload large-tier read goldens
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-large-goldens
+          path: corpus/goldens/read-large

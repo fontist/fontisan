@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "names-mac-and-windows-mixed.ttf",
+  "font_sha256": "df76ae6cae97942a3c8bb39e70b58e9f0332f6445f1a693f55034298b2e381c0",
+  "id": "names-mac-and-windows-mixed",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Mix Café (Windows)",
+        "full_name": "Mix Café (Windows) Regular",
+        "postscript_name": "MixCafeWin-Regular",
+        "preferred_family": "Mix Étendue",
+        "preferred_subfamily": "Gras",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "names-mac-and-windows-mixed.ttf",
+      "sha256": "df76ae6cae97942a3c8bb39e70b58e9f0332f6445f1a693f55034298b2e381c0",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

@@ -1,0 +1,48 @@
+{
+  "comparison_class": "exact",
+  "file": "quirk-empty-cmap-table.ttf",
+  "font_sha256": "855d7f1aea73de6d5d337a7776039d36c99f943145ff7fd4d8c9c04325f7ec8a",
+  "id": "quirk-empty-cmap-table",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttf",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": {
+        "family_name": "Test TTF",
+        "full_name": "Test TTF",
+        "postscript_name": "TestTTF-Regular",
+        "preferred_family": null,
+        "preferred_subfamily": null,
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 1,
+      "path": "quirk-empty-cmap-table.ttf",
+      "sha256": "855d7f1aea73de6d5d337a7776039d36c99f943145ff7fd4d8c9c04325f7ec8a",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}
