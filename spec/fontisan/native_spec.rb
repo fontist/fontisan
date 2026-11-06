@@ -4,6 +4,7 @@ require "spec_helper"
 require "tmpdir"
 require "fileutils"
 require "rbconfig"
+require "open3"
 
 RSpec.describe Fontisan::Native do
   let(:fixtures) { File.expand_path("../fixtures/fonttools", __dir__) }
@@ -50,6 +51,33 @@ RSpec.describe Fontisan::Native do
         expect(makefile).to match(/^all:/)
         expect(Dir.children(work)).to eq(["Makefile"])
       end
+    end
+  end
+
+  describe "an extension that is present but unusable" do
+    def probe_stderr(dir, lib: File.expand_path("../../lib", __dir__))
+      script = "require 'fontisan'; 2.times { Fontisan::Native.reset!; Fontisan::Native.available? }; " \
+               "puts Fontisan::Native.available?.inspect"
+      out, err, = Open3.capture3({ "RUBYOPT" => nil }, RbConfig.ruby, "-I", lib, "-I", dir, "-e", script)
+      [out.strip, err]
+    end
+
+    it "warns once and still falls back" do
+      Dir.mktmpdir("badext") do |dir|
+        FileUtils.mkdir_p(File.join(dir, "fontisan", "native"))
+        File.write(File.join(dir, "fontisan", "native", "fontisan_native.rb"), "# loads, but reports no ABI\n")
+        out, err = probe_stderr(dir)
+        expect(out).to eq("false")
+        expect(err.scan("native extension is present but did not load").size).to eq(1)
+      end
+    end
+
+    it "stays quiet when there is no extension file at all" do
+      allow(described_class).to receive_messages(probe: false, extension_present?: false)
+      described_class.reset!
+      expect { expect(described_class.available?).to be(false) }.not_to output.to_stderr
+    ensure
+      described_class.reset!
     end
   end
 
