@@ -63,6 +63,8 @@ RSpec.describe Fontisan::Engine do
   # must not answer, so it is hidden even when built.
   before do
     allow(Fontisan::Native).to receive(:load_extension).and_raise(LoadError)
+    # Simulate no extension at all, not a broken one, so the unusable-extension warning stays quiet.
+    allow(Fontisan::Native).to receive(:extension_present?).and_return(false)
     Fontisan::Native.reset!
   end
 
