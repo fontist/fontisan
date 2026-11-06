@@ -101,6 +101,22 @@ RSpec.describe Fontisan::Native do
       end
     end
 
+    it "tags a file handed back to Ruby as :ruby when the engine reports native separators (Windows)" do
+      Dir.mktmpdir("winsep") do |dir|
+        FileUtils.cp([ttf, dfont], dir)
+        stub_const("File::ALT_SEPARATOR", "\\")
+        with_engine("native") do
+          original = described_class.method(:native_audit_dir_rows)
+          allow(described_class).to receive(:native_audit_dir_rows) do |*args|
+            original.call(*args).map { |row| row.merge("path" => row["path"].sub(%r{/([^/]+)\z}, '\\\\\1')) }
+          end
+          entries = Fontisan::Engine.audit_dir(dir)
+          expect(entries.to_h { |e| [e["path"], e["served_by"]] })
+            .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "ruby")
+        end
+      end
+    end
+
     it "serves what the extension cannot honour from Ruby (profile validation)" do
       with_engine("native") do
         Fontisan::Reference.audit(ttf, validate: "web")

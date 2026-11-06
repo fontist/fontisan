@@ -175,14 +175,17 @@ module Fontisan
           rel = Fontisan::Reference.relative_row_path(dir, row["path"])
           next if rel.split("/").any? { |part| part.start_with?(".") }
 
-          dir_entry(row, rel, validate)
+          dir_entry(dir, row, rel, validate)
         end
       end
 
-      def dir_entry(row, rel, validate)
+      def dir_entry(dir, row, rel, validate)
         case row["status"]
         when "ok" then { "faces" => row["reports"], "path" => rel }
-        when "unsupported" then audit_with_ruby(row["path"], rel, validate)
+        # The gate records the path it is given and Engine.audit_dir looks it up
+        # as File.join(dir, rel); the row's own path has a native separator on
+        # Windows, so it would never match.
+        when "unsupported" then audit_with_ruby(File.join(dir, rel), rel, validate)
         else
           error = row["error"]
           { "error" => { "class" => error["class"], "message" => error["message"] }, "path" => rel }
