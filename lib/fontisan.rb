@@ -134,6 +134,7 @@ module Fontisan
   autoload :Type1Font, "fontisan/type1_font"
   autoload :Woff2Collection, "fontisan/woff2_collection"
   autoload :Woff2Font, "fontisan/woff2_font"
+  autoload :SfntDirectory, "fontisan/sfnt_directory"
   autoload :WoffContainer, "fontisan/woff_container"
   autoload :WoffFont, "fontisan/woff_font"
 

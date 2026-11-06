@@ -70,6 +70,7 @@ module Fontisan
       # @option options [Boolean] :verbose Verbose output
       # @option options [ConversionOptions] :options ConversionOptions object
       def initialize(font_path, options = {})
+        check_sfnt_directory!(font_path)
         super(font_path, options)
 
         # Convert string keys to symbols for Thor compatibility. All command
@@ -155,6 +156,18 @@ module Fontisan
       end
 
       private
+
+      # A plain sfnt whose table directory the engine tiers reject fails with
+      # their error, before the loader can raise its own (fontist/fontisan#159).
+      def check_sfnt_directory!(path)
+        path = path.to_path if path.respond_to?(:to_path)
+        return unless path.is_a?(String) && File.file?(path)
+        return unless %i[ttf otf].include?(FontLoader.detect_format(path))
+
+        SfntDirectory.check!(File.binread(path))
+      rescue SfntDirectory::Malformed => e
+        raise Error, "Conversion failed: #{e.message}"
+      end
 
       # Reference.convert keywords when the call is a plain conversion; else nil.
       def routed_options
