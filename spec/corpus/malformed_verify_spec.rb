@@ -20,6 +20,21 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
     JSON.parse(File.read(described_class.golden_path(entry)))
   end
 
+  # The first few leaf paths that differ, so a CI failure names what changed.
+  def leaf_diffs(want, got)
+    flat = lambda do |node, path = "", out = {}|
+      case node
+      when Hash then node.each { |k, v| flat.call(v, "#{path}/#{k}", out) }
+      else out[path] = node
+      end
+      out
+    end
+    a = flat.call(want)
+    b = flat.call(got)
+    (a.keys | b.keys).reject { |k| a[k] == b[k] }.first(4)
+      .map { |k| "#{k}: #{a[k].inspect} -> #{b[k].inspect}" }.join("; ")
+  end
+
   it "covers all seventeen malformed kinds" do
     expect(entries.map { |e| e["malformed_kind"] }).to match_array(kinds)
   end
@@ -75,7 +90,7 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
     second = entries.map { |e| JSON.parse(described_class.render(e)) }
     # A node the reference timed out on is allowed to differ (see .matches?).
     first.zip(second, entries).each do |a, b, e|
-      expect(described_class.matches?(a, b)).to be(true), "#{e['id']} differs between two renders"
+      expect(described_class.matches?(a, b)).to be(true), "#{e['id']} differs between two renders: #{leaf_diffs(a, b)}"
     end
   end
 
@@ -85,7 +100,9 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
       entries.each do |e|
         FileUtils.cp(File.join(described_class::DERIVED_DIR, e["file"]), dir)
         rendered = JSON.parse(described_class.render(e, dir: dir))
-        expect(described_class.matches?(golden_for(e), rendered)).to be(true), "#{e['id']} depends on location"
+        want = golden_for(e)
+        expect(described_class.matches?(want, rendered)).to be(true),
+                                                            "#{e['id']} depends on location: #{leaf_diffs(want, rendered)}"
       end
     ensure
       # Windows cannot delete a file a lazily loaded font still holds open (EACCES in
