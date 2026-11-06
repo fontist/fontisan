@@ -1,0 +1,380 @@
+{
+  "comparison_class": "exact",
+  "file": "NotoSerifCJK-VF.otf.ttc",
+  "font_sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+  "id": "noto-serif-cjk-vf-otc",
+  "rows": [
+    {
+      "collection_index": 0,
+      "english_names": {
+        "family_name": "Noto Serif CJK JP",
+        "full_name": "Noto Serif CJK JP",
+        "postscript_name": "NotoSerifCJKjp-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otc",
+      "has_fvar": true,
+      "is_collection": true,
+      "names": {
+        "family_name": "Noto Serif CJK JP",
+        "full_name": "Noto Serif CJK JP",
+        "postscript_name": "NotoSerifCJKjp-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 5,
+      "path": "NotoSerifCJK-VF.otf.ttc",
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Serif CJK JP ExtraLight",
+          "full_name": "Noto Serif CJK JP ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK JP Light",
+          "full_name": "Noto Serif CJK JP Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK JP",
+          "full_name": "Noto Serif CJK JP Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK JP Medium",
+          "full_name": "Noto Serif CJK JP Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK JP SemiBold",
+          "full_name": "Noto Serif CJK JP SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK JP",
+          "full_name": "Noto Serif CJK JP Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Serif CJK JP Black",
+          "full_name": "Noto Serif CJK JP Black",
+          "style": "Regular"
+        }
+      ]
+    },
+    {
+      "collection_index": 1,
+      "english_names": {
+        "family_name": "Noto Serif CJK KR",
+        "full_name": "Noto Serif CJK KR",
+        "postscript_name": "NotoSerifCJKkr-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otc",
+      "has_fvar": true,
+      "is_collection": true,
+      "names": {
+        "family_name": "Noto Serif CJK KR",
+        "full_name": "Noto Serif CJK KR",
+        "postscript_name": "NotoSerifCJKkr-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 5,
+      "path": "NotoSerifCJK-VF.otf.ttc",
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Serif CJK KR ExtraLight",
+          "full_name": "Noto Serif CJK KR ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK KR Light",
+          "full_name": "Noto Serif CJK KR Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK KR",
+          "full_name": "Noto Serif CJK KR Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK KR Medium",
+          "full_name": "Noto Serif CJK KR Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK KR SemiBold",
+          "full_name": "Noto Serif CJK KR SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK KR",
+          "full_name": "Noto Serif CJK KR Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Serif CJK KR Black",
+          "full_name": "Noto Serif CJK KR Black",
+          "style": "Regular"
+        }
+      ]
+    },
+    {
+      "collection_index": 2,
+      "english_names": {
+        "family_name": "Noto Serif CJK SC",
+        "full_name": "Noto Serif CJK SC",
+        "postscript_name": "NotoSerifCJKsc-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otc",
+      "has_fvar": true,
+      "is_collection": true,
+      "names": {
+        "family_name": "Noto Serif CJK SC",
+        "full_name": "Noto Serif CJK SC",
+        "postscript_name": "NotoSerifCJKsc-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 5,
+      "path": "NotoSerifCJK-VF.otf.ttc",
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Serif CJK SC ExtraLight",
+          "full_name": "Noto Serif CJK SC ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK SC Light",
+          "full_name": "Noto Serif CJK SC Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK SC",
+          "full_name": "Noto Serif CJK SC Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK SC Medium",
+          "full_name": "Noto Serif CJK SC Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK SC SemiBold",
+          "full_name": "Noto Serif CJK SC SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK SC",
+          "full_name": "Noto Serif CJK SC Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Serif CJK SC Black",
+          "full_name": "Noto Serif CJK SC Black",
+          "style": "Regular"
+        }
+      ]
+    },
+    {
+      "collection_index": 3,
+      "english_names": {
+        "family_name": "Noto Serif CJK TC",
+        "full_name": "Noto Serif CJK TC",
+        "postscript_name": "NotoSerifCJKtc-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otc",
+      "has_fvar": true,
+      "is_collection": true,
+      "names": {
+        "family_name": "Noto Serif CJK TC",
+        "full_name": "Noto Serif CJK TC",
+        "postscript_name": "NotoSerifCJKtc-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 5,
+      "path": "NotoSerifCJK-VF.otf.ttc",
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Serif CJK TC ExtraLight",
+          "full_name": "Noto Serif CJK TC ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK TC Light",
+          "full_name": "Noto Serif CJK TC Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK TC",
+          "full_name": "Noto Serif CJK TC Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK TC Medium",
+          "full_name": "Noto Serif CJK TC Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK TC SemiBold",
+          "full_name": "Noto Serif CJK TC SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK TC",
+          "full_name": "Noto Serif CJK TC Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Serif CJK TC Black",
+          "full_name": "Noto Serif CJK TC Black",
+          "style": "Regular"
+        }
+      ]
+    },
+    {
+      "collection_index": 4,
+      "english_names": {
+        "family_name": "Noto Serif CJK HK",
+        "full_name": "Noto Serif CJK HK",
+        "postscript_name": "NotoSerifCJKhk-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "errors": {
+        "collection_file": null,
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "otc",
+      "has_fvar": true,
+      "is_collection": true,
+      "names": {
+        "family_name": "Noto Serif CJK HK",
+        "full_name": "Noto Serif CJK HK",
+        "postscript_name": "NotoSerifCJKhk-ExtraLight",
+        "preferred_family": null,
+        "preferred_subfamily": "ExtraLight",
+        "subfamily_name": "Regular"
+      },
+      "num_faces": 5,
+      "path": "NotoSerifCJK-VF.otf.ttc",
+      "sha256": "24720ea76c8b13e822059d155cefb0f9f6be1cfdee1e2bb67b61c96067de42c9",
+      "validation": {
+        "error_summary": "",
+        "issues": [],
+        "profile": "indexability",
+        "status": "valid",
+        "valid": true
+      },
+      "variable_instances": [
+        {
+          "family": "Noto Serif CJK HK ExtraLight",
+          "full_name": "Noto Serif CJK HK ExtraLight",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK HK Light",
+          "full_name": "Noto Serif CJK HK Light",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK HK",
+          "full_name": "Noto Serif CJK HK Regular",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK HK Medium",
+          "full_name": "Noto Serif CJK HK Medium",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK HK SemiBold",
+          "full_name": "Noto Serif CJK HK SemiBold",
+          "style": "Regular"
+        },
+        {
+          "family": "Noto Serif CJK HK",
+          "full_name": "Noto Serif CJK HK Bold",
+          "style": "Bold"
+        },
+        {
+          "family": "Noto Serif CJK HK Black",
+          "full_name": "Noto Serif CJK HK Black",
+          "style": "Regular"
+        }
+      ]
+    }
+  ],
+  "schema": 1,
+  "tier": "large"
+}
