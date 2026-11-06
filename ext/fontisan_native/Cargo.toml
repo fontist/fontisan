@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 # TEMPORARY (decision D3: the crate is not on crates.io yet). Replace with
 # `fontisan = "=<version>"` once published. The rev must be a commit on
 # fontist/fontisan-rs; keep it equal to the rev in ext/fontisan_cdylib/Cargo.toml.
-fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "24bb4c2b810e42bcb616054c75c30bd11e712ea9" }
+fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "10bbd1c7a961dfe383879f2c5cf995c1abe7d9df" }
 magnus = "=0.8.4"
 rb-sys = { version = "=0.9.130", default-features = false }
 
