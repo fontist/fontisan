@@ -443,7 +443,7 @@ module Fontisan
     option :opsz, type: :numeric,
                   desc: "Optical size axis value"
     option :named_instance, type: :string,
-                            desc: "Use named instance (e.g., 'Bold', 'Light')",
+                            desc: "Use named instance by fvar index (e.g., 0, 1; see --list-instances)",
                             aliases: "-n"
     option :list_instances, type: :boolean, default: false,
                             desc: "List available named instances",
@@ -463,7 +463,7 @@ module Fontisan
     #   fontisan instance variable.ttf --wght=700 --output=bold.ttf
     #
     # @example Use named instance
-    #   fontisan instance variable.ttf --named-instance="Bold" --output=bold.ttf
+    #   fontisan instance variable.ttf --named-instance=0 --output=bold.ttf
     #
     # @example Instance with format conversion
     #   fontisan instance variable.ttf --wght=700 --to=woff2 --output=bold.woff2

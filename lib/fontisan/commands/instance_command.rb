@@ -210,6 +210,8 @@ module Fontisan
       # @param output_path [String] Output file path
       # @param options [Hash] Command options
       def instance_named(font, instance_index, output_path, options)
+        instance_index = parse_instance_index(instance_index, font)
+
         # Generate instance using named instance
         generator = Variation::InstanceGenerator.new(font)
         tables = generator.generate_named_instance(instance_index)
@@ -225,6 +227,33 @@ module Fontisan
           source_format: source_format,
           optimize: options[:optimize] || false,
         )
+      end
+
+      # Convert the --named-instance value (a string from Thor) to a valid
+      # fvar instance index. The generator takes an Integer, so the conversion
+      # and range check live here, at the command boundary.
+      #
+      # @param value [String, Integer] raw option value
+      # @param font [Object] Font object
+      # @return [Integer] index into the fvar named instances
+      # @raise [ArgumentError] when not a non-negative integer or out of range
+      def parse_instance_index(value, font)
+        index = begin
+          Integer(value.to_s, 10)
+        rescue ArgumentError
+          raise ArgumentError,
+                "--named-instance must be an integer index, got #{value.inspect}"
+        end
+        raise ArgumentError, "--named-instance must be >= 0, got #{index}" if index.negative?
+
+        fvar = font.table("fvar") if font.respond_to?(:table)
+        count = fvar&.instances&.length
+        if count && index >= count
+          raise ArgumentError,
+                "--named-instance #{index} out of range (font has #{count} named instances)"
+        end
+
+        index
       end
 
       # List available named instances
