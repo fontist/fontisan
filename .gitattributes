@@ -1,0 +1,6 @@
+# The corpus goldens are compared byte for byte against freshly generated output (LF only),
+# so a Windows checkout with core.autocrlf=true must not rewrite them.
+corpus/goldens/**/*.json text eol=lf
+corpus/goldens/**/*.ttf binary
+corpus/TRIAGE.md text eol=lf
+corpus/TRIAGE_CONVERT.md text eol=lf
