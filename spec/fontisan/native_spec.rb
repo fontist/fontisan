@@ -32,14 +32,17 @@ RSpec.describe Fontisan::Native do
   describe "extconf without cargo" do
     it "writes a no-op Makefile and leaves a working :ruby gem" do
       Dir.mktmpdir("noext") do |dir|
-        bare = File.join(dir, "bin")
-        FileUtils.mkdir_p(bare)
-        ruby = File.join(bare, "ruby")
-        File.symlink(RbConfig.ruby, ruby)
         extconf = File.expand_path("../../ext/fontisan_native/extconf.rb", __dir__)
         work = File.join(dir, "build")
         FileUtils.mkdir_p(work)
-        env = { "PATH" => bare, "RUBYOPT" => nil, "RUBYLIB" => nil, "BUNDLE_GEMFILE" => nil }
+        # Keep the real ruby (and its DLL directory on Windows) on PATH; drop only
+        # the directories that provide cargo.
+        cargo_names = ["cargo", *ENV.fetch("PATHEXT", "").split(";").map { |e| "cargo#{e.downcase}" }]
+        path = ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).reject do |d|
+          cargo_names.any? { |n| File.file?(File.join(d, n)) }
+        end
+        ruby = RbConfig.ruby
+        env = { "PATH" => path.join(File::PATH_SEPARATOR), "RUBYOPT" => nil, "RUBYLIB" => nil, "BUNDLE_GEMFILE" => nil }
         out = IO.popen(env, [ruby, extconf], chdir: work, err: %i[child out], &:read)
         expect($?).to be_success, out
         expect(out).to include("skipping the native extension (cargo not found)")
