@@ -1,0 +1,165 @@
+{
+  "audit": {
+    "causes": [],
+    "error_class": "Fontisan::InvalidFontError",
+    "markers": [],
+    "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+    "outcome": "error"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-woff2-truncated-half.woff2",
+  "file_sha256": "5ed9e3df5d45674752877b6a688b7ccc3ccbb408aff2609a82250fd4df97ab8b",
+  "id": "malformed-woff2-truncated-half",
+  "kind": "woff2-truncated-half",
+  "scan": {
+    "digest": "86ee4a22dfa50ce6710abfb8b6a2ecd14d2490b06c95554416236f6994d9efd9",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": {
+            "cause": {
+              "class": "Fontisan::InvalidFontError",
+              "message": "Invalid WOFF<N> file: woff: brotli stream is corrupt"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: Invalid WOFF<N> file: woff: brotli stream is corrupt>."
+          }
+        },
+        "format": "woff2",
+        "num_faces": 1,
+        "validation_status": null
+      }
+    ]
+  }
+}

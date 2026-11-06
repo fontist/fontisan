@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-woff-zero-table-dir.woff",
+  "font_sha256": "76becfc448a58a42645ec48f55d880b2e50934a85d74fddc00c765dac6f512a7",
+  "id": "malformed-woff-zero-table-dir",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "woff: table directory not sorted by unique tag"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: woff: table directory not sorted by unique tag>."
+        }
+      },
+      "format": "woff",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-woff-zero-table-dir.woff",
+      "sha256": "76becfc448a58a42645ec48f55d880b2e50934a85d74fddc00c765dac6f512a7",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}
