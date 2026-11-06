@@ -360,7 +360,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Fontisan is a [Ribose](https://open.ribose.com/) project',
+      message: 'Fontisan is a [Ribose](https://www.ribose.com/) project',
       copyright: `Copyright &copy; 2026 Ribose Group Inc. All rights reserved.`,
     },
 
