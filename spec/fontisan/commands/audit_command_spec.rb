@@ -140,4 +140,53 @@ RSpec.describe Fontisan::Commands::AuditCommand do
       expect((damaged.opentype_scripts + damaged.features).map(&:valid_encoding?)).to all(be(true))
     end
   end
+
+  describe "#run for a font with an unreadable table" do
+    # A directory entry whose offset lies beyond the end of the file leaves
+    # the table listed but unreadable, so face.table returns nil for it.
+    def audit_with_unreadable(source, tag)
+      data = File.binread(source)
+      count = data[4, 2].unpack1("n")
+      index = (0...count).find { |i| data[12 + (i * 16), 4] == tag }
+      data[12 + (index * 16) + 8, 4] = [0x7FFFFFF0].pack("N")
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "unreadable.ttf")
+        File.binwrite(path, data)
+        described_class.new(path).run
+      end
+    end
+
+    let(:variable_path) { "spec/fixtures/fonts/MonaSansVF/MonaSansMonoVF[wght].ttf" }
+
+    it "leaves the identity empty when name is unreadable" do
+      report = audit_with_unreadable(font_path, "name")
+      expect([report.family_name, report.font_revision]).to eq([nil, nil])
+    end
+
+    it "keeps the rest of the report when name is unreadable" do
+      report = audit_with_unreadable(font_path, "name")
+      expect(report.total_glyphs).to be_positive
+    end
+
+    it "reports no axes and a static font when fvar is unreadable" do
+      report = audit_with_unreadable(variable_path, "fvar")
+      expect([report.is_variable, Array(report.axes)]).to eq([false, []])
+    end
+
+    it "still audits the readable tables when fvar is unreadable" do
+      report = audit_with_unreadable(variable_path, "fvar")
+      expect(report.weight_class).to be_a(Integer)
+    end
+
+    %w[head OS/2 cmap].each do |tag|
+      it "does not raise when #{tag} is unreadable" do
+        expect { audit_with_unreadable(font_path, tag) }.not_to raise_error
+      end
+    end
+
+    it "reports no codepoints when cmap is unreadable" do
+      report = audit_with_unreadable(font_path, "cmap")
+      expect(report.total_codepoints).to be_nil
+    end
+  end
 end
