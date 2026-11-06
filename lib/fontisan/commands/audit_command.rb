@@ -221,7 +221,7 @@ module Fontisan
           table = face.table(tag)
           scripts.merge(table.scripts) if table
         end
-        scripts.sort
+        printable_tags(scripts.sort)
       end
 
       def collect_features(face)
@@ -232,7 +232,14 @@ module Fontisan
           table = face.table(tag)
           features.merge(collect_features_from_table(table)) if table
         end
-        features.sort
+        printable_tags(features.sort)
+      end
+
+      # Layout tags come from BinData as ASCII-8BIT. A damaged table can yield
+      # bytes that are not UTF-8, which the JSON generator rejects. Each
+      # invalid byte becomes U+FFFD, as the native tier's lossy decode does.
+      def printable_tags(tags)
+        tags.map { |tag| tag.dup.force_encoding(Encoding::UTF_8).scrub }
       end
 
       def collect_features_from_table(layout_table)

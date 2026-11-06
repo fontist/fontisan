@@ -114,4 +114,30 @@ RSpec.describe Fontisan::Commands::AuditCommand do
       expect(restored.total_glyphs).to eq(report.total_glyphs)
     end
   end
+
+  describe "#run for a font whose GSUB directory entry is damaged" do
+    # Flipping directory byte 86 of SourceSans3-Regular misplaces a layout
+    # table, so its script and feature tags come out as arbitrary bytes.
+    let(:damaged) do
+      data = File.binread("spec/fixtures/fonts/SourceSans3/OTF/SourceSans3-Regular.otf")
+      data.setbyte(86, data.getbyte(86) ^ 0xFF)
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "damaged.otf")
+        File.binwrite(path, data)
+        described_class.new(path).run
+      end
+    end
+
+    it "serialises to JSON" do
+      expect { damaged.to_json }.not_to raise_error
+    end
+
+    it "replaces each invalid tag byte with U+FFFD, as the native tier does" do
+      expect(damaged.opentype_scripts).to include("\u0000\u0002\b\uFFFD")
+    end
+
+    it "keeps every tag valid UTF-8" do
+      expect((damaged.opentype_scripts + damaged.features).map(&:valid_encoding?)).to all(be(true))
+    end
+  end
 end
