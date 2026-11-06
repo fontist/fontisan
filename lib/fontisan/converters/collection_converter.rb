@@ -290,7 +290,10 @@ conv_options = nil)
                   note: "Conversion failed, kept original: #{e.message}",
                 }
               else
-                raise Error, "Font #{index} conversion failed: #{e.message}"
+                # Keep MissingTableError as its class so callers can rescue it
+                # by type; the message format is unchanged.
+                error_class = e.is_a?(Fontisan::MissingTableError) ? Fontisan::MissingTableError : Fontisan::Error
+                raise error_class, "Font #{index} conversion failed: #{e.message}"
               end
             end
           else
