@@ -344,10 +344,34 @@ module Fontisan
           cmap: cmap_digest(font),
           fvar: fvar_data(font),
           outlines: outline_summary(font),
+          hmtx_metrics: hmtx_metrics(font),
           post: post_data(font),
           layout: layout_data(font),
           variation: variation_data(font),
         }
+      end
+
+      # Digest of the per-glyph horizontal metrics as Tables::Hmtx#metric_for
+      # decodes them (advance and lsb of every glyph). Raw-byte digests
+      # (`tables`) cannot see a decoder bug and no convert golden reads hmtx,
+      # so this is the only golden that does. (Parsed glyf coordinates are
+      # covered by the convert goldens, which rebuild outlines in ttf -> otf.)
+      # nil when hmtx is absent or gated out by the loading mode; `{error:
+      # class}` when parsing fails.
+      def hmtx_metrics(font)
+        return nil unless available_table(font, "hmtx") && available_table(font, "hhea") && available_table(font, "maxp")
+
+        hmtx = font.table("hmtx")
+        hhea = font.table("hhea")
+        num_glyphs = font.table("maxp").num_glyphs
+        hmtx.parse_with_context(hhea.number_of_h_metrics, num_glyphs) unless hmtx.parsed?
+        packed = Array.new(num_glyphs) do |gid|
+          metric = hmtx.metric_for(gid)
+          [metric[:advance_width], metric[:lsb]].pack("Nl>")
+        end
+        { count: num_glyphs, sha256: Digest::SHA256.hexdigest(packed.join) }
+      rescue StandardError => e
+        { error: e.class.name }
       end
 
       # post header fields plus a count and digest of the glyph names (names

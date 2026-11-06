@@ -57,6 +57,12 @@ Further `read` face fields (all nil when the table is absent or gated out):
   underline_thickness, is_fixed_pitch, min_mem_type42, max_mem_type42,
   min_mem_type1, max_mem_type1`, `glyph_name_count` and `glyph_names_sha256`
   (SHA-256 of the glyph names joined with "\n"), or `glyph_names_error`.
+- `hmtx_metrics`: `count` (glyphs) and `sha256` over the decoded `Hmtx#metric_for`
+  result of every glyph (advance as uint32 BE, lsb as int32 BE, concatenated), or
+  `{error}`. A decoded-value digest: the `tables` digests are raw bytes and no
+  convert golden reads hmtx. (Parsed glyf coordinates are covered by the convert
+  goldens, whose ttf -> otf rebuild decodes every simple glyph; measured red under
+  a coordinate-delta mutation.)
 - `layout`: `GSUB` / `GPOS` => `{scripts, features}` where `features` maps each
   script tag to its feature tags, exactly as the table classes report them
   (they answer `[]` when parsing fails; that is the reference behaviour).
