@@ -348,7 +348,8 @@ conv_options = nil)
         elsif font.has_table?("glyf")
           :ttf
         else
-          raise Error, "Cannot detect font format"
+          raise Fontisan::MissingTableError,
+                "Font has neither glyf nor CFF table"
         end
       end
 
