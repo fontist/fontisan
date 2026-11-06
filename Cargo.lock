@@ -185,7 +185,7 @@ dependencies = [
 [[package]]
 name = "fontisan"
 version = "0.0.0"
-source = "git+https://github.com/fontist/fontisan-rs?rev=0687123bc8793e8b2454f5f54c262ad5ddaec6c5#0687123bc8793e8b2454f5f54c262ad5ddaec6c5"
+source = "git+https://github.com/fontist/fontisan-rs?rev=24bb4c2b810e42bcb616054c75c30bd11e712ea9#24bb4c2b810e42bcb616054c75c30bd11e712ea9"
 dependencies = [
  "brotli",
  "brotli-decompressor",
