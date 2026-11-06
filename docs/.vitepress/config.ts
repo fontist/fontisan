@@ -245,6 +245,7 @@ export default defineConfig({
           text: "Advanced Topics",
           collapsed: true,
           items: [
+            { text: "Engines", link: "/guide/engines" },
             { text: "Universal Outline Model", link: "/guide/universal-outline" },
           ],
         },

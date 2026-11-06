@@ -76,6 +76,13 @@ Or install it yourself as:
 gem install fontisan
 ----
 
+== Engines
+
+Path-based operations (`Fontisan::Reference`) can run on a compiled native tier
+instead of Ruby. Select it with `FONTISAN_ENGINE=ruby|native|ffi|auto` (default
+`ruby`); `FONTISAN_ENGINE_STRICT=1` raises instead of falling back to Ruby. See
+link:docs/guide/engines.md[Engines] for tiers, platforms and troubleshooting.
+
 == Features
 
 Font compilation and assembly::
