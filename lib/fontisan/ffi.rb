@@ -75,7 +75,7 @@ module Fontisan
         when *ByteOps::BYTE_OPERATIONS then path.is_a?(String) && File.file?(path) && !ruby_only?(path)
         when :audit_dir then path.nil? || File.directory?(path)
         when :scan then path.nil? || File.file?(path) && !ruby_only?(path)
-        else path.nil? || !ruby_only?(path)
+        else path.nil? || File.file?(path) && !ruby_only?(path)
         end
       end
 
