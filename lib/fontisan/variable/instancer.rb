@@ -45,6 +45,7 @@ module Fontisan
       # @example
       #   binary = instancer.instance({ "wght" => 700, "wdth" => 100 })
       def instance(user_coords, _options = {})
+        Fontisan::Engine.record_ruby(:instance)
         tables = Variation::Instancing::TrueTypeInstancer
           .new(@font.table_data, user_coords).call
         FontWriter.write_font(tables)

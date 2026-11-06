@@ -154,7 +154,9 @@ module Fontisan
         target = options.fetch(:to)
         opts = { quiet: true, **options.except(:to) }
         opts[:timestamp] = unix_seconds(timestamp) if stamps?(target, timestamp)
-        Fontisan.convert(path, to: target, output: output, **opts)
+        # The command itself, not Fontisan.convert: that one dispatches to the
+        # native tier and would loop back through the gate.
+        Commands::ConvertCommand.new(path, { to: target, output: output, **opts }).run
       end
 
       # Extract one member of a collection as a standalone font.

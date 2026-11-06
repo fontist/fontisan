@@ -398,6 +398,19 @@ fn native_subset(ruby: &Ruby, path: String, gids: Vec<u32>, profile: String) -> 
     Ok(bytes_value(ruby, &bytes))
 }
 
+/// Glyph ids kept for `codepoints` (the facade's `gids_for`); `name` is the
+/// file's basename, used in the "None of the requested characters" error.
+fn native_glyph_ids(ruby: &Ruby, path: String, codepoints: Vec<u32>, name: String) -> Result<Vec<u32>, Error> {
+    finish(
+        ruby,
+        nogvl(move || {
+            let input = read_file(&path)?;
+            subset::glyph_ids_for(&input, &codepoints, &name)
+                .map_err(|e| Fail::simple(e.class, e.message.clone()))
+        }),
+    )
+}
+
 // --- probes --------------------------------------------------------------
 
 /// Seeded failure for the specs: panics inside the released section.
@@ -437,6 +450,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     native.define_singleton_method("native_extract", function!(native_extract, 2))?;
     native.define_singleton_method("native_instance", function!(native_instance, 2))?;
     native.define_singleton_method("native_subset", function!(native_subset, 3))?;
+    native.define_singleton_method("native_glyph_ids", function!(native_glyph_ids, 3))?;
     native.define_singleton_method("native_selftest_panic", function!(native_selftest_panic, 0))?;
     native.define_singleton_method("native_selftest_block", function!(native_selftest_block, 1))?;
     Ok(())

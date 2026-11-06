@@ -96,7 +96,10 @@ RSpec.describe ConvertGoldens do
 
     it "matches the committed goldens byte for byte" do
       first, = ConvertSpecCache.runs
-      first.each { |name, text| expect(File.read(File.join(described_class::GOLDEN_DIR, name))).to eq(text), name }
+      first.each do |name, text|
+        golden = File.read(File.join(described_class::GOLDEN_DIR, name))
+        expect(described_class.same_golden?(golden, text)).to be(true), "#{name} differs from its golden"
+      end
     end
   end
 

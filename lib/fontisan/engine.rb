@@ -27,6 +27,7 @@ module Fontisan
     OPS = %i[read outline_hashes audit audit_dir scan convert extract
              instance glyph_ids subset].freeze
     ROW_RECORDER = :fontisan_engine_rows
+    IN_OPERATION = :fontisan_engine_in_operation
 
     Config = Struct.new(:selection, :strict)
 
@@ -151,6 +152,17 @@ module Fontisan
         run(tier, operation, path, args, kwargs, &)
       end
 
+      # The object-based entry points (`Subset::Builder.new(font, ...)`,
+      # `Variable::Instancer.new(font)`) are never dispatched: a loaded font's
+      # state lives in cached parsed tables, so they always run on Ruby. They
+      # call this so that {served_by} reports it; inside a gated call (the
+      # Ruby tier's own Reference body) the gate has already recorded the tier.
+      def record_ruby(operation)
+        return if Thread.current[IN_OPERATION]
+
+        record(:ruby, operation, nil)
+      end
+
       # Forget probes, counters, served state and registered tiers.
       def reset!
         @mutex.synchronize do
@@ -228,14 +240,21 @@ module Fontisan
         return false unless tier.supports?(operation, path)
         return true unless options && tier.respond_to?(:supports_options?)
 
-        tier.supports_options?(operation, options) || false
+        takes_path = tier.method(:supports_options?).arity.abs > 2
+        (takes_path ? tier.supports_options?(operation, options, path) : tier.supports_options?(operation, options)) || false
       rescue StandardError, ScriptError
         false
       end
 
       def run(tier, operation, path, args, kwargs, &)
         record(tier, operation, path)
-        tier_object(tier).call(operation, *args, **kwargs, &)
+        previous = Thread.current[IN_OPERATION]
+        Thread.current[IN_OPERATION] = true
+        begin
+          tier_object(tier).call(operation, *args, **kwargs, &)
+        ensure
+          Thread.current[IN_OPERATION] = previous
+        end
       end
 
       def record(tier, operation, path)

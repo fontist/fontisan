@@ -399,7 +399,7 @@ module ConvertGoldens
     generated.each do |name, text|
       file = File.join(dir, name)
       if !File.exist?(file) then problems << "#{name}: golden missing"
-      elsif File.read(file) != text then problems << "#{name}: #{diff_cases(File.read(file), text)}"
+      elsif !same_golden?(File.read(file), text) then problems << "#{name}: #{diff_cases(File.read(file), text)}"
       end
     end
     unless only
@@ -407,6 +407,27 @@ module ConvertGoldens
       problems.concat(stale.map { |n| "#{n}: golden has no corpus font" })
     end
     problems
+  end
+
+  # Goldens are Ruby's output. A non-Ruby tier (FONTISAN_ENGINE=native|ffi|auto)
+  # compresses with its own zlib/brotli, so for the "decoded-exact" class (woff,
+  # woff2) its compressed size and sha256 may differ; the decoded tables must
+  # not. Every other case is compared exactly, on every tier.
+  def same_golden?(golden_text, new_text)
+    return golden_text == new_text unless compressed_bytes_may_differ?
+
+    relaxed(JSON.parse(golden_text)) == relaxed(JSON.parse(new_text))
+  end
+
+  def compressed_bytes_may_differ?
+    !%w[ruby].include?(ENV.fetch("FONTISAN_ENGINE", "ruby").strip.downcase)
+  end
+
+  def relaxed(golden)
+    golden["cases"].each_value do |c|
+      c["output"]&.delete_if { |k, _| %w[sha256 size].include?(k) } if c["class"] == "decoded-exact" && c["outcome"] == "ok"
+    end
+    golden
   end
 
   def diff_cases(old_text, new_text)

@@ -91,6 +91,7 @@ module Fontisan
       #   subset_binary = builder.build
       #   File.binwrite('subset.ttf', subset_binary)
       def build
+        Fontisan::Engine.record_ruby(:subset)
         validate_input!
         calculate_closure
         build_mapping
