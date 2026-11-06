@@ -1,0 +1,277 @@
+---
+# Platform gems for fontist/fontisan#156 card 2e.
+#
+# Each platform gem bundles a precompiled magnus extension per supported Ruby
+# minor (the :native tier, rb-sys cross-gem) and the cdylib for the platform
+# (the :ffi tier, vendored by `rake cdylib:vendor` from the cross_compiling hook
+# in rakelib/native.rake). The source gem builds nothing without cargo; the
+# `no-toolchain` job proves that on a runner with no Rust installed.
+name: gem-build
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/gem-build.yml"
+      - "ext/**"
+      - "rakelib/**"
+      - "fontisan.gemspec"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "lib/fontisan/native.rb"
+      - "lib/fontisan/ffi.rb"
+      - "lib/fontisan/ffi/**"
+      - "scripts/tier_smoke.rb"
+      - "lib/fontisan/engine.rb"
+      - "lib/fontisan/utilities/brotli_wrapper.rb"
+  push:
+    branches: [main, "cross-gem/*", "pkg/*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Build ${{ matrix.platform }} gem
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x86_64-linux
+          - platform: x86_64-linux-musl
+            # A musl cdylib / magnus extension cannot link a static C runtime.
+            # rakelib/native.rake sets this too; stated here so it is visible.
+            rustflags: "-C target-feature=-crt-static"
+          - platform: arm64-darwin
+          - platform: x86_64-darwin
+          - platform: x64-mingw-ucrt
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # Pinned to the exact release: the floating major tag moves its
+      # rake-compiler-dock image.
+      - uses: oxidize-rb/actions/cross-gem@v1.5.0
+        id: cross-gem
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        with:
+          platform: ${{ matrix.platform }}
+          ruby-versions: "3.2,3.3,3.4,4.0"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cross-gem-${{ matrix.platform }}
+          path: ${{ steps.cross-gem.outputs.gem-path }}
+          if-no-files-found: error
+
+  # Install each platform gem on a matching runner and check that `auto`
+  # serves the corpus from :native, with no Rust toolchain involved.
+  smoke:
+    name: Smoke ${{ matrix.platform }}
+    needs: native
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: x86_64-linux, os: ubuntu-22.04 }
+          - { platform: arm64-darwin, os: macos-15 }
+          - { platform: x86_64-darwin, os: macos-15-intel }
+          - { platform: x64-mingw-ucrt, os: windows-2025 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cross-gem-${{ matrix.platform }}
+          path: pkg/
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      - name: Install the platform gem and run the corpus
+        shell: bash
+        run: |
+          gem install --no-document pkg/fontisan-*.gem
+          # Outside the checkout, so the installed gem is the one loaded.
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" native "$GITHUB_WORKSPACE/corpus"
+
+  # The java-platform gem (card 2g): no `brotli`, `ffi` instead, the cdylib of
+  # every platform gem below lib/fontisan/ffi/<platform>/. JRuby installs it and
+  # must serve the corpus from :ffi.
+  java-gem:
+    name: Build java gem
+    needs: native
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cross-gem-*
+          path: platform-gems/
+
+      - name: Stage the cdylib of each platform gem
+        run: |
+          stage() { # PLATFORM-GEM-GLOB DIR
+            gem=$(ls platform-gems/cross-gem-$1/fontisan-*.gem | head -n 1)
+            mkdir -p "unpacked/$2" "lib/fontisan/ffi/$2"
+            gem unpack "$gem" --target "unpacked/$2"
+            cp unpacked/$2/fontisan-*/lib/fontisan/ffi/*fontisan_cdylib.* "lib/fontisan/ffi/$2/"
+          }
+          stage x86_64-linux linux-x86_64
+          stage arm64-darwin darwin-arm64
+          stage x86_64-darwin darwin-x86_64
+          stage x64-mingw-ucrt windows-x86_64
+          ls -l lib/fontisan/ffi/*/
+
+      - name: Build the java gem
+        run: FONTISAN_JAVA_ALL=1 bundle exec rake java:gem
+
+      - name: Assert no brotli dependency
+        run: |
+          if gem spec pkg/fontisan-*-java.gem dependencies | grep -qi brotli; then
+            echo "java gem depends on brotli"; exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/fontisan-*-java.gem
+          if-no-files-found: error
+
+  jruby:
+    name: Smoke java gem on JRuby
+    needs: java-gem
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      - name: Install the java gem
+        run: |
+          gem install --no-document pkg/fontisan-*-java.gem
+          if gem list -i brotli >/dev/null; then echo "brotli is installed"; exit 1; fi
+
+      # Outside the checkout, so the installed gem is the one loaded. Asserts
+      # served_by == ffi for every row the engine does not hand to Ruby.
+      - name: Corpus through the ffi tier
+        run: |
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" ffi "$GITHUB_WORKSPACE/corpus"
+
+  smoke-musl:
+    name: Smoke x86_64-linux-musl
+    needs: native
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cross-gem-x86_64-linux-musl
+          path: pkg/
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      # Alpine: the C compiler is for the brotli dependency only, not Rust.
+      - name: Install the platform gem and run the corpus
+        run: |
+          docker run --rm -v "$PWD:/w:ro" ruby:3.4-alpine sh -ec '
+            apk add --no-cache build-base git
+            gem install --no-document /w/pkg/fontisan-*.gem
+            cd /tmp
+            ruby /w/scripts/tier_smoke.rb native /w/corpus
+          '
+
+  # The source gem on a runner with no Rust: it must install (extconf writes a
+  # no-op Makefile), `auto` must resolve to :ruby, and results must equal the
+  # goldens. Card 2e / #159 definition of done.
+  no-toolchain:
+    name: Source gem without a Rust toolchain
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Remove Rust and prove it is gone
+        run: |
+          sudo rm -f /usr/local/bin/cargo /usr/local/bin/rustc /usr/local/bin/rustup /usr/bin/cargo /usr/bin/rustc
+          rm -rf "$HOME/.cargo" "$HOME/.rustup"
+          echo "PATH=$(echo "$PATH" | tr ':' '\n' | grep -v -e cargo -e rustup | paste -sd:)" >> "$GITHUB_ENV"
+
+      - name: Assert no cargo or rustc
+        run: |
+          if command -v cargo || command -v rustc; then echo "Rust is still on PATH"; exit 1; fi
+
+      - name: Build and install the source gem
+        run: |
+          gem build fontisan.gemspec -o "$RUNNER_TEMP/fontisan-source.gem"
+          gem install --no-document --platform ruby "$RUNNER_TEMP/fontisan-source.gem"
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      - name: Corpus through the installed source gem
+        run: |
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" ruby "$GITHUB_WORKSPACE/corpus"
+
+  source:
+    name: Build source gem
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - run: gem build fontisan.gemspec -o fontisan-source.gem
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cross-gem-any
+          path: fontisan-source.gem
+          if-no-files-found: error

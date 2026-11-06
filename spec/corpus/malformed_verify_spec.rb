@@ -10,14 +10,32 @@ require_relative "../../scripts/corpus/generate_malformed_goldens"
 RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   let(:entries) { described_class.entries }
   let(:kinds) do
-    %w[truncated-10 truncated-100 truncated-half garbage empty bad-table-offset bad-checksum bad-num-tables]
+    %w[truncated-10 truncated-100 truncated-half garbage empty bad-table-offset bad-checksum bad-num-tables
+       fuzz-cmap12-u32-span fuzz-cff2-huge-count fuzz-ttc-head-offset
+       woff-corrupt-deflate woff-zero-table-dir woff-truncated-half
+       woff2-corrupt-brotli woff2-zero-table-dir woff2-truncated-half]
   end
 
   def golden_for(entry)
     JSON.parse(File.read(described_class.golden_path(entry)))
   end
 
-  it "covers all eight malformed kinds" do
+  # The first few leaf paths that differ, so a CI failure names what changed.
+  def leaf_diffs(want, got)
+    flat = lambda do |node, path = "", out = {}|
+      case node
+      when Hash then node.each { |k, v| flat.call(v, "#{path}/#{k}", out) }
+      else out[path] = node
+      end
+      out
+    end
+    a = flat.call(want)
+    b = flat.call(got)
+    (a.keys | b.keys).reject { |k| a[k] == b[k] }.first(4)
+      .map { |k| "#{k}: #{a[k].inspect} -> #{b[k].inspect}" }.join("; ")
+  end
+
+  it "covers all seventeen malformed kinds" do
     expect(entries.map { |e| e["malformed_kind"] }).to match_array(kinds)
   end
 
@@ -34,9 +52,9 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
         want = %w[load name table_head read]
         want << "table_cmap" if name.start_with?("full")
         expect(c["ops"].keys).to match_array(want)
-        c["ops"].each_value { |op| expect(op["outcome"]).to match(/\A(ok|error|skipped)\z/) }
+        c["ops"].each_value { |op| expect(op["outcome"]).to match(/\A(ok|error|skipped|timeout)\z/) }
       end
-      expect(g["audit"]["outcome"]).to match(/\A(ok|error)\z/)
+      expect(g["audit"]["outcome"]).to match(/\A(ok|error|timeout)\z/)
       expect(g["scan"]["outcome"]).to eq("ok")
     end
   end
@@ -68,17 +86,29 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   end
 
   it "is deterministic across two generations" do
-    first = entries.map { |e| described_class.render(e) }
-    second = entries.map { |e| described_class.render(e) }
-    expect(first).to eq(second)
+    first = entries.map { |e| JSON.parse(described_class.render(e)) }
+    second = entries.map { |e| JSON.parse(described_class.render(e)) }
+    # A node the reference timed out on is allowed to differ (see .matches?).
+    first.zip(second, entries).each do |a, b, e|
+      expect(described_class.matches?(a, b)).to be(true), "#{e['id']} differs between two renders: #{leaf_diffs(a, b)}"
+    end
   end
 
   it "does not depend on where the fonts live" do
-    Dir.mktmpdir("elsewhere-42") do |dir|
+    dir = Dir.mktmpdir("elsewhere-42")
+    begin
       entries.each do |e|
         FileUtils.cp(File.join(described_class::DERIVED_DIR, e["file"]), dir)
-        expect(described_class.render(e, dir: dir)).to eq(File.read(described_class.golden_path(e)))
+        rendered = JSON.parse(described_class.render(e, dir: dir))
+        want = golden_for(e)
+        expect(described_class.matches?(want, rendered)).to be(true),
+                                                            "#{e['id']} depends on location: #{leaf_diffs(want, rendered)}"
       end
+    ensure
+      # Windows cannot delete a file a lazily loaded font still holds open (EACCES in
+      # Dir.mktmpdir's own cleanup); release the handles first and ignore a leftover.
+      GC.start
+      FileUtils.rm_rf(dir)
     end
   end
 

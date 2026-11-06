@@ -272,11 +272,7 @@ module Fontisan
         # encoder does the same — short loca halves the loca table size
         # and Chrome's OTS accepts both formats.
         max_canonical_glyf_size = glyf_data.bytesize + 3 * maxp.num_glyphs
-        target_format = if max_canonical_glyf_size <= SHORT_LOCA_GLYF_MAX
-                          0
-                        else
-                          source_format
-                        end
+        target_format = max_canonical_glyf_size <= SHORT_LOCA_GLYF_MAX ? 0 : 1
 
         canonical = Woff2::GlyfCanonicalizer.new(
           glyf_data:,

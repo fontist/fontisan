@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "brotli"
-
 module Fontisan
   module Utilities
     # Wrapper for Brotli compression with consistent settings
@@ -19,6 +17,15 @@ module Fontisan
     # @example Decompress data
     #   decompressed = BrotliWrapper.decompress(compressed_data)
     class BrotliWrapper
+      # Raised when the optional `brotli` C extension cannot be loaded (the
+      # java-platform gem omits it; WOFF2 is then served by the :ffi tier).
+      class Unavailable < Fontisan::Error; end
+
+      MISSING_MESSAGE = "WOFF2 needs the `brotli` gem, which is not available " \
+                        "(java-platform fontisan omits it). Use " \
+                        "FONTISAN_ENGINE=ffi or auto with the bundled cdylib, " \
+                        "or install the brotli gem."
+
       # Default compression quality (0-11, higher = better but slower)
       # Quality 11 gives best compression for WOFF2
       DEFAULT_QUALITY = 11
@@ -28,6 +35,30 @@ module Fontisan
 
       # Maximum quality level
       MAX_QUALITY = 11
+
+      # Whether the `brotli` gem loads here. Memoised; never raises.
+      def self.available?
+        return @available if defined?(@available)
+
+        @available = begin
+          require "brotli"
+          true
+        rescue LoadError
+          false
+        end
+      end
+
+      # Forget the memoised probe (specs).
+      def self.reset!
+        remove_instance_variable(:@available) if defined?(@available)
+      end
+
+      # The ::Brotli module, or {Unavailable} with a clear message.
+      def self.library
+        raise Unavailable, MISSING_MESSAGE unless available?
+
+        ::Brotli
+      end
 
       # Compress data using Brotli
       #
@@ -48,7 +79,9 @@ module Fontisan
         validate_data!(data)
 
         begin
-          Brotli.deflate(data, quality: quality, mode: mode)
+          library.deflate(data, quality: quality, mode: mode)
+        rescue Unavailable
+          raise
         rescue StandardError => e
           raise Fontisan::Error,
                 "Brotli compression failed: #{e.message}"
@@ -67,7 +100,9 @@ module Fontisan
         validate_data!(data)
 
         begin
-          Brotli.inflate(data)
+          library.inflate(data)
+        rescue Unavailable
+          raise
         rescue StandardError => e
           raise Fontisan::Error,
                 "Brotli decompression failed: #{e.message}"

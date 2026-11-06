@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The default engine is now `FONTISAN_ENGINE=auto`: installs with a native tier
+  serve the path-based `Fontisan::Reference` operations from it (native, then
+  ffi), and installs without one fall back to Ruby with no toolchain needed.
+  Set `FONTISAN_ENGINE=ruby` to opt out. Engine: fontisan-rs at git rev
+  `10bbd1c7a961dfe383879f2c5cf995c1abe7d9df` (crate version 0.0.0, not yet on
+  crates.io), bundled as the magnus extension and the C-ABI shared library.
+  Platform gems: `x86_64-linux`, `x86_64-linux-musl`, `arm64-darwin`,
+  `x86_64-darwin`, `x64-mingw-ucrt`; the `java` gem carries the shared library
+  for JRuby. Measured native factors per platform are in `BENCHMARKS.md`.
+
 ### Removed
 
 - Audit/UCD documentation residue from the v0.3.0 audit/UCD subsystem

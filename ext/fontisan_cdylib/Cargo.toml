@@ -1,0 +1,18 @@
+[package]
+name = "fontisan_cdylib"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "C ABI of the fontisan engine as a shared library for the Ruby `ffi` tier (no magnus)"
+
+[lib]
+name = "fontisan_cdylib"
+crate-type = ["cdylib"]
+
+# Standalone: not a member of any enclosing workspace.
+[workspace]
+
+[dependencies]
+# TEMPORARY (decision D3: the crate is not on crates.io yet). Replace with
+# `fontisan = { version = "=<release>", features = ["ffi"] }` once published.
+fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "10bbd1c7a961dfe383879f2c5cf995c1abe7d9df", features = ["ffi"] }

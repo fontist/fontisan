@@ -29,7 +29,7 @@ module FontisanBench
       @ops = Ops.new(corpus)
       @side = side
       @only = only
-      @slowdown = side == "head" ? ENV.fetch("FONTISAN_BENCH_SLOWDOWN", "1").to_f : 1.0
+      @slowdown = slowdown_for(side)
     end
 
     def call
@@ -44,6 +44,17 @@ module FontisanBench
     end
 
     private
+
+    # FONTISAN_BENCH_SLOWDOWN_TIER=native limits the forced slowdown to the
+    # run whose FONTISAN_ENGINE is that tier (the tiers gate self-test).
+    def slowdown_for(side)
+      return 1.0 unless side == "head"
+
+      tier = ENV.fetch("FONTISAN_BENCH_SLOWDOWN_TIER", "")
+      return 1.0 unless tier.empty? || tier == ENV.fetch("FONTISAN_ENGINE", "")
+
+      ENV.fetch("FONTISAN_BENCH_SLOWDOWN", "1").to_f
+    end
 
     def runnable?(bench)
       bench.requires.all? { |const| Object.const_defined?(const) }
@@ -81,20 +92,49 @@ module FontisanBench
 
       lib = File.dirname($LOADED_FEATURES.grep(%r{/fontisan\.rb\z}).first.to_s)
       Rss.peak_kb(
-        [RbConfig.ruby, "-I", lib, "-e",
-         'require "fontisan"; p = Dir.glob(File.join(ARGV[0], "fonts", "**", "*")).select { |f| File.file?(f) }.sort; ' \
-         "Fontisan::Reference.scan(p)", @ops.corpus],
+        [RbConfig.ruby, "-I", lib, File.join(__dir__, "scan_child.rb"), @ops.corpus],
         env: ENV.to_h,
       )
     end
   end
 
-  # Peak resident set size of a child process, via the platform's time(1).
+  # Peak resident set size of a child process: time(1) on macOS and Linux,
+  # a PowerShell sampler of PeakWorkingSet64 on Windows. nil when the
+  # platform cannot measure it; the tiers gate then skips only the RSS check.
   module Rss
+    WINDOWS = /mswin|mingw|cygwin/
+    # Polls the child's peak working set until it exits (the value is gone
+    # once the process object is released, so it is sampled, never read late).
+    POWERSHELL = <<~PS
+      $psi = New-Object System.Diagnostics.ProcessStartInfo
+      $psi.FileName = $env:FONTISAN_RSS_EXE
+      $psi.Arguments = $env:FONTISAN_RSS_ARGS
+      $psi.UseShellExecute = $false
+      $p = [System.Diagnostics.Process]::Start($psi)
+      $peak = 0
+      while (-not $p.HasExited) {
+        try { $p.Refresh(); if ($p.PeakWorkingSet64 -gt $peak) { $peak = $p.PeakWorkingSet64 } } catch {}
+        Start-Sleep -Milliseconds 5
+      }
+      $p.WaitForExit()
+      if ($p.ExitCode -ne 0) { exit 1 }
+      Write-Output ("PEAK_BYTES=" + $peak)
+    PS
+
     module_function
+
+    def supported?
+      windows? || (File.executable?("/usr/bin/time") && !RbConfig::CONFIG["host_os"].match?(WINDOWS))
+    end
+
+    def windows?
+      RbConfig::CONFIG["host_os"].match?(WINDOWS)
+    end
 
     def peak_kb(cmd, env: {})
       require "open3"
+      return windows_peak_kb(cmd, env) if windows?
+
       flag = RbConfig::CONFIG["host_os"].include?("darwin") ? "-l" : "-v"
       return nil unless File.executable?("/usr/bin/time")
 
@@ -102,6 +142,18 @@ module FontisanBench
       return nil unless status.success?
 
       parse(err, flag)
+    end
+
+    def windows_peak_kb(cmd, env)
+      args = cmd.drop(1).map { |a| %("#{a}") }.join(" ")
+      out, _err, status = Open3.capture3(env.merge("FONTISAN_RSS_EXE" => cmd.first, "FONTISAN_RSS_ARGS" => args),
+                                         "powershell", "-NoProfile", "-NonInteractive", "-Command", POWERSHELL)
+      return nil unless status.success?
+
+      m = out.match(/PEAK_BYTES=(\d+)/)
+      m && m[1].to_i.positive? ? m[1].to_i / 1024 : nil
+    rescue SystemCallError
+      nil
     end
 
     def parse(text, flag)

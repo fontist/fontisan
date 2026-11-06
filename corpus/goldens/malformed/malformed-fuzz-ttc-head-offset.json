@@ -1,0 +1,166 @@
+{
+  "audit": {
+    "digest": "2f046bf2dd0f8ee6a40ca6497fa914d7c385da783fbb6bcecf4dcd18a07693b9",
+    "faces": 1,
+    "outcome": "ok"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'english_name' for nil",
+          "outcome": "error"
+        },
+        "read": {
+          "digest": "a5e0da1003d71bced48e1ac69e26352e6b0244934bc58ac18c3770bd37255c4e",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_cmap": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'unicode_mappings' for nil",
+          "outcome": "error"
+        },
+        "table_head": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'units_per_em' for nil",
+          "outcome": "error"
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'english_name' for nil",
+          "outcome": "error"
+        },
+        "read": {
+          "digest": "6addcb6a9c4a5ca108a3d341d8a91f98631f3873da36c2b190369d5e9adbeeb5",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_cmap": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'unicode_mappings' for nil",
+          "outcome": "error"
+        },
+        "table_head": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'units_per_em' for nil",
+          "outcome": "error"
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'english_name' for nil",
+          "outcome": "error"
+        },
+        "read": {
+          "digest": "aa1df59ebd0030599ad70b21101dc035b6be366a66885a45e8314cfe11304b71",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'units_per_em' for nil",
+          "outcome": "error"
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "name",
+      "ops": {
+        "load": {
+          "format": "Fontisan::TrueTypeFont",
+          "outcome": "ok"
+        },
+        "name": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'english_name' for nil",
+          "outcome": "error"
+        },
+        "read": {
+          "digest": "a1b9fb014bb08df2fd69fd8c09667c229c0b2f0a8a4d439bae759d63db8f7d90",
+          "faces": 1,
+          "outcome": "ok"
+        },
+        "table_head": {
+          "causes": [],
+          "error_class": "NoMethodError",
+          "markers": [],
+          "message": "undefined method 'units_per_em' for nil",
+          "outcome": "error"
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-fuzz-ttc-head-offset.ttc",
+  "file_sha256": "da5fb7ce3f8bce7243c94ef694c6835f73fd4bbd56f14b3797e1effabf70a1c9",
+  "id": "malformed-fuzz-ttc-head-offset",
+  "kind": "fuzz-ttc-head-offset",
+  "scan": {
+    "digest": "f9a14c6a53e6830138b2e4d86a753c0791572d1855d05fea9652f5c75c4aa1a6",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": null,
+            "class": "Fontist::Errors::FontIndexabilityValidationError",
+            "markers": [
+              "table 'head'",
+              "table 'maxp'",
+              "table 'name'"
+            ],
+            "message": "Font collection failed indexability validation (first font): structure: Font structure validation failed for check 'required_tables'; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'maxp' is missing"
+          },
+          "collection_member": null,
+          "font_file": null
+        },
+        "format": "ttc",
+        "num_faces": 1,
+        "validation_status": "invalid"
+      }
+    ]
+  }
+}

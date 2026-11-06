@@ -128,18 +128,20 @@ module FontisanBench
 
     module_function
 
-    def rows(measure, tolerance:)
+    # `strict` (weekly mode): the pinned reference must be able to run every
+    # op, so an op with no base number is "NO-BASE" and fails instead of "new".
+    def rows(measure, tolerance:, strict: false)
       ops = measure.op_names.map do |op|
-        row(op, measure.median_op("base", op), measure.median_op("head", op), tolerance)
+        row(op, measure.median_op("base", op), measure.median_op("head", op), tolerance, strict: strict)
       end
-      ops << row("scan_peak_rss_kb", measure.median_rss("base"), measure.median_rss("head"), tolerance)
+      ops << row("scan_peak_rss_kb", measure.median_rss("base"), measure.median_rss("head"), tolerance, strict: strict)
       ops
     end
 
-    def row(metric, base, head, tolerance)
+    def row(metric, base, head, tolerance, strict: false)
       return Row.new(metric: metric, base: base, head: head, status: "n/a") if head.nil? && base.nil?
       return Row.new(metric: metric, base: base, head: head, status: "MISSING-ON-HEAD") if head.nil?
-      return Row.new(metric: metric, base: base, head: head, status: "new") if base.nil?
+      return Row.new(metric: metric, base: base, head: head, status: strict ? "NO-BASE" : "new") if base.nil?
 
       ratio = head.to_f / base
       Row.new(metric: metric, base: base, head: head, ratio: ratio,
@@ -147,7 +149,7 @@ module FontisanBench
     end
 
     def failed?(rows)
-      rows.any? { |r| %w[REGRESSION MISSING-ON-HEAD].include?(r.status) }
+      rows.any? { |r| %w[REGRESSION MISSING-ON-HEAD NO-BASE].include?(r.status) }
     end
 
     def markdown(rows, title:, tolerance:, rounds:)

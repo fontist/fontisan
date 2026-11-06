@@ -9,6 +9,17 @@ name: Perf Gate
 #   commit in benchmark/baseline.json, same job (ratios, not absolute times).
 #   A missing reference fails. workflow_dispatch only runs from the default
 #   branch.
+# tiers (matrix, one job per platform): ruby vs native vs ffi in the same job,
+#   interleaved, median-of-5 (benchmark/ci_gate.rb --mode tiers). Hard floor
+#   (#160): native must be faster than ruby on audit_file, audit_dir and scan_dir,
+#   its scan peak RSS must not exceed ruby's (3% noise tolerance), and its factor
+#   must stay within 25% of the platform's committed factor in
+#   benchmark/tier_baseline.json (the regression gate; the PR-mode `gate` job
+#   above measures the ruby tier only, no ext is built there). The measured factor per platform is
+#   the published factor (job summary and artifact; copy it into BENCHMARKS.md).
+#   Peak RSS on Windows is sampled by PowerShell; if it cannot be read there
+#   only the RSS check is skipped. x86_64-linux-musl has no GitHub runner and
+#   is not measured here.
 # Ported from parsanol-ruby's perf-gate.yml (same steps, upload, summary), with
 # the cached baseline replaced by a commit measured in the same job.
 
@@ -75,3 +86,117 @@ jobs:
       - name: Job summary
         if: always()
         run: cat gate-output.md >> "$GITHUB_STEP_SUMMARY"
+
+  tiers:
+    name: Tiers ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: x86_64-linux, os: ubuntu-22.04 }
+          - { platform: aarch64-linux, os: ubuntu-22.04-arm }
+          - { platform: arm64-darwin, os: macos-15 }
+          - { platform: x86_64-darwin, os: macos-15-intel }
+          - { platform: x64-mingw-ucrt, os: windows-2025 }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: runner.os != 'Windows'
+
+      # RubyInstaller is MinGW, and rb-sys refuses to bind its headers from the
+      # MSVC host that is the runner default. Making the GNU triple the host keeps
+      # the artefacts in target/release, where the rake tasks expect them.
+      - uses: dtolnay/rust-toolchain@master
+        if: runner.os == 'Windows'
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
+
+      # rb-sys runs bindgen, which needs libclang AND the MinGW headers of the Ruby
+      # being bound (ruby/defines.h includes strings.h). The runner's LLVM targets
+      # MSVC and has no MinGW sysroot, so use the MSYS2 ucrt64 clang that ships
+      # next to RubyInstaller's toolchain.
+      - name: Install MSYS2 clang for bindgen
+        if: runner.os == 'Windows'
+        run: |
+          "$(cygpath -u "$RI_DEVKIT")/usr/bin/pacman" -S --noconfirm --needed mingw-w64-ucrt-x86_64-clang
+          msys=$(cygpath -m "$RI_DEVKIT")
+          echo "LIBCLANG_PATH=$msys/ucrt64/bin" >> "$GITHUB_ENV"
+          echo "$msys/ucrt64/bin" >> "$GITHUB_PATH"
+
+      - name: Build the native and ffi tiers
+        run: |
+          bundle exec rake compile
+          bundle exec rake cdylib:build
+
+      - name: Fetch ci-tier corpus
+        run: bundle exec rake corpus:fetch
+
+      - name: Run tiers gate
+        run: |
+          bundle exec ruby benchmark/ci_gate.rb --mode tiers --platform "${{ matrix.platform }}" --label "${{ matrix.platform }} (${{ matrix.os }})" \
+            --save perf-tiers.json | tee tiers-output.md
+
+      - name: Upload tiers results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-tiers-${{ matrix.platform }}
+          path: |
+            perf-tiers.json
+            tiers-output.md
+          retention-days: 90
+
+      - name: Job summary
+        if: always()
+        run: cat tiers-output.md >> "$GITHUB_STEP_SUMMARY"
+
+  # x86_64-linux-musl: GitHub has no musl runner, so the tiers gate runs in an Alpine
+  # container on the ubuntu runner (the way parity.yml's musl cells do). Unlike parity,
+  # which tests the cross-gem, this builds native and ffi inside Alpine: the gate needs
+  # the three tiers together, and the build is what the musl gem would ship.
+  tiers-musl:
+    name: Tiers x86_64-linux-musl
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tiers gate in Alpine
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w \
+            -e RUSTFLAGS="-C target-feature=-crt-static" \
+            ruby:3.4-alpine sh -ec '
+              # time: GNU time for /usr/bin/time -v (busybox has no -v), the RSS floor needs it.
+              apk add --no-cache build-base git make bash time rust cargo clang-dev linux-headers openssl-dev yaml-dev
+              bundle install --jobs 4
+              bundle exec rake compile
+              bundle exec rake cdylib:build
+              bundle exec rake corpus:fetch
+              bundle exec ruby benchmark/ci_gate.rb --mode tiers --platform x86_64-linux-musl --label "x86_64-linux-musl (alpine)" \
+                --save perf-tiers.json | tee tiers-output.md
+            '
+
+      - name: Upload tiers results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-tiers-x86_64-linux-musl
+          path: |
+            perf-tiers.json
+            tiers-output.md
+          retention-days: 90
+
+      - name: Job summary
+        if: always()
+        run: cat tiers-output.md >> "$GITHUB_STEP_SUMMARY"

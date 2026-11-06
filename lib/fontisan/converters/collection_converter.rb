@@ -262,7 +262,9 @@ conv_options = nil)
             converter = FormatConverter.new
 
             # Build converter options, including ConversionOptions if provided
-            converter_opts = options.dup
+            # timestamp is a WOFF2 encoder option; the outline strategy rejects
+            # any option key it does not declare, even with a nil value.
+            converter_opts = options.except(:timestamp)
             converter_opts[:options] = conv_options if conv_options
 
             begin
@@ -288,7 +290,10 @@ conv_options = nil)
                   note: "Conversion failed, kept original: #{e.message}",
                 }
               else
-                raise Error, "Font #{index} conversion failed: #{e.message}"
+                # Keep MissingTableError as its class so callers can rescue it
+                # by type; the message format is unchanged.
+                error_class = e.is_a?(Fontisan::MissingTableError) ? Fontisan::MissingTableError : Fontisan::Error
+                raise error_class, "Font #{index} conversion failed: #{e.message}"
               end
             end
           else
@@ -348,7 +353,8 @@ conv_options = nil)
         elsif font.has_table?("glyf")
           :ttf
         else
-          raise Error, "Cannot detect font format"
+          raise Fontisan::MissingTableError,
+                "Font has neither glyf nor CFF table"
         end
       end
 

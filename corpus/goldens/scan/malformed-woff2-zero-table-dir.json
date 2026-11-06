@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-woff2-zero-table-dir.woff2",
+  "font_sha256": "3e0b2baa3320e23cc6d8547e8e5a227d1790d1c6e68b543cda9a185f421e64fa",
+  "id": "malformed-woff2-zero-table-dir",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "Invalid WOFF2 file: woff: brotli stream is corrupt"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: Invalid WOFF2 file: woff: brotli stream is corrupt>."
+        }
+      },
+      "format": "woff2",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-woff2-zero-table-dir.woff2",
+      "sha256": "3e0b2baa3320e23cc6d8547e8e5a227d1790d1c6e68b543cda9a185f421e64fa",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

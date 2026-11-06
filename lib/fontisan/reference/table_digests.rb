@@ -197,6 +197,12 @@ module Fontisan
         return [] if count.zero?
 
         off_size = u8(data, offset + 4)
+        # The offset array must fit in the table; a fuzzed count of 2^32
+        # would otherwise build billions of slices (same bound as the Rust
+        # engine's INDEX reader).
+        raise Truncated, "invalid CFF2 offSize #{off_size}" unless (1..4).cover?(off_size)
+
+        slice(data, offset + 5, (count + 1) * off_size)
         read = ->(i) { slice(data, offset + 5 + (i * off_size), off_size).bytes.inject(0) { |a, b| (a << 8) | b } }
         base = offset + 5 + ((count + 1) * off_size) - 1
         Array.new(count) { |i| slice(data, base + read.call(i), read.call(i + 1) - read.call(i)) }

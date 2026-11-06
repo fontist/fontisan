@@ -120,6 +120,11 @@ module Fontisan
   autoload :SfntTable, "fontisan/sfnt_table"
   autoload :SfntBuilder, "fontisan/sfnt_builder"
   autoload :Reference, "fontisan/reference"
+  autoload :Engine, "fontisan/engine"
+  autoload :ByteOps, "fontisan/byte_ops"
+  autoload :Native, "fontisan/native"
+  autoload :Ffi, "fontisan/ffi"
+  autoload :FfiPlatform, "fontisan/ffi_platform"
   autoload :Scan, "fontisan/scan"
   autoload :Stitcher, "fontisan/stitcher"
   autoload :StitcherCli, "fontisan/stitcher_cli"
@@ -129,6 +134,8 @@ module Fontisan
   autoload :Type1Font, "fontisan/type1_font"
   autoload :Woff2Collection, "fontisan/woff2_collection"
   autoload :Woff2Font, "fontisan/woff2_font"
+  autoload :SfntDirectory, "fontisan/sfnt_directory"
+  autoload :WoffContainer, "fontisan/woff_container"
   autoload :WoffFont, "fontisan/woff_font"
 
   # SFNT offset table and table directory (defined in sfnt_font.rb)
@@ -214,7 +221,11 @@ module Fontisan
   # @example WOFF with no compression (legal per WOFF 1.0 §5.1)
   #   Fontisan.convert("f.ttf", to: :woff, output: "f.woff", uncompressed: true)
   def self.convert(path, to:, output:, **)
-    Commands::ConvertCommand.new(path, { to: to, output: output, ** }).run
+    # Through the Reference gate on every tier: the gate picks the tier, records
+    # who served the call, and never prints (the Ruby tier used to print progress
+    # here while the native tiers stayed silent).
+    # TODO(2f): UnpackCommand and the Thor CLI still call their commands directly.
+    Reference.convert(path, to: to, output: output, **)
   end
 
   # Scan font files into one row per font face, with the names, indexability

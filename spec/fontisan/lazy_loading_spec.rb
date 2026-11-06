@@ -88,20 +88,20 @@ RSpec.describe "Lazy Table Loading" do
   describe "performance" do
     it "is faster than eager loading for single table access" do
       iterations = 100
-
-      eager_time = Benchmark.realtime do
-        iterations.times do
-          font = Fontisan::FontLoader.load(font_path, lazy: false)
-          font.table("name")  # Only access one table
-        end
+      # Best of several rounds: a shared CI runner stalls one round, not all of them.
+      best = lambda do |&work|
+        Array.new(5) { Benchmark.realtime { iterations.times(&work) } }.min
       end
 
-      lazy_time = Benchmark.realtime do
-        iterations.times do
-          font = Fontisan::FontLoader.load(font_path, lazy: true)
-          font.table("name")  # Only access one table
-          font.close
-        end
+      eager_time = best.call do
+        font = Fontisan::FontLoader.load(font_path, lazy: false)
+        font.table("name") # Only access one table
+      end
+
+      lazy_time = best.call do
+        font = Fontisan::FontLoader.load(font_path, lazy: true)
+        font.table("name") # Only access one table
+        font.close
       end
 
       # Lazy loading should not be significantly slower than eager loading

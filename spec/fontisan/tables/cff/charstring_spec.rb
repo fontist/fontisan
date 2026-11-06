@@ -842,4 +842,49 @@ RSpec.describe Fontisan::Tables::Cff::CharString do
       expect(cs.path.size).to eq(3)
     end
   end
+
+  describe "operation budget" do
+    # Global subr i calls subr i+1 twice: 2**n operations without a budget.
+    # The shape of the cff-gsubr-priv-exp-60 break-test font (the native
+    # tiers' budget test uses the same one).
+    def fan_out_subrs(count)
+      subrs = Array.new(count) do |i|
+        # operand is the subr number minus the bias (107 for < 1240 subrs)
+        call = build_charstring(encode_int(i + 1 - 107), 29)
+        call * 2
+      end
+      subrs << build_charstring(11) # return
+      create_subr_index(subrs)
+    end
+
+    def run_fan_out(count)
+      subrs = fan_out_subrs(count)
+      # -107 callgsubr: enter subr 0
+      data = build_charstring(encode_int(-107), 29, 14)
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      error = nil
+      begin
+        described_class.new(data, private_dict, subrs, nil)
+      rescue StandardError => e
+        error = e
+      end
+      [error, Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
+    end
+
+    it "fails exponential subroutine fan-out fast with the native tiers' message" do
+      error, took = run_fan_out(60)
+
+      expect(error).to be_a(Fontisan::CorruptedTableError)
+      expect(error.message).to eq(
+        "Failed to parse CharString: charstring operation budget exceeded",
+      )
+      expect(took).to be < 10
+    end
+
+    it "still runs a legitimate fan-out well inside the budget" do
+      error, = run_fan_out(12)
+
+      expect(error).to be_nil
+    end
+  end
 end

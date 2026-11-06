@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "thor"
 
 module Fontisan
@@ -27,10 +28,27 @@ module Fontisan
     # @example Dry-run to preview
     #   fontisan instance variable.ttf --wght=700 --dry-run
     class InstanceCommand < BaseCommand
+      # Options that make an instance request more than plain axis coordinates.
+      NON_PLAIN_OPTIONS = %i[validate list_instances dry_run named_instance
+                             to optimize progress].freeze
+      TRUETYPE_MAGIC = "\x00\x01\x00\x00".b.freeze
+
+      # The CLI builds the command bare and hands the font to {#execute}, so
+      # the font is not loaded here (BaseCommand's constructor loads one).
+      #
+      # @param font_path [String, nil] unused until {#execute}
+      # @param options [Hash] command options
+      def initialize(font_path = nil, options = {}) # rubocop:disable Lint/MissingSuper
+        @font_path = font_path
+        @options = options
+      end
+
       # Instance a variable font at specified coordinates
       #
       # @param input_path [String] Path to variable font file
       def execute(input_path, options = {})
+        return if write_routed(input_path, options)
+
         # Load variable font
         font = load_font(input_path)
 
@@ -71,6 +89,34 @@ module Fontisan
       end
 
       private
+
+      # Serve a plain request (axis coordinates, the font's own format, a
+      # TrueType-outline sfnt) through the engine selection. Named instances,
+      # listing, dry-run, validation, --to, --optimize, --progress, CFF2 or
+      # wrapped inputs stay on the Ruby path in {#execute}. The Ruby writer and
+      # {Reference.instance} produce identical bytes for these requests.
+      #
+      # @return [String, nil] the output path when a non-Ruby tier wrote the
+      #   instance; nil when {#execute} must run the Ruby path
+      def write_routed(input_path, options)
+        gate = routed_gate(input_path, options)
+        return nil unless gate && Engine.resolve(:instance, input_path.to_s, gate) != :ruby
+
+        output_path = determine_output_path(input_path, options)
+        FileUtils.mkdir_p(File.dirname(output_path))
+        File.binwrite(output_path, Reference.instance(input_path, **gate))
+        puts "Static font instance written to: #{output_path}"
+        output_path
+      end
+
+      # Reference.instance keywords for a plain request; nil otherwise.
+      def routed_gate(input_path, options)
+        return nil if NON_PLAIN_OPTIONS.any? { |key| options[key] }
+        return nil unless File.file?(input_path) && File.binread(input_path, 4) == TRUETYPE_MAGIC
+
+        coords = extract_coordinates(options)
+        coords.empty? ? nil : { coords: coords }
+      end
 
       # Validate font before generating instance
       #
@@ -164,6 +210,8 @@ module Fontisan
       # @param output_path [String] Output file path
       # @param options [Hash] Command options
       def instance_named(font, instance_index, output_path, options)
+        instance_index = parse_instance_index(instance_index, font)
+
         # Generate instance using named instance
         generator = Variation::InstanceGenerator.new(font)
         tables = generator.generate_named_instance(instance_index)
@@ -179,6 +227,33 @@ module Fontisan
           source_format: source_format,
           optimize: options[:optimize] || false,
         )
+      end
+
+      # Convert the --named-instance value (a string from Thor) to a valid
+      # fvar instance index. The generator takes an Integer, so the conversion
+      # and range check live here, at the command boundary.
+      #
+      # @param value [String, Integer] raw option value
+      # @param font [Object] Font object
+      # @return [Integer] index into the fvar named instances
+      # @raise [ArgumentError] when not a non-negative integer or out of range
+      def parse_instance_index(value, font)
+        index = begin
+          Integer(value.to_s, 10)
+        rescue ArgumentError
+          raise ArgumentError,
+                "--named-instance must be an integer index, got #{value.inspect}"
+        end
+        raise ArgumentError, "--named-instance must be >= 0, got #{index}" if index.negative?
+
+        fvar = font.table("fvar") if font.respond_to?(:table)
+        count = fvar&.instances&.length
+        if count && index >= count
+          raise ArgumentError,
+                "--named-instance #{index} out of range (font has #{count} named instances)"
+        end
+
+        index
       end
 
       # List available named instances

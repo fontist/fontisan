@@ -298,6 +298,16 @@ RSpec.describe Fontisan::Subset::Builder do
       end.to raise_error(Fontisan::MissingTableError)
     end
 
+    it "raises MissingTableError, not a wrapped NoMethodError, when hhea is absent" do
+      allow(font).to receive(:table).and_call_original
+      allow(font).to receive(:table).with("hhea").and_return(nil)
+
+      expect do
+        described_class.new(font, glyph_ids, options).build
+      end.to raise_error(Fontisan::MissingTableError,
+                         "Required table 'hhea' not found in font")
+    end
+
     it "provides informative error messages" do
       expect do
         described_class.new(font, [99999], options).build

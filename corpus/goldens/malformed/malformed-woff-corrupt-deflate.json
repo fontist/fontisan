@@ -1,0 +1,165 @@
+{
+  "audit": {
+    "causes": [],
+    "error_class": "Fontisan::InvalidFontError",
+    "markers": [],
+    "message": "woff: zlib stream is corrupt or too long",
+    "outcome": "error"
+  },
+  "combos": {
+    "full/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "full/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "table_cmap": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=false": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    },
+    "metadata/lazy=true": {
+      "failure_point": "load",
+      "ops": {
+        "load": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "name": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        },
+        "read": {
+          "causes": [],
+          "error_class": "Fontisan::InvalidFontError",
+          "markers": [],
+          "message": "woff: zlib stream is corrupt or too long",
+          "outcome": "error"
+        },
+        "table_head": {
+          "outcome": "skipped",
+          "reason": "load failed"
+        }
+      }
+    }
+  },
+  "comparison": "exact",
+  "file": "malformed-woff-corrupt-deflate.woff",
+  "file_sha256": "8468015af5cd9330f23e7514adeae7912dda74ae5037788cdd783ae9db0858f0",
+  "id": "malformed-woff-corrupt-deflate",
+  "kind": "woff-corrupt-deflate",
+  "scan": {
+    "digest": "f84ba634b8a35226d8f2a8729265c3a1c6345d606a89f1407d3e9dc98c13bc1b",
+    "outcome": "ok",
+    "rows": 1,
+    "summary": [
+      {
+        "errors": {
+          "collection_file": {
+            "cause": {
+              "class": "Fontist::Errors::FontFileError",
+              "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "collection_member": null,
+          "font_file": {
+            "cause": {
+              "class": "Fontisan::InvalidFontError",
+              "message": "woff: zlib stream is corrupt or too long"
+            },
+            "class": "Fontist::Errors::FontFileError",
+            "markers": [],
+            "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: woff: zlib stream is corrupt or too long>."
+          }
+        },
+        "format": "woff",
+        "num_faces": 1,
+        "validation_status": null
+      }
+    ]
+  }
+}

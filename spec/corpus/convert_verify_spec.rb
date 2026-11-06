@@ -96,7 +96,26 @@ RSpec.describe ConvertGoldens do
 
     it "matches the committed goldens byte for byte" do
       first, = ConvertSpecCache.runs
-      first.each { |name, text| expect(File.read(File.join(described_class::GOLDEN_DIR, name))).to eq(text), name }
+      first.each do |name, text|
+        golden = File.read(File.join(described_class::GOLDEN_DIR, name))
+        expect(described_class.same_golden?(golden, text)).to be(true), "#{name} differs from its golden"
+      end
+    end
+  end
+
+  # FONTISAN_ENGINE=native|ffi (strict): every corpus case is served by that
+  # tier; no operation falls back to Ruby (the corpus has no .otc input or
+  # option the tiers route away).
+  if %w[native ffi].include?(ENV.fetch("FONTISAN_ENGINE", ""))
+    describe "tier coverage" do
+      it "serves every convert, extract, instance and subset case from the selected tier" do
+        tier = ENV.fetch("FONTISAN_ENGINE").to_sym
+        Fontisan::Engine.reset!
+        expect(described_class.verify(tiers)).to be_empty
+        counters = Fontisan::Engine.counters
+        expect(counters.keys).to eq([tier])
+        expect(counters.fetch(tier).keys).to include(:convert, :extract, :instance, :subset)
+      end
     end
   end
 

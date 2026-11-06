@@ -31,6 +31,10 @@ module Fontisan
   #   font = FontLoader.load("font.ttf", lazy: true)   # Tables loaded on-demand
   #   font = FontLoader.load("font.ttf", lazy: false)  # All tables loaded upfront
   class FontLoader
+    # The one text every tier raises for a file that is no font at all.
+    UNKNOWN_FORMAT_MESSAGE =
+      "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+
     # Number of bytes read from the start of a file to identify its format.
     # 100 bytes is enough to comfortably contain the Adobe Type 1 PFA header
     # plus its leading whitespace, and far more than the 4 bytes needed for
@@ -91,7 +95,7 @@ module Fontisan
       when :pfa, :pfb then Type1Font.from_file(path, mode: resolved_mode)
       else
         raise InvalidFontError,
-              "Unknown font format. Expected TTF, OTF, TTC, OTC, WOFF, WOFF2, PFB, or PFA file."
+              UNKNOWN_FORMAT_MESSAGE
       end
     end
 

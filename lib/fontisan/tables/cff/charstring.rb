@@ -107,6 +107,11 @@ module Fontisan
           [12, 37] => :flex1,
         }.freeze
 
+        # Total operators and operands one CharString (subroutines included)
+        # may execute. Real glyphs need hundreds; this only stops exponential
+        # subroutine fan-out. Matches the native tiers' `MAX_OPS` (1 << 20).
+        MAX_OPS = 1 << 20
+
         # Initialize and interpret a CharString
         #
         # @param data [String] Binary CharString data
@@ -128,6 +133,7 @@ module Fontisan
           @transient_array = []
           @subroutine_bias = calculate_bias(local_subrs)
           @global_subroutine_bias = calculate_bias(global_subrs)
+          @ops = 0
 
           parse!
         end
@@ -184,6 +190,7 @@ module Fontisan
           width_parsed = false
 
           until io.eof?
+            count_op
             byte = io.getbyte
 
             if byte <= 31 && byte != 28
@@ -205,6 +212,14 @@ module Fontisan
         rescue StandardError => e
           raise CorruptedTableError,
                 "Failed to parse CharString: #{e.message}"
+        end
+
+        # Count one operator or operand against the budget.
+        def count_op
+          @ops += 1
+          return if @ops <= MAX_OPS
+
+          raise CorruptedTableError, "charstring operation budget exceeded"
         end
 
         # Read an operator from the CharString
@@ -836,6 +851,7 @@ module Fontisan
 
           # Process subroutine until return or end
           until @io.eof?
+            count_op
             byte = @io.getbyte
 
             if byte <= 31 && byte != 28

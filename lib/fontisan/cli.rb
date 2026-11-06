@@ -226,7 +226,7 @@ module Fontisan
     # @param font_file [String] Path to the font file
     def subset(font_file)
       command = Commands::SubsetCommand.new(font_file, options)
-      result = command.run
+      result = command.run_routed
 
       unless options[:quiet]
         puts "Subset font created:"
@@ -422,7 +422,7 @@ module Fontisan
       convert_options[:options] = conv_options if conv_options
 
       command = Commands::ConvertCommand.new(font_file, convert_options)
-      command.run
+      command.run_routed
     rescue Errno::ENOENT, Error => e
       handle_error(e)
     end
@@ -443,7 +443,7 @@ module Fontisan
     option :opsz, type: :numeric,
                   desc: "Optical size axis value"
     option :named_instance, type: :string,
-                            desc: "Use named instance (e.g., 'Bold', 'Light')",
+                            desc: "Use named instance by fvar index (e.g., 0, 1; see --list-instances)",
                             aliases: "-n"
     option :list_instances, type: :boolean, default: false,
                             desc: "List available named instances",
@@ -463,7 +463,7 @@ module Fontisan
     #   fontisan instance variable.ttf --wght=700 --output=bold.ttf
     #
     # @example Use named instance
-    #   fontisan instance variable.ttf --named-instance="Bold" --output=bold.ttf
+    #   fontisan instance variable.ttf --named-instance=0 --output=bold.ttf
     #
     # @example Instance with format conversion
     #   fontisan instance variable.ttf --wght=700 --to=woff2 --output=bold.woff2
@@ -668,7 +668,7 @@ module Fontisan
     #   fontisan unpack family.ttc --output-dir extracted/ --prefix "NotoSans"
     def unpack(font_file)
       command = Commands::UnpackCommand.new(font_file, options)
-      result = command.run
+      result = command.run_routed
 
       unless options[:quiet]
         puts "Collection unpacked successfully:"

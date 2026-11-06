@@ -56,7 +56,7 @@
       "outcome": "ok",
       "output": {
         "format": "ttc",
-        "sha256": "276c6c6f104bc33b4ab346dce85054d24cd78f6fb9ae173f4440a539824a8427",
+        "sha256": "2641540fedc24beadf74b9126645e05a511fbd2abc10cda7612d32cb6186eba2",
         "size": 4764
       },
       "params": {
@@ -72,7 +72,7 @@
       "outcome": "ok",
       "output": {
         "format": "ttc",
-        "sha256": "276c6c6f104bc33b4ab346dce85054d24cd78f6fb9ae173f4440a539824a8427",
+        "sha256": "2641540fedc24beadf74b9126645e05a511fbd2abc10cda7612d32cb6186eba2",
         "size": 4764
       },
       "params": {
@@ -90,7 +90,7 @@
           "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
           "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
           "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
-          "head": "e94e28e2f4f058627a4be62187d9817380174ae7735d5eab38c5109a1abb89ba",
+          "head": "48269a11b1bd8d29c71dbcc7806fa3f8b8c4ea1e96e56609021bef28c44075a4",
           "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
           "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
           "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
@@ -106,7 +106,7 @@
           "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
           "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
           "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
-          "head": "e94e28e2f4f058627a4be62187d9817380174ae7735d5eab38c5109a1abb89ba",
+          "head": "48269a11b1bd8d29c71dbcc7806fa3f8b8c4ea1e96e56609021bef28c44075a4",
           "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
           "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
           "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
@@ -122,7 +122,7 @@
           "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
           "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
           "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
-          "head": "e94e28e2f4f058627a4be62187d9817380174ae7735d5eab38c5109a1abb89ba",
+          "head": "48269a11b1bd8d29c71dbcc7806fa3f8b8c4ea1e96e56609021bef28c44075a4",
           "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
           "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
           "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
@@ -135,7 +135,7 @@
           "CFF ": "37bbb22782b82cf155ed4610be033f8cd10a94271c001b0bf7736b87d235387b",
           "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
           "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
-          "head": "e64fe9e7c573a9e8a6770c6ddc5c1b0f6ae5747773495e3eb90c516d9f308b09",
+          "head": "383e1e66af07cf57d1f39511a96bd3835f11c86311d5f52c9033979063b2dffc",
           "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
           "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
           "maxp": "1ca0f74a5c9c24add2cf85b8bcbf44676043813d22fc36558f6448714e60c81a",
@@ -149,7 +149,7 @@
       "outcome": "ok",
       "output": {
         "format": "woff2",
-        "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+        "sha256": "91bc389e25d4b595a18127c6a3d48d2571ff9a73a5b5796c4ecbb9c0ba0b1e03",
         "size": 1224
       },
       "params": {
@@ -160,6 +160,6 @@
   },
   "font": "woff2-collection-4members",
   "source_format": "woff2",
-  "source_sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+  "source_sha256": "91bc389e25d4b595a18127c6a3d48d2571ff9a73a5b5796c4ecbb9c0ba0b1e03",
   "timestamp": 1735689600
 }

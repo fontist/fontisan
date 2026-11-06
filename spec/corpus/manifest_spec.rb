@@ -60,7 +60,10 @@ RSpec.describe "corpus manifest" do # rubocop:disable RSpec/DescribeClass
     "routing proof: Type 1" => "routing-type1",
   }.freeze
   malformed_kinds = %w[truncated-10 truncated-100 truncated-half garbage empty
-                       bad-table-offset bad-checksum bad-num-tables].freeze
+                       bad-table-offset bad-checksum bad-num-tables
+                       fuzz-cmap12-u32-span fuzz-cff2-huge-count fuzz-ttc-head-offset
+                       woff-corrupt-deflate woff-zero-table-dir woff-truncated-half
+                       woff2-corrupt-brotli woff2-zero-table-dir woff2-truncated-half].freeze
 
   it "has the expected schema and two tiers" do
     expect(manifest["schema"]).to eq(1)

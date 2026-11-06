@@ -119,12 +119,32 @@ module ConvertGoldens
   end
 
   def sample_codepoints(path)
-    face = Fontisan::FontLoader.load(path, mode: :full, lazy: false)
-    cps = face.table("cmap").unicode_mappings.keys.sort
+    cps = cmap_codepoints(path)
     return cps if cps.size <= SUBSET_SAMPLE
 
     step = (cps.size - 1).fdiv(SUBSET_SAMPLE - 1)
     Array.new(SUBSET_SAMPLE) { |i| cps[(i * step).round] }.uniq
+  end
+
+  # Codepoints of a face's cmap. A WOFF2 input on a platform without the `brotli`
+  # gem (the java gem on JRuby) is decoded by the pinned woff2_decompress first,
+  # so the sample does not depend on the tier under test.
+  def cmap_codepoints(path)
+    return load_codepoints(path) unless File.binread(path, 4) == "wOF2" && !Fontisan::Utilities::BrotliWrapper.available?
+
+    Dir.mktmpdir("sample-cps") do |tmp|
+      input = File.join(tmp, "in.woff2")
+      FileUtils.cp(path, input)
+      _out, err, status = Open3.capture3(woff2_decompress, input)
+      decoded = File.join(tmp, "in.ttf")
+      raise "woff2_decompress failed: #{err.strip}" unless status.success? && File.exist?(decoded)
+
+      load_codepoints(decoded)
+    end
+  end
+
+  def load_codepoints(path)
+    Fontisan::FontLoader.load(path, mode: :full, lazy: false).table("cmap").unicode_mappings.keys.sort
   end
 
   # --- tools ----------------------------------------------------------------
@@ -399,7 +419,7 @@ module ConvertGoldens
     generated.each do |name, text|
       file = File.join(dir, name)
       if !File.exist?(file) then problems << "#{name}: golden missing"
-      elsif File.read(file) != text then problems << "#{name}: #{diff_cases(File.read(file), text)}"
+      elsif !same_golden?(File.read(file), text) then problems << "#{name}: #{diff_cases(File.read(file), text)}"
       end
     end
     unless only
@@ -407,6 +427,27 @@ module ConvertGoldens
       problems.concat(stale.map { |n| "#{n}: golden has no corpus font" })
     end
     problems
+  end
+
+  # Goldens are Ruby's output. A non-Ruby tier (FONTISAN_ENGINE=native|ffi|auto)
+  # compresses with its own zlib/brotli, so for the "decoded-exact" class (woff,
+  # woff2) its compressed size and sha256 may differ; the decoded tables must
+  # not. Every other case is compared exactly, on every tier.
+  def same_golden?(golden_text, new_text)
+    return golden_text == new_text unless compressed_bytes_may_differ?
+
+    relaxed(JSON.parse(golden_text)) == relaxed(JSON.parse(new_text))
+  end
+
+  def compressed_bytes_may_differ?
+    !%w[ruby].include?(ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase)
+  end
+
+  def relaxed(golden)
+    golden["cases"].each_value do |c|
+      c["output"]&.delete_if { |k, _| %w[sha256 size].include?(k) } if c["class"] == "decoded-exact" && c["outcome"] == "ok"
+    end
+    golden
   end
 
   def diff_cases(old_text, new_text)

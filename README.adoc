@@ -53,6 +53,38 @@ command mappings and usage examples.
   round-trip. See link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide].
 
 
+== Engine
+
+Fontisan can serve its read, audit, scan, convert, extract, instance and subset
+operations from three tiers: `native` (a precompiled Rust extension), `ffi` (the
+bundled Rust shared library, loaded through the `ffi` gem) and `ruby` (the pure
+Ruby implementation, always present).
+
+The default is `auto`: the first available tier wins, in the order
+`native`, `ffi`, `ruby`. An operation a tier cannot serve goes to the next one.
+Installed from the source gem on a machine with no Rust toolchain and no
+bundled library, `auto` serves everything from `ruby`, with no warning and
+no error.
+
+[cols="1,3"]
+|===
+|Variable |Effect
+
+|`FONTISAN_ENGINE=auto\|native\|ffi\|ruby`
+|Pick the tier. Unset or empty means `auto`. `ruby` never uses the Rust tiers.
+A forced tier that is not available falls back to `ruby`.
+
+|`FONTISAN_ENGINE_STRICT=1`
+|No fallback: a forced tier that is not available raises
+`Fontisan::Engine::TierUnavailable` at setup. `1`, `true`, `yes` and `on` enable it;
+unset, empty, `0`, `false`, `no` and `off` leave it off; any other value raises
+`Fontisan::Engine::ConfigError`.
+|===
+
+`Fontisan::Engine.served_by(:read)` reports which tier served the last call of
+an operation. See link:docs/guide/engines.md[Engines] for tiers, platforms and
+troubleshooting.
+
 == Installation
 
 Add this line to your application's Gemfile:
@@ -2733,6 +2765,26 @@ bundle exec rake fixtures:download  # Download all test fonts
 bundle exec rake fixtures:clean     # Remove downloaded fonts
 ----
 
+
+=== Reference corpus and benchmarks
+
+`corpus/` holds the golden outputs of the pure-Ruby engine (fontist/fontisan#157).
+The fonts themselves are not in git: `corpus/manifest.json` pins each source
+by URL and SHA-256, and `rake corpus:fetch` downloads and verifies them into
+`corpus/fonts/`. `corpus:verify` and `bench` run the fetch themselves, so a
+fresh clone needs no manual step.
+
+[source,shell]
+----
+bundle exec rake corpus:fetch    # download + checksum the ci tier (TIER=ci|large|all)
+bundle exec rake corpus:verify   # compare read goldens; never writes
+bundle exec rake bench           # run the benches, print the report, write BENCHMARKS.md
+----
+
+Goldens are compared, never regenerated, by the tests. `corpus:regenerate` is
+the one explicit rewrite and belongs in a PR that shows the golden diff.
+Baseline numbers are in link:BENCHMARKS.md[BENCHMARKS.md]; the `Perf Gate`
+workflow fails a PR that makes an operation more than 25% slower than its base.
 
 == Copyright and license
 

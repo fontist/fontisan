@@ -164,13 +164,14 @@ module Fontisan
         options.select { |k, _| names.include?(k.to_sym) }
       end
 
-      # Collect all table data from font in input-font order (spec §6: tables
-      # MUST be stored in the same order as the well-formed input font).
+      # Collect all table data from font, sorted ascending by tag (WOFF 1.0
+      # §5: the table directory MUST be sorted by tag; data follows directory
+      # order). Input-font order is not preserved.
       #
       # @param font [TrueTypeFont, OpenTypeFont]
       # @return [Hash<String, String>]
       def collect_tables_data(font)
-        font.table_names.each_with_object({}) do |tag, h|
+        font.table_names.sort.each_with_object({}) do |tag, h|
           data = font.table_data[tag]
           h[tag] = data if data
         end
@@ -241,7 +242,7 @@ module Fontisan
       # emits header → directory → tables → optional metadata → optional
       # private data.
       #
-      # @param compressed_tables [Hash<String, Hash>] in input-font order
+      # @param compressed_tables [Hash<String, Hash>] sorted by tag
       # @param font [TrueTypeFont, OpenTypeFont]
       # @param compressed_metadata [Hash, nil]
       # @param private_data [String, nil]
@@ -252,7 +253,7 @@ module Fontisan
         num_tables = compressed_tables.length
         data_start = header_size + (num_tables * 20)
 
-        # Lay out tables in input-font order with 4-byte alignment padding.
+        # Lay out tables in directory (tag) order with 4-byte alignment padding.
         # Each entry: { tag:, info:, offset:, pad_bytes: }
         entries = []
         cursor = data_start

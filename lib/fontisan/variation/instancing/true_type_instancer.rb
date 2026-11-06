@@ -9,6 +9,8 @@ module Fontisan
       # chosen location. cvar, GPOS/GDEF variations and MVAR are not applied.
       class TrueTypeInstancer
         DROPPED = %w[fvar gvar avar HVAR VVAR MVAR STAT cvar DSIG].freeze
+        # Tables read by #call besides the variation tables checked below.
+        REQUIRED = %w[head hhea hmtx maxp loca].freeze
         WIDTH_CLASSES = [50, 62.5, 75, 87.5, 100, 112.5, 125, 150, 200].freeze
 
         # @param tables [Hash{String=>String}] raw tables of the variable font
@@ -45,13 +47,19 @@ module Fontisan
           unless @tables["fvar"]
             raise MissingVariationTableError.new(table: "fvar")
           end
-          return if @tables["gvar"] && @tables["glyf"]
+          unless @tables["gvar"] && @tables["glyf"]
+            raise MissingVariationTableError.new(
+              table: "gvar",
+              message: "Static instancing needs TrueType outlines with gvar " \
+                       "(CFF2 variable fonts are not supported yet)",
+            )
+          end
 
-          raise MissingVariationTableError.new(
-            table: "gvar",
-            message: "Static instancing needs TrueType outlines with gvar " \
-                     "(CFF2 variable fonts are not supported yet)",
-          )
+          REQUIRED.each do |tag|
+            next if @tables[tag]
+
+            raise MissingTableError, "Font missing required #{tag} table"
+          end
         end
 
         def read_metrics(num_glyphs)

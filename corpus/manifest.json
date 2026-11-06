@@ -514,7 +514,7 @@
       ],
       "woff2_decode": true,
       "woff2_decoded_equals": "ttc-4members-shared",
-      "sha256": "d90d3b8fa9269e752e745b81b4a4eecc6dc182c57f8cc8d03b6ab97deff68d87",
+      "sha256": "91bc389e25d4b595a18127c6a3d48d2571ff9a73a5b5796c4ecbb9c0ba0b1e03",
       "size": 1224
     },
     {
@@ -832,6 +832,150 @@
       "malformed_kind": "bad-num-tables",
       "sha256": "275bff491132b61ee04a20a4c0ace950745dc36c145e010a58ce291afab067b7",
       "size": 2336
+    },
+    {
+      "id": "malformed-fuzz-cmap12-u32-span",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-cmap12-u32-span.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-cmap12-u32-span",
+      "sha256": "5d303459eca91c05d4d21bfbc5e263adbc9f73943838414ff8a0203575f02ea7",
+      "size": 1868
+    },
+    {
+      "id": "malformed-fuzz-cff2-huge-count",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-cff2-huge-count.otf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-cff2-huge-count",
+      "sha256": "c7f07fea9b114ea4c31f0252e889cb43d45cce65eff7aa98274a20ec3012580e",
+      "size": 2224
+    },
+    {
+      "id": "malformed-fuzz-ttc-head-offset",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-ttc-head-offset.ttc",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-ttc-head-offset",
+      "sha256": "da5fb7ce3f8bce7243c94ef694c6835f73fd4bbd56f14b3797e1effabf70a1c9",
+      "size": 44
+    },
+    {
+      "id": "malformed-woff-corrupt-deflate",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff-corrupt-deflate.woff",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff"
+      ],
+      "malformed_kind": "woff-corrupt-deflate",
+      "sha256": "8468015af5cd9330f23e7514adeae7912dda74ae5037788cdd783ae9db0858f0",
+      "size": 1328
+    },
+    {
+      "id": "malformed-woff-zero-table-dir",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff-zero-table-dir.woff",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff"
+      ],
+      "malformed_kind": "woff-zero-table-dir",
+      "sha256": "76becfc448a58a42645ec48f55d880b2e50934a85d74fddc00c765dac6f512a7",
+      "size": 1328
+    },
+    {
+      "id": "malformed-woff-truncated-half",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff-truncated-half.woff",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff"
+      ],
+      "malformed_kind": "woff-truncated-half",
+      "sha256": "d997d9e693fa97209a12f473f42a6e4d2ad80a5cc41299448ced9caa55598492",
+      "size": 664
+    },
+    {
+      "id": "malformed-woff2-corrupt-brotli",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff2-corrupt-brotli.woff2",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff2"
+      ],
+      "malformed_kind": "woff2-corrupt-brotli",
+      "sha256": "96243ce295ee4e4ab212b7653bc220b77cada4240445ac34c73923ec6af5f581",
+      "size": 808
+    },
+    {
+      "id": "malformed-woff2-zero-table-dir",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff2-zero-table-dir.woff2",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff2"
+      ],
+      "malformed_kind": "woff2-zero-table-dir",
+      "sha256": "3e0b2baa3320e23cc6d8547e8e5a227d1790d1c6e68b543cda9a185f421e64fa",
+      "size": 808
+    },
+    {
+      "id": "malformed-woff2-truncated-half",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-woff2-truncated-half.woff2",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/malformed_woff.rb",
+      "inputs": [
+        "fonttools-test-woff2"
+      ],
+      "malformed_kind": "woff2-truncated-half",
+      "sha256": "5ed9e3df5d45674752877b6a688b7ccc3ccbb408aff2609a82250fd4df97ab8b",
+      "size": 404
     }
   ]
 }

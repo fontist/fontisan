@@ -365,15 +365,15 @@ Ruby raises on these inputs today; the golden keeps class and masked message.
 
 - Reference error: `names-mac-roman-only/format:otf`
 
+## Fontisan::Error: Conversion failed: Transformation failed: Output validation failed: Table 'name' failed validation, Table 'name' failed validation, Table 'name' failed validation (1)
+
+- Reference error: `quirk-empty-name-table/format:otf`
+
 ## Fontisan::Error: Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet) (3)
 
 - Reference error: `source-sans-3-vf-upright-cff2/format:ttf`
 - Reference error: `source-sans-3-vf-upright-cff2/format:woff`
 - Reference error: `source-sans-3-vf-upright-cff2/format:woff2`
-
-## Fontisan::Error: Conversion failed: Transformation failed: item N must have BINARY encoding, got: UTF-N (1)
-
-- Reference error: `quirk-empty-name-table/format:otf`
 
 ## Fontisan::Error: None of the requested characters exist in quirk-empty-cmap-table.ttf (2)
 

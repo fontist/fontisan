@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "open3"
+require "rbconfig"
+require "tmpdir"
 require "fontisan/converters/conversion_strategy"
 require "fontisan/converters/table_copier"
 require "fontisan/converters/outline_converter"
@@ -130,6 +133,28 @@ RSpec.describe Fontisan::Converters::ConversionStrategy do
           :woff2, { zlib_level: 9 }
         )
       end.to raise_error(ArgumentError, /do not apply.*woff2/)
+    end
+
+    # The option-conflict message names the strategy class via
+    # String#demodulize, which only ActiveSupport provides. Specs load
+    # ActiveSupport, so the in-process specs cannot see the gap; the CLI loads
+    # only fontisan and a NoMethodError replaced the conversion. A child
+    # process loads only fontisan, the way the CLI does.
+    it "converts a collection with a target_format option without ActiveSupport" do
+      fixture = File.expand_path("../../fixtures/fonttools/TestTTC.ttc", __dir__)
+      lib = File.expand_path("../../../lib", __dir__)
+      Dir.mktmpdir do |dir|
+        output = File.join(dir, "out.otc")
+        script = <<~RUBY
+          require "fontisan"
+          Fontisan::Reference.convert(#{fixture.inspect}, to: :otc,
+            output: #{output.inspect}, target_format: "otf")
+        RUBY
+        out, status = Open3.capture2e(RbConfig.ruby, "-I#{lib}", "-e", script)
+
+        expect(status).to be_success, out
+        expect(File.exist?(output)).to be(true)
+      end
     end
 
     it "passes brotli_quality for :woff2 target" do

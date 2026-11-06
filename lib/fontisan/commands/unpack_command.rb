@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "tmpdir"
 
 module Fontisan
   module Commands
@@ -98,7 +99,62 @@ module Fontisan
         raise Fontisan::Error, "Unexpected error during unpacking: #{e.message}"
       end
 
+      # Execute the command through the engine selection (the CLI entry): a
+      # tier other than Ruby serves the extraction when it can, and the result
+      # and the files written are those of {#run}. Anything the engine cannot
+      # honour (a +format+ or +prefix+, verbose output, an OTC input, a
+      # non-"ttcf" file, an index out of range) runs {#run} on the Ruby tier.
+      #
+      # @return [Hash] same as {#run}
+      def run_routed
+        indices = routed_indices
+        return run unless indices
+
+        FileUtils.mkdir_p(@output_dir)
+        files = indices.map { |index| extract_member(index) }
+        { collection: @collection_path, output_dir: @output_dir,
+          num_fonts: collection_member_count, fonts_extracted: files.size,
+          extracted_files: files }
+      rescue Fontisan::Error => e
+        raise Fontisan::Error, "Collection unpacking failed: #{e.message}"
+      end
+
       private
+
+      # Member indices to extract on a non-Ruby tier; nil when Ruby serves.
+      def routed_indices
+        return nil if @format || @prefix || @verbose || !ttcf_file?
+
+        count = collection_member_count
+        return nil if @font_index && @font_index >= count
+
+        indices = @font_index ? [@font_index] : (0...count).to_a
+        probe = { index: indices.first, output_dir: @output_dir.to_s }
+        Engine.resolve(:extract, @collection_path.to_s, probe) == :ruby ? nil : indices
+      end
+
+      def ttcf_file?
+        File.extname(@collection_path).casecmp?(".otc") ? false : File.binread(@collection_path, 4) == "ttcf"
+      end
+
+      # numFonts of the TTC header.
+      def collection_member_count
+        File.binread(@collection_path, 12).unpack1("@8N")
+      end
+
+      # One member through {Reference.extract}. A single requested index keeps
+      # the engine's file name; all members get Ruby's "<name>_<index>" form.
+      def extract_member(index)
+        return Reference.extract(@collection_path, index: index, output_dir: @output_dir) if @font_index
+
+        Dir.mktmpdir("fontisan-unpack") do |scratch|
+          file = Reference.extract(@collection_path, index: index, output_dir: scratch)
+          ext = File.extname(file)
+          target = File.join(@output_dir, "#{File.basename(file, ext)}_#{index}#{ext}")
+          FileUtils.mv(file, target)
+          target
+        end
+      end
 
       # Validate command options
       #

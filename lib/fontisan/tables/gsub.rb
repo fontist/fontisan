@@ -26,6 +26,13 @@ module Fontisan
         []
       end
 
+      # Every script with its feature tags, parsed once and work-budgeted
+      # (see {LayoutCommon::ScriptFeatures}).
+      # @return [Hash{String=>Array<String>}] script tag => feature tags
+      def script_features
+        LayoutCommon::ScriptFeatures.new(self).call
+      end
+
       # Get all feature tags for a given script
       # @param script_tag [String] 4-character script tag (e.g., 'latn')
       # @return [Array<String>] Array of 4-character feature tags
