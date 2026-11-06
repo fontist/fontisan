@@ -134,6 +134,12 @@ module Fontisan
         end
       end
 
+      # Run +operation+ on the Ruby tier, whatever is selected (a tier handing
+      # a file it cannot read back to Ruby).
+      def ruby_call(operation, ...)
+        tier_object(:ruby).call(operation, ...)
+      end
+
       # Called by the gates.
       def dispatch(operation, args, kwargs, &)
         path = args.first

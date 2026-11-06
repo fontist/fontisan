@@ -67,9 +67,11 @@ RSpec.describe Fontisan::Engine do
   end
 
   around do |example|
-    saved = ENV.to_h.slice("FONTISAN_ENGINE", "FONTISAN_ENGINE_STRICT")
+    saved = ENV.to_h.slice("FONTISAN_ENGINE", "FONTISAN_ENGINE_STRICT", "FONTISAN_CDYLIB")
     ENV.delete("FONTISAN_ENGINE")
     ENV.delete("FONTISAN_ENGINE_STRICT")
+    # These examples assume no ffi library; a built one must not leak in.
+    ENV["FONTISAN_CDYLIB"] = File.join(Dir.tmpdir, "no-such-fontisan-lib")
     described_class.reset!
     FileUtils.mkdir_p(File.join(out, "d"))
     FileUtils.cp(ttf, File.join(out, "d"))
@@ -77,6 +79,7 @@ RSpec.describe Fontisan::Engine do
   ensure
     ENV.delete("FONTISAN_ENGINE")
     ENV.delete("FONTISAN_ENGINE_STRICT")
+    ENV.delete("FONTISAN_CDYLIB")
     ENV.update(saved)
     described_class.reset!
     FileUtils.rm_rf(out)

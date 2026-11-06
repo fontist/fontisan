@@ -64,3 +64,9 @@ corpus/fonts/
 /lib/fontisan/native/*.so
 /lib/fontisan/native/*.dll
 /ext/fontisan_native/target/
+
+# :ffi tier build output
+/ext/fontisan_cdylib/target/
+/lib/fontisan/ffi/*.dylib
+/lib/fontisan/ffi/*.so
+/lib/fontisan/ffi/*.dll

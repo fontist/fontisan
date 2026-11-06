@@ -9,6 +9,8 @@ gem "benchmark"
 # bigdecimal is required by get_process_mem for Ruby 3.4+ compatibility
 gem "bigdecimal"
 gem "canon", "~> 0.1.3"
+# Optional runtime dependency of the :ffi engine tier (lib/fontisan/ffi.rb); not in the gemspec.
+gem "ffi"
 gem "get_process_mem", "~> 0.2"
 # Octokit provides authenticated GitHub API access for the test-only
 # fixture downloader (spec/support/fixture_downloader.rb). CI sets
