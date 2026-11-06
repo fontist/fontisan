@@ -221,14 +221,11 @@ module Fontisan
   # @example WOFF with no compression (legal per WOFF 1.0 §5.1)
   #   Fontisan.convert("f.ttf", to: :woff, output: "f.woff", uncompressed: true)
   def self.convert(path, to:, output:, **)
-    options = { to: to, output: output, ** }
-    # Path-based native dispatch (card 2f): when a non-Ruby tier serves this
-    # call, it goes through the Reference gate (which never prints).
+    # Through the Reference gate on every tier: the gate picks the tier, records
+    # who served the call, and never prints (the Ruby tier used to print progress
+    # here while the native tiers stayed silent).
     # TODO(2f): UnpackCommand and the Thor CLI still call their commands directly.
-    input = path.respond_to?(:to_path) ? path.to_path : path
-    return Reference.convert(path, **options) if Engine.resolve(:convert, input, options) != :ruby
-
-    Commands::ConvertCommand.new(path, options).run
+    Reference.convert(path, to: to, output: output, **)
   end
 
   # Scan font files into one row per font face, with the names, indexability
