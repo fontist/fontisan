@@ -95,7 +95,7 @@ module Fontisan
         else raise Fontisan::Error, "native tier cannot serve #{operation}"
         end
       rescue Failure => e
-        raise_failure(e.details)
+        raise_failure(e.details, byte_operation: ByteOps::BYTE_OPERATIONS.include?(operation))
       end
 
       private

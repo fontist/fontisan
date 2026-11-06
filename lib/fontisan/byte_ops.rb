@@ -16,6 +16,12 @@ module Fontisan
 
     BYTE_OPERATIONS = %i[convert extract instance subset].freeze
 
+    # "<ruby class>: <message>": how the engine reports a Ruby exception it
+    # mirrors (the byte operations carry one class and one message, no chain).
+    FAILURE_MESSAGE = /\A([A-Z]\w*(?:::\w+)*): (.*)\z/m
+    # The engine's text for a file that is no font; Ruby's is InvalidFontError.
+    UNRECOGNISED_FORMAT_MESSAGE = "Conversion failed: unrecognised font format"
+
     private
 
     # Whether the engine honours +options+ for +operation+ (one of
@@ -141,11 +147,26 @@ module Fontisan
 
     # Raise the Ruby tier's exception: class, message and the cause chain
     # (each cause is raised so that its own #cause is set).
-    def raise_failure(details)
+    def raise_failure(details, byte_operation: false)
       class_name, message, causes = details
       cause = nil
       causes.reverse_each { |name, text| cause = build_exception(name, text, cause) }
-      raise build_instance(exception_class(class_name), message), cause: cause
+      klass, message = byte_failure(class_name, message) if byte_operation
+      raise build_instance(klass || exception_class(class_name), message), cause: cause
+    end
+
+    # The Ruby class and message of a failed byte operation, so that a tier
+    # never changes what a caller can rescue or match: an engine error that
+    # names the Ruby exception it mirrors ("RuntimeError: ...") is unwrapped,
+    # and the engine's unrecognised-format error becomes the loader's.
+    def byte_failure(class_name, message)
+      if class_name == "Fontisan::Error" && (match = FAILURE_MESSAGE.match(message))
+        class_name = match[1]
+        message = match[2]
+      end
+      return [InvalidFontError, FontLoader::UNKNOWN_FORMAT_MESSAGE] if message == UNRECOGNISED_FORMAT_MESSAGE
+
+      [exception_class(class_name), message]
     end
 
     # `klass.new(message)`, or the `message:` keyword form some Fontisan

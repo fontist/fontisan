@@ -49,8 +49,6 @@ module Fontisan
     CONVERT_FAILED = 8
     SUBSET_PROFILE_CODES = { "pdf" => 0, "web" => 1, "minimal" => 2 }.freeze
     FIXED_ONE = 65_536
-    # "<ruby class>: <message>" as the byte operations report a failure.
-    FAILURE_MESSAGE = /\A([A-Z]\w*(?:::\w+)*): (.*)\z/m
 
     class << self
       include ByteOps
@@ -175,9 +173,10 @@ module Fontisan
       end
 
       def raise_byte_failure(reply)
-        match = FAILURE_MESSAGE.match(reply.message)
+        match = ByteOps::FAILURE_MESSAGE.match(reply.message)
         if reply.status == CONVERT_FAILED && match
-          raise build_instance(exception_class(match[1]), match[2])
+          klass, message = byte_failure(match[1], match[2])
+          raise build_instance(klass, message)
         end
 
         raise Fontisan::Error, "fontisan ffi status #{reply.status}: #{reply.message}"
