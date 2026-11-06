@@ -126,7 +126,7 @@ jobs:
       - name: Install MSYS2 clang for bindgen
         if: runner.os == 'Windows'
         run: |
-          ridk exec pacman -S --noconfirm --needed mingw-w64-ucrt-x86_64-clang
+          "$(cygpath -u "$RI_DEVKIT")/usr/bin/pacman" -S --noconfirm --needed mingw-w64-ucrt-x86_64-clang
           msys=$(cygpath -m "$RI_DEVKIT")
           echo "LIBCLANG_PATH=$msys/ucrt64/bin" >> "$GITHUB_ENV"
           echo "$msys/ucrt64/bin" >> "$GITHUB_PATH"
