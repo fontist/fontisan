@@ -76,7 +76,9 @@ A forced tier that is not available falls back to `ruby`.
 
 |`FONTISAN_ENGINE_STRICT=1`
 |No fallback: a forced tier that is not available raises
-`Fontisan::Engine::TierUnavailable` at setup.
+`Fontisan::Engine::TierUnavailable` at setup. `1`, `true`, `yes` and `on` enable it;
+unset, empty, `0`, `false`, `no` and `off` leave it off; any other value raises
+`Fontisan::Engine::ConfigError`.
 |===
 
 `Fontisan::Engine.served_by(:read)` reports which tier served the last call of

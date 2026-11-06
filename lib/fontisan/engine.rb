@@ -25,6 +25,8 @@ module Fontisan
     class Woff2Unavailable < TierUnavailable; end
 
     SELECTIONS = %w[ruby native ffi auto].freeze
+    STRICT_ON = %w[1 true yes on].freeze
+    STRICT_OFF = ["", "0", "false", "no", "off"].freeze
     AUTO_ORDER = %i[native ffi ruby].freeze
     OPS = %i[read outline_hashes audit audit_dir scan convert extract
              instance glyph_ids subset].freeze
@@ -219,10 +221,20 @@ module Fontisan
                 "#{SELECTIONS.join(', ')}"
         end
 
-        strict = %w[1 true yes on].include?(
-          ENV.fetch("FONTISAN_ENGINE_STRICT", "").strip.downcase,
-        )
-        Config.new(selection.to_sym, strict)
+        Config.new(selection.to_sym, strict_from_env)
+      end
+
+      # 1/true/yes/on is strict; unset, empty and 0/false/no/off is not. Any
+      # other value raises, as an unknown FONTISAN_ENGINE does: a typo must not
+      # silently leave a service non-strict.
+      def strict_from_env
+        value = ENV.fetch("FONTISAN_ENGINE_STRICT", "").strip.downcase
+        return true if STRICT_ON.include?(value)
+        return false if STRICT_OFF.include?(value)
+
+        raise ConfigError,
+              "FONTISAN_ENGINE_STRICT=#{value.inspect} is not one of " \
+              "#{(STRICT_ON + STRICT_OFF.reject(&:empty?)).join(', ')}"
       end
 
       # The java-platform gem has no `brotli`: a WOFF2 operation that no other

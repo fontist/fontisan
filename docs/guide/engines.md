@@ -46,7 +46,7 @@ The same variables apply to the CLI, but only for the commands that go through t
 
 ## Strict mode
 
-If a forced tier (`native` or `ffi`) is not available, fontisan falls back to Ruby silently. Set `FONTISAN_ENGINE_STRICT=1` (also `true`, `yes`, `on`) to raise `Fontisan::Engine::TierUnavailable` instead:
+If a forced tier (`native` or `ffi`) is not available, fontisan falls back to Ruby silently. Set `FONTISAN_ENGINE_STRICT=1` (also `true`, `yes`, `on`; `0`, `false`, `no`, `off` leave it off, anything else raises `Fontisan::Engine::ConfigError`) to raise `Fontisan::Engine::TierUnavailable` instead:
 
 ```sh
 FONTISAN_ENGINE=native FONTISAN_ENGINE_STRICT=1 ruby -rfontisan -e 'Fontisan::Reference.audit("MyFont.ttf")'

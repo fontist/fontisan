@@ -173,6 +173,31 @@ RSpec.describe Fontisan::Engine do
         .to raise_error(described_class::ConfigError, /rust/)
     end
 
+    %w[junk 2 y enabled].each do |value|
+      it "rejects the unknown FONTISAN_ENGINE_STRICT value #{value.inspect}" do
+        configure("ruby")
+        ENV["FONTISAN_ENGINE_STRICT"] = value
+        expect { Fontisan::Reference.read(ttf) }
+          .to raise_error(described_class::ConfigError, /FONTISAN_ENGINE_STRICT=#{value.inspect}/)
+      end
+    end
+
+    %w[1 true YES on].each do |value|
+      it "reads FONTISAN_ENGINE_STRICT=#{value} as on" do
+        configure("native")
+        ENV["FONTISAN_ENGINE_STRICT"] = value
+        expect(described_class.send(:config_from_env).strict).to be(true)
+      end
+    end
+
+    ["0", "false", "No", "off", "", " "].each do |value|
+      it "reads FONTISAN_ENGINE_STRICT=#{value.inspect} as off" do
+        configure("native")
+        ENV["FONTISAN_ENGINE_STRICT"] = value
+        expect(described_class.send(:config_from_env).strict).to be(false)
+      end
+    end
+
     it "treats the value case-insensitively" do
       configure("RUBY")
       Fontisan::Reference.read(ttf)
