@@ -22,7 +22,7 @@
           "outcome": "error"
         },
         "read": {
-          "digest": "33768acf66f2641c79556a3e796498a800fa8294457330124a3e0829b7c83cd7",
+          "digest": "a5e0da1003d71bced48e1ac69e26352e6b0244934bc58ac18c3770bd37255c4e",
           "faces": 1,
           "outcome": "ok"
         },
@@ -57,7 +57,7 @@
           "outcome": "error"
         },
         "read": {
-          "digest": "2e4352bca5859eeb9b2af932b25a8910f0939121666606c90e560a054b797324",
+          "digest": "6addcb6a9c4a5ca108a3d341d8a91f98631f3873da36c2b190369d5e9adbeeb5",
           "faces": 1,
           "outcome": "ok"
         },
@@ -92,7 +92,7 @@
           "outcome": "error"
         },
         "read": {
-          "digest": "1bb83efbe593ff27601d9047c4c754c2ae6c59af639a2aacd6042a3c974d7dae",
+          "digest": "aa1df59ebd0030599ad70b21101dc035b6be366a66885a45e8314cfe11304b71",
           "faces": 1,
           "outcome": "ok"
         },
@@ -120,7 +120,7 @@
           "outcome": "error"
         },
         "read": {
-          "digest": "17514e5c4c09ba1f516cb90134ba034f2bf0695224ad8337da5dfc30513aa851",
+          "digest": "a1b9fb014bb08df2fd69fd8c09667c229c0b2f0a8a4d439bae759d63db8f7d90",
           "faces": 1,
           "outcome": "ok"
         },
