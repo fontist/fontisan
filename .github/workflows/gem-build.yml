@@ -23,6 +23,8 @@ on:
       - "lib/fontisan/ffi.rb"
       - "lib/fontisan/ffi/**"
       - "scripts/tier_smoke.rb"
+      - "lib/fontisan/engine.rb"
+      - "lib/fontisan/utilities/brotli_wrapper.rb"
   push:
     branches: [main, "cross-gem/*", "pkg/*"]
 
@@ -103,6 +105,82 @@ jobs:
           # Outside the checkout, so the installed gem is the one loaded.
           cd "$RUNNER_TEMP"
           ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" native "$GITHUB_WORKSPACE/corpus"
+
+  # The java-platform gem (card 2g): no `brotli`, `ffi` instead, the cdylib of
+  # every platform gem below lib/fontisan/ffi/<platform>/. JRuby installs it and
+  # must serve the corpus from :ffi.
+  java-gem:
+    name: Build java gem
+    needs: native
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cross-gem-*
+          path: platform-gems/
+
+      - name: Stage the cdylib of each platform gem
+        run: |
+          stage() { # PLATFORM-GEM-GLOB DIR
+            gem=$(ls platform-gems/cross-gem-$1/fontisan-*.gem | head -n 1)
+            mkdir -p "unpacked/$2" "lib/fontisan/ffi/$2"
+            gem unpack "$gem" --target "unpacked/$2"
+            cp unpacked/$2/fontisan-*/lib/fontisan/ffi/*fontisan_cdylib.* "lib/fontisan/ffi/$2/"
+          }
+          stage x86_64-linux linux-x86_64
+          stage arm64-darwin darwin-arm64
+          stage x86_64-darwin darwin-x86_64
+          stage x64-mingw-ucrt windows-x86_64
+          ls -l lib/fontisan/ffi/*/
+
+      - name: Build the java gem
+        run: FONTISAN_JAVA_ALL=1 ruby -S rake java:gem
+
+      - name: Assert no brotli dependency
+        run: |
+          if gem spec pkg/fontisan-*-java.gem dependencies | grep -qi brotli; then
+            echo "java gem depends on brotli"; exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/fontisan-*-java.gem
+          if-no-files-found: error
+
+  jruby:
+    name: Smoke java gem on JRuby
+    needs: java-gem
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/
+
+      - name: Install the java gem
+        run: |
+          gem install --no-document pkg/fontisan-*-java.gem
+          if gem list -i brotli >/dev/null; then echo "brotli is installed"; exit 1; fi
+
+      # Outside the checkout, so the installed gem is the one loaded. Asserts
+      # served_by == ffi for every row the engine does not hand to Ruby.
+      - name: Corpus through the ffi tier
+        run: |
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" ffi "$GITHUB_WORKSPACE/corpus"
 
   smoke-musl:
     name: Smoke x86_64-linux-musl

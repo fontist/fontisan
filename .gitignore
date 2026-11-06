@@ -70,3 +70,6 @@ corpus/fonts/
 /lib/fontisan/ffi/*.dylib
 /lib/fontisan/ffi/*.so
 /lib/fontisan/ffi/*.dll
+/lib/fontisan/ffi/*/*.dylib
+/lib/fontisan/ffi/*/*.so
+/lib/fontisan/ffi/*/*.dll

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "bindata"
-require "brotli"
 require "stringio"
 
 module Fontisan
@@ -266,7 +265,7 @@ module Fontisan
         File.open(@io_source.path, "rb") do |io|
           io.seek(@header.meta_offset)
           compressed_meta = io.read(@header.meta_length)
-          Brotli.inflate(compressed_meta)
+          Utilities::BrotliWrapper.library.inflate(compressed_meta)
         end
       rescue StandardError => e
         warn "Failed to decompress metadata: #{e.message}"
@@ -516,7 +515,7 @@ module Fontisan
       compressed_data = io.read(header.total_compressed_size)
 
       # Decompress entire data block with Brotli
-      decompressed_data = Brotli.inflate(compressed_data)
+      decompressed_data = Utilities::BrotliWrapper.library.inflate(compressed_data)
 
       # Split decompressed data into individual tables
       decompressed_tables = {}

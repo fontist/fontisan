@@ -124,6 +124,7 @@ module Fontisan
   autoload :ByteOps, "fontisan/byte_ops"
   autoload :Native, "fontisan/native"
   autoload :Ffi, "fontisan/ffi"
+  autoload :FfiPlatform, "fontisan/ffi_platform"
   autoload :Scan, "fontisan/scan"
   autoload :Stitcher, "fontisan/stitcher"
   autoload :StitcherCli, "fontisan/stitcher_cli"

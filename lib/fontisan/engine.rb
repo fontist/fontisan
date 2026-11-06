@@ -21,6 +21,8 @@ module Fontisan
     class Error < Fontisan::Error; end
     class ConfigError < Error; end
     class TierUnavailable < Error; end
+    # A WOFF2 operation fell to the Ruby tier on a platform with no `brotli`.
+    class Woff2Unavailable < TierUnavailable; end
 
     SELECTIONS = %w[ruby native ffi auto].freeze
     AUTO_ORDER = %i[native ffi ruby].freeze
@@ -94,9 +96,11 @@ module Fontisan
       # Tier (Symbol) that serves +operation+ for +path+ under the current config.
       def resolve(operation, path = nil, options = nil)
         config = setup!
-        candidates(config).find do |name|
+        tier = candidates(config).find do |name|
           available?(name) && supports?(name, operation, path, options)
         end || :ruby
+        require_woff2_support!(operation, path, options) if tier == :ruby
+        tier
       end
 
       # Tier that served the last call of +operation+ in this process; nil if none.
@@ -198,6 +202,22 @@ module Fontisan
           ENV.fetch("FONTISAN_ENGINE_STRICT", "").strip.downcase,
         )
         Config.new(selection.to_sym, strict)
+      end
+
+      # The java-platform gem has no `brotli`: a WOFF2 operation that no other
+      # tier took must fail here, at setup, not as a LoadError mid-parse.
+      def require_woff2_support!(operation, path, options)
+        return unless woff2_operation?(path, options)
+        return if Utilities::BrotliWrapper.available?
+
+        raise Woff2Unavailable,
+              "#{operation} on WOFF2 needs the ffi tier or the `brotli` gem; " \
+              "neither is available. #{Utilities::BrotliWrapper::MISSING_MESSAGE}"
+      end
+
+      def woff2_operation?(path, options)
+        File.extname(path.to_s).casecmp?(".woff2") ||
+          options&.dig(:to).to_s.casecmp?("woff2")
       end
 
       def forced?(selection)

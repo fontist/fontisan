@@ -2,6 +2,8 @@
 
 require "fileutils"
 require "json"
+require "rbconfig"
+require "fontisan/ffi_platform"
 
 module Fontisan
   # The `:ffi` engine tier: the Rust engine's C ABI (fontisan.h, version 1)
@@ -19,7 +21,9 @@ module Fontisan
   # mismatch makes {.available?} false and never raises.
   #
   # The library is looked up in FONTISAN_CDYLIB (a file path), then in
-  # lib/fontisan/ffi/.
+  # lib/fontisan/ffi/<platform>/ (the java-platform gem, one directory per
+  # bundled OS and architecture, see {FfiPlatform}), then in lib/fontisan/ffi/
+  # (the platform gems).
   #
   # Tier contract: `available?`, `supports?(operation, path)` and
   # `call(operation, *args, **kwargs)`, as for {Fontisan::Native}.
@@ -116,7 +120,10 @@ module Fontisan
                     else "so"
                     end
         prefix = extension == "dll" ? "" : "lib"
-        File.expand_path("ffi/#{prefix}#{LIBRARY}.#{extension}", __dir__)
+        file = "#{prefix}#{LIBRARY}.#{extension}"
+        platform = FfiPlatform.dir
+        bundled = platform && File.expand_path("ffi/#{platform}/#{file}", __dir__)
+        bundled && File.file?(bundled) ? bundled : File.expand_path("ffi/#{file}", __dir__)
       end
 
       def ruby_only?(path)
