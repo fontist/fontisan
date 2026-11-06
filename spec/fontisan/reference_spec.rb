@@ -256,6 +256,17 @@ RSpec.describe Fontisan::Reference do
         .to raise_error(Fontisan::Error,
                         "None of the requested characters exist in TestTTF.ttf")
     end
+
+    it "raises MissingTableError, not a NoMethodError, when the font has no cmap table" do
+      font = Fontisan::FontLoader.load(ttf, mode: :full, lazy: false)
+      allow(font).to receive(:table).and_call_original
+      allow(font).to receive(:table).with("cmap").and_return(nil)
+      allow(Fontisan::FontLoader).to receive(:load).and_return(font)
+
+      expect { described_class.subset(ttf, text: "abc") }
+        .to raise_error(Fontisan::MissingTableError,
+                        "Required table 'cmap' not found in font")
+    end
   end
 
   describe "timestamp plumbing below the facade" do

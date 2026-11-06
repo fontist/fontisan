@@ -266,7 +266,10 @@ module Fontisan
       end
 
       def gids_for(font, codepoints, name)
-        mappings = font.table("cmap").unicode_mappings
+        cmap = font.table("cmap") or
+          raise Fontisan::MissingTableError,
+                "Required table 'cmap' not found in font"
+        mappings = cmap.unicode_mappings
         gids = codepoints.uniq.filter_map { |cp| mappings[cp] }.uniq.sort
         return gids if gids.any?
 
