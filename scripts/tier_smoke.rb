@@ -5,7 +5,7 @@
 #   ruby scripts/tier_smoke.rb EXPECTED_TIER [CORPUS_ROOT]
 #
 # Run it against an INSTALLED fontisan gem (never the checkout's lib/). It scans
-# every `ci`-tier corpus font through Fontisan::Engine under FONTISAN_ENGINE=auto,
+# every `ci`-tier corpus font through Fontisan::Engine under the default engine (FONTISAN_ENGINE unset = auto),
 # then checks that
 #   * the tier auto resolves to is EXPECTED_TIER (native, ffi or ruby);
 #   * every row equals the committed scan golden (minus the served_by key);
@@ -18,7 +18,7 @@ expected = ARGV.fetch(0) { abort "usage: tier_smoke.rb native|ffi|ruby [corpus r
 root = File.expand_path(ARGV.fetch(1, File.join(__dir__, "..", "corpus")))
 abort "unknown tier #{expected.inspect}" unless %w[native ffi ruby].include?(expected)
 
-ENV["FONTISAN_ENGINE"] = "auto"
+ENV.delete("FONTISAN_ENGINE") # the default (auto) is what is under test
 ENV.delete("FONTISAN_ENGINE_STRICT")
 require "fontisan"
 Fontisan::Reference # autoloading it installs the engine gates

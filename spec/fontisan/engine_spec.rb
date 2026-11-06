@@ -91,12 +91,39 @@ RSpec.describe Fontisan::Engine do
   end
 
   describe "default" do
-    it "is :ruby for every operation, with nothing configured" do
-      op_calls.each do |operation, call|
-        call.call
-        expect(described_class.served_by(operation)).to eq(:ruby), "operation #{operation}"
-      end
+    it "is auto: serves every operation from ruby when no other tier is present, silently" do
+      expect do
+        op_calls.each do |operation, call|
+          call.call
+          expect(described_class.served_by(operation)).to eq(:ruby), "operation #{operation}"
+        end
+      end.not_to output.to_stderr
       expect(described_class.counters.keys).to eq([:ruby])
+    end
+
+    it "treats an empty FONTISAN_ENGINE as the default" do
+      configure("")
+      Fontisan::Reference.read(ttf)
+      expect(described_class.served_by(:read)).to eq(:ruby)
+    end
+
+    it "prefers an available native tier with nothing configured" do
+      described_class.register(:native, fake_class.new)
+      Fontisan::Reference.read(ttf)
+      expect(described_class.served_by(:read)).to eq(:native)
+    end
+
+    it "uses ffi when only ffi is available and nothing is configured" do
+      described_class.register(:ffi, fake_class.new)
+      Fontisan::Reference.read(ttf)
+      expect(described_class.served_by(:read)).to eq(:ffi)
+    end
+
+    it "stays on ruby when FONTISAN_ENGINE=ruby, even with native available" do
+      described_class.register(:native, fake_class.new)
+      configure("ruby")
+      Fontisan::Reference.read(ttf)
+      expect(described_class.served_by(:read)).to eq(:ruby)
     end
 
     it "has no native or ffi tier available when the extensions do not load" do

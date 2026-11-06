@@ -53,6 +53,36 @@ command mappings and usage examples.
   round-trip. See link:docs/TYPE1_FONTS.adoc[Type 1 Fonts Guide].
 
 
+== Engine
+
+Fontisan can serve its read, audit, scan, convert, extract, instance and subset
+operations from three tiers: `native` (a precompiled Rust extension), `ffi` (the
+bundled Rust shared library, loaded through the `ffi` gem) and `ruby` (the pure
+Ruby implementation, always present).
+
+The default is `auto`: the first available tier wins, in the order
+`native`, `ffi`, `ruby`. An operation a tier cannot serve goes to the next one.
+Installed from the source gem on a machine with no Rust toolchain and no
+bundled library, `auto` serves everything from `ruby`, with no warning and
+no error.
+
+[cols="1,3"]
+|===
+|Variable |Effect
+
+|`FONTISAN_ENGINE=auto\|native\|ffi\|ruby`
+|Pick the tier. Unset or empty means `auto`. `ruby` never uses the Rust tiers.
+A forced tier that is not available falls back to `ruby`.
+
+|`FONTISAN_ENGINE_STRICT=1`
+|No fallback: a forced tier that is not available raises
+`Fontisan::Engine::TierUnavailable` at setup.
+|===
+
+`Fontisan::Engine.served_by(:read)` reports which tier served the last call of
+an operation. See link:docs/guide/engines.md[Engines] for tiers, platforms and
+troubleshooting.
+
 == Installation
 
 Add this line to your application's Gemfile:
@@ -75,13 +105,6 @@ Or install it yourself as:
 ----
 gem install fontisan
 ----
-
-== Engines
-
-Path-based operations (`Fontisan::Reference`) can run on a compiled native tier
-instead of Ruby. Select it with `FONTISAN_ENGINE=ruby|native|ffi|auto` (default
-`ruby`); `FONTISAN_ENGINE_STRICT=1` raises instead of falling back to Ruby. See
-link:docs/guide/engines.md[Engines] for tiers, platforms and troubleshooting.
 
 == Features
 

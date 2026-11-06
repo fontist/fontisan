@@ -24,18 +24,18 @@ Peak memory of a directory scan is about 4% lower on the native tier.
 
 ## Selecting an engine
 
-Set `FONTISAN_ENGINE` before the process starts:
+Set `FONTISAN_ENGINE` before the process starts. Unset or empty means `auto`:
 
 | Value | Behaviour |
 |---|---|
-| `ruby` | Use the Ruby tier. This is the default. |
+| `ruby` | Use the Ruby tier only. |
 | `native` | Use the native tier. |
 | `ffi` | Use the ffi tier. |
-| `auto` | Use the first tier that is available and supports the operation, in the order native, ffi, ruby. |
+| `auto` | The default. Use the first tier that is available and supports the operation, in the order native, ffi, ruby. |
 
 ```sh
 FONTISAN_ENGINE=native FONTISAN_ENGINE_STRICT=1 fontisan convert MyFont.ttf --to woff2 --output out.woff2
-FONTISAN_ENGINE=auto ruby -e 'require "fontisan"; p Fontisan::Reference.audit("MyFont.ttf").keys'
+ruby -e 'require "fontisan"; p Fontisan::Reference.audit("MyFont.ttf").keys'
 ```
 
 Any other value raises `Fontisan::Engine::ConfigError`.

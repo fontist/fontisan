@@ -3,7 +3,7 @@
 module Fontisan
   # Engine selection for the {Fontisan::Reference} operations.
   #
-  #   FONTISAN_ENGINE=ruby|native|ffi|auto   (default ruby)
+  #   FONTISAN_ENGINE=ruby|native|ffi|auto   (default auto)
   #   FONTISAN_ENGINE_STRICT=1               (no fallback)
   #
   # `auto` resolves native, then ffi, then ruby: the first tier that is
@@ -193,8 +193,8 @@ module Fontisan
       private
 
       def config_from_env
-        selection = ENV.fetch("FONTISAN_ENGINE", "ruby").strip.downcase
-        selection = "ruby" if selection.empty?
+        selection = ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase
+        selection = "auto" if selection.empty?
         unless SELECTIONS.include?(selection)
           raise ConfigError,
                 "FONTISAN_ENGINE=#{selection.inspect} is not one of " \

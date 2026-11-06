@@ -440,7 +440,7 @@ module ConvertGoldens
   end
 
   def compressed_bytes_may_differ?
-    !%w[ruby].include?(ENV.fetch("FONTISAN_ENGINE", "ruby").strip.downcase)
+    !%w[ruby].include?(ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase)
   end
 
   def relaxed(golden)
