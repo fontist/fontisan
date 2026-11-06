@@ -90,6 +90,8 @@ module Fontisan
         # Check 35: Cmap glyph indices must be valid
         check_structure :cmap_glyph_indices, severity: :error do |font|
           cmap = font.table("cmap")
+          next true unless cmap
+
           maxp = font.table("maxp")
           cmap.valid_glyph_indices?(maxp.num_glyphs)
         end
