@@ -97,12 +97,15 @@ module Fontisan
       end
       raise Errno::ENOENT, "File not found: #{path}" unless File.exist?(path)
 
+      WoffContainer.check!(File.binread(path))
+
       File.open(path, "rb") do |io|
         font = read(io)
         font.validate_signature!
         font.initialize_storage
         font.io_source = io
         font.read_compressed_table_data(io)
+        font.table_entries.each { |entry| font.table_data(entry.tag.dup.force_encoding("UTF-8")) }
         font
       rescue BinData::ValidityError, EOFError => e
         Kernel.raise(::Fontisan::InvalidFontError,
@@ -218,18 +221,31 @@ module Fontisan
                                     # Table is not compressed
                                     compressed_data
                                   else
-                                    # Decompress using zlib
-                                    Zlib::Inflate.inflate(compressed_data)
+                                    inflate_table(compressed_data, entry.orig_length)
                                   end
 
-      # Verify decompressed size matches expected
-      if @decompressed_tables[tag].bytesize != entry.orig_length
+      @decompressed_tables[tag]
+    end
+
+    # Inflate one table. Same failures and messages as the native tiers (see
+    # WoffContainer): a bad stream, or one longer than origLength, is "zlib
+    # stream is corrupt or too long"; a shorter one is a size mismatch.
+    def inflate_table(data, orig_length)
+      plain = begin
+        Zlib::Inflate.inflate(data)
+      rescue Zlib::Error
+        nil
+      end
+      if plain.nil? || plain.bytesize > orig_length
         Kernel.raise(::Fontisan::InvalidFontError,
-                     "Decompressed table '#{tag}' size mismatch: " \
-                     "expected #{entry.orig_length}, got #{@decompressed_tables[tag].bytesize}")
+                     "#{WoffContainer::PREFIX}zlib stream is corrupt or too long", cause: nil)
+      end
+      if plain.bytesize != orig_length
+        Kernel.raise(::Fontisan::InvalidFontError,
+                     "#{WoffContainer::PREFIX}inflated size does not match origLength", cause: nil)
       end
 
-      @decompressed_tables[tag]
+      plain
     end
 
     # Check if font has a specific table

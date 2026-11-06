@@ -515,7 +515,7 @@ module Fontisan
       compressed_data = io.read(header.total_compressed_size)
 
       # Decompress entire data block with Brotli
-      decompressed_data = Utilities::BrotliWrapper.library.inflate(compressed_data)
+      decompressed_data = inflate_brotli(compressed_data)
 
       # Split decompressed data into individual tables
       decompressed_tables = {}
@@ -531,6 +531,16 @@ module Fontisan
 
       decompressed_tables
     end
+
+    # Brotli-inflate the table block. A bad stream is the same InvalidFontError
+    # on every tier (the native tiers say "brotli stream is corrupt"); the
+    # binding's own message and class are not a contract.
+    def self.inflate_brotli(data)
+      Utilities::BrotliWrapper.library.inflate(data)
+    rescue StandardError
+      raise InvalidFontError.new("Invalid WOFF2 file: woff: brotli stream is corrupt"), cause: nil
+    end
+    private_class_method :inflate_brotli
 
     # Apply table transformations for glyf/loca/hmtx tables
     #
