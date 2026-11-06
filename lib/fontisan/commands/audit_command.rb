@@ -103,9 +103,9 @@ module Fontisan
       # ------------------------------------------------------------------
 
       def populate_identity(report, face)
-        return unless face.has_table?(Constants::NAME_TAG)
+        name_table = readable_table(face, Constants::NAME_TAG)
+        return unless name_table
 
-        name_table = face.table(Constants::NAME_TAG)
         report.family_name = name_table.english_name(Tables::Name::FAMILY)
         report.subfamily_name = name_table.english_name(Tables::Name::SUBFAMILY)
         report.full_name = name_table.english_name(Tables::Name::FULL_NAME)
@@ -113,9 +113,17 @@ module Fontisan
           name_table.english_name(Tables::Name::POSTSCRIPT_NAME)
         report.version = name_table.english_name(Tables::Name::VERSION)
 
-        return unless face.has_table?(Constants::HEAD_TAG)
+        head = readable_table(face, Constants::HEAD_TAG)
+        report.font_revision = head.font_revision if head
+      end
 
-        report.font_revision = face.table(Constants::HEAD_TAG).font_revision
+      # A table listed in the directory whose data cannot be read (offset or
+      # length outside the file) comes back from `face.table` as nil. The
+      # audit reports on what is readable, so such a table is treated as
+      # absent: its section stays empty instead of raising NoMethodError on
+      # nil. The native tier does the same.
+      def readable_table(face, tag)
+        face.has_table?(tag) ? face.table(tag) : nil
       end
 
       # ------------------------------------------------------------------
@@ -126,13 +134,15 @@ module Fontisan
         report.is_variable = false
         report.italic = false
         report.bold = false
-        populate_os2_style(report, face) if face.has_table?(Constants::OS2_TAG)
-        populate_head_style(report, face) if face.has_table?(Constants::HEAD_TAG)
-        populate_fvar_style(report, face) if face.has_table?(Constants::FVAR_TAG)
+        populate_os2_style(report, face)
+        populate_head_style(report, face)
+        populate_fvar_style(report, face)
       end
 
       def populate_os2_style(report, face)
-        os2 = face.table(Constants::OS2_TAG)
+        os2 = readable_table(face, Constants::OS2_TAG)
+        return unless os2
+
         report.weight_class = os2.us_weight_class
         report.width_class = os2.us_width_class
         report.italic = os2.fs_selection && (os2.fs_selection & 0x01).positive?
@@ -141,7 +151,9 @@ module Fontisan
       end
 
       def populate_head_style(report, face)
-        head = face.table(Constants::HEAD_TAG)
+        head = readable_table(face, Constants::HEAD_TAG)
+        return unless head
+
         mac_style = head.mac_style || 0
         # head macStyle overrides OS/2 fsSelection only when OS/2 didn't set it
         report.italic = true if (mac_style & 0x02).positive?
@@ -149,8 +161,10 @@ module Fontisan
       end
 
       def populate_fvar_style(report, face)
+        fvar = readable_table(face, Constants::FVAR_TAG)
+        return unless fvar
+
         report.is_variable = true
-        fvar = face.table(Constants::FVAR_TAG)
         report.axes = fvar.axes.map do |axis|
           Models::AuditAxis.new(
             tag: axis.axis_tag,
@@ -173,8 +187,8 @@ module Fontisan
       # ------------------------------------------------------------------
 
       def populate_coverage(report, face)
-        if face.has_table?(Constants::CMAP_TAG)
-          cmap = face.table(Constants::CMAP_TAG)
+        cmap = readable_table(face, Constants::CMAP_TAG)
+        if cmap
           mappings = cmap.unicode_mappings || {}
           report.total_codepoints = mappings.size
           report.cmap_subtables = cmap.subtable_formats
