@@ -208,31 +208,22 @@ module Fontisan
       # OpenType layout (GSUB/GPOS)
       # ------------------------------------------------------------------
 
+      # GSUB and GPOS are each read once through the budgeted
+      # `script_features`, which serves both the scripts and their features.
       def populate_layout(report, face)
-        report.opentype_scripts = collect_scripts(face)
-        report.features = collect_features(face)
-      end
-
-      def collect_scripts(face)
         scripts = Set.new
-        %w[GSUB GPOS].each do |tag|
-          next unless face.has_table?(tag)
-
-          table = face.table(tag)
-          scripts.merge(table.scripts) if table
-        end
-        printable_tags(scripts.sort)
-      end
-
-      def collect_features(face)
         features = Set.new
         %w[GSUB GPOS].each do |tag|
           next unless face.has_table?(tag)
 
           table = face.table(tag)
-          features.merge(collect_features_from_table(table)) if table
+          next unless table
+
+          scripts.merge(table.scripts)
+          table.script_features.each_value { |tags| features.merge(tags) }
         end
-        printable_tags(features.sort)
+        report.opentype_scripts = printable_tags(scripts.sort)
+        report.features = printable_tags(features.sort)
       end
 
       # Layout tags come from BinData as ASCII-8BIT. A damaged table can yield
@@ -240,23 +231,6 @@ module Fontisan
       # invalid byte becomes U+FFFD, as the native tier's lossy decode does.
       def printable_tags(tags)
         tags.map { |tag| tag.dup.force_encoding(Encoding::UTF_8).scrub }
-      end
-
-      def collect_features_from_table(layout_table)
-        scripts = begin
-                    layout_table.scripts
-        rescue StandardError
-                    []
-        end
-        scripts.flat_map { |script| features_for_script(layout_table, script) }
-      rescue StandardError
-        []
-      end
-
-      def features_for_script(layout_table, script)
-          layout_table.features(script_tag: script)
-      rescue StandardError
-          []
       end
 
       # ------------------------------------------------------------------
