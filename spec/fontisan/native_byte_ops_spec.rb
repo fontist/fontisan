@@ -7,7 +7,7 @@ require "fileutils"
 # Cards 2f and 2f-ffi: convert, extract, instance and subset through the
 # native and ffi gates. Needs the built extension (`bundle exec rake compile`)
 # and, for ffi, the built library (`rake cdylib:build`, FONTISAN_CDYLIB); a
-# missing tier fails the examples, it never skips them.
+# missing tier skips the examples (the tier jobs build it).
 RSpec.describe "native byte ops" do
   let(:fixtures) { File.expand_path("../fixtures", __dir__) }
   let(:ttf) { File.join(fixtures, "fonttools", "TestTTF.ttf") }
@@ -33,6 +33,10 @@ RSpec.describe "native byte ops" do
   { native: Fontisan::Native, ffi: Fontisan::Ffi }.each do |name, mod|
     describe "the #{name} tier" do
       let(:tier_name) { name.to_s }
+
+      # Same convention as native_spec/ffi_spec: the plain rake job has no Rust
+      # toolchain, so an unbuilt tier skips. The tier jobs build it and run these.
+      before { skip "#{name} tier not built (rake compile / rake cdylib:build)" unless mod.available? }
 
       def tier(&) = with_engine(tier_name, &)
 
