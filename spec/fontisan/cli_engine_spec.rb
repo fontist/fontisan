@@ -34,7 +34,11 @@ RSpec.describe "CLI through the engine tiers" do
     saved = $stdout
     $stdout = out
     allow(Time).to receive(:now).and_return(stamp)
-    Fontisan::Cli.start(args)
+    begin
+      Fontisan::Cli.start(args)
+    rescue SystemExit => e
+      raise "fontisan #{args.first} exited #{e.status}: #{out.string}"
+    end
     out.string
   ensure
     $stdout = saved
@@ -55,7 +59,14 @@ RSpec.describe "CLI through the engine tiers" do
 
   %w[native ffi].each do |name|
     describe "the #{name} tier (strict)" do
-      def tier(selection, &) = with_engine(selection, &)
+      # A tier that is not built is skipped (as native_spec/ffi_spec do): the
+      # CLI turns the strict TierUnavailable into `exit 1`, and that
+      # SystemExit would end the whole rspec process, not fail one example.
+      def tier(selection, &)
+        built = selection == "native" ? Fontisan::Native.available? : Fontisan::Ffi.available?
+        skip "#{selection} tier not built (rake compile / rake cdylib:build)" unless built
+        with_engine(selection, &)
+      end
 
       %w[ttf otf woff woff2].each do |target|
         it "serves `convert --to #{target}` and writes what Ruby writes" do
