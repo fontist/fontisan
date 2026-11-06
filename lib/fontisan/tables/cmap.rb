@@ -201,6 +201,10 @@ module Fontisan
           id_delta = id_deltas[i]
           id_range_offset = id_range_offsets[i]
 
+          # A segmentCount past the arrays inside the declared length leaves
+          # the later arrays short: skip the cut segment (was NoMethodError).
+          next if [start_code, end_code, id_delta, id_range_offset].any?(&:nil?)
+
           # Skip the final segment (0xFFFF)
           next if start_code == 0xFFFF
 
