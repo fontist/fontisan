@@ -149,6 +149,83 @@ RSpec.describe "CLI through the engine tiers" do
           end
         end
       end
+
+      describe "instance and subset" do
+        let(:vf2) { File.join(fixtures, "fonts", "MonaSansVF", "MonaSansVF[wght,opsz].ttf") }
+
+        it "serves `instance` by axis coordinates and writes what Ruby writes" do
+          [[vf, %w[--wght 700]], [vf2, %w[--wght 650 --opsz 14]]].each do |font, axes|
+            Dir.mktmpdir do |dir|
+              n = File.join(dir, "n.ttf")
+              r = File.join(dir, "r.ttf")
+              printed = tier(name) do
+                cli("instance", font, *axes, "--output", n).tap do
+                  expect(Fontisan::Engine.served_by(:instance)).to eq(name.to_sym)
+                end
+              end
+              with_engine("ruby", strict: false) { cli("instance", font, *axes, "--output", r) }
+              expect(File.binread(n)).to eq(File.binread(r))
+              expect(printed).to eq("Static font instance written to: #{n}\n")
+            end
+          end
+        end
+
+        it "keeps --to and --list-instances on Ruby" do
+          Dir.mktmpdir do |dir|
+            tier(name) do
+              Fontisan::Engine.reset!
+              cli("instance", vf, "--wght", "700", "--to", "ttf", "--output", File.join(dir, "t.ttf"))
+              expect(Fontisan::Engine.served_by(:instance)).to be_nil
+              expect(cli("instance", vf, "--list-instances")).to include("Available named instances")
+              expect(Fontisan::Engine.served_by(:instance)).to be_nil
+            end
+          end
+        end
+
+        [["--text", ". "], ["--unicode", "U+0020,0x2e"]].each do |flag, value|
+          %w[pdf web minimal].each do |profile|
+            it "serves `subset #{flag}` with the #{profile} profile and writes what Ruby writes" do
+              Dir.mktmpdir do |dir|
+                n = File.join(dir, "n.ttf")
+                r = File.join(dir, "r.ttf")
+                printed = tier(name) do
+                  cli("subset", ttf, flag, value, "--profile", profile, "--output", n).tap do
+                    expect(Fontisan::Engine.served_by(:subset)).to eq(name.to_sym)
+                  end
+                end
+                ruby_printed = with_engine("ruby", strict: false) do
+                  cli("subset", ttf, flag, value, "--profile", profile, "--output", r)
+                end
+                expect(File.binread(n)).to eq(File.binread(r))
+                expect(printed).to eq(ruby_printed.gsub(r, n))
+              end
+            end
+          end
+        end
+
+        it "keeps subset options the engine cannot honour on Ruby" do
+          Dir.mktmpdir do |dir|
+            tier(name) do
+              [%w[--glyphs 0,1], %w[--text . --retain-gids], %w[--text . --drop-hints], %w[--text . --drop-names],
+               %w[--text . --no-unicode-ranges]].each_with_index do |args, i|
+                Fontisan::Engine.reset!
+                cli("subset", ttf, *args, "--output", File.join(dir, "k#{i}.ttf"), "--quiet")
+                # Subset::Builder, the Ruby body, records the Ruby tier itself
+                expect(Fontisan::Engine.served_by(:subset)).to eq(:ruby)
+              end
+            end
+          end
+        end
+
+        it "raises the Ruby error when no character matches" do
+          Dir.mktmpdir do |dir|
+            tier(name) do
+              expect { cli("subset", ttf, "--text", "ABC", "--output", File.join(dir, "x.ttf")) }
+                .to raise_error(ArgumentError, /No characters from text found in font/)
+            end
+          end
+        end
+      end
     end
   end
 end

@@ -226,7 +226,7 @@ module Fontisan
     # @param font_file [String] Path to the font file
     def subset(font_file)
       command = Commands::SubsetCommand.new(font_file, options)
-      result = command.run
+      result = command.run_routed
 
       unless options[:quiet]
         puts "Subset font created:"
