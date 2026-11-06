@@ -279,7 +279,9 @@ module Fontisan
 
       # Get metadata tables sorted by offset for sequential access
       metadata_entries = tables.select { |entry| LoadingModes::METADATA_TABLES_SET.include?(entry.tag) }
-      metadata_entries.sort_by!(&:offset)
+      # Tables may share an offset (a zero-length table sits where the next one
+      # starts) and sort_by is not stable, so tie-break on the directory order.
+      metadata_entries = metadata_entries.each_with_index.sort_by { |entry, idx| [entry.offset, idx] }.map(&:first)
 
       return if metadata_entries.empty?
 
@@ -287,18 +289,18 @@ module Fontisan
       i = 0
       while i < metadata_entries.size
         batch_start = metadata_entries[i]
-        batch_end = batch_start
+        batch_end_pos = batch_start.offset + batch_start.table_length
         batch_entries = [batch_start]
 
         # Extend batch while next table is within page threshold
         j = i + 1
         while j < metadata_entries.size
           next_entry = metadata_entries[j]
-          gap = next_entry.offset - (batch_end.offset + batch_end.table_length)
+          gap = next_entry.offset - batch_end_pos
 
           # If gap is small (within page threshold), include in batch
           if gap <= page_threshold
-            batch_end = next_entry
+            batch_end_pos = [batch_end_pos, next_entry.offset + next_entry.table_length].max
             batch_entries << next_entry
             j += 1
           else
@@ -315,7 +317,7 @@ module Fontisan
         else
           # Multiple tables, read contiguous segment
           batch_offset = batch_start.offset
-          batch_length = (batch_end.offset + batch_end.table_length) - batch_start.offset
+          batch_length = batch_end_pos - batch_start.offset
 
           io.seek(batch_offset)
           batch_data = io.read(batch_length)
