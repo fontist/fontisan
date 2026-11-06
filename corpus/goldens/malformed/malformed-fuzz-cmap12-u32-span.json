@@ -1,6 +1,8 @@
 {
   "audit": {
-    "outcome": "timeout"
+    "digest": "58981cc64ecbb2090273577b7b6289daaa3751af88da2c30040c19381ef74d2f",
+    "faces": 1,
+    "outcome": "ok"
   },
   "combos": {
     "full/lazy=false": {
@@ -15,10 +17,13 @@
           "outcome": "ok"
         },
         "read": {
-          "outcome": "timeout"
+          "digest": "4b8305c9cc71a92c186fce483d8857fc9d4b2efe4c188b1939279244a8ffdd44",
+          "faces": 1,
+          "outcome": "ok"
         },
         "table_cmap": {
-          "outcome": "timeout"
+          "mappings": 1114112,
+          "outcome": "ok"
         },
         "table_head": {
           "outcome": "ok",
@@ -38,10 +43,13 @@
           "outcome": "ok"
         },
         "read": {
-          "outcome": "timeout"
+          "digest": "fec3caa307782e272d0d98a4743b9912270ae902e8716b57d42f6673504b4929",
+          "faces": 1,
+          "outcome": "ok"
         },
         "table_cmap": {
-          "outcome": "timeout"
+          "mappings": 1114112,
+          "outcome": "ok"
         },
         "table_head": {
           "outcome": "ok",

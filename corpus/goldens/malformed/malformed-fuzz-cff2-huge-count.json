@@ -17,7 +17,9 @@
           "outcome": "ok"
         },
         "read": {
-          "outcome": "timeout"
+          "digest": "e473d95af1275aabac828061f0fddf7f55bc6a3f499d69aea80dcbfe934c4fd2",
+          "faces": 1,
+          "outcome": "ok"
         },
         "table_cmap": {
           "mappings": 5,
@@ -41,7 +43,9 @@
           "outcome": "ok"
         },
         "read": {
-          "outcome": "timeout"
+          "digest": "5ce0a02868e08b502488827de338acbb13b2f2cfd3f549c91306e8fc1d58d991",
+          "faces": 1,
+          "outcome": "ok"
         },
         "table_cmap": {
           "mappings": 5,
