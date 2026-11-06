@@ -221,11 +221,14 @@ module Fontisan
         reply = client.call(OP_AUDIT_DIR, dir, validate ? FLAG_VALIDATE : 0)
         raise Fontisan::Error, reply.message unless reply.status == Client::OK
 
-        decode(reply.payload).map { |row| dir_entry(dir, row, validate) }
+        decode(reply.payload).filter_map { |row| dir_entry(dir, row, validate) }
       end
 
       def dir_entry(dir, row, validate)
         rel = Reference.relative_row_path(dir, row["path"])
+        # Like the Ruby and native tiers: nothing below a hidden directory.
+        return if rel.split("/").any? { |part| part.start_with?(".") }
+
         seen_by(File.join(dir, rel), :ffi)
         case row["status"]
         when "ok" then { "path" => rel, "faces" => row["reports"] }
