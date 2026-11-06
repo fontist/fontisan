@@ -188,7 +188,7 @@ module Fontisan
           return font_name.dup.force_encoding("ASCII-8BIT") if font_name
         end
 
-        "UnnamedFont"
+        "UnnamedFont".b
       end
     end
   end

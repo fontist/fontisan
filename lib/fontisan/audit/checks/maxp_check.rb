@@ -26,7 +26,7 @@ module Fontisan
         end
 
         def self.validate_version(maxp, font)
-          version_raw = maxp.version_raw
+          version_raw = maxp.version_raw.to_i
           is_truetype = font.has_table?("glyf")
           tt_version = 0x00010000 # 1.0 as Fixed 16.16
           cff_version = 0x00005000 # 0.5 as Fixed 16.16
