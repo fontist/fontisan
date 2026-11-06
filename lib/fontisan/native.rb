@@ -46,7 +46,7 @@ module Fontisan
       def available?
         return @available if defined?(@available)
 
-        @available = probe
+        @available = probe.tap { |ok| warn_unusable unless ok }
       end
 
       # Forget the memoised probe (tests, or after installing the extension).
@@ -105,6 +105,22 @@ module Fontisan
         abi_version == ABI_VERSION
       rescue StandardError, ScriptError
         false
+      end
+
+      # An extension file that is shipped but does not load or report the
+      # expected ABI leaves every call on the Ruby tier. Say so once; the
+      # fallback itself is unchanged. No file at all (a source install without
+      # cargo) is the normal :ruby gem and stays quiet.
+      def warn_unusable
+        return if @warned_unusable || !extension_present?
+
+        @warned_unusable = true
+        warn "fontisan: the native extension is present but did not load (or has the wrong ABI); " \
+             "falling back to the Ruby tier. Reinstall the gem or run `bundle exec rake compile`."
+      end
+
+      def extension_present?
+        [VERSIONED_EXTENSION, EXTENSION].any? { |feature| $LOAD_PATH.resolve_feature_path(feature) }
       end
 
       def load_extension
