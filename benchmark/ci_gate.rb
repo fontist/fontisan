@@ -7,7 +7,9 @@
 #                  job, interleaved. This is the per-PR check.
 #   --mode weekly  head vs the pinned reference commit in benchmark/baseline.json,
 #                  same job (ratios, never absolute times). A missing or
-#                  unreachable reference fails.
+#                  unreachable reference fails, and so does an op the
+#                  reference cannot run (NO-BASE): move reference_commit
+#                  to a commit that can run every op.
 #   --mode tiers   ruby vs native vs ffi (FONTISAN_ENGINE, strict) on the working
 #                  tree, same job, interleaved. Hard floor (#160): native must be
 #                  at least as fast as ruby on audit_file, audit_dir and scan_dir
@@ -82,7 +84,7 @@ module FontisanBench
       sides = [Side.from_ref("base", base_ref, root: ROOT, workdir: work),
                Side.from_ref("head", @opts[:head], root: ROOT, workdir: work)]
       m = Measurement.interleave(sides, rounds: @opts[:rounds], harness_dir: HARNESS, corpus: @opts[:corpus])
-      rows = Compare.rows(m, tolerance: @opts[:tolerance])
+      rows = Compare.rows(m, tolerance: @opts[:tolerance], strict: @opts[:mode] == "weekly")
       rows = confirm(m, sides, rows)
       title = @opts[:mode] == "weekly" ? "Perf gate: head vs pinned reference" : "Perf gate: head vs base"
       puts Compare.markdown(rows, title: "#{title} (#{sides[0].ref[0, 8]} -> #{sides[1].ref[0, 8]})",
@@ -103,7 +105,7 @@ module FontisanBench
       warn "confirming #{suspects.join(', ')} with #{@opts[:rounds]} more rounds"
       Measurement.interleave(sides, rounds: @opts[:rounds], harness_dir: HARNESS,
                                     corpus: @opts[:corpus], only: ops, into: measure)
-      Compare.rows(measure, tolerance: @opts[:tolerance])
+      Compare.rows(measure, tolerance: @opts[:tolerance], strict: @opts[:mode] == "weekly")
     end
 
     def tiers
