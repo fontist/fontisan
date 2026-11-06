@@ -38,3 +38,19 @@ Median of 5+ interleaved rounds, one engine per run (`FONTISAN_ENGINE`, strict).
 **RESULT: PASS**
 
 The table above is the local macOS arm64 measurement. CI measures the other platforms (`perf-gate.yml`, job `tiers`; one `perf-tiers-<platform>` artifact each); their rows are added when those runs are green.
+
+## Published factors per platform (CI)
+
+Native factor (ruby time / native time) from the `perf-gate.yml` `tiers` jobs, run 42233249352 on fontisan `2b648ed06153e6ba3a7babb20c62bd6778262f7a`. Median of 5+ interleaved rounds, one engine per run, hard floor 1.00x on audit_dir and scan_dir and native peak RSS at or below ruby's. Every cell below passed the floor.
+
+| platform (runner) | audit_file | audit_dir | scan_dir | scan peak RSS (native / ruby) |
+|---|---|---|---|---|
+| x86_64-linux (ubuntu-22.04) | 43.14x | 33.17x | 13.58x | 0.89x |
+| x86_64-linux-musl (alpine) | 21.07x | 25.64x | 10.76x | 0.90x |
+| aarch64-linux (ubuntu-22.04-arm) | 45.51x | 17.16x | 7.86x | 0.84x |
+| x86_64-darwin (macos-15-intel) | 36.89x | 23.06x | 7.78x | 0.94x |
+| x64-mingw-ucrt (windows-2025) | 29.71x | 29.22x | 10.57x | 0.86x |
+| arm64-darwin (local, Apple M2; see above) | 30.26x | 8.22x | 3.94x | 0.96x |
+
+The arm64-darwin CI cell (macos-15) had not finished when this table was written; the local row stands in until its `perf-tiers-arm64-darwin` artifact is added. The lowest published native factor on a gated operation is 3.94x (scan_dir, arm64-darwin).
+
