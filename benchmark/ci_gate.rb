@@ -10,8 +10,11 @@
 #                  unreachable reference fails.
 #   --mode tiers   ruby vs native vs ffi (FONTISAN_ENGINE, strict) on the working
 #                  tree, same job, interleaved. Hard floor (#160): native must be
-#                  at least as fast as ruby on audit_dir and scan_dir and its
-#                  scan peak RSS must not exceed ruby's. With --write FILE the
+#                  at least as fast as ruby on audit_file, audit_dir and scan_dir
+#                  and its scan peak RSS must not exceed ruby's (3% tolerance).
+#                  Regression gate: native factors must stay within 25% of
+#                  benchmark/tier_baseline.json for --platform (default
+#                  Gem::Platform.local; no entry = floor only). With --write FILE the
 #                  factor table is written into the "Engine tier factors"
 #                  section of FILE (BENCHMARKS.md), tagged with --label.
 #   --mode report  head only (working tree); prints the report and, with
@@ -55,6 +58,8 @@ module FontisanBench
         o.on("--save FILE") { |v| @opts[:save] = v }
         o.on("--write FILE") { |v| @opts[:write] = v }
         o.on("--label TEXT") { |v| @opts[:label] = v }
+        o.on("--platform NAME") { |v| @opts[:platform] = v }
+        o.on("--tier-baseline FILE") { |v| @opts[:tier_baseline] = v }
       end.parse!(argv)
     end
 
@@ -105,11 +110,12 @@ module FontisanBench
       sides = Tiers.sides(ROOT)
       args = { harness_dir: HARNESS, corpus: @opts[:corpus] }
       m = Tiers.measure(sides, rounds: @opts[:rounds], **args)
-      rows = Tiers.rows(m)
+      baseline = tier_baseline
+      rows = Tiers.rows(m, baseline: baseline)
       if Tiers.failed?(rows)
         warn "confirming with #{@opts[:rounds]} more rounds"
         Tiers.measure(sides, rounds: @opts[:rounds], into: m, **args)
-        rows = Tiers.rows(m)
+        rows = Tiers.rows(m, baseline: baseline)
       end
       text = Tiers.markdown(rows, title: "Perf gate: engine tiers (#{@opts[:label] || runner_description})",
                                   rounds: @opts[:rounds])
@@ -117,6 +123,12 @@ module FontisanBench
       write_factors(text)
       save(m, [], sides)
       Tiers.failed?(rows) ? 1 : 0
+    end
+
+    # The committed expected factors for --platform (default: this Ruby's).
+    def tier_baseline
+      Tiers.baseline(@opts[:platform] || Gem::Platform.local.to_s,
+                     file: @opts[:tier_baseline] || Tiers::BASELINE_FILE)
     end
 
     def write_factors(text)

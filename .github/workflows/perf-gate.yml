@@ -11,8 +11,11 @@ name: Perf Gate
 #   branch.
 # tiers (matrix, one job per platform): ruby vs native vs ffi in the same job,
 #   interleaved, median-of-5 (benchmark/ci_gate.rb --mode tiers). Hard floor
-#   (#160): native must be faster than ruby on audit_dir and scan_dir and its
-#   scan peak RSS must not exceed ruby's; the measured factor per platform is
+#   (#160): native must be faster than ruby on audit_file, audit_dir and scan_dir,
+#   its scan peak RSS must not exceed ruby's (3% noise tolerance), and its factor
+#   must stay within 25% of the platform's committed factor in
+#   benchmark/tier_baseline.json (the regression gate; the PR-mode `gate` job
+#   above measures the ruby tier only, no ext is built there). The measured factor per platform is
 #   the published factor (job summary and artifact; copy it into BENCHMARKS.md).
 #   Peak RSS on Windows is sampled by PowerShell; if it cannot be read there
 #   only the RSS check is skipped. x86_64-linux-musl has no GitHub runner and
@@ -141,7 +144,7 @@ jobs:
 
       - name: Run tiers gate
         run: |
-          bundle exec ruby benchmark/ci_gate.rb --mode tiers --label "${{ matrix.platform }} (${{ matrix.os }})" \
+          bundle exec ruby benchmark/ci_gate.rb --mode tiers --platform "${{ matrix.platform }}" --label "${{ matrix.platform }} (${{ matrix.os }})" \
             --save perf-tiers.json | tee tiers-output.md
 
       - name: Upload tiers results
@@ -180,7 +183,7 @@ jobs:
               bundle exec rake compile
               bundle exec rake cdylib:build
               bundle exec rake corpus:fetch
-              bundle exec ruby benchmark/ci_gate.rb --mode tiers --label "x86_64-linux-musl (alpine)" \
+              bundle exec ruby benchmark/ci_gate.rb --mode tiers --platform x86_64-linux-musl --label "x86_64-linux-musl (alpine)" \
                 --save perf-tiers.json | tee tiers-output.md
             '
 
