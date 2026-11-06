@@ -33,7 +33,7 @@ module FontisanBench
     end
 
     def all
-      [table_parse, names, cmap_coverage, audit_file, audit_dir, scan,
+      [table_parse, hmtx_metrics, names, cmap_coverage, audit_file, audit_dir, scan,
        vf_instance, woff2_decode, convert_roundtrip, woff2_encode]
     end
 
@@ -60,6 +60,19 @@ module FontisanBench
         TABLE_PARSE_FONTS.each do |rel|
           f = load_full(rel)
           f.table_names.each { |tag| f.table(tag) }
+        end
+      end
+    end
+
+    # Tables::Hmtx#metric_for is the per-glyph metric lookup; table_parse only
+    # parses the table, so a slowdown inside the lookup was invisible.
+    def hmtx_metrics
+      op("hmtx_metrics", "hmtx metric_for every glyph of 3 static fonts") do
+        TABLE_PARSE_FONTS.each do |rel|
+          f = load_full(rel)
+          hmtx = f.table("hmtx")
+          hmtx.parse_with_context(f.table("hhea").number_of_h_metrics, f.table("maxp").num_glyphs) unless hmtx.parsed?
+          f.table("maxp").num_glyphs.times { |gid| hmtx.metric_for(gid) }
         end
       end
     end
