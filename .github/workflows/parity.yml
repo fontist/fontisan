@@ -136,7 +136,11 @@ jobs:
         run: |
           exe="$PWD/corpus/fonts/.tools/woff2/bin/woff2_decompress"
           # Ruby on Windows cannot resolve the MSYS path ($PWD is /d/a/...), so hand it a drive path.
-          [ "$RUNNER_OS" = Windows ] && exe="$(cygpath -m "$exe").exe"
+          # cygpath already resolves the bare name to the .exe that exists; appending ".exe" made woff2_decompress.exe.exe.
+          if [ "$RUNNER_OS" = Windows ]; then
+            exe="$(cygpath -m "$exe")"
+            case "$exe" in *.exe) ;; *) exe="$exe.exe" ;; esac
+          fi
           echo "WOFF2_DECOMPRESS=$exe" >> "$GITHUB_ENV"
 
       - name: Fetch ci-tier corpus (sha256 verified)
