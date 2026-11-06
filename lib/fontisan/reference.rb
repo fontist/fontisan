@@ -399,9 +399,10 @@ module Fontisan
           next [tag, nil] unless table
 
           scripts = table.scripts
+          by_script = table.script_features
           [tag, {
             scripts: scripts,
-            features: scripts.to_h { |s| [s, table.features(script_tag: s)] },
+            features: scripts.to_h { |s| [s, by_script.fetch(s, [])] },
           }]
         end
       end
