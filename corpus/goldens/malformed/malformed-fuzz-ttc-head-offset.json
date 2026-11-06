@@ -1,10 +1,8 @@
 {
   "audit": {
-    "causes": [],
-    "error_class": "NoMethodError",
-    "markers": [],
-    "message": "undefined method 'mac_style' for nil",
-    "outcome": "error"
+    "digest": "2f046bf2dd0f8ee6a40ca6497fa914d7c385da783fbb6bcecf4dcd18a07693b9",
+    "faces": 1,
+    "outcome": "ok"
   },
   "combos": {
     "full/lazy=false": {
