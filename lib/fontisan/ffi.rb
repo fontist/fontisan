@@ -1,12 +1,18 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "json"
 
 module Fontisan
   # The `:ffi` engine tier: the Rust engine's C ABI (fontisan.h, version 1)
   # loaded through the optional `ffi` gem. It serves the read-side
-  # {Fontisan::Reference} operations (read, audit, audit_dir, scan); every
+  # {Fontisan::Reference} operations (read, audit, audit_dir, scan) and the
+  # byte operations (convert, extract, instance, subset: card 2f-ffi, the same
+  # routing rules as {Fontisan::Native} through {Fontisan::ByteOps}); every
   # other operation, and dfont / Type 1 files, are the Ruby tier's.
+  #
+  # The C ABI has no glyph-id operation: a subset's glyph ids come from the
+  # Ruby facade's `glyph_ids` (a pure cmap read, run on the Ruby tier).
   #
   # The `ffi` gem and the shared library are loaded lazily, on the first probe.
   # A missing gem, missing or unloadable library, missing symbol or ABI
@@ -21,9 +27,13 @@ module Fontisan
     class AbiMismatch < Fontisan::Error; end
 
     LIBRARY = "fontisan_cdylib"
-    OPERATIONS = %i[read audit audit_dir scan].freeze
+    OPERATIONS = %i[read audit audit_dir scan convert extract instance subset].freeze
     RUBY_ONLY_FORMATS = %i[dfont pfa pfb].freeze
 
+    OP_CONVERT = 1
+    OP_EXTRACT = 2
+    OP_SUBSET = 6
+    OP_INSTANCE = 7
     OP_READ = 8
     OP_AUDIT = 9
     OP_SCAN = 10
@@ -32,7 +42,15 @@ module Fontisan
     FLAG_LAZY = 2
     FLAG_VALIDATE = 1
 
+    CONVERT_FAILED = 8
+    SUBSET_PROFILE_CODES = { "pdf" => 0, "web" => 1, "minimal" => 2 }.freeze
+    FIXED_ONE = 65_536
+    # "<ruby class>: <message>" as the byte operations report a failure.
+    FAILURE_MESSAGE = /\A([A-Z]\w*(?:::\w+)*): (.*)\z/m
+
     class << self
+      include ByteOps
+
       # Probe: true only when the `ffi` gem and a compatible library both load.
       def available?
         return @available if defined?(@available)
@@ -52,10 +70,19 @@ module Fontisan
         return false unless available? && OPERATIONS.include?(operation)
 
         case operation
+        when *ByteOps::BYTE_OPERATIONS then path.is_a?(String) && File.file?(path) && !ruby_only?(path)
         when :audit_dir then path.nil? || File.directory?(path)
         when :scan then path.nil? || File.file?(path) && !ruby_only?(path)
         else path.nil? || !ruby_only?(path)
         end
+      end
+
+      # Options the engine honours; anything else is served by Ruby. The
+      # read-side operations check their own options and fall back inside.
+      def supports_options?(operation, options, path = nil)
+        return byte_options?(operation, options, path) if ByteOps::BYTE_OPERATIONS.include?(operation)
+
+        OPERATIONS.include?(operation)
       end
 
       def call(operation, *, **)
@@ -96,6 +123,57 @@ module Fontisan
         RUBY_ONLY_FORMATS.include?(FontLoader.detect_format(path))
       rescue StandardError
         false
+      end
+
+      # Writes the converted font to +output+; returns the ConvertCommand hash.
+      def serve_convert(path, output:, timestamp: nil, **options)
+        path = File.path(path)
+        target = convert_target(options.fetch(:to))
+        stamp = timestamp ? unix_seconds(timestamp) : Time.now.to_i
+        prefix = [ByteOps::TARGET_CODES.fetch(target), 0, stamp].pack("NNq>")
+        bytes = byte_op(OP_CONVERT, prefix + File.binread(path))
+        finish_convert(path, target, File.path(output), bytes)
+      end
+
+      # Same file layout as UnpackCommand: <output_dir>/<basename>.
+      def serve_extract(path, index:, output_dir:)
+        payload = byte_op(OP_EXTRACT, [index, 0, 0, 0].pack("NNNN") + File.binread(File.path(path)))
+        length = payload.unpack1("N")
+        name = payload.byteslice(4, length).force_encoding(Encoding::UTF_8)
+        FileUtils.mkdir_p(output_dir)
+        File.join(output_dir, name).tap { |out| File.binwrite(out, payload.byteslice(4 + length..)) }
+      end
+
+      def serve_instance(path, coords:, timestamp: nil)
+        _ = timestamp
+        axes = coords.map { |tag, value| tag.to_s.b + [(Float(value) * FIXED_ONE).round].pack("l>") }
+        byte_op(OP_INSTANCE, [axes.size].pack("N") + axes.join + File.binread(File.path(path)))
+      end
+
+      def serve_subset(path, unicodes: nil, text: nil, profile: "web", timestamp: nil)
+        _ = timestamp
+        path = File.path(path)
+        gids = ruby(:glyph_ids, path, unicodes: unicodes, text: text)
+        head = [SUBSET_PROFILE_CODES.fetch(profile.to_s), gids.size, 0, 0].pack("NNNN")
+        byte_op(OP_SUBSET, head + gids.pack("N*") + File.binread(path))
+      end
+
+      # The payload of a byte operation; a failure is raised as the Ruby
+      # exception the message names (the ABI carries no cause chain).
+      def byte_op(operation, input)
+        reply = client.call(operation, input)
+        return reply.payload if reply.status == Client::OK
+
+        raise_byte_failure(reply)
+      end
+
+      def raise_byte_failure(reply)
+        match = FAILURE_MESSAGE.match(reply.message)
+        if reply.status == CONVERT_FAILED && match
+          raise build_instance(exception_class(match[1]), match[2])
+        end
+
+        raise Fontisan::Error, "fontisan ffi status #{reply.status}: #{reply.message}"
       end
 
       def serve_read(path, mode: :metadata, lazy: true)

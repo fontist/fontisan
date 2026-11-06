@@ -121,6 +121,7 @@ module Fontisan
   autoload :SfntBuilder, "fontisan/sfnt_builder"
   autoload :Reference, "fontisan/reference"
   autoload :Engine, "fontisan/engine"
+  autoload :ByteOps, "fontisan/byte_ops"
   autoload :Native, "fontisan/native"
   autoload :Ffi, "fontisan/ffi"
   autoload :Scan, "fontisan/scan"

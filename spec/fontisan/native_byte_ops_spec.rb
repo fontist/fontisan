@@ -4,9 +4,10 @@ require "spec_helper"
 require "tmpdir"
 require "fileutils"
 
-# Card 2f: convert, extract, instance and subset through the native gates.
-# Needs the built extension (`bundle exec rake compile`); a missing extension
-# fails the examples, it never skips them.
+# Cards 2f and 2f-ffi: convert, extract, instance and subset through the
+# native and ffi gates. Needs the built extension (`bundle exec rake compile`)
+# and, for ffi, the built library (`rake cdylib:build`, FONTISAN_CDYLIB); a
+# missing tier fails the examples, it never skips them.
 RSpec.describe "native byte ops" do
   let(:fixtures) { File.expand_path("../fixtures", __dir__) }
   let(:ttf) { File.join(fixtures, "fonttools", "TestTTF.ttf") }
@@ -27,144 +28,151 @@ RSpec.describe "native byte ops" do
     Fontisan::Engine.reset!
   end
 
-  def native(&) = with_engine("native", &)
   def ruby(&) = with_engine("ruby", strict: false, &)
 
-  it "has the extension built" do
-    expect(Fontisan::Native.available?).to be(true)
-  end
+  { native: Fontisan::Native, ffi: Fontisan::Ffi }.each do |name, mod|
+    describe "the #{name} tier" do
+      let(:tier_name) { name.to_s }
 
-  describe "convert" do
-    it "writes the same bytes and result hash as Ruby, served natively" do
-      Dir.mktmpdir do |dir|
-        n = native do
-          Fontisan::Reference.convert(ttf, to: :woff2, output: File.join(dir, "n.woff2"), timestamp: stamp)
-            .tap { expect(Fontisan::Engine.served_by(:convert)).to eq(:native) }
-        end
-        r = ruby { Fontisan::Reference.convert(ttf, to: :woff2, output: File.join(dir, "r.woff2"), timestamp: stamp) }
-        expect(File.binread(File.join(dir, "n.woff2"))).to eq(File.binread(File.join(dir, "r.woff2")))
-        expect(n.except(:output_path)).to eq(r.except(:output_path))
+      def tier(&) = with_engine(tier_name, &)
+
+      it "is available" do
+        expect(mod.available?).to be(true)
       end
-    end
 
-    it "serves Fontisan.convert natively too" do
-      Dir.mktmpdir do |dir|
-        native do
-          Fontisan.convert(ttf, to: :woff, output: File.join(dir, "o.woff"))
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:native)
+      describe "convert" do
+        it "writes the same bytes and result hash as Ruby, served by the tier" do
+          Dir.mktmpdir do |dir|
+            n = tier do
+              Fontisan::Reference.convert(ttf, to: :woff2, output: File.join(dir, "n.woff2"), timestamp: stamp)
+                .tap { expect(Fontisan::Engine.served_by(:convert)).to eq(name) }
+            end
+            r = ruby { Fontisan::Reference.convert(ttf, to: :woff2, output: File.join(dir, "r.woff2"), timestamp: stamp) }
+            expect(File.binread(File.join(dir, "n.woff2"))).to eq(File.binread(File.join(dir, "r.woff2")))
+            expect(n.except(:output_path)).to eq(r.except(:output_path))
+          end
+        end
+
+        it "serves Fontisan.convert by the tier too" do
+          Dir.mktmpdir do |dir|
+            tier do
+              Fontisan.convert(ttf, to: :woff, output: File.join(dir, "o.woff"))
+              expect(Fontisan::Engine.served_by(:convert)).to eq(name)
+            end
+          end
+        end
+
+        it "converts a collection to a collection by the tier and matches Ruby" do
+          Dir.mktmpdir do |dir|
+            n = tier do
+              Fontisan::Reference.convert(ttc, to: :otc, output: File.join(dir, "n.otc"), timestamp: stamp)
+                .tap { expect(Fontisan::Engine.served_by(:convert)).to eq(name) }
+            end
+            r = ruby { Fontisan::Reference.convert(ttc, to: :otc, output: File.join(dir, "r.otc"), timestamp: stamp) }
+            expect(File.binread(File.join(dir, "n.otc"))).to eq(File.binread(File.join(dir, "r.otc")))
+            expect(n.except(:output_path)).to eq(r.except(:output_path))
+          end
+        end
+
+        it "keeps an .otc collection input on Ruby (the engine cannot take the extension hint)" do
+          Dir.mktmpdir do |dir|
+            otc = File.join(dir, "in.otc")
+            FileUtils.cp(ttc, otc)
+            tier do
+              result = Fontisan::Reference.convert(otc, to: :ttc, output: File.join(dir, "o.ttc"))
+              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+              expect(result[:source_format]).to eq(:otc)
+            end
+          end
+        end
+
+        it "routes the options the engine does not serve to Ruby" do
+          Dir.mktmpdir do |dir|
+            tier do
+              Fontisan::Reference.convert(vf, to: :ttf, output: File.join(dir, "a.ttf"), coordinates: "wght=700")
+              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+              Fontisan::Reference.convert(ttf, to: "woff,woff2", output: File.join(dir, "b"))
+              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+              Fontisan::Reference.convert(ttf, to: :otf, output: File.join(dir, "c.otf"), preserve_hints: true)
+              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+            end
+          end
+        end
+
+        it "routes a collection converted to a non-collection format to Ruby, with Ruby's error" do
+          Dir.mktmpdir do |dir|
+            error = ruby do
+              Fontisan::Reference.convert(ttc, to: :ttf, output: File.join(dir, "r.ttf"))
+            rescue StandardError => e
+              [e.class, e.message]
+            end
+            tier do
+              got = begin
+                Fontisan::Reference.convert(ttc, to: :ttf, output: File.join(dir, "n.ttf"))
+              rescue StandardError => e
+                [e.class, e.message]
+              end
+              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+              expect(got).to eq(error)
+            end
+          end
         end
       end
-    end
 
-    it "converts a collection to a collection natively and matches Ruby" do
-      Dir.mktmpdir do |dir|
-        n = native do
-          Fontisan::Reference.convert(ttc, to: :otc, output: File.join(dir, "n.otc"), timestamp: stamp)
-            .tap { expect(Fontisan::Engine.served_by(:convert)).to eq(:native) }
-        end
-        r = ruby { Fontisan::Reference.convert(ttc, to: :otc, output: File.join(dir, "r.otc"), timestamp: stamp) }
-        expect(File.binread(File.join(dir, "n.otc"))).to eq(File.binread(File.join(dir, "r.otc")))
-        expect(n.except(:output_path)).to eq(r.except(:output_path))
-      end
-    end
-
-    it "keeps an .otc collection input on Ruby (the engine cannot take the extension hint)" do
-      Dir.mktmpdir do |dir|
-        otc = File.join(dir, "in.otc")
-        FileUtils.cp(ttc, otc)
-        native do
-          result = Fontisan::Reference.convert(otc, to: :ttc, output: File.join(dir, "o.ttc"))
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
-          expect(result[:source_format]).to eq(:otc)
+      describe "extract" do
+        it "extracts the same member as Ruby, served by the tier" do
+          Dir.mktmpdir do |dir|
+            n = tier do
+              Fontisan::Reference.extract(ttc, index: 1, output_dir: File.join(dir, "n"))
+                .tap { expect(Fontisan::Engine.served_by(:extract)).to eq(name) }
+            end
+            r = ruby { Fontisan::Reference.extract(ttc, index: 1, output_dir: File.join(dir, "r")) }
+            expect(File.basename(n)).to eq(File.basename(r))
+            expect(File.binread(n)).to eq(File.binread(r))
+          end
         end
       end
-    end
 
-    it "routes the options the engine does not serve to Ruby" do
-      Dir.mktmpdir do |dir|
-        native do
-          Fontisan::Reference.convert(vf, to: :ttf, output: File.join(dir, "a.ttf"), coordinates: "wght=700")
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
-          Fontisan::Reference.convert(ttf, to: "woff,woff2", output: File.join(dir, "b"))
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
-          Fontisan::Reference.convert(ttf, to: :otf, output: File.join(dir, "c.otf"), preserve_hints: true)
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+      describe "instance and subset" do
+        it "instances a variable font identically to Ruby, served by the tier" do
+          coords = { "wght" => 700 }
+          n = tier do
+            Fontisan::Reference.instance(vf, coords: coords)
+              .tap { expect(Fontisan::Engine.served_by(:instance)).to eq(name) }
+          end
+          expect(n).to eq(ruby { Fontisan::Reference.instance(vf, coords: coords) })
         end
-      end
-    end
 
-    it "routes a collection converted to a non-collection format to Ruby, with Ruby's error" do
-      Dir.mktmpdir do |dir|
-        error = ruby do
-          Fontisan::Reference.convert(ttc, to: :ttf, output: File.join(dir, "r.ttf"))
-        rescue StandardError => e
-          [e.class, e.message]
+        it "subsets identically to Ruby, served by the tier" do
+          n = tier do
+            Fontisan::Reference.subset(ttf, unicodes: [32, 46])
+              .tap { expect(Fontisan::Engine.served_by(:subset)).to eq(name) }
+          end
+          expect(n).to eq(ruby { Fontisan::Reference.subset(ttf, unicodes: [32, 46]) })
         end
-        native do
-          got = begin
-            Fontisan::Reference.convert(ttc, to: :ttf, output: File.join(dir, "n.ttf"))
+
+        it "raises Ruby's error for characters the font lacks" do
+          message = ruby do
+            Fontisan::Reference.subset(ttf, unicodes: [0x10FFFF])
           rescue StandardError => e
             [e.class, e.message]
           end
-          expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
-          expect(got).to eq(error)
+          tier do
+            got = begin
+              Fontisan::Reference.subset(ttf, unicodes: [0x10FFFF])
+            rescue StandardError => e
+              [e.class, e.message]
+            end
+            expect(got).to eq(message)
+            expect(Fontisan::Engine.served_by(:subset)).to eq(name)
+          end
         end
-      end
-    end
-  end
-
-  describe "extract" do
-    it "extracts the same member as Ruby, served natively" do
-      Dir.mktmpdir do |dir|
-        n = native do
-          Fontisan::Reference.extract(ttc, index: 1, output_dir: File.join(dir, "n"))
-            .tap { expect(Fontisan::Engine.served_by(:extract)).to eq(:native) }
-        end
-        r = ruby { Fontisan::Reference.extract(ttc, index: 1, output_dir: File.join(dir, "r")) }
-        expect(File.basename(n)).to eq(File.basename(r))
-        expect(File.binread(n)).to eq(File.binread(r))
-      end
-    end
-  end
-
-  describe "instance and subset" do
-    it "instances a variable font identically to Ruby, served natively" do
-      coords = { "wght" => 700 }
-      n = native do
-        Fontisan::Reference.instance(vf, coords: coords)
-          .tap { expect(Fontisan::Engine.served_by(:instance)).to eq(:native) }
-      end
-      expect(n).to eq(ruby { Fontisan::Reference.instance(vf, coords: coords) })
-    end
-
-    it "subsets identically to Ruby, served natively" do
-      n = native do
-        Fontisan::Reference.subset(ttf, unicodes: [32, 46])
-          .tap { expect(Fontisan::Engine.served_by(:subset)).to eq(:native) }
-      end
-      expect(n).to eq(ruby { Fontisan::Reference.subset(ttf, unicodes: [32, 46]) })
-    end
-
-    it "raises Ruby's error for characters the font lacks" do
-      message = ruby do
-        Fontisan::Reference.subset(ttf, unicodes: [0x10FFFF])
-      rescue StandardError => e
-        [e.class, e.message]
-      end
-      native do
-        got = begin
-          Fontisan::Reference.subset(ttf, unicodes: [0x10FFFF])
-        rescue StandardError => e
-          [e.class, e.message]
-        end
-        expect(got).to eq(message)
-        expect(Fontisan::Engine.served_by(:subset)).to eq(:native)
       end
     end
   end
 
   describe "object-based entry points" do
-    %w[native auto].each do |selection|
+    %w[native ffi auto].each do |selection|
       it "reports :ruby for Subset::Builder and Variable::Instancer under #{selection}" do
         with_engine(selection) do
           font = Fontisan::FontLoader.load(ttf, mode: :full, lazy: false)
@@ -187,8 +195,4 @@ RSpec.describe "native byte ops" do
       end
     end
   end
-
-  # TODO(2f ffi): once card 2d is merged, repeat these examples with
-  # FONTISAN_ENGINE=ffi and served_by == :ffi (the ffi tier takes the same
-  # option checks as Native.supports_options?).
 end

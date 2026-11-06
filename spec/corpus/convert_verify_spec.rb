@@ -103,6 +103,22 @@ RSpec.describe ConvertGoldens do
     end
   end
 
+  # FONTISAN_ENGINE=native|ffi (strict): every corpus case is served by that
+  # tier; no operation falls back to Ruby (the corpus has no .otc input or
+  # option the tiers route away).
+  if %w[native ffi].include?(ENV.fetch("FONTISAN_ENGINE", ""))
+    describe "tier coverage" do
+      it "serves every convert, extract, instance and subset case from the selected tier" do
+        tier = ENV.fetch("FONTISAN_ENGINE").to_sym
+        Fontisan::Engine.reset!
+        expect(described_class.verify(tiers)).to be_empty
+        counters = Fontisan::Engine.counters
+        expect(counters.keys).to eq([tier])
+        expect(counters.fetch(tier).keys).to include(:convert, :extract, :instance, :subset)
+      end
+    end
+  end
+
   describe "a deliberately broken op" do
     let(:id) { "fonttools-test-ttf" }
 
