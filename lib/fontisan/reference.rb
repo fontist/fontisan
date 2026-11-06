@@ -142,7 +142,8 @@ module Fontisan
           dir = dir.tr(alt_separator, "/")
           path = path.tr(alt_separator, "/")
         end
-        prefix = "#{dir.sub(%r{/+\z}, '')}/"
+        dir = dir.delete_suffix("/") while dir.end_with?("/")
+        prefix = "#{dir}/"
         return path unless path.start_with?(prefix)
 
         # A glob over "dir//" yields "dir//a.ttf": drop every separator.
