@@ -59,11 +59,13 @@ module Fontisan
         # the glyf was transformed.
         font_entries.map do |fe|
           font_tables = {}
+          glyf_transformed = false
           fe.table_indices.each do |idx|
             entry = table_entries.fetch(idx)
             font_tables[entry.tag] = entry.raw_bytes
+            glyf_transformed = !entry.transform_length.nil? if entry.tag == "glyf"
           end
-          reconstruct_glyf_loca!(font_tables) if font_tables.key?("glyf")
+          reconstruct_glyf_loca!(font_tables) if glyf_transformed
           { flavor: fe.flavor, tables: font_tables }
         end
       end
