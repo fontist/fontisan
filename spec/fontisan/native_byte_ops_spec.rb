@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "tmpdir"
+require "timeout"
 require "fileutils"
 
 # Cards 2f and 2f-ffi: convert, extract, instance and subset through the
@@ -133,6 +134,23 @@ RSpec.describe "native byte ops" do
             r = ruby { Fontisan::Reference.extract(ttc, index: 1, output_dir: File.join(dir, "r")) }
             expect(File.basename(n)).to eq(File.basename(r))
             expect(File.binread(n)).to eq(File.binread(r))
+          end
+        end
+
+        # fontisan-rs 0687123 (head-offset fix): a TTC whose head table offset
+        # overflows must not hang or write a huge file. Ruby's extract is not run
+        # on it: it would write about 4 GiB.
+        it "extracts the head-offset fuzz TTC without a hang or a huge write" do
+          fuzz = File.expand_path("../../corpus/derived/malformed-fuzz-ttc-head-offset.ttc", __dir__)
+          Dir.mktmpdir do |dir|
+            Timeout.timeout(60) do
+              tier do
+                Fontisan::Reference.extract(fuzz, index: 0, output_dir: dir)
+              rescue StandardError => e
+                expect(e.message.bytesize).to be < 1_000
+              end
+            end
+            expect(Dir.glob(File.join(dir, "**", "*")).sum { |f| File.file?(f) ? File.size(f) : 0 }).to be < 1_048_576
           end
         end
       end
