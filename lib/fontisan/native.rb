@@ -17,6 +17,9 @@ module Fontisan
   # tier's exception class, message and cause chain from it.
   module Native
     EXTENSION = "fontisan/native/fontisan_native"
+    # Cross-compiled platform gems ship one build per Ruby minor, in a
+    # directory named for it (rake-compiler's fat-binary layout).
+    VERSIONED_EXTENSION = "fontisan/native/#{RUBY_VERSION[/\A\d+\.\d+/]}/fontisan_native".freeze
     ABI_VERSION = 1
 
     # Operations served natively. Convert, extract, instance and subset are
@@ -105,6 +108,8 @@ module Fontisan
       end
 
       def load_extension
+        require VERSIONED_EXTENSION
+      rescue LoadError
         require EXTENSION
       end
 

@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features)/|\.(?:git|travis|circleci)|appveyor)})
+      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|corpus)/|\.(?:git|travis|circleci)|appveyor)})
     end
   end
   spec.bindir = "exe"
@@ -40,6 +40,9 @@ Gem::Specification.new do |spec|
   # The :native tier. extconf.rb writes a no-op Makefile without cargo, so a
   # source install on a machine with no Rust toolchain still works (:ruby tier).
   spec.extensions = ["ext/fontisan_native/extconf.rb"]
+  # The :ffi tier needs the `ffi` gem and lib/fontisan/ffi/libfontisan_cdylib.*,
+  # which only platform gems carry. `ffi` stays OFF the runtime dependencies: it
+  # is optional, and `auto` only reaches the ffi tier when the native one is gone.
 
   spec.add_dependency "base64"
   spec.add_dependency "bindata", "~> 2.5"

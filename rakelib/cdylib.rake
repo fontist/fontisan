@@ -3,16 +3,28 @@
 # The :ffi tier's shared library (fontisan#156 card 2d).
 namespace :cdylib do
   desc "Build ext/fontisan_cdylib with cargo and install it under lib/fontisan/ffi/"
-  task :build do
+  task build: :vendor
+
+  desc "Build the cdylib for the active cross target (CARGO_BUILD_TARGET / RUST_TARGET) and vendor it into lib/fontisan/ffi/"
+  task :vendor do
     require "rbconfig"
     require "fileutils"
     ext = File.expand_path("../ext/fontisan_cdylib", __dir__)
-    sh "cargo", "build", "--release", "--manifest-path", File.join(ext, "Cargo.toml")
-    suffix = RbConfig::CONFIG["SOEXT"]
-    prefix = suffix == "dll" ? "" : "lib"
+    triple = ENV["CARGO_BUILD_TARGET"] || ENV.fetch("RUST_TARGET", nil)
+    if triple.nil? && ENV.key?("RUBY_TARGET") # a cross build outside rb-sys-dock
+      require "rb_sys/toolchain_info"
+      triple = RbSys::ToolchainInfo.new(ENV.fetch("RUBY_TARGET")).rust_target
+    end
+    args = ["cargo", "build", "--release", "--manifest-path", File.join(ext, "Cargo.toml")]
+    args += ["--target", triple] if triple
+    sh(*args)
+    release = File.join(ENV.fetch("CARGO_TARGET_DIR", File.join(ext, "target")), triple.to_s, "release")
+    built = Dir[File.join(release, "{lib,}fontisan_cdylib.{so,dylib,dll}")].first
+    abort "cdylib not found under #{release}" unless built
+
     dest = File.expand_path("../lib/fontisan/ffi", __dir__)
     FileUtils.mkdir_p(dest)
-    FileUtils.cp(File.join(ext, "target/release/#{prefix}fontisan_cdylib.#{suffix}"), dest)
+    FileUtils.cp(built, dest)
   end
 
   desc "List the fontisan_* symbols the built library exports (nm -gU / dumpbin); fails if any is missing"
