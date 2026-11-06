@@ -98,6 +98,10 @@ jobs:
           name: cross-gem-${{ matrix.platform }}
           path: pkg/
 
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
       - name: Install the platform gem and run the corpus
         shell: bash
         run: |
@@ -171,6 +175,10 @@ jobs:
           name: java-gem
           path: pkg/
 
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
       - name: Install the java gem
         run: |
           gem install --no-document pkg/fontisan-*-java.gem
@@ -190,10 +198,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
       - uses: actions/download-artifact@v4
         with:
           name: cross-gem-x86_64-linux-musl
           path: pkg/
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
 
       # Alpine: the C compiler is for the brotli dependency only, not Rust.
       - name: Install the platform gem and run the corpus
@@ -232,6 +248,10 @@ jobs:
         run: |
           gem build fontisan.gemspec -o "$RUNNER_TEMP/fontisan-source.gem"
           gem install --no-document --platform ruby "$RUNNER_TEMP/fontisan-source.gem"
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
 
       - name: Corpus through the installed source gem
         run: |

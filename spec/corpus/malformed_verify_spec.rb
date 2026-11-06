@@ -10,14 +10,15 @@ require_relative "../../scripts/corpus/generate_malformed_goldens"
 RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   let(:entries) { described_class.entries }
   let(:kinds) do
-    %w[truncated-10 truncated-100 truncated-half garbage empty bad-table-offset bad-checksum bad-num-tables]
+    %w[truncated-10 truncated-100 truncated-half garbage empty bad-table-offset bad-checksum bad-num-tables
+       fuzz-cmap12-u32-span fuzz-cff2-huge-count fuzz-ttc-head-offset]
   end
 
   def golden_for(entry)
     JSON.parse(File.read(described_class.golden_path(entry)))
   end
 
-  it "covers all eight malformed kinds" do
+  it "covers all eleven malformed kinds" do
     expect(entries.map { |e| e["malformed_kind"] }).to match_array(kinds)
   end
 
@@ -34,9 +35,9 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
         want = %w[load name table_head read]
         want << "table_cmap" if name.start_with?("full")
         expect(c["ops"].keys).to match_array(want)
-        c["ops"].each_value { |op| expect(op["outcome"]).to match(/\A(ok|error|skipped)\z/) }
+        c["ops"].each_value { |op| expect(op["outcome"]).to match(/\A(ok|error|skipped|timeout)\z/) }
       end
-      expect(g["audit"]["outcome"]).to match(/\A(ok|error)\z/)
+      expect(g["audit"]["outcome"]).to match(/\A(ok|error|timeout)\z/)
       expect(g["scan"]["outcome"]).to eq("ok")
     end
   end
@@ -68,16 +69,20 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   end
 
   it "is deterministic across two generations" do
-    first = entries.map { |e| described_class.render(e) }
-    second = entries.map { |e| described_class.render(e) }
-    expect(first).to eq(second)
+    first = entries.map { |e| JSON.parse(described_class.render(e)) }
+    second = entries.map { |e| JSON.parse(described_class.render(e)) }
+    # A node the reference timed out on is allowed to differ (see .matches?).
+    first.zip(second, entries).each do |a, b, e|
+      expect(described_class.matches?(a, b)).to be(true), "#{e['id']} differs between two renders"
+    end
   end
 
   it "does not depend on where the fonts live" do
     Dir.mktmpdir("elsewhere-42") do |dir|
       entries.each do |e|
         FileUtils.cp(File.join(described_class::DERIVED_DIR, e["file"]), dir)
-        expect(described_class.render(e, dir: dir)).to eq(File.read(described_class.golden_path(e)))
+        rendered = JSON.parse(described_class.render(e, dir: dir))
+        expect(described_class.matches?(golden_for(e), rendered)).to be(true), "#{e['id']} depends on location"
       end
     end
   end

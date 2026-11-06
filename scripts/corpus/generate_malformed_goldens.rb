@@ -18,12 +18,20 @@ require "fontisan"
 require "digest"
 require "fileutils"
 require "json"
+require "timeout"
 
 module MalformedGoldens
   ROOT = File.expand_path("../..", __dir__)
   MANIFEST = File.join(ROOT, "corpus", "manifest.json")
   DERIVED_DIR = File.join(ROOT, "corpus", "derived")
   GOLDEN_DIR = File.join(ROOT, "corpus", "goldens", "malformed")
+
+  # The Ruby reference itself never returns on a few fuzz-found inputs (a cmap
+  # format 12 group spanning the u32 range, a CFF2 INDEX of 2^32 entries). An
+  # operation that runs past this many seconds is recorded as outcome "timeout";
+  # the tiers are then only required to finish without crashing (see
+  # {.matches?}). Real fonts take milliseconds.
+  OP_TIMEOUT = 5
 
   COMBOS = [[:metadata, true], [:metadata, false],
             [:full, true], [:full, false]].freeze
@@ -85,8 +93,10 @@ module MalformedGoldens
     }
   end
 
-  def attempt
-    { outcome: "ok" }.merge(yield || {})
+  def attempt(&)
+    { outcome: "ok" }.merge(Timeout.timeout(OP_TIMEOUT, &) || {})
+  rescue Timeout::Error
+    { outcome: "timeout" }
   rescue StandardError => e
     error_record(e)
   end
@@ -142,7 +152,7 @@ module MalformedGoldens
   end
 
   def scan(path)
-    rows = Fontisan::Reference.scan([path])
+    rows = Timeout.timeout(OP_TIMEOUT) { Fontisan::Reference.scan([path]) }
     rows.each { |r| r["path"] = File.basename(r["path"]) }
     {
       outcome: "ok",
@@ -150,6 +160,8 @@ module MalformedGoldens
       digest: digest(rows),
       summary: rows.map { |r| scan_summary(r) },
     }
+  rescue Timeout::Error
+    { outcome: "timeout" }
   rescue StandardError => e
     error_record(e)
   end
@@ -188,6 +200,24 @@ module MalformedGoldens
     File.join(GOLDEN_DIR, "#{entry['id']}.json")
   end
 
+  # Whether +actual+ (parsed render) equals +want+ (parsed golden). A node the
+  # reference timed out on matches whatever the tier returned, because that
+  # operation has no reference result; a crash would have killed the process.
+  def matches?(want, actual)
+    case want
+    when Hash
+      return true if want["outcome"] == "timeout" && actual.is_a?(Hash)
+
+      actual.is_a?(Hash) && want.keys.sort == actual.keys.sort &&
+        want.all? { |k, v| matches?(v, actual[k]) }
+    when Array
+      actual.is_a?(Array) && want.size == actual.size &&
+        want.zip(actual).all? { |w, a| matches?(w, a) }
+    else
+      want == actual
+    end
+  end
+
   # @return [Array<String>] problems; empty when the committed goldens match
   def verify(dir: DERIVED_DIR)
     problems = []
@@ -198,7 +228,8 @@ module MalformedGoldens
         next
       end
       actual = render(e, dir: dir)
-      problems << "#{e['id']}: golden differs from current behaviour" unless File.read(gp) == actual
+      same = File.read(gp) == actual || matches?(JSON.parse(File.read(gp)), JSON.parse(actual))
+      problems << "#{e['id']}: golden differs from current behaviour" unless same
     end
     extra = Dir[File.join(GOLDEN_DIR, "*.json")].map { |f| File.basename(f, ".json") } - entries.map { |e| e["id"] }
     problems.concat(extra.map { |x| "#{x}: golden has no manifest entry" })

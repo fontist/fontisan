@@ -832,6 +832,54 @@
       "malformed_kind": "bad-num-tables",
       "sha256": "275bff491132b61ee04a20a4c0ace950745dc36c145e010a58ce291afab067b7",
       "size": 2336
+    },
+    {
+      "id": "malformed-fuzz-cmap12-u32-span",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-cmap12-u32-span.ttf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-cmap12-u32-span",
+      "sha256": "5d303459eca91c05d4d21bfbc5e263adbc9f73943838414ff8a0203575f02ea7",
+      "size": 1868
+    },
+    {
+      "id": "malformed-fuzz-cff2-huge-count",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-cff2-huge-count.otf",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-cff2-huge-count",
+      "sha256": "c7f07fea9b114ea4c31f0252e889cb43d45cce65eff7aa98274a20ec3012580e",
+      "size": 2224
+    },
+    {
+      "id": "malformed-fuzz-ttc-head-offset",
+      "type": "derived",
+      "tier": "ci",
+      "file": "malformed-fuzz-ttc-head-offset.ttc",
+      "covers": [],
+      "licence": "MIT",
+      "licence_file": "corpus/LICENSES/MIT-fonttools.txt",
+      "script": "corpus/derive/fuzz.rb",
+      "inputs": [
+        "fonttools-test-ttf"
+      ],
+      "malformed_kind": "fuzz-ttc-head-offset",
+      "sha256": "da5fb7ce3f8bce7243c94ef694c6835f73fd4bbd56f14b3797e1effabf70a1c9",
+      "size": 44
     }
   ]
 }

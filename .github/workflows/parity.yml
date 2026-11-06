@@ -1,0 +1,346 @@
+---
+# Parity matrix for fontist/fontisan#156 card 3a (and the malformed-input parity of 3b).
+#
+# Cells: {linux-glibc, linux-musl, macos-arm64, macos-x64, windows} x {ruby, native, ffi}
+# = 15, plus a JRuby :ffi cell on linux-glibc, plus the strict-OFF fallback job on every
+# platform. Every cell runs the four corpus specs with FONTISAN_ENGINE=<tier> (strict
+# for native and ffi, so a silent fall back to Ruby fails):
+#
+#   verify_spec           read goldens
+#   scan_goldens_spec     scan goldens, asserts served_by
+#   malformed_verify_spec malformed goldens (outcome, class, normalised message, markers,
+#                         failure point), including the fuzz-found inputs; a crash or an
+#                         unbounded run kills the cell
+#   convert_verify_spec   convert goldens, asserts served_by, runs OTS on every output
+#
+# The platform gems come from gem-build.yml (same run, workflow_call). For the cells the
+# native extension and cdylib are copied out of the gem into the checkout's lib/, so the
+# specs run the shipped binaries; the fallback job installs the gem and runs outside the
+# checkout.
+name: parity
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/parity.yml"
+      - "scripts/tier_fallback.rb"
+      - "scripts/corpus/**"
+      - "spec/corpus/**"
+      - "corpus/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: parity-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUNDLE_WITHOUT: fontist_parity
+
+# The cells need the gem artifacts only, not the verdict of gem-build's own smoke jobs
+# (`if: !cancelled()` lets them run when a smoke job failed; a failed build job still
+# fails the artifact download).
+jobs:
+  gems:
+    name: Platform gems
+    uses: ./.github/workflows/gem-build.yml
+
+  cell:
+    name: ${{ matrix.name }} / ${{ matrix.tier }}
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, name: linux-glibc, platform: x86_64-linux, tier: ruby }
+          - { os: ubuntu-22.04, name: linux-glibc, platform: x86_64-linux, tier: native }
+          - { os: ubuntu-22.04, name: linux-glibc, platform: x86_64-linux, tier: ffi }
+          - { os: macos-15, name: macos-arm64, platform: arm64-darwin, tier: ruby }
+          - { os: macos-15, name: macos-arm64, platform: arm64-darwin, tier: native }
+          - { os: macos-15, name: macos-arm64, platform: arm64-darwin, tier: ffi }
+          - { os: macos-15-intel, name: macos-x64, platform: x86_64-darwin, tier: ruby }
+          - { os: macos-15-intel, name: macos-x64, platform: x86_64-darwin, tier: native }
+          - { os: macos-15-intel, name: macos-x64, platform: x86_64-darwin, tier: ffi }
+          - { os: windows-2025, name: windows, platform: x64-mingw-ucrt, tier: ruby }
+          - { os: windows-2025, name: windows, platform: x64-mingw-ucrt, tier: native }
+          - { os: windows-2025, name: windows, platform: x64-mingw-ucrt, tier: ffi }
+    env:
+      FONTISAN_ENGINE: ${{ matrix.tier }}
+      FONTISAN_ENGINE_STRICT: ${{ matrix.tier == 'ruby' && '0' || '1' }}
+      OTS_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install OTS
+        run: python -m pip install opentype-sanitizer
+
+      - uses: actions/download-artifact@v4
+        if: matrix.tier != 'ruby'
+        with:
+          name: cross-gem-${{ matrix.platform }}
+          path: pkg/
+
+      - name: Copy the extension and cdylib out of the platform gem
+        if: matrix.tier != 'ruby'
+        shell: bash
+        run: |
+          gem unpack pkg/fontisan-*.gem --target "$RUNNER_TEMP/unpacked"
+          unpacked=$(ls -d "$RUNNER_TEMP"/unpacked/fontisan-*)
+          mkdir -p lib/fontisan/native lib/fontisan/ffi
+          cp -R "$unpacked"/lib/fontisan/native/. lib/fontisan/native/
+          cp "$unpacked"/lib/fontisan/ffi/*fontisan_cdylib.* lib/fontisan/ffi/
+          ls -lR lib/fontisan/native lib/fontisan/ffi | head -40
+
+      - name: Cache pinned woff2_decompress
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts/.tools/woff2
+          key: woff2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-woff2.sh') }}
+
+      - name: Build pinned woff2_decompress
+        if: runner.os != 'Windows'
+        run: scripts/build-woff2.sh
+
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          install: git make mingw-w64-x86_64-gcc
+
+      - name: Build pinned woff2_decompress (MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: scripts/build-woff2.sh
+
+      # The generator would otherwise run the .sh itself, which Windows Ruby cannot.
+      - name: Point the corpus at woff2_decompress
+        shell: bash
+        run: |
+          exe="$PWD/corpus/fonts/.tools/woff2/bin/woff2_decompress"
+          [ "$RUNNER_OS" = Windows ] && exe="$exe.exe"
+          echo "WOFF2_DECOMPRESS=$exe" >> "$GITHUB_ENV"
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        run: bundle exec rake corpus:fetch
+
+      - name: Corpus specs under ${{ matrix.tier }}
+        run: >-
+          bundle exec rspec --options /dev/null --format progress
+          spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
+          spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+
+  # linux-musl: Alpine, with the C toolchain the brotli and woff2 builds need (not Rust).
+  cell-musl:
+    name: linux-musl / ${{ matrix.tier }}
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        tier: [ruby, native, ffi]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        if: matrix.tier != 'ruby'
+        with:
+          name: cross-gem-x86_64-linux-musl
+          path: pkg/
+
+      - name: Corpus specs under ${{ matrix.tier }} in Alpine
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w \
+            -e FONTISAN_ENGINE=${{ matrix.tier }} \
+            -e FONTISAN_ENGINE_STRICT=${{ matrix.tier == 'ruby' && '0' || '1' }} \
+            ruby:3.4-alpine sh -ec '
+              apk add --no-cache build-base git make bash python3 py3-pip
+              python3 -m venv /ots && /ots/bin/pip install opentype-sanitizer
+              export OTS_PYTHON=/ots/bin/python WOFF2_DECOMPRESS=/w/corpus/fonts/.tools/woff2/bin/woff2_decompress
+              if [ "$FONTISAN_ENGINE" != ruby ]; then
+                gem unpack pkg/fontisan-*.gem --target /tmp/unpacked
+                mkdir -p lib/fontisan/native lib/fontisan/ffi
+                cp -R /tmp/unpacked/fontisan-*/lib/fontisan/native/. lib/fontisan/native/
+                cp /tmp/unpacked/fontisan-*/lib/fontisan/ffi/*fontisan_cdylib.* lib/fontisan/ffi/
+              fi
+              scripts/build-woff2.sh
+              bundle config set --local without fontist_parity
+              bundle install --jobs 4
+              bundle exec rake corpus:fetch
+              bundle exec rspec --options /dev/null --format progress \
+                spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb \
+                spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+            '
+
+  # JRuby on linux-glibc: the java gem has the cdylib of every platform and no brotli, so
+  # the specs run unbundled against the checkout's lib/ with the cdylib copied in.
+  cell-jruby:
+    name: linux-glibc / jruby ffi
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      FONTISAN_ENGINE: ffi
+      FONTISAN_ENGINE_STRICT: "1"
+      OTS_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      # MRI first: it fetches the corpus and builds the tools; JRuby then runs the specs.
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install OTS
+        run: python -m pip install opentype-sanitizer
+
+      - name: Cache pinned woff2_decompress
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts/.tools/woff2
+          key: woff2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-woff2.sh') }}
+
+      - run: scripts/build-woff2.sh
+
+      - name: Fetch ci-tier corpus (MRI)
+        run: bundle exec rake corpus:fetch
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+
+      - name: Install the java gem and rspec
+        run: |
+          gem install --no-document pkg/fontisan-*-java.gem rspec
+          gem unpack pkg/fontisan-*-java.gem --target "$RUNNER_TEMP/unpacked"
+          mkdir -p lib/fontisan/ffi
+          cp -R "$RUNNER_TEMP"/unpacked/fontisan-*/lib/fontisan/ffi/. lib/fontisan/ffi/
+          ruby -v
+
+      - name: Corpus specs under JRuby ffi
+        env:
+          WOFF2_DECOMPRESS: ${{ github.workspace }}/corpus/fonts/.tools/woff2/bin/woff2_decompress
+        run: >-
+          ruby -S rspec --options /dev/null --format progress
+          spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
+          spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+
+  # Strict OFF, installed gem, outside the checkout (scripts/tier_fallback.rb).
+  fallback:
+    name: fallback ${{ matrix.name }}
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, name: linux-glibc, platform: x86_64-linux }
+          - { os: macos-15, name: macos-arm64, platform: arm64-darwin }
+          - { os: macos-15-intel, name: macos-x64, platform: x86_64-darwin }
+          - { os: windows-2025, name: windows, platform: x64-mingw-ucrt }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cross-gem-${{ matrix.platform }}
+          path: pkg/
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        run: bundle exec rake corpus:fetch
+
+      - name: Install the platform gem and run the fallback scenarios
+        shell: bash
+        run: |
+          gem install --no-document pkg/fontisan-*.gem
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_fallback.rb" native,ffi "$GITHUB_WORKSPACE/corpus"
+
+  fallback-musl:
+    name: fallback linux-musl
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cross-gem-x86_64-linux-musl
+          path: pkg/
+
+      - run: |
+          docker run --rm -v "$PWD:/w" -w /w ruby:3.4-alpine sh -ec '
+            apk add --no-cache build-base git bash
+            bundle config set --local without fontist_parity
+            bundle install --jobs 4
+            bundle exec rake corpus:fetch
+            gem install --no-document pkg/fontisan-*.gem
+            cd /tmp
+            ruby /w/scripts/tier_fallback.rb native,ffi /w/corpus
+          '
+
+  fallback-jruby:
+    name: fallback linux-glibc jruby
+    needs: gems
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - run: bundle exec rake corpus:fetch
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: java-gem
+          path: pkg/
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+
+      - run: |
+          gem install --no-document pkg/fontisan-*-java.gem
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_fallback.rb" ffi "$GITHUB_WORKSPACE/corpus"
