@@ -78,12 +78,18 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
   end
 
   it "does not depend on where the fonts live" do
-    Dir.mktmpdir("elsewhere-42") do |dir|
+    dir = Dir.mktmpdir("elsewhere-42")
+    begin
       entries.each do |e|
         FileUtils.cp(File.join(described_class::DERIVED_DIR, e["file"]), dir)
         rendered = JSON.parse(described_class.render(e, dir: dir))
         expect(described_class.matches?(golden_for(e), rendered)).to be(true), "#{e['id']} depends on location"
       end
+    ensure
+      # Windows cannot delete a file a lazily loaded font still holds open (EACCES in
+      # Dir.mktmpdir's own cleanup); release the handles first and ignore a leftover.
+      GC.start
+      FileUtils.rm_rf(dir)
     end
   end
 
