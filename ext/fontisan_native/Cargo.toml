@@ -11,11 +11,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 # TEMPORARY (decision D3: the crate is not on crates.io yet). Replace with
-# `fontisan = "=<version>"` once published. The rev must be a commit that exists
-# on fontist/fontisan-rs and carries read/audit/scan (fontisan-rs PR #1 head
-# c1317aa does not yet; b990f75 (an earlier head of issue-156/1a-workspace-bootstrap; 0687123 is the head used here) carries
-# read, audit, scan, convert, extract, instance and subset).
-# TEMPORARY: crates.io publish is pending; remove this git dependency then.
+# `fontisan = "=<version>"` once published. The rev must be a commit on
+# fontist/fontisan-rs; keep it equal to the rev in ext/fontisan_cdylib/Cargo.toml.
 fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "24bb4c2b810e42bcb616054c75c30bd11e712ea9" }
 magnus = "=0.8.4"
 rb-sys = { version = "=0.9.130", default-features = false }
