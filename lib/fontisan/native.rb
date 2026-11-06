@@ -63,8 +63,10 @@ module Fontisan
 
         case operation
         when :audit_dir then File.directory?(path)
-        when :scan then File.file?(path) && native_supports_file(path)
-        else native_supports_file(path)
+        # A FIFO, device or socket is never handed to the extension: it would
+        # block in the engine's read with the GVL released, where no signal or
+        # Timeout can interrupt it. Ruby's read is interruptible.
+        else File.file?(path) && native_supports_file(path)
         end
       end
 
