@@ -21,6 +21,8 @@ module Fontisan
     # adjacent (loca immediately follows glyf) in the directory.
     class CollectionEncoder
       TTC_FLAVOR = 0x74746366 # 'ttcf'
+      # Largest padded glyf a short (uint16, offset / 2) loca can index.
+      SHORT_LOCA_GLYF_MAX = 0x1FFFE
 
       # @param brotli_quality [Integer] 0-11
       # @param timestamp [Integer, nil] Unix seconds stamped into every
@@ -76,12 +78,30 @@ module Fontisan
         head = font.table("head")
         return nil unless maxp && head
 
-        loca_orig_length = tables["loca"].bytesize
+        glyf = tables["glyf"]
+        loca = tables["loca"]
+        index_format = head.index_to_loc_format
+        # The WOFF2 decoder pads every glyph to 4 bytes; a short loca
+        # (offset / 2 as uint16) wraps once that padded glyf passes
+        # SHORT_LOCA_GLYF_MAX, so such a member is re-emitted with a long loca.
+        if index_format.zero? &&
+            glyf.bytesize + 3 * maxp.num_glyphs > SHORT_LOCA_GLYF_MAX
+          canonical = GlyfCanonicalizer.new(
+            glyf_data: glyf, loca_data: loca, num_glyphs: maxp.num_glyphs,
+            source_format: 0, target_format: 1
+          ).canonical
+          glyf = canonical[:glyf]
+          loca = canonical[:loca]
+          index_format = 1
+          EncoderRules.set_head_index_to_loc_format!(tables, 1)
+        end
+
+        loca_orig_length = loca.bytesize
         tables["glyf"] = GlyfLocaTransform.new(
-          glyf_data: tables["glyf"],
-          loca_data: tables["loca"],
+          glyf_data: glyf,
+          loca_data: loca,
           num_glyphs: maxp.num_glyphs,
-          index_format: head.index_to_loc_format,
+          index_format:,
         ).transform
         tables.delete("loca")
         loca_orig_length
