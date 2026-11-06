@@ -515,7 +515,7 @@ _options)
           raise ArgumentError,
                 "Option(s) #{conflicts.map(&:inspect).join(', ')} do not apply " \
                 "to #{source_format}→#{target_format} " \
-                "(#{this_class.name.demodulize}). " \
+                "(#{this_class.name.split('::').last}). " \
                 "Accepted: #{accepted_list}"
         end
 

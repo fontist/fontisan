@@ -262,7 +262,9 @@ conv_options = nil)
             converter = FormatConverter.new
 
             # Build converter options, including ConversionOptions if provided
-            converter_opts = options.dup
+            # timestamp is a WOFF2 encoder option; the outline strategy rejects
+            # any option key it does not declare, even with a nil value.
+            converter_opts = options.except(:timestamp)
             converter_opts[:options] = conv_options if conv_options
 
             begin
