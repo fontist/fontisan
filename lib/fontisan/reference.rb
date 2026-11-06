@@ -118,7 +118,7 @@ module Fontisan
         dir = path_arg(dir)
         files = font_files(dir)
         entries = files.map do |file|
-          rel = file.delete_prefix("#{dir}/")
+          rel = relative_row_path(dir, file)
           begin
             { path: rel, faces: audit(file, validate: validate) }
           rescue StandardError => e
@@ -142,7 +142,11 @@ module Fontisan
           dir = dir.tr(alt_separator, "/")
           path = path.tr(alt_separator, "/")
         end
-        path.delete_prefix("#{dir.chomp('/')}/")
+        prefix = "#{dir.sub(%r{/+\z}, '')}/"
+        return path unless path.start_with?(prefix)
+
+        # A glob over "dir//" yields "dir//a.ttf": drop every separator.
+        path.delete_prefix(prefix).sub(%r{\A/+}, "")
       end
 
       # One row per font face for every path (see {Fontisan::Scan}).
