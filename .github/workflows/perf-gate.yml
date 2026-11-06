@@ -136,3 +136,43 @@ jobs:
       - name: Job summary
         if: always()
         run: cat tiers-output.md >> "$GITHUB_STEP_SUMMARY"
+
+  # x86_64-linux-musl: GitHub has no musl runner, so the tiers gate runs in an Alpine
+  # container on the ubuntu runner (the way parity.yml's musl cells do). Unlike parity,
+  # which tests the cross-gem, this builds native and ffi inside Alpine: the gate needs
+  # the three tiers together, and the build is what the musl gem would ship.
+  tiers-musl:
+    name: Tiers x86_64-linux-musl
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tiers gate in Alpine
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w \
+            -e RUSTFLAGS="-C target-feature=-crt-static" \
+            ruby:3.4-alpine sh -ec '
+              # time: GNU time for /usr/bin/time -v (busybox has no -v), the RSS floor needs it.
+              apk add --no-cache build-base git make bash time rust cargo clang-dev linux-headers
+              bundle install --jobs 4
+              bundle exec rake compile
+              bundle exec rake cdylib:build
+              bundle exec rake corpus:fetch
+              bundle exec ruby benchmark/ci_gate.rb --mode tiers --label "x86_64-linux-musl (alpine)" \
+                --save perf-tiers.json | tee tiers-output.md
+            '
+
+      - name: Upload tiers results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-tiers-x86_64-linux-musl
+          path: |
+            perf-tiers.json
+            tiers-output.md
+          retention-days: 90
+
+      - name: Job summary
+        if: always()
+        run: cat tiers-output.md >> "$GITHUB_STEP_SUMMARY"
