@@ -109,6 +109,15 @@ jobs:
           bundler-cache: true
 
       - uses: dtolnay/rust-toolchain@stable
+        if: runner.os != 'Windows'
+
+      # RubyInstaller is MinGW, and rb-sys refuses to bind its headers from the
+      # MSVC host that is the runner default. Making the GNU triple the host keeps
+      # the artefacts in target/release, where the rake tasks expect them.
+      - uses: dtolnay/rust-toolchain@master
+        if: runner.os == 'Windows'
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
 
       - name: Build the native and ffi tiers
         run: |
