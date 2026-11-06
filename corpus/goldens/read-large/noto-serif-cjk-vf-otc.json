@@ -1044,6 +1044,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "c83bfaa39b2ab0125c3d3b5e28564a08d7b842c98997cbcaa3b7d22fe2d6b5d5"
+          },
           "index": 0,
           "layout": {
             "GPOS": {
@@ -2145,6 +2149,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "c83bfaa39b2ab0125c3d3b5e28564a08d7b842c98997cbcaa3b7d22fe2d6b5d5"
+          },
           "index": 1,
           "layout": {
             "GPOS": {
@@ -3217,6 +3225,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "c83bfaa39b2ab0125c3d3b5e28564a08d7b842c98997cbcaa3b7d22fe2d6b5d5"
           },
           "index": 2,
           "layout": {
@@ -4291,6 +4303,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "c83bfaa39b2ab0125c3d3b5e28564a08d7b842c98997cbcaa3b7d22fe2d6b5d5"
+          },
           "index": 3,
           "layout": {
             "GPOS": {
@@ -5364,6 +5380,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "c83bfaa39b2ab0125c3d3b5e28564a08d7b842c98997cbcaa3b7d22fe2d6b5d5"
+          },
           "index": 4,
           "layout": {
             "GPOS": {
@@ -6366,6 +6386,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 0,
           "layout": {
             "GPOS": null,
@@ -7037,6 +7058,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 1,
           "layout": {
             "GPOS": null,
@@ -7708,6 +7730,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 2,
           "layout": {
             "GPOS": null,
@@ -8379,6 +8402,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 3,
           "layout": {
             "GPOS": null,
@@ -9050,6 +9074,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 4,
           "layout": {
             "GPOS": null,

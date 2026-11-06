@@ -5473,6 +5473,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5e8342ae901a6136299bf860bf1cabb287082ba675a89a2da325b1968366a922"
+          },
           "index": 0,
           "layout": {
             "GPOS": {
@@ -6093,6 +6097,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5e8342ae901a6136299bf860bf1cabb287082ba675a89a2da325b1968366a922"
+          },
           "index": 1,
           "layout": {
             "GPOS": {
@@ -6684,6 +6692,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5e8342ae901a6136299bf860bf1cabb287082ba675a89a2da325b1968366a922"
           },
           "index": 2,
           "layout": {
@@ -7277,6 +7289,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5e8342ae901a6136299bf860bf1cabb287082ba675a89a2da325b1968366a922"
+          },
           "index": 3,
           "layout": {
             "GPOS": {
@@ -7869,6 +7885,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5e8342ae901a6136299bf860bf1cabb287082ba675a89a2da325b1968366a922"
+          },
           "index": 4,
           "layout": {
             "GPOS": {
@@ -8460,6 +8480,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "e0705e849001e1a39892b0ed6aaee6fec82985ca0c5561adffcf20f5192e3d03"
           },
           "index": 5,
           "layout": {
@@ -9081,6 +9105,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "e0705e849001e1a39892b0ed6aaee6fec82985ca0c5561adffcf20f5192e3d03"
+          },
           "index": 6,
           "layout": {
             "GPOS": {
@@ -9672,6 +9700,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "e0705e849001e1a39892b0ed6aaee6fec82985ca0c5561adffcf20f5192e3d03"
           },
           "index": 7,
           "layout": {
@@ -10265,6 +10297,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "e0705e849001e1a39892b0ed6aaee6fec82985ca0c5561adffcf20f5192e3d03"
+          },
           "index": 8,
           "layout": {
             "GPOS": {
@@ -10856,6 +10892,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "e0705e849001e1a39892b0ed6aaee6fec82985ca0c5561adffcf20f5192e3d03"
           },
           "index": 9,
           "layout": {
@@ -11449,6 +11489,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "31f682c8e72a91361d85fe526d6b1225355a295a843eeb945ad6610401c6f83c"
+          },
           "index": 10,
           "layout": {
             "GPOS": {
@@ -12041,6 +12085,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "31f682c8e72a91361d85fe526d6b1225355a295a843eeb945ad6610401c6f83c"
+          },
           "index": 11,
           "layout": {
             "GPOS": {
@@ -12604,6 +12652,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "31f682c8e72a91361d85fe526d6b1225355a295a843eeb945ad6610401c6f83c"
           },
           "index": 12,
           "layout": {
@@ -13169,6 +13221,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "31f682c8e72a91361d85fe526d6b1225355a295a843eeb945ad6610401c6f83c"
+          },
           "index": 13,
           "layout": {
             "GPOS": {
@@ -13733,6 +13789,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "31f682c8e72a91361d85fe526d6b1225355a295a843eeb945ad6610401c6f83c"
+          },
           "index": 14,
           "layout": {
             "GPOS": {
@@ -14296,6 +14356,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5074a272afec7e9493e83ec3e56a5e65f795b8689aedf116af88412640cdb616"
           },
           "index": 15,
           "layout": {
@@ -14917,6 +14981,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5074a272afec7e9493e83ec3e56a5e65f795b8689aedf116af88412640cdb616"
+          },
           "index": 16,
           "layout": {
             "GPOS": {
@@ -15508,6 +15576,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5074a272afec7e9493e83ec3e56a5e65f795b8689aedf116af88412640cdb616"
           },
           "index": 17,
           "layout": {
@@ -16101,6 +16173,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5074a272afec7e9493e83ec3e56a5e65f795b8689aedf116af88412640cdb616"
+          },
           "index": 18,
           "layout": {
             "GPOS": {
@@ -16693,6 +16769,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "5074a272afec7e9493e83ec3e56a5e65f795b8689aedf116af88412640cdb616"
+          },
           "index": 19,
           "layout": {
             "GPOS": {
@@ -17284,6 +17364,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "4b5cb594e75952bb8dd2de24f8e68f06481a67518805ca9feba898e55d7dc19a"
           },
           "index": 20,
           "layout": {
@@ -17905,6 +17989,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "4b5cb594e75952bb8dd2de24f8e68f06481a67518805ca9feba898e55d7dc19a"
+          },
           "index": 21,
           "layout": {
             "GPOS": {
@@ -18496,6 +18584,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "4b5cb594e75952bb8dd2de24f8e68f06481a67518805ca9feba898e55d7dc19a"
           },
           "index": 22,
           "layout": {
@@ -19089,6 +19181,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "4b5cb594e75952bb8dd2de24f8e68f06481a67518805ca9feba898e55d7dc19a"
+          },
           "index": 23,
           "layout": {
             "GPOS": {
@@ -19680,6 +19776,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "4b5cb594e75952bb8dd2de24f8e68f06481a67518805ca9feba898e55d7dc19a"
           },
           "index": 24,
           "layout": {
@@ -20273,6 +20373,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "023dd5b90d11b4368a11e0105ce8096a9ad9ba29b84550c54ef5420386d381b6"
+          },
           "index": 25,
           "layout": {
             "GPOS": {
@@ -20865,6 +20969,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "023dd5b90d11b4368a11e0105ce8096a9ad9ba29b84550c54ef5420386d381b6"
+          },
           "index": 26,
           "layout": {
             "GPOS": {
@@ -21428,6 +21536,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "023dd5b90d11b4368a11e0105ce8096a9ad9ba29b84550c54ef5420386d381b6"
           },
           "index": 27,
           "layout": {
@@ -21993,6 +22105,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "023dd5b90d11b4368a11e0105ce8096a9ad9ba29b84550c54ef5420386d381b6"
+          },
           "index": 28,
           "layout": {
             "GPOS": {
@@ -22557,6 +22673,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "023dd5b90d11b4368a11e0105ce8096a9ad9ba29b84550c54ef5420386d381b6"
+          },
           "index": 29,
           "layout": {
             "GPOS": {
@@ -23120,6 +23240,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "b0ee7e8554c4e2af21819ae4da5a5a6ace642db3947b0c71e0622005c9e00b8e"
           },
           "index": 30,
           "layout": {
@@ -23741,6 +23865,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "b0ee7e8554c4e2af21819ae4da5a5a6ace642db3947b0c71e0622005c9e00b8e"
+          },
           "index": 31,
           "layout": {
             "GPOS": {
@@ -24332,6 +24460,10 @@
               "num_glyphs": 65535,
               "version_raw": 20480
             }
+          },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "b0ee7e8554c4e2af21819ae4da5a5a6ace642db3947b0c71e0622005c9e00b8e"
           },
           "index": 32,
           "layout": {
@@ -24925,6 +25057,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "b0ee7e8554c4e2af21819ae4da5a5a6ace642db3947b0c71e0622005c9e00b8e"
+          },
           "index": 33,
           "layout": {
             "GPOS": {
@@ -25517,6 +25653,10 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": {
+            "count": 65535,
+            "sha256": "b0ee7e8554c4e2af21819ae4da5a5a6ace642db3947b0c71e0622005c9e00b8e"
+          },
           "index": 34,
           "layout": {
             "GPOS": {
@@ -26107,6 +26247,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 0,
           "layout": {
             "GPOS": null,
@@ -26489,6 +26630,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 1,
           "layout": {
             "GPOS": null,
@@ -26871,6 +27013,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 2,
           "layout": {
             "GPOS": null,
@@ -27253,6 +27396,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 3,
           "layout": {
             "GPOS": null,
@@ -27635,6 +27779,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 4,
           "layout": {
             "GPOS": null,
@@ -28017,6 +28162,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 5,
           "layout": {
             "GPOS": null,
@@ -28399,6 +28545,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 6,
           "layout": {
             "GPOS": null,
@@ -28781,6 +28928,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 7,
           "layout": {
             "GPOS": null,
@@ -29163,6 +29311,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 8,
           "layout": {
             "GPOS": null,
@@ -29545,6 +29694,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 9,
           "layout": {
             "GPOS": null,
@@ -29927,6 +30077,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 10,
           "layout": {
             "GPOS": null,
@@ -30281,6 +30432,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 11,
           "layout": {
             "GPOS": null,
@@ -30635,6 +30787,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 12,
           "layout": {
             "GPOS": null,
@@ -30989,6 +31142,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 13,
           "layout": {
             "GPOS": null,
@@ -31343,6 +31497,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 14,
           "layout": {
             "GPOS": null,
@@ -31697,6 +31852,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 15,
           "layout": {
             "GPOS": null,
@@ -32079,6 +32235,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 16,
           "layout": {
             "GPOS": null,
@@ -32461,6 +32618,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 17,
           "layout": {
             "GPOS": null,
@@ -32843,6 +33001,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 18,
           "layout": {
             "GPOS": null,
@@ -33225,6 +33384,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 19,
           "layout": {
             "GPOS": null,
@@ -33607,6 +33767,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 20,
           "layout": {
             "GPOS": null,
@@ -33989,6 +34150,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 21,
           "layout": {
             "GPOS": null,
@@ -34371,6 +34533,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 22,
           "layout": {
             "GPOS": null,
@@ -34753,6 +34916,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 23,
           "layout": {
             "GPOS": null,
@@ -35135,6 +35299,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 24,
           "layout": {
             "GPOS": null,
@@ -35517,6 +35682,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 25,
           "layout": {
             "GPOS": null,
@@ -35871,6 +36037,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 26,
           "layout": {
             "GPOS": null,
@@ -36225,6 +36392,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 27,
           "layout": {
             "GPOS": null,
@@ -36579,6 +36747,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 28,
           "layout": {
             "GPOS": null,
@@ -36933,6 +37102,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 29,
           "layout": {
             "GPOS": null,
@@ -37287,6 +37457,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 30,
           "layout": {
             "GPOS": null,
@@ -37669,6 +37840,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 31,
           "layout": {
             "GPOS": null,
@@ -38051,6 +38223,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 32,
           "layout": {
             "GPOS": null,
@@ -38433,6 +38606,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 33,
           "layout": {
             "GPOS": null,
@@ -38815,6 +38989,7 @@
               "version_raw": 20480
             }
           },
+          "hmtx_metrics": null,
           "index": 34,
           "layout": {
             "GPOS": null,
