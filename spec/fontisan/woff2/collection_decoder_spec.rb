@@ -16,6 +16,14 @@ RSpec.describe Fontisan::Woff2::CollectionDecoder do
 
   let(:decoder) { described_class.new(woff2_bytes) }
 
+  describe "#font_count" do
+    it "counts the fonts from the directory, without inflating the brotli stream" do
+      decoder
+      allow(Fontisan::Utilities::BrotliWrapper).to receive(:library).and_raise("no brotli")
+      expect(decoder.font_count).to eq(fonts.length)
+    end
+  end
+
   describe "#decode" do
     subject(:result) { decoder.decode }
 

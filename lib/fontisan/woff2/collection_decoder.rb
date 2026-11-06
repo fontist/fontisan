@@ -70,6 +70,18 @@ module Fontisan
         end
       end
 
+      # Number of fonts, read from the CollectionDirectory alone: no Brotli
+      # inflate, so it works where the `brotli` gem is absent (JRuby).
+      #
+      # @return [Integer]
+      def font_count
+        validate_signature!
+        validate_collection_flavor!
+
+        _entries, post_dir_pos = read_table_directory
+        read_collection_directory(post_dir_pos).first.length
+      end
+
       private
 
       def validate_signature!
