@@ -422,7 +422,7 @@ module Fontisan
       convert_options[:options] = conv_options if conv_options
 
       command = Commands::ConvertCommand.new(font_file, convert_options)
-      command.run
+      command.run_routed
     rescue Errno::ENOENT, Error => e
       handle_error(e)
     end
@@ -668,7 +668,7 @@ module Fontisan
     #   fontisan unpack family.ttc --output-dir extracted/ --prefix "NotoSans"
     def unpack(font_file)
       command = Commands::UnpackCommand.new(font_file, options)
-      result = command.run
+      result = command.run_routed
 
       unless options[:quiet]
         puts "Collection unpacked successfully:"

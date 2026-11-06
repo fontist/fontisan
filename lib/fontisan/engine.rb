@@ -81,6 +81,9 @@ module Fontisan
       # Current configuration from the environment; raises at setup for a
       # bad value or a strict forced tier that is not available.
       def setup!
+        # The gates are installed when Reference loads (autoload); a fresh
+        # process, e.g. the CLI, reaches the engine before anything touched it.
+        Fontisan::Reference unless @tiers
         config = config_from_env
         return config unless config.strict && forced?(config.selection)
 
