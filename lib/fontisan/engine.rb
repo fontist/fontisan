@@ -28,6 +28,8 @@ module Fontisan
     AUTO_ORDER = %i[native ffi ruby].freeze
     OPS = %i[read outline_hashes audit audit_dir scan convert extract
              instance glyph_ids subset].freeze
+    REPLACEABLE_TIERS = %i[native ffi].freeze
+    TIER_CONTRACT = %i[available? supports? call].freeze
     ROW_RECORDER = :fontisan_engine_rows
     IN_OPERATION = :fontisan_engine_in_operation
 
@@ -182,8 +184,10 @@ module Fontisan
         Ffi.reset!
       end
 
-      # Register a tier object (tests, or the extension itself).
+      # Register a tier object (tests, or the extension itself). A bad
+      # registration raises here, at setup, never as a silent fallback later.
       def register(name, tier)
+        validate_registration!(name, tier)
         @mutex.synchronize do
           @tiers = @tiers.merge(name.to_sym => tier).freeze
           @availability.delete(name.to_sym)
@@ -191,6 +195,20 @@ module Fontisan
       end
 
       private
+
+      def validate_registration!(name, tier)
+        unless REPLACEABLE_TIERS.include?(name.to_s.to_sym)
+          raise ConfigError,
+                "cannot register tier #{name.inspect}: only " \
+                "#{REPLACEABLE_TIERS.join(' and ')} can be registered"
+        end
+
+        missing = TIER_CONTRACT.reject { |method| tier.respond_to?(method) }
+        return if missing.empty?
+
+        raise ConfigError,
+              "tier #{name} does not implement #{missing.join(', ')}"
+      end
 
       def config_from_env
         selection = ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase

@@ -253,6 +253,32 @@ RSpec.describe Fontisan::Engine do
     end
   end
 
+  describe "registering a tier" do
+    it "raises at registration for a name that is not a replaceable tier" do
+      expect { described_class.register(:ruby, fake_class.new) }
+        .to raise_error(described_class::ConfigError, /ruby/)
+      expect { described_class.register(:rubi, fake_class.new) }
+        .to raise_error(described_class::ConfigError, /rubi/)
+    end
+
+    it "raises at registration for an object missing the tier contract" do
+      incomplete = Class.new { def available? = true }.new
+      expect { described_class.register(:native, incomplete) }
+        .to raise_error(described_class::ConfigError, /supports\?, call/)
+    end
+
+    it "keeps the ruby tier serving after a rejected registration" do
+      begin
+        described_class.register(:ruby, fake_class.new)
+      rescue described_class::ConfigError
+        nil
+      end
+      configure("auto")
+      expect(Fontisan::Reference.read(ttf)).not_to eq([:marker])
+      expect(described_class.served_by(:read)).to eq(:ruby)
+    end
+  end
+
   describe "auto order" do
     it "prefers native, then ffi, then ruby" do
       configure("auto")
@@ -293,6 +319,8 @@ RSpec.describe Fontisan::Engine do
     it "falls back when a registered tier's probe raises NameError" do
       broken = Class.new do
         def available? = raise(NameError, "uninitialized constant FontisanNative")
+        def supports?(*) = true
+        def call(*) = nil
       end
       described_class.register(:native, broken.new)
       configure("auto")
