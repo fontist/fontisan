@@ -31,12 +31,18 @@ Gem::Specification.new do |spec|
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features)/|\.(?:git|travis|circleci)|appveyor)})
+      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|corpus)/|\.(?:git|travis|circleci)|appveyor)})
     end
   end
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  # The :native tier. extconf.rb writes a no-op Makefile without cargo, so a
+  # source install on a machine with no Rust toolchain still works (:ruby tier).
+  spec.extensions = ["ext/fontisan_native/extconf.rb"]
+  # The :ffi tier needs the `ffi` gem and lib/fontisan/ffi/libfontisan_cdylib.*,
+  # which only platform gems carry. `ffi` stays OFF the runtime dependencies: it
+  # is optional, and `auto` only reaches the ffi tier when the native one is gone.
 
   spec.add_dependency "base64"
   spec.add_dependency "bindata", "~> 2.5"
@@ -44,5 +50,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "logger"
   spec.add_dependency "lutaml-model", "~> 0.8"
   spec.add_dependency "nokogiri", "~> 1.16"
+  spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_dependency "thor", "~> 1.3"
 end

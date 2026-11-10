@@ -91,6 +91,7 @@ module Fontisan
       #   subset_binary = builder.build
       #   File.binwrite('subset.ttf', subset_binary)
       def build
+        Fontisan::Engine.record_ruby(:subset)
         validate_input!
         calculate_closure
         build_mapping
@@ -133,7 +134,7 @@ module Fontisan
       #
       # @raise [Fontisan::MissingTableError] If required tables are missing
       def validate_required_tables!
-        required = %w[head maxp]
+        required = %w[head hhea maxp]
         required.each do |tag|
           table = font.table(tag)
           next if table

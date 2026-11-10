@@ -1,0 +1,98 @@
+{
+  "audit": {
+    "default": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "malformed-bad-checksum.ttf",
+          "source_format": "ttf",
+          "source_sha256": "42c96846da3904330498ceaf04812994697bdbba9da660819607ce1dd6537eca",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    },
+    "validate": {
+      "ok": [
+        {
+          "axes": [],
+          "bold": false,
+          "cmap_subtables": [
+            4,
+            6
+          ],
+          "family_name": "Test TTF",
+          "font_revision_raw": 65536,
+          "full_name": "Test TTF",
+          "is_variable": false,
+          "italic": false,
+          "num_fonts_in_source": 1,
+          "panose": "2 11 6 4 4 2 7 8 1 4",
+          "postscript_name": "TestTTF-Regular",
+          "source_file": "malformed-bad-checksum.ttf",
+          "source_format": "ttf",
+          "source_sha256": "42c96846da3904330498ceaf04812994697bdbba9da660819607ce1dd6537eca",
+          "subfamily_name": "Regular",
+          "total_codepoints": 5,
+          "total_glyphs": 6,
+          "validation_issues": [
+            {
+              "category": "table_directory",
+              "message": "Check table_directory failed to execute: ArgumentError: wrong number of arguments (given 1, expected 0)",
+              "severity": "fatal"
+            },
+            {
+              "category": "hinting",
+              "location": "maxp.max_stack_elements",
+              "message": "maxp.maxStackElements is 0 but the font has hinting instructions — rendering may fail",
+              "severity": "warning"
+            },
+            {
+              "category": "naming_consistency",
+              "location": "name.consistency.full_name",
+              "message": "Full name 'Test TTF' doesn't match Family + Subfamily 'Test TTF Regular'",
+              "severity": "info"
+            }
+          ],
+          "validation_summary": {
+            "error_count": 0,
+            "fatal_count": 1,
+            "info_count": 1,
+            "passed": false,
+            "total": 3,
+            "warning_count": 1
+          },
+          "version": "Version 1.000",
+          "weight_class": 400,
+          "width_class": 5
+        }
+      ]
+    }
+  },
+  "case": "bad-checksum-validate",
+  "comparison_class": "exact",
+  "file": "malformed-bad-checksum.ttf",
+  "font_sha256": "42c96846da3904330498ceaf04812994697bdbba9da660819607ce1dd6537eca",
+  "known_reference_bug": [
+    "CHECKSUM-BINDATA"
+  ],
+  "schema": 1,
+  "source": "malformed-bad-checksum"
+}

@@ -4,7 +4,7 @@
       "class": "exact",
       "error": {
         "class": "Fontisan::Error",
-        "message": "Conversion failed: Transformation failed: item N must have BINARY encoding, got: UTF-N"
+        "message": "Conversion failed: Transformation failed: Output validation failed: Table 'name' failed validation, Table 'name' failed validation, Table 'name' failed validation"
       },
       "outcome": "error",
       "params": {

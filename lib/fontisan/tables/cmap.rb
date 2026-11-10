@@ -22,6 +22,9 @@ module Fontisan
       PLATFORM_MACINTOSH = 1
       PLATFORM_MICROSOFT = 3
 
+      # Last Unicode scalar; bounds format 12 group spans.
+      MAX_CODEPOINT = 0x10FFFF
+
       # Microsoft Encoding IDs
       ENC_MS_UNICODE_BMP = 1    # Unicode BMP (UCS-2)
       ENC_MS_UNICODE_UCS4 = 10  # Unicode full repertoire (UCS-4)
@@ -198,6 +201,10 @@ module Fontisan
           id_delta = id_deltas[i]
           id_range_offset = id_range_offsets[i]
 
+          # A segmentCount past the arrays inside the declared length leaves
+          # the later arrays short: skip the cut segment (was NoMethodError).
+          next if [start_code, end_code, id_delta, id_range_offset].any?(&:nil?)
+
           # Skip the final segment (0xFFFF)
           next if start_code == 0xFFFF
 
@@ -272,8 +279,11 @@ module Fontisan
       end
 
       # Map a range of characters to glyphs
+      # The end is clamped to the last Unicode scalar: a fuzzed group spanning
+      # the u32 range would otherwise loop for minutes (same bound as the Rust
+      # engine's cmap parser).
       def map_character_range(start_char, end_char, start_glyph, mappings)
-        (start_char..end_char).each do |code|
+        (start_char..[end_char, MAX_CODEPOINT].min).each do |code|
           glyph_index = start_glyph + (code - start_char)
           mappings[code] = glyph_index if glyph_index != 0
         end

@@ -118,7 +118,7 @@ module Fontisan
         dir = path_arg(dir)
         files = font_files(dir)
         entries = files.map do |file|
-          rel = file.delete_prefix("#{dir}/")
+          rel = relative_row_path(dir, file)
           begin
             { path: rel, faces: audit(file, validate: validate) }
           rescue StandardError => e
@@ -126,6 +126,28 @@ module Fontisan
           end
         end
         normalize(entries)
+      end
+
+      # The path of an audit_dir row relative to +dir+, with "/" separators. An
+      # engine tier on Windows reports "D:/a/dir\\file.ttf" (the directory as
+      # given, then a native separator), so both sides are normalised before the
+      # prefix is removed; elsewhere a backslash is an ordinary file name byte.
+      #
+      # @param dir [String]
+      # @param path [String] the row's path, below +dir+
+      # @param alt_separator [String, nil] the platform's second separator
+      # @return [String]
+      def relative_row_path(dir, path, alt_separator: File::ALT_SEPARATOR)
+        if alt_separator
+          dir = dir.tr(alt_separator, "/")
+          path = path.tr(alt_separator, "/")
+        end
+        dir = dir.delete_suffix("/") while dir.end_with?("/")
+        prefix = "#{dir}/"
+        return path unless path.start_with?(prefix)
+
+        # A glob over "dir//" yields "dir//a.ttf": drop every separator.
+        path.delete_prefix(prefix).sub(%r{\A/+}, "")
       end
 
       # One row per font face for every path (see {Fontisan::Scan}).
@@ -154,7 +176,9 @@ module Fontisan
         target = options.fetch(:to)
         opts = { quiet: true, **options.except(:to) }
         opts[:timestamp] = unix_seconds(timestamp) if stamps?(target, timestamp)
-        Fontisan.convert(path, to: target, output: output, **opts)
+        # The command itself, not Fontisan.convert: that one dispatches to the
+        # native tier and would loop back through the gate.
+        Commands::ConvertCommand.new(path, { to: target, output: output, **opts }).run
       end
 
       # Extract one member of a collection as a standalone font.
@@ -264,7 +288,10 @@ module Fontisan
       end
 
       def gids_for(font, codepoints, name)
-        mappings = font.table("cmap").unicode_mappings
+        cmap = font.table("cmap") or
+          raise Fontisan::MissingTableError,
+                "Required table 'cmap' not found in font"
+        mappings = cmap.unicode_mappings
         gids = codepoints.uniq.filter_map { |cp| mappings[cp] }.uniq.sort
         return gids if gids.any?
 
@@ -318,10 +345,34 @@ module Fontisan
           cmap: cmap_digest(font),
           fvar: fvar_data(font),
           outlines: outline_summary(font),
+          hmtx_metrics: hmtx_metrics(font),
           post: post_data(font),
           layout: layout_data(font),
           variation: variation_data(font),
         }
+      end
+
+      # Digest of the per-glyph horizontal metrics as Tables::Hmtx#metric_for
+      # decodes them (advance and lsb of every glyph). Raw-byte digests
+      # (`tables`) cannot see a decoder bug and no convert golden reads hmtx,
+      # so this is the only golden that does. (Parsed glyf coordinates are
+      # covered by the convert goldens, which rebuild outlines in ttf -> otf.)
+      # nil when hmtx is absent or gated out by the loading mode; `{error:
+      # class}` when parsing fails.
+      def hmtx_metrics(font)
+        return nil unless available_table(font, "hmtx") && available_table(font, "hhea") && available_table(font, "maxp")
+
+        hmtx = font.table("hmtx")
+        hhea = font.table("hhea")
+        num_glyphs = font.table("maxp").num_glyphs
+        hmtx.parse_with_context(hhea.number_of_h_metrics, num_glyphs) unless hmtx.parsed?
+        packed = Array.new(num_glyphs) do |gid|
+          metric = hmtx.metric_for(gid)
+          [metric[:advance_width], metric[:lsb]].pack("Nl>")
+        end
+        { count: num_glyphs, sha256: Digest::SHA256.hexdigest(packed.join) }
+      rescue StandardError => e
+        { error: e.class.name }
       end
 
       # post header fields plus a count and digest of the glyph names (names
@@ -349,9 +400,10 @@ module Fontisan
           next [tag, nil] unless table
 
           scripts = table.scripts
+          by_script = table.script_features
           [tag, {
             scripts: scripts,
-            features: scripts.to_h { |s| [s, table.features(script_tag: s)] },
+            features: scripts.to_h { |s| [s, by_script.fetch(s, [])] },
           }]
         end
       end
@@ -563,3 +615,5 @@ module Fontisan
     end
   end
 end
+
+Fontisan::Engine.install(Fontisan::Reference)

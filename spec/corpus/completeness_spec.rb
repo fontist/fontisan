@@ -32,11 +32,16 @@ RSpec.describe "read golden completeness" do
     expect(Dir.children(dir).sort).to eq(names.flat_map { |n| ["#{n}.json", "#{n}.ttf"] }.sort)
   end
 
+  it "has the two post-Phase-0 divergence goldens", if: ENV.fetch("TIER", "ci") == "ci" do
+    expect(Dir.children(CorpusGoldens::DIVERGE_DIR).sort).to eq(%w[bad-checksum-validate.json woff1-mode.json])
+  end
+
   describe "TRIAGE.md" do
     let(:triage) { File.read(File.join(root, "corpus", "TRIAGE.md")) }
     let(:listed) { triage.scan(/^\| ([A-Z0-9-]+) \| known_reference_bug \|/).flatten.sort }
     let(:used) do
-      Dir.glob(File.join(CorpusGoldens.golden_dir(tier), "*.json"))
+      Dir.glob([File.join(CorpusGoldens.golden_dir(tier), "*.json"),
+                File.join(CorpusGoldens::DIVERGE_DIR, "*.json")])
         .flat_map { |p| JSON.parse(File.read(p)).fetch("known_reference_bug") }.uniq.sort
     end
 

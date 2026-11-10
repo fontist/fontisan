@@ -1,0 +1,10 @@
+# The engine never spawns processes (index rule "No C, no forks"). xtask is its
+# own workspace and is exempt.
+disallowed-methods = [
+  { path = "std::process::Command::new", reason = "the engine must not spawn processes" },
+  { path = "libc::fork", reason = "the engine must not fork" },
+]
+disallowed-types = [
+  { path = "std::process::Command", reason = "the engine must not spawn processes" },
+]
+msrv = "1.85"

@@ -83,4 +83,26 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
       end.to raise_error(ArgumentError, "Output path is required (:output option)")
     end
   end
+
+  describe "#convert per-font failure" do
+    it "keeps MissingTableError as the class when a member lacks a required table" do
+      allow(format_converter).to receive(:convert)
+        .and_raise(Fontisan::MissingTableError, "Font missing required head table")
+
+      expect do
+        converter.convert(collection_path, target_type: :otc,
+                                           options: { output: output_path, target_format: :otf })
+      end.to raise_error(Fontisan::MissingTableError,
+                         "Font 0 conversion failed: Font missing required head table")
+    end
+  end
+
+  describe "#detect_font_format" do
+    it "raises MissingTableError naming the outline tables when a member has neither glyf nor CFF" do
+      member = double("member", has_table?: false)
+
+      expect { converter.send(:detect_font_format, member) }
+        .to raise_error(Fontisan::MissingTableError, "Font has neither glyf nor CFF table")
+    end
+  end
 end

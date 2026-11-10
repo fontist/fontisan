@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "tolerance": 0.25,
+  "note": "Expected native factor (ruby time / native time) per platform and op, from the perf-gate.yml tiers jobs (run 42233249352 on 2b648ed, BENCHMARKS.md). audit_dir re-measured in run 42789182973 on 91beb5b: the Ruby tier got about 26% faster at audit_dir (one budgeted layout parse, 8e55ebd) while native time stayed flat, so the ratio fell. The tiers gate fails when a measured factor is more than `tolerance` below it. Both tiers run in the same job, so the factor cancels runner speed. A platform without an entry is held to the 1.00x floor only: arm64-darwin has no CI measurement yet. Raise a value only deliberately, from a green CI run.",
+  "platforms": {
+    "x86_64-linux": { "audit_file": 43.14, "audit_dir": 19.93, "scan_dir": 13.58 },
+    "x86_64-linux-musl": { "audit_file": 21.07, "audit_dir": 14.96, "scan_dir": 10.76 },
+    "aarch64-linux": { "audit_file": 45.51, "audit_dir": 11.15, "scan_dir": 7.86 },
+    "x86_64-darwin": { "audit_file": 36.89, "audit_dir": 11.90, "scan_dir": 7.78 },
+    "x64-mingw-ucrt": { "audit_file": 29.71, "audit_dir": 17.69, "scan_dir": 10.57 }
+  }
+}

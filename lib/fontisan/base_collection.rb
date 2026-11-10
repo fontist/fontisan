@@ -38,6 +38,36 @@ module Fontisan
     uint32 :num_fonts
     array :font_offsets, type: :uint32, initial_length: :num_fonts
 
+    HEADER_BYTES = 12
+    OFFSET_BYTES = 4
+
+    # Parse the header, refusing a +num_fonts+ whose offset table cannot fit in
+    # the remaining bytes. BinData reads the table eagerly, so an unchecked
+    # count of 0xFFFFFFFF would spin through 4 GiB of uint32s instead of
+    # failing on the first missing offset.
+    #
+    # @raise [BinData::ValidityError] if the offset table exceeds the input
+    def self.read(io, *, &)
+      verify_offset_table_fits!(io)
+      super
+    end
+
+    def self.verify_offset_table_fits!(io)
+      return unless io.respond_to?(:pos) && io.respond_to?(:size)
+
+      start = io.pos
+      head = io.read(HEADER_BYTES)
+      io.seek(start)
+      return unless head && head.bytesize == HEADER_BYTES
+
+      count = head.byteslice(8, 4).unpack1("N")
+      return if HEADER_BYTES + (count * OFFSET_BYTES) <= io.size - start
+
+      raise BinData::ValidityError,
+            "#{count} fonts declared but the file is too short for their offsets"
+    end
+    private_class_method :verify_offset_table_fits!
+
     # Abstract method: Get the font class for this collection type
     #
     # Subclasses must override this to return their specific font class

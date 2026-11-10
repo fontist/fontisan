@@ -206,6 +206,10 @@
               "version_raw": 65536
             }
           },
+          "hmtx_metrics": {
+            "count": 6,
+            "sha256": "324d6bf6e49a4b7ee9b74fe611af9a0ebc2182f547a656b752981613e85c2015"
+          },
           "index": 0,
           "layout": {
             "GPOS": null,
@@ -532,6 +536,7 @@
               "version_raw": 65536
             }
           },
+          "hmtx_metrics": null,
           "index": 0,
           "layout": {
             "GPOS": null,

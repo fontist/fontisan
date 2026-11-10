@@ -20,6 +20,11 @@ are triaged by card 0e.
 | FIXED-HINTING-CVT | fixed | 06d7033, `fix_hinting_cvt_spec.rb`: false "no cvt" because the tag is `"cvt "` | 21 fonts |
 | FIXED-CMAP-SHORT | fixed | 1ba7332, `fix_cmap_short_table_spec.rb`: crash on a short cmap | quirk-empty-cmap-table |
 | FIXED-AUDIT-ADDRESSES | fixed | 5d2a171, `audit_message_masking_spec.rb`: object addresses in messages made output non-deterministic (a determinism fix, not a font bug) | all |
+| FIXED-SWEEP-MAXP-VERSION | fixed | `fix_ruby_sweep_spec.rb`: `MaxpCheck` formatted a `BinData::Int32be` with `to_s(16)` and crashed (fatal, no location) whenever the version warning fired, e.g. `audit(validate: true)` on a font with glyf dropped; now a warning at `maxp.version` | 23 drop-sweep audit cases |
+| FIXED-SWEEP-INSTANCER-TABLES | fixed | `fix_ruby_sweep_spec.rb`: `TrueTypeInstancer` leaked `undefined method '[]'/'unpack' for nil` when head, hhea, hmtx, maxp or loca was missing; now `MissingTableError` "Font missing required <tag> table" | variable TTFs with one of those tables dropped |
+| FIXED-SWEEP-WOFF2-LOCA | fixed | `fix_ruby_sweep_spec.rb`: `Woff2Encoder` kept short loca when the 4-byte-padded glyf no longer fit (offset/2 wrapped past 16 bits, `unpack1 for nil` or a corrupt glyph stream); now long loca is chosen | glyf above 131,070 bytes padded, short-loca source (source-sans-3-vf-upright-ttf without fvar/gvar) |
+| FIXED-SWEEP-CFF-NAME | fixed | `fix_ruby_sweep_spec.rb`: the `UnnamedFont` fallback was a UTF-8 literal, so TTF to OTF without a name table raised `item 0 must have BINARY encoding`; now binary | any font converted to OTF with no name table |
+| FIXED-SWEEP-CMAP-VALIDATOR | fixed | `fix_ruby_sweep_spec.rb`: `cmap_glyph_indices` called a method on a missing cmap ("Exception during check execution: NoMethodError"); now skipped (the missing table is reported by `required_tables`) | any font validated without cmap |
 
 ## Known reference bugs
 
@@ -32,6 +37,7 @@ are triaged by card 0e.
 | NAME-FORMAT1 | known_reference_bug | name format 1 storage is misread. | quirk-name-format-1 |
 | NAME-MAC-DECODE | known_reference_bug | Mac names are decoded as ASCII with replacement characters (the facade copies fontist on purpose). | names-mac-roman-only |
 | NAME-FULL-REGULAR | known_reference_bug | the info-level full-name check fires when the full name omits "Regular" (arguably a false positive). Tagged automatically from the audit message. | every font whose validate audit has "Full name ... doesn't match Family + Subfamily" |
+| CHECKSUM-BINDATA | known_reference_bug | `table_directory` check `validate_checksums` calls `entry.checksum.to_s(16)` on a `BinData::Uint32be`, which takes no argument, so `audit(validate: true)` on a bad checksum yields one fatal "Check table_directory failed to execute: ArgumentError". Pinned in `read/_diverge/bad-checksum-validate.json`. | malformed-bad-checksum |
 
 ## Reviewed, no entry
 

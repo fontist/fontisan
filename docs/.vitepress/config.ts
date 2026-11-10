@@ -245,6 +245,7 @@ export default defineConfig({
           text: "Advanced Topics",
           collapsed: true,
           items: [
+            { text: "Engines", link: "/guide/engines" },
             { text: "Universal Outline Model", link: "/guide/universal-outline" },
           ],
         },
@@ -360,7 +361,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Fontisan is a [Ribose](https://open.ribose.com/) project',
+      message: 'Fontisan is a [Ribose](https://www.ribose.com/) project',
       copyright: `Copyright &copy; 2026 Ribose Group Inc. All rights reserved.`,
     },
 

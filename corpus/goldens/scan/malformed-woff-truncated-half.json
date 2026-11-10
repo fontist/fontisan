@@ -1,0 +1,42 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-woff-truncated-half.woff",
+  "font_sha256": "d997d9e693fa97209a12f473f42a6e4d2ad80a5cc41299448ced9caa55598492",
+  "id": "malformed-woff-truncated-half",
+  "rows": [
+    {
+      "collection_index": null,
+      "english_names": null,
+      "errors": {
+        "collection_file": {
+          "cause": {
+            "class": "Fontist::Errors::FontFileError",
+            "message": "File is not a recognized font collection (TTC/OTC/dfont)"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font collection could not be loaded: File is not a recognized font collection (TTC/OTC/dfont)"
+        },
+        "collection_member": null,
+        "font_file": {
+          "cause": {
+            "class": "Fontisan::InvalidFontError",
+            "message": "woff: header length does not match file length"
+          },
+          "class": "Fontist::Errors::FontFileError",
+          "message": "Font file could not be parsed: #<Fontisan::InvalidFontError: woff: header length does not match file length>."
+        }
+      },
+      "format": "woff",
+      "has_fvar": false,
+      "is_collection": false,
+      "names": null,
+      "num_faces": 1,
+      "path": "malformed-woff-truncated-half.woff",
+      "sha256": "d997d9e693fa97209a12f473f42a6e4d2ad80a5cc41299448ced9caa55598492",
+      "validation": null,
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

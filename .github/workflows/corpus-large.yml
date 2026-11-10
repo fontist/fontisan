@@ -1,0 +1,106 @@
+---
+# Nightly large-tier parity (fontist/fontisan#158 DoD 1f, fontist/fontisan#156).
+#
+# The two large fonts (noto-serif-cjk-ttc 170 MB, noto-serif-cjk-vf-otc 57 MB) are
+# read, audited (with and without validate) and scanned by the :native and :ffi
+# tiers, strict (a silent fall back to Ruby fails), and compared byte for byte
+# with the committed Ruby goldens in corpus/goldens/read-large and
+# corpus/goldens/scan-large. Ruby is not re-run on a schedule: the goldens are
+# its output and Ruby needs ~7 minutes on the 170 MB TTC alone. A manual run with
+# `verify_ruby: true` (or a pull request that touches the goldens) re-checks the
+# goldens against Ruby, and regenerating them stays `TIER=large rake corpus:regenerate
+# corpus:scan:regenerate`.
+#
+# One ubuntu job, so a night costs one runner. The fonts are cached by manifest hash
+# and the cargo build by Cargo.lock.
+name: corpus-large
+
+on:
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+    inputs:
+      verify_ruby:
+        description: "Also compare the committed goldens with fresh Ruby output (~10 minutes)"
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - ".github/workflows/corpus-large.yml"
+      - "corpus/goldens/read-large/**"
+      - "corpus/goldens/scan-large/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corpus-large-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TIER: large
+  BUNDLE_WITHOUT: fontist_parity
+
+jobs:
+  large:
+    name: large tier native + ffi vs Ruby goldens
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build the native and ffi tiers
+        run: |
+          bundle exec rake compile
+          bundle exec rake cdylib:build
+
+      # corpus:fetch re-verifies every file against the manifest sha256, so a stale
+      # or partial cache is repaired, never trusted.
+      - name: Cache large-tier fonts
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts
+          key: corpus-large-fonts-${{ hashFiles('corpus/manifest.json') }}
+
+      - name: Fetch large-tier corpus (sha256 verified)
+        run: bundle exec rake corpus:fetch
+
+      # Reads the goldens only (no font is parsed): every manifest row has one.
+      - name: Goldens are complete for the tier
+        run: bundle exec rspec --options /dev/null --format progress spec/corpus/completeness_spec.rb
+
+      - name: Read goldens, native strict
+        if: ${{ !cancelled() }}
+        env: { FONTISAN_ENGINE: native, FONTISAN_ENGINE_STRICT: "1" }
+        run: bundle exec rake corpus:verify
+
+      - name: Scan goldens, native strict
+        if: ${{ !cancelled() }}
+        env: { FONTISAN_ENGINE: native, FONTISAN_ENGINE_STRICT: "1" }
+        run: bundle exec rake corpus:scan:verify
+
+      - name: Read goldens, ffi strict
+        if: ${{ !cancelled() }}
+        env: { FONTISAN_ENGINE: ffi, FONTISAN_ENGINE_STRICT: "1" }
+        run: bundle exec rake corpus:verify
+
+      - name: Scan goldens, ffi strict
+        if: ${{ !cancelled() }}
+        env: { FONTISAN_ENGINE: ffi, FONTISAN_ENGINE_STRICT: "1" }
+        run: bundle exec rake corpus:scan:verify
+
+      - name: Goldens against Ruby (manual or golden-changing runs only)
+        if: ${{ !cancelled() && (inputs.verify_ruby || github.event_name == 'pull_request') }}
+        env: { FONTISAN_ENGINE: ruby }
+        run: |
+          bundle exec rake corpus:verify
+          bundle exec rake corpus:scan:verify

@@ -1,0 +1,12 @@
+# Workspace root for rb-sys (it infers the crate from `cargo metadata` at the gem
+# root). The only member is the :native tier.
+[workspace]
+members = ["ext/fontisan_native"]
+resolver = "2"
+
+# A panic must unwind so catch_unwind can turn it into a Ruby error (abort cannot).
+[profile.release]
+panic = "unwind"
+
+[profile.dev]
+panic = "unwind"

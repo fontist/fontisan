@@ -45,7 +45,7 @@ RSpec.describe Fontisan::WoffFont do
 
           expect { described_class.from_file(f.path) }
             .to raise_error(Fontisan::InvalidFontError,
-                            /Invalid WOFF signature/)
+                            /woff: not a WOFF file \(bad signature\)/)
         end
       end
     end
@@ -262,6 +262,25 @@ RSpec.describe Fontisan::WoffFont do
         expect(result1.object_id).to eq(result2.object_id)
       end
 
+      it "raises the native-tier error, without a zlib cause, for a corrupt or over-long stream" do
+        woff = described_class.new
+        woff.initialize_storage
+
+        [["not a zlib stream", 100], [Zlib::Deflate.deflate("Test" * 10), 4]].each do |data, orig|
+          entry = Fontisan::WoffTableDirectoryEntry.new
+          entry.tag = "head"
+          entry.comp_length = data.bytesize
+          entry.orig_length = orig
+          woff.table_entries = [entry]
+          woff.compressed_table_data["head"] = data
+          woff.decompressed_tables.clear
+          expect { woff.table_data("head") }
+            .to raise_error(Fontisan::InvalidFontError, "woff: zlib stream is corrupt or too long") do |e|
+              expect(e.cause).to be_nil
+            end
+        end
+      end
+
       it "raises error when decompressed size does not match" do
         woff = described_class.new
         woff.initialize_storage
@@ -278,7 +297,7 @@ RSpec.describe Fontisan::WoffFont do
         woff.compressed_table_data["head"] = compressed_data
 
         expect { woff.table_data("head") }
-          .to raise_error(Fontisan::InvalidFontError, /size mismatch/)
+          .to raise_error(Fontisan::InvalidFontError, /woff: inflated size does not match origLength/)
       end
     end
 
@@ -399,10 +418,14 @@ RSpec.describe Fontisan::WoffFont do
   describe "integration with real WOFF structure" do
     it "handles minimal valid WOFF file" do
       Tempfile.create(["minimal", ".woff"]) do |f|
+        table_offset = 44 + 20 # After header and directory
+        head_data = "\u0000\u0001\u0000\u0000#{"\x00" * 50}" # Minimal head table
+        compressed_head = Zlib::Deflate.deflate(head_data)
+
         # Write WOFF header
         f.write([0x774F4646].pack("N"))      # signature
         f.write([0x00010000].pack("N"))      # flavor (TTF)
-        f.write([1000].pack("N"))            # length
+        f.write([table_offset + compressed_head.bytesize].pack("N")) # length
         f.write([1].pack("n"))               # num_tables
         f.write([0].pack("n"))               # reserved
         f.write([1000].pack("N"))            # total_sfnt_size
@@ -411,10 +434,6 @@ RSpec.describe Fontisan::WoffFont do
         f.write([0, 0].pack("NN"))           # priv offset/length
 
         # Write one table entry (head)
-        table_offset = 44 + 20 # After header and directory
-        head_data = "\u0000\u0001\u0000\u0000#{"\x00" * 50}" # Minimal head table
-        compressed_head = Zlib::Deflate.deflate(head_data)
-
         f.write("head")                                  # tag
         f.write([table_offset].pack("N"))                # offset
         f.write([compressed_head.bytesize].pack("N"))    # comp_length

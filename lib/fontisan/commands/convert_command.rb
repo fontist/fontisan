@@ -70,6 +70,7 @@ module Fontisan
       # @option options [Boolean] :verbose Verbose output
       # @option options [ConversionOptions] :options ConversionOptions object
       def initialize(font_path, options = {})
+        check_sfnt_directory!(font_path)
         super(font_path, options)
 
         # Convert string keys to symbols for Thor compatibility. All command
@@ -136,7 +137,56 @@ module Fontisan
         raise Error, "Conversion failed: #{e.message}"
       end
 
+      # Execute through the engine selection (the CLI entry): a tier other than
+      # Ruby serves the plain single-target conversions it supports, anything
+      # else (several targets, instance coordinates, ConversionOptions, hints,
+      # collection target format, compression knobs, a font index) runs {#run}
+      # on the Ruby tier. A routed conversion prints the same summary lines
+      # (minus the variation note) unless +quiet+.
+      #
+      # @return [Hash] same as {#run} for a single target
+      def run_routed
+        validate_options!
+        gate = routed_options
+        return run unless gate && Engine.resolve(:convert, font_path.to_s, gate) != :ruby
+
+        result = Reference.convert(font_path, **gate)
+        print_routed_summary(result) unless @options[:quiet]
+        result
+      end
+
       private
+
+      # A plain sfnt whose table directory the engine tiers reject fails with
+      # their error, before the loader can raise its own (fontist/fontisan#159).
+      def check_sfnt_directory!(path)
+        path = path.to_path if path.respond_to?(:to_path)
+        return unless path.is_a?(String) && File.file?(path)
+        return unless %i[ttf otf].include?(FontLoader.detect_format(path))
+
+        SfntDirectory.check!(File.binread(path))
+      rescue SfntDirectory::Malformed => e
+        raise Error, "Conversion failed: #{e.message}"
+      end
+
+      # Reference.convert keywords when the call is a plain conversion; else nil.
+      def routed_options
+        return nil if multi_format? || @coordinates || @instance_index || @conv_options
+        return nil if @preserve_hints || !@preserve_variation.nil? || @collection_target_format != "preserve"
+        return nil if @options.fetch(:font_index, 0).to_i != 0
+        return nil if Converters::FormatConverter.all_strategy_option_names.any? { |name| @options.key?(name) }
+        return nil unless @output_path.is_a?(String)
+
+        { to: @target_formats.first, output: @output_path }
+      end
+
+      def print_routed_summary(result)
+        puts "Converting #{File.basename(font_path)} to #{result[:target_format]}..."
+        puts "Conversion complete!"
+        puts "  Input:  #{font_path} (#{format_size(result[:input_size])})"
+        puts "  Output: #{result[:output_path]} (#{format_size(result[:output_size])})"
+        puts "  Format: #{result[:source_format]} → #{result[:target_format]}"
+      end
 
       # @return [Boolean] true when more than one target format was given
       def multi_format?

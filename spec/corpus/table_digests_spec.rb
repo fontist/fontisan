@@ -19,6 +19,16 @@ RSpec.describe Fontisan::Reference::TableDigests do
     expect(described_class.cff2_charstrings(raw(cff2_id, "CFF2")).size).to eq(glyph_count(cff2_id))
   end
 
+  it "rejects a CFF2 INDEX whose count cannot fit in the table instead of looping" do
+    dict = [17].pack("C").prepend([29, 8].pack("Cl>")) # CharStrings offset 8 = operator 17
+    table = [2, 0, 5, dict.bytesize].pack("CCCn") + dict
+    table += [0xFFFF_FFFF, 1].pack("NC") + ("\x00" * 8)
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+    expect { described_class.cff2_charstrings(table) }.to raise_error(described_class::Truncated)
+    expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be < 2
+  end
+
   it "reports CFF2 outlines through the facade" do
     outlines = Fontisan::Reference.read(CorpusPaths.path(cff2_id), mode: :full).first["outlines"]
 

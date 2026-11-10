@@ -264,7 +264,7 @@ namespace :corpus do
 
   desc "Regenerate corpus/derived from corpus/derive scripts (provenance; run after fetch)"
   task derive: :fetch do
-    ruby = %w[quirks malformed ttc_multi woff2_collection]
+    ruby = %w[quirks malformed fuzz ttc_multi woff2_collection]
     ruby.each do |name|
       sh "bundle", "exec", "ruby", File.join(Corpus::ROOT, "corpus", "derive", "#{name}.rb")
     end

@@ -1,6 +1,6 @@
 name: corpus
 
-# Reference corpus (fontist/fontisan#157): per-PR `ci` tier, nightly `large` tier.
+# Reference corpus (fontist/fontisan#157): per-PR `ci` tier. The nightly `large` tier is corpus-large.yml.
 on:
   pull_request:
     paths:
@@ -98,44 +98,3 @@ jobs:
 
       - name: Scan parity with fontist (dev-only gem, pinned ref)
         run: bundle exec rspec --options /dev/null --format progress spec/corpus/fontist_parity_spec.rb
-
-  large-tier:
-    name: large tier (nightly)
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-
-      - name: Fetch large-tier corpus (sha256 verified)
-        run: TIER=large bundle exec rake corpus:fetch
-
-      - name: Generate large-tier read goldens twice
-        run: |
-          TIER=large bundle exec rake corpus:regenerate
-          cp -R corpus/goldens/read-large "$RUNNER_TEMP/read-large-1"
-          TIER=large bundle exec rake corpus:regenerate
-
-      - name: Large-tier determinism and completeness
-        run: |
-          diff -r "$RUNNER_TEMP/read-large-1" corpus/goldens/read-large
-          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/completeness_spec.rb
-
-      - name: Large-tier scan goldens, twice
-        run: |
-          TIER=large bundle exec rake corpus:scan:regenerate
-          cp -R corpus/goldens/scan-large "$RUNNER_TEMP/scan-large-1"
-          TIER=large bundle exec rake corpus:scan:regenerate
-          diff -r "$RUNNER_TEMP/scan-large-1" corpus/goldens/scan-large
-          TIER=large bundle exec rspec --options /dev/null --format progress spec/corpus/scan_goldens_spec.rb
-
-      - name: Upload large-tier read goldens
-        uses: actions/upload-artifact@v4
-        with:
-          name: read-large-goldens
-          path: corpus/goldens/read-large

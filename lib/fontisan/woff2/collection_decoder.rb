@@ -59,13 +59,27 @@ module Fontisan
         # the glyf was transformed.
         font_entries.map do |fe|
           font_tables = {}
+          glyf_transformed = false
           fe.table_indices.each do |idx|
             entry = table_entries.fetch(idx)
             font_tables[entry.tag] = entry.raw_bytes
+            glyf_transformed = !entry.transform_length.nil? if entry.tag == "glyf"
           end
-          reconstruct_glyf_loca!(font_tables) if font_tables.key?("glyf")
+          reconstruct_glyf_loca!(font_tables) if glyf_transformed
           { flavor: fe.flavor, tables: font_tables }
         end
+      end
+
+      # Number of fonts, read from the CollectionDirectory alone: no Brotli
+      # inflate, so it works where the `brotli` gem is absent (JRuby).
+      #
+      # @return [Integer]
+      def font_count
+        validate_signature!
+        validate_collection_flavor!
+
+        _entries, post_dir_pos = read_table_directory
+        read_collection_directory(post_dir_pos).first.length
       end
 
       private

@@ -6,6 +6,8 @@ require "json"
 require "tmpdir"
 
 RSpec.describe Fontisan::Reference do
+  include TierParity
+
   let(:dir) { File.expand_path("../fixtures/fonttools", __dir__) }
   let(:ttf) { File.join(dir, "TestTTF.ttf") }
   let(:otf) { File.join(dir, "TestOTF.otf") }
@@ -81,6 +83,32 @@ RSpec.describe Fontisan::Reference do
       end
       expect(described_class.outline_hashes(ttf)).to eq("kind" => "glyf",
                                                         "hashes" => expected)
+    end
+
+    describe "hmtx_metrics (decoded metrics, not raw bytes)" do
+      def metrics(path = ttf)
+        described_class.read(path, mode: :full, lazy: false).first["hmtx_metrics"]
+      end
+
+      it "digests the metrics of every glyph" do
+        expect(metrics).to include("count" => Fontisan::FontLoader.load(ttf, mode: :full).table("maxp").num_glyphs,
+                                   "sha256" => match(/\A\h{64}\z/))
+      end
+
+      it "is gated out in metadata mode, like the table it digests" do
+        expect(described_class.read(ttf, mode: :metadata).first["hmtx_metrics"]).to be_nil
+      end
+
+      # Stubs the Ruby hmtx decoder, so it only means something on the ruby tier.
+      it "changes when the hmtx decoder returns a different advance (a raw-byte digest would not)" do
+        with_engine("ruby") do
+          before = metrics["sha256"]
+          allow_any_instance_of(Fontisan::Tables::Hmtx).to receive(:metric_for).and_wrap_original do |orig, gid| # rubocop:disable RSpec/AnyInstance
+            orig.call(gid)&.merge(advance_width: orig.call(gid)[:advance_width] + 1)
+          end
+          expect(metrics["sha256"]).not_to eq(before)
+        end
+      end
     end
 
     it "hashes CFF CharStrings, also for the same font inside WOFF" do
@@ -255,6 +283,20 @@ RSpec.describe Fontisan::Reference do
       expect { described_class.subset(ttf, unicodes: [0x1F600]) }
         .to raise_error(Fontisan::Error,
                         "None of the requested characters exist in TestTTF.ttf")
+    end
+
+    # Stubs the Ruby font object, so it only means something on the ruby tier.
+    it "raises MissingTableError, not a NoMethodError, when the font has no cmap table" do
+      with_engine("ruby") do
+        font = Fontisan::FontLoader.load(ttf, mode: :full, lazy: false)
+        allow(font).to receive(:table).and_call_original
+        allow(font).to receive(:table).with("cmap").and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load).and_return(font)
+
+        expect { described_class.subset(ttf, text: "abc") }
+          .to raise_error(Fontisan::MissingTableError,
+                          "Required table 'cmap' not found in font")
+      end
     end
   end
 

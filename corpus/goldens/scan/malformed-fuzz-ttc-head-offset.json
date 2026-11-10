@@ -1,0 +1,87 @@
+{
+  "comparison_class": "exact",
+  "file": "malformed-fuzz-ttc-head-offset.ttc",
+  "font_sha256": "da5fb7ce3f8bce7243c94ef694c6835f73fd4bbd56f14b3797e1effabf70a1c9",
+  "id": "malformed-fuzz-ttc-head-offset",
+  "rows": [
+    {
+      "collection_index": 0,
+      "english_names": {},
+      "errors": {
+        "collection_file": {
+          "cause": null,
+          "class": "Fontist::Errors::FontIndexabilityValidationError",
+          "message": "Font collection failed indexability validation (first font): structure: Font structure validation failed for check 'required_tables'; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'maxp' is missing"
+        },
+        "collection_member": null,
+        "font_file": null
+      },
+      "format": "ttc",
+      "has_fvar": false,
+      "is_collection": true,
+      "names": {},
+      "num_faces": 1,
+      "path": "malformed-fuzz-ttc-head-offset.ttc",
+      "sha256": "da5fb7ce3f8bce7243c94ef694c6835f73fd4bbd56f14b3797e1effabf70a1c9",
+      "validation": {
+        "error_summary": "structure: Font structure validation failed for check 'required_tables'; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'name' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'head' is missing; table_presence: Required table 'maxp' is missing",
+        "issues": [
+          {
+            "category": "structure",
+            "location": null,
+            "message": "Font structure validation failed for check 'required_tables'",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "name",
+            "message": "Required table 'name' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "name",
+            "message": "Required table 'name' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "name",
+            "message": "Required table 'name' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "head",
+            "message": "Required table 'head' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "head",
+            "message": "Required table 'head' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "maxp",
+            "message": "Required table 'maxp' is missing",
+            "severity": "error"
+          },
+          {
+            "category": "table_presence",
+            "location": "maxp",
+            "message": "Required table 'maxp' is missing",
+            "severity": "warning"
+          }
+        ],
+        "profile": "indexability",
+        "status": "invalid",
+        "valid": false
+      },
+      "variable_instances": []
+    }
+  ],
+  "schema": 1,
+  "tier": "ci"
+}

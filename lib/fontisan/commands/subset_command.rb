@@ -33,6 +33,8 @@ module Fontisan
     #   )
     #   command.run
     class SubsetCommand < BaseCommand
+      ROUTED_PROFILES = %w[pdf web minimal].freeze
+
       # Initialize subset command
       #
       # @param font_path [String] Path to input font file
@@ -86,7 +88,48 @@ module Fontisan
               "Subsetting failed: #{e.message}"
       end
 
+      # Execute through the engine selection (the CLI entry): a tier other
+      # than Ruby subsets by text or Unicode codepoints with a profile the
+      # engine knows, and writes the bytes {#run} writes. Glyph-id input,
+      # retained GIDs, dropped hints or names, disabled Unicode-range pruning
+      # and verbose output run {#run} on the Ruby tier.
+      #
+      # @return [Hash] same as {#run}
+      def run_routed
+        gate = routed_gate
+        return run unless gate && Engine.resolve(:subset, font_path.to_s, gate) != :ruby
+
+        determine_glyph_ids # same errors as the Ruby path when nothing matches
+        bytes = Reference.subset(font_path, **gate)
+        FileUtils.mkdir_p(File.dirname(@output_path))
+        File.binwrite(@output_path, bytes)
+        routed_result(bytes, gate[:profile])
+      end
+
       private
+
+      # Reference.subset keywords for a plain request; nil otherwise.
+      def routed_gate
+        profile = options[:profile] || "pdf"
+        return nil if options[:glyphs] || options[:retain_gids] || options[:drop_hints] ||
+          options[:drop_names] || options[:unicode_ranges] == false || options[:verbose]
+        return nil unless ROUTED_PROFILES.include?(profile)
+
+        input = options[:text] ? { text: options[:text] } : { unicodes: parse_unicode(options[:unicode]) }
+        input.merge(profile: profile)
+      end
+
+      def routed_result(bytes, profile)
+        subset = FontLoader.load(@output_path)
+        {
+          input: font_path,
+          output: @output_path,
+          original_glyphs: font.table("maxp").num_glyphs,
+          subset_glyphs: subset.table("maxp").num_glyphs,
+          profile: profile,
+          size: bytes.bytesize,
+        }
+      end
 
       # Validate command options
       #
