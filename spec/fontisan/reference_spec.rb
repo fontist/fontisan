@@ -6,6 +6,8 @@ require "json"
 require "tmpdir"
 
 RSpec.describe Fontisan::Reference do
+  include TierParity
+
   let(:dir) { File.expand_path("../fixtures/fonttools", __dir__) }
   let(:ttf) { File.join(dir, "TestTTF.ttf") }
   let(:otf) { File.join(dir, "TestOTF.otf") }
@@ -97,12 +99,15 @@ RSpec.describe Fontisan::Reference do
         expect(described_class.read(ttf, mode: :metadata).first["hmtx_metrics"]).to be_nil
       end
 
+      # Stubs the Ruby hmtx decoder, so it only means something on the ruby tier.
       it "changes when the hmtx decoder returns a different advance (a raw-byte digest would not)" do
-        before = metrics["sha256"]
-        allow_any_instance_of(Fontisan::Tables::Hmtx).to receive(:metric_for).and_wrap_original do |orig, gid| # rubocop:disable RSpec/AnyInstance
-          orig.call(gid)&.merge(advance_width: orig.call(gid)[:advance_width] + 1)
+        with_engine("ruby") do
+          before = metrics["sha256"]
+          allow_any_instance_of(Fontisan::Tables::Hmtx).to receive(:metric_for).and_wrap_original do |orig, gid| # rubocop:disable RSpec/AnyInstance
+            orig.call(gid)&.merge(advance_width: orig.call(gid)[:advance_width] + 1)
+          end
+          expect(metrics["sha256"]).not_to eq(before)
         end
-        expect(metrics["sha256"]).not_to eq(before)
       end
     end
 
@@ -280,15 +285,18 @@ RSpec.describe Fontisan::Reference do
                         "None of the requested characters exist in TestTTF.ttf")
     end
 
+    # Stubs the Ruby font object, so it only means something on the ruby tier.
     it "raises MissingTableError, not a NoMethodError, when the font has no cmap table" do
-      font = Fontisan::FontLoader.load(ttf, mode: :full, lazy: false)
-      allow(font).to receive(:table).and_call_original
-      allow(font).to receive(:table).with("cmap").and_return(nil)
-      allow(Fontisan::FontLoader).to receive(:load).and_return(font)
+      with_engine("ruby") do
+        font = Fontisan::FontLoader.load(ttf, mode: :full, lazy: false)
+        allow(font).to receive(:table).and_call_original
+        allow(font).to receive(:table).with("cmap").and_return(nil)
+        allow(Fontisan::FontLoader).to receive(:load).and_return(font)
 
-      expect { described_class.subset(ttf, text: "abc") }
-        .to raise_error(Fontisan::MissingTableError,
-                        "Required table 'cmap' not found in font")
+        expect { described_class.subset(ttf, text: "abc") }
+          .to raise_error(Fontisan::MissingTableError,
+                          "Required table 'cmap' not found in font")
+      end
     end
   end
 
