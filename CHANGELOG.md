@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   serve the path-based `Fontisan::Reference` operations from it (native, then
   ffi), and installs without one fall back to Ruby with no toolchain needed.
   Set `FONTISAN_ENGINE=ruby` to opt out. Engine: fontisan-rs at git rev
-  `6c83f3f450a9444cbb3f11d926f00b5f8461a9d2` (crate version 0.0.0, not yet on
+  `daffb3f45b67517e924a3e5d0e113a2ecbde9959` (crate version 0.0.0, not yet on
   crates.io), bundled as the magnus extension and the C-ABI shared library.
   Platform gems: `x86_64-linux`, `x86_64-linux-musl`, `arm64-darwin`,
   `x86_64-darwin`, `x64-mingw-ucrt`; the `java` gem carries the shared library
