@@ -437,10 +437,16 @@ fn extension_abi_version() -> u32 {
     ABI_VERSION
 }
 
+/// The engine rev this build was compiled against (see `build.rs`).
+fn extension_engine_rev() -> &'static str {
+    env!("FONTISAN_ENGINE_REV")
+}
+
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
     let native = module(ruby)?;
     native.define_singleton_method("extension_abi_version", function!(extension_abi_version, 0))?;
+    native.define_singleton_method("extension_engine_rev", function!(extension_engine_rev, 0))?;
     native.define_singleton_method("native_read", function!(native_read, 3))?;
     native.define_singleton_method("native_audit", function!(native_audit, 2))?;
     native.define_singleton_method("native_scan", function!(native_scan, 1))?;

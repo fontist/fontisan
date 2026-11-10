@@ -38,21 +38,34 @@ module Fontisan
                :payload, :pointer, :payload_len, :size_t
       end
 
-      # @raise [LoadError] when the library or one of its symbols is missing
-      # @raise [Fontisan::Ffi::AbiMismatch] when it speaks another ABI version
-      def initialize(path)
-        @binding = Module.new do
+      # Loads +path+ and binds its symbols.
+      #
+      # @return [Module] an FFI::Library with the exported functions attached
+      def self.bind(path)
+        Module.new do
           extend FFI::Library
 
           ffi_lib path
           attach_function :fontisan_abi_version, [], :uint32
           attach_function :fontisan_call, %i[pointer pointer], :int32
           attach_function :fontisan_result_free, [:pointer], :void
+          attach_function :fontisan_cdylib_engine_rev, [], :string
         end
-        found = @binding.fontisan_abi_version
-        return if found == ABI_VERSION
+      end
 
-        raise AbiMismatch, "#{path} speaks ABI #{found}, this gem expects #{ABI_VERSION}"
+      # @raise [LoadError] when the library or one of its symbols is missing; a
+      #   library from before the engine-rev symbol existed is stale, so it too
+      # @raise [Fontisan::Ffi::AbiMismatch] when it speaks another ABI version
+      #   or was built from another engine rev than {Fontisan::Native::ENGINE_REV}
+      def initialize(path)
+        @binding = self.class.bind(path)
+        found = @binding.fontisan_abi_version
+        raise AbiMismatch, "#{path} speaks ABI #{found}, this gem expects #{ABI_VERSION}" unless found == ABI_VERSION
+
+        rev = @binding.fontisan_cdylib_engine_rev
+        return if rev == Fontisan::Native::ENGINE_REV
+
+        raise AbiMismatch, "#{path} was built from engine #{rev}, this gem expects #{Fontisan::Native::ENGINE_REV}"
       rescue FFI::NotFoundError => e
         raise LoadError, e.message
       end

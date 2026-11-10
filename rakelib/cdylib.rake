@@ -32,7 +32,7 @@ namespace :cdylib do
     lib = Dir[File.expand_path("../lib/fontisan/ffi/*fontisan_cdylib.*", __dir__)].first
     abort "no built library under lib/fontisan/ffi (rake cdylib:build)" unless lib
     listing = if Gem.win_platform? then `dumpbin /exports "#{lib}"` else `nm -gU "#{lib}"` end
-    missing = %w[fontisan_abi_version fontisan_call fontisan_result_free].reject { |s| listing.include?(s) }
+    missing = %w[fontisan_abi_version fontisan_call fontisan_result_free fontisan_cdylib_engine_rev].reject { |s| listing.include?(s) }
     abort "missing exports: #{missing.join(', ')}" unless missing.empty?
     puts listing.lines.grep(/fontisan_/)
   end

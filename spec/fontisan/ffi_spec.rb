@@ -102,6 +102,40 @@ RSpec.describe Fontisan::Ffi do
     end
   end
 
+  describe "the engine rev handshake" do
+    before { require "fontisan/ffi/client" }
+
+    def client_for(rev)
+      lib = double("cdylib", fontisan_abi_version: Fontisan::Ffi::Client::ABI_VERSION)
+      if rev == :missing
+        allow(lib).to receive(:fontisan_cdylib_engine_rev).and_raise(FFI::NotFoundError.new("fontisan_cdylib_engine_rev", []))
+      else
+        allow(lib).to receive(:fontisan_cdylib_engine_rev).and_return(rev)
+      end
+      allow(Fontisan::Ffi::Client).to receive(:bind).and_return(lib)
+      Fontisan::Ffi::Client.new("lib.so")
+    end
+
+    it "accepts a library built from the expected engine rev" do
+      expect { client_for(Fontisan::Native::ENGINE_REV) }.not_to raise_error
+    end
+
+    it "rejects a library built from another engine rev" do
+      expect { client_for("0" * 40) }.to raise_error(Fontisan::Ffi::AbiMismatch, /built from engine/)
+    end
+
+    it "rejects a library without the rev symbol (a stale build) as a LoadError" do
+      expect { client_for(:missing) }.to raise_error(LoadError, /fontisan_cdylib_engine_rev/)
+    end
+
+    it "makes strict mode raise at setup for a stale library" do
+      allow(Fontisan::Ffi::Client).to receive(:new).and_raise(LoadError, "fontisan_cdylib_engine_rev")
+      tier("ffi")
+      expect { Fontisan::Reference.read(fonts.first) }
+        .to raise_error(Fontisan::Engine::TierUnavailable, /ffi tier is not available/)
+    end
+  end
+
   describe "with the built library" do
     before do
       skip "cdylib not built (set FONTISAN_CDYLIB)" unless built?

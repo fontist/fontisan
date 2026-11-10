@@ -81,13 +81,45 @@ RSpec.describe Fontisan::Native do
     end
   end
 
+  describe "the engine rev handshake" do
+    after { described_class.reset! }
+
+    def available_with?(rev)
+      allow(described_class).to receive_messages(load_extension: nil, abi_version: described_class::ABI_VERSION,
+                                                 engine_rev: rev)
+      described_class.reset!
+      described_class.available?
+    end
+
+    it "accepts an extension built from the expected engine rev" do
+      expect(available_with?(described_class::ENGINE_REV)).to be(true)
+    end
+
+    it "treats an extension built from another engine rev as unavailable" do
+      expect(available_with?("0" * 40)).to be(false)
+    end
+
+    it "treats an extension without the rev symbol (a stale build) as unavailable" do
+      expect(available_with?(nil)).to be(false)
+    end
+
+    it "keeps ENGINE_REV equal to the pin in every Cargo manifest" do
+      root = File.expand_path("../..", __dir__)
+      pins = %w[ext/fontisan_native/Cargo.toml ext/fontisan_cdylib/Cargo.toml].map do |file|
+        File.read(File.join(root, file))[/^fontisan = \{ git = [^\n]*rev = "(\h{40})"/, 1]
+      end
+      expect(pins).to eq([described_class::ENGINE_REV] * 2)
+    end
+  end
+
   context "with the extension built" do
     before do
       skip "extension not built (bundle exec rake compile)" unless described_class.available?
     end
 
-    it "reports the ABI the gem expects" do
+    it "reports the ABI and engine rev the gem expects" do
       expect(described_class.extension_abi_version).to eq(described_class::ABI_VERSION)
+      expect(described_class.extension_engine_rev).to eq(described_class::ENGINE_REV)
     end
 
     it "serves read, audit, scan and audit_dir with the Ruby tier's output, tagged :native" do

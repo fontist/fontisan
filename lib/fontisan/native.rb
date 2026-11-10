@@ -22,6 +22,12 @@ module Fontisan
     VERSIONED_EXTENSION = "fontisan/native/#{RUBY_VERSION[/\A\d+\.\d+/]}/fontisan_native".freeze
     ABI_VERSION = 1
 
+    # The fontisan-rs commit both binaries must be built from: the `rev` of the
+    # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
+    # not move on a repin, so this is what keeps a stale binary from serving old
+    # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
+    ENGINE_REV = "10bbd1c7a961dfe383879f2c5cf995c1abe7d9df"
+
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points
     # (`Subset::Builder.new(font, ...)`, `Variable::Instancer.new(font)`) are
@@ -104,7 +110,7 @@ module Fontisan
 
       def probe
         load_extension
-        abi_version == ABI_VERSION
+        abi_version == ABI_VERSION && engine_rev == ENGINE_REV
       rescue StandardError, ScriptError
         false
       end
@@ -117,7 +123,8 @@ module Fontisan
         return if @warned_unusable || !extension_present?
 
         @warned_unusable = true
-        warn "fontisan: the native extension is present but did not load (or has the wrong ABI); " \
+        warn "fontisan: the native extension is present but did not load (or has the wrong ABI " \
+             "or was built from another engine rev); " \
              "falling back to the Ruby tier. Reinstall the gem or run `bundle exec rake compile`."
       end
 
@@ -133,6 +140,10 @@ module Fontisan
 
       def abi_version
         respond_to?(:extension_abi_version) ? extension_abi_version : nil
+      end
+
+      def engine_rev
+        respond_to?(:extension_engine_rev) ? extension_engine_rev : nil
       end
 
       def read_options?(options)
