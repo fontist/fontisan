@@ -11,9 +11,9 @@ name: Perf Gate
 #   branch.
 # tiers (matrix, one job per platform): ruby vs native vs ffi in the same job,
 #   interleaved, median-of-5 (benchmark/ci_gate.rb --mode tiers). Hard floor
-#   (#160): native must be faster than ruby on audit_file, audit_dir and scan_dir,
-#   its scan peak RSS must not exceed ruby's (3% noise tolerance), and its factor
-#   must stay within 25% of the platform's committed factor in
+#   (#160): native (and ffi, when it ran) must be faster than ruby on audit_file,
+#   audit_dir and scan_dir, their scan peak RSS must not exceed ruby's (3% noise
+#   tolerance), and native's factor must stay within 25% of the platform's committed factor in
 #   benchmark/tier_baseline.json (the regression gate; the PR-mode `gate` job
 #   above measures the ruby tier only, no ext is built there). The measured factor per platform is
 #   the published factor (job summary and artifact; copy it into BENCHMARKS.md).
@@ -30,6 +30,9 @@ on:
       - "benchmark/**"
       - "corpus/**"
       - "rakelib/**"
+      - "ext/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - "Gemfile"
       - "fontisan.gemspec"
       - ".github/workflows/perf-gate.yml"

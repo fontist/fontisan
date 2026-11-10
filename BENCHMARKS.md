@@ -26,7 +26,7 @@ Reference corpus `ci` tier benches for the #157 operations (`rake bench`).
 - Ruby: 3.4.8 (arm64-darwin25); local macOS arm64 (Apple M2), not CI
 - fontisan SHA: `d8e13aae38212cb0507cee03d6ce8fbbf53061e2`
 
-Median of 5+ interleaved rounds, one engine per run (`FONTISAN_ENGINE`, strict). Factor = ruby time / tier time (above 1.00x is faster than Ruby; RSS rows show tier / ruby). Hard floor: native factor on audit_dir, scan_dir must be at least 1.00x and native peak RSS must not exceed ruby's. Other columns are reported, not gated.
+Median of 5+ interleaved rounds, one engine per run (`FONTISAN_ENGINE`, strict). Factor = ruby time / tier time (above 1.00x is faster than Ruby; RSS rows show tier / ruby). Hard floor: native and ffi factors on audit_file, audit_dir, scan_dir must be at least 1.00x and their peak RSS must not exceed ruby's by more than 3%. Other columns are reported, not gated.
 
 | metric | ruby | native | ffi | native factor | ffi factor | status |
 |---|---|---|---|---|---|---|

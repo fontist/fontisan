@@ -9,7 +9,10 @@ module FontisanBench
     TIERS = %w[ruby native ffi].freeze
     # Ops served by the engine tiers (they go through Fontisan::Reference).
     OPS = %w[audit_file audit_dir scan_dir].freeze
-    # The hard floor (#160): native must be faster than Ruby on these.
+    # The hard floor (#160): native must be faster than Ruby on these. The ffi
+    # tier is held to the same floor when it ran (it is optional: no cdylib, no
+    # ffi row). Both are floors only; the baseline regression gate is native-only
+    # because no ffi baselines exist.
     GATED_OPS = %w[audit_file audit_dir scan_dir].freeze
     # Native peak RSS may exceed ruby's by this much before the gate fails.
     # #160 says "must not exceed the Ruby baseline's"; the scan's peak RSS is
@@ -105,6 +108,7 @@ module FontisanBench
     def floor(times, factors)
       return ["FAIL", "no ruby or native measurement"] unless times["ruby"] && times["native"]
       return ["FAIL", "native is slower than ruby"] if factors["native"] < 1.0
+      return ["FAIL", "ffi is slower than ruby"] if factors["ffi"] && factors["ffi"] < 1.0
 
       %w[ok gated]
     end
@@ -125,15 +129,17 @@ module FontisanBench
                       got: factors["native"], pct: (baseline["tolerance"] * 100).round, want: expected)]
     end
 
+    # Both engine tiers share the RSS rule. ffi's cdylib is loaded into the Ruby
+    # process, so its peak RSS is directly comparable to ruby's (local 0.98x).
     def rss_row(rss)
       status = "ok"
       note = nil
       if rss["ruby"].nil? || rss["native"].nil?
         note = "peak RSS unsupported on this platform; RSS check skipped"
         status = "skipped"
-      elsif rss["native"] > rss["ruby"] * (1 + RSS_TOLERANCE)
+      elsif (over = %w[native ffi].find { |t| rss[t] && rss[t] > rss["ruby"] * (1 + RSS_TOLERANCE) })
         status = "FAIL"
-        note = "native peak RSS exceeds ruby's by more than #{(RSS_TOLERANCE * 100).round}%"
+        note = "#{over} peak RSS exceeds ruby's by more than #{(RSS_TOLERANCE * 100).round}%"
       else
         note = "gated"
       end
@@ -149,7 +155,7 @@ module FontisanBench
       out = ["## #{title}", "",
              "Median of #{rounds}+ interleaved rounds, one engine per run (`FONTISAN_ENGINE`, strict). " \
              "Factor = ruby time / tier time (above 1.00x is faster than Ruby; RSS rows show tier / ruby). " \
-             "Hard floor: native factor on #{GATED_OPS.join(', ')} must be at least 1.00x and native peak RSS " \
+             "Hard floor: native and ffi factors on #{GATED_OPS.join(', ')} must be at least 1.00x and their peak RSS " \
              "must not exceed ruby's by more than #{(RSS_TOLERANCE * 100).round}%. With a committed baseline for the " \
              "platform, the native factor must also stay within its tolerance of the expected factor. " \
              "Other columns are reported, not gated.", "",
