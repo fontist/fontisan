@@ -83,7 +83,11 @@ module Fontisan
       # Options the engine honours; anything else is served by Ruby. The
       # read-side operations check their own options and fall back inside.
       def supports_options?(operation, options, path = nil)
-        return byte_options?(operation, options, path) if ByteOps::BYTE_OPERATIONS.include?(operation)
+        if ByteOps::BYTE_OPERATIONS.include?(operation)
+          return false unless byte_options?(operation, options, path)
+
+          return operation != :instance || fixed_coordinates?(options[:coords])
+        end
 
         OPERATIONS.include?(operation)
       end
@@ -98,6 +102,18 @@ module Fontisan
       private
 
       attr_reader :client
+
+      # The instance request carries each coordinate as a signed 16.16 Fixed.
+      # A value that is not finite, does not fit, or is not an exact multiple
+      # of 1/65536 would be rounded or wrapped (1e9 became -13824.0), so the
+      # engine would build a different font than the Ruby and native tiers;
+      # those requests go to Ruby.
+      def fixed_coordinates?(coords)
+        coords.each_value.all? do |value|
+          scaled = Float(value) * FIXED_ONE
+          scaled.finite? && scaled.abs < 2**31 && scaled == scaled.round
+        end
+      end
 
       def probe
         require "fontisan/ffi/client"

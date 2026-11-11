@@ -13,6 +13,8 @@ module Fontisan
     CONVERT_OPTIONS = %i[to output timestamp quiet].freeze
     SUBSET_PROFILES = %w[web pdf minimal].freeze
     MAX_CODEPOINT = 0x10FFFF
+    # The engine's extract index is a u32; a larger one would wrap, not raise.
+    MAX_FONT_INDEX = 0xFFFF_FFFF
 
     BYTE_OPERATIONS = %i[convert extract instance subset].freeze
 
@@ -79,7 +81,7 @@ module Fontisan
 
     def extract_options?(options)
       options.keys.sort == %i[index output_dir] && options[:index].is_a?(Integer) &&
-        !options[:index].negative? && options[:output_dir].respond_to?(:to_str)
+        options[:index].between?(0, MAX_FONT_INDEX) && options[:output_dir].respond_to?(:to_str)
     end
 
     def instance_options?(options, path)
