@@ -6,8 +6,10 @@ module Fontisan
   #   FONTISAN_ENGINE=ruby|native|ffi|auto   (default auto)
   #   FONTISAN_ENGINE_STRICT=1               (no fallback)
   #
-  # `auto` resolves native, then ffi, then ruby: the first tier that is
-  # available and supports the operation wins. A forced tier that is unavailable
+  # `auto` resolves to the Ruby tier until the phase-3 gates pass
+  # (fontisan#160); only an explicit native or ffi selection uses the Rust
+  # tiers. The post-gate order (native, ffi, ruby) is
+  # {NATIVE_PREFERRED_ORDER}. A forced tier that is unavailable
   # falls back to Ruby silently, or raises {TierUnavailable} at setup when
   # strict. An operation (or a path, e.g. dfont) a tier cannot serve always goes to
   # Ruby, strict or not. FONTISAN_MODE and FONTISAN_LAZY are not read here.
@@ -27,7 +29,11 @@ module Fontisan
     SELECTIONS = %w[ruby native ffi auto].freeze
     STRICT_ON = %w[1 true yes on].freeze
     STRICT_OFF = ["", "0", "false", "no", "off"].freeze
-    AUTO_ORDER = %i[native ffi ruby].freeze
+    # The order `auto` will use once the phase-3 gates pass (fontisan#160).
+    # Until then `auto` resolves to ruby only; the 2d flip is replacing
+    # AUTO_ORDER with this constant.
+    NATIVE_PREFERRED_ORDER = %i[native ffi ruby].freeze
+    AUTO_ORDER = %i[ruby].freeze
     OPS = %i[read outline_hashes audit audit_dir scan convert extract
              instance glyph_ids subset].freeze
     REPLACEABLE_TIERS = %i[native ffi].freeze

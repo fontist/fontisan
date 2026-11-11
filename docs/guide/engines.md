@@ -31,7 +31,7 @@ Set `FONTISAN_ENGINE` before the process starts. Unset or empty means `auto`:
 | `ruby` | Use the Ruby tier only. |
 | `native` | Use the native tier. |
 | `ffi` | Use the ffi tier. |
-| `auto` | The default. Use the first tier that is available and supports the operation, in the order native, ffi, ruby. |
+| `auto` | The default. Currently serves everything from ruby; the Rust tiers are used only when selected explicitly, until the phase-3 gates pass (fontisan#160). After that, the first available tier in the order native, ffi, ruby. |
 
 ```sh
 FONTISAN_ENGINE=native FONTISAN_ENGINE_STRICT=1 fontisan convert MyFont.ttf --to woff2 --output out.woff2
