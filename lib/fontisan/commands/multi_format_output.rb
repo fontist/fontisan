@@ -51,8 +51,13 @@ module Fontisan
         @target_formats.map { |fmt| "#{@base_path}.#{fmt}" }
       end
 
+      # A dot file whose whole name is the extension (".ttf") has one: appending
+      # the format would write ".ttf.ttf".
       def has_extension?
-        !File.extname(@base_path).strip.downcase.empty?
+        name = File.basename(@base_path)
+        return true if name.length > 1 && name.start_with?(".") && name.count(".") == 1
+
+        !File.extname(name).strip.downcase.empty?
       end
     end
   end

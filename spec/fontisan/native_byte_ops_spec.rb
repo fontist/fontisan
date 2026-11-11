@@ -155,6 +155,29 @@ RSpec.describe "native byte ops" do
         end
       end
 
+      describe "extract index range" do
+        # u32 wrap: 2**32 reached member 0 on the ffi tier instead of raising.
+        [2**32, 2**63].each do |index|
+          it "raises Ruby's out-of-range error for index #{index}, as Ruby does" do
+            Dir.mktmpdir do |dir|
+              want = ruby do
+                Fontisan::Reference.extract(ttc, index: index, output_dir: File.join(dir, "r"))
+              rescue StandardError => e
+                [e.class, e.message]
+              end
+              got = tier do
+                Fontisan::Reference.extract(ttc, index: index, output_dir: File.join(dir, "n"))
+              rescue StandardError => e
+                [e.class, e.message]
+              end
+              expect(want.first).to eq(ArgumentError)
+              expect(got).to eq(want)
+              expect(Dir.glob(File.join(dir, "n", "*"))).to be_empty
+            end
+          end
+        end
+      end
+
       describe "instance and subset" do
         it "instances a variable font identically to Ruby, served by the tier" do
           coords = { "wght" => 700 }
@@ -163,6 +186,36 @@ RSpec.describe "native byte ops" do
               .tap { expect(Fontisan::Engine.served_by(:instance)).to eq(name) }
           end
           expect(n).to eq(ruby { Fontisan::Reference.instance(vf, coords: coords) })
+        end
+
+        it "instances at a coordinate that is not a 16.16 multiple identically to Ruby" do
+          coords = { "wght" => 400.0 + (1 / 3.0) }
+          n = tier { Fontisan::Reference.instance(vf, coords: coords) }
+          expect(n).to eq(ruby { Fontisan::Reference.instance(vf, coords: coords) })
+        end
+
+        it "instances at both axis extremes identically to Ruby" do
+          [200, 800].each do |wght|
+            n = tier { Fontisan::Reference.instance(vf, coords: { "wght" => wght }) }
+            expect(n).to eq(ruby { Fontisan::Reference.instance(vf, coords: { "wght" => wght }) })
+          end
+        end
+
+        [1e9, -1e9, Float::NAN, Float::INFINITY].each do |value|
+          it "rejects the coordinate #{value} with Ruby's error class" do
+            want = ruby do
+              Fontisan::Reference.instance(vf, coords: { "wght" => value })
+            rescue StandardError => e
+              e.class
+            end
+            got = tier do
+              Fontisan::Reference.instance(vf, coords: { "wght" => value })
+            rescue StandardError => e
+              e.class
+            end
+            expect(want).to eq(Fontisan::InvalidCoordinatesError)
+            expect(got).to eq(want)
+          end
         end
 
         it "subsets identically to Ruby, served by the tier" do

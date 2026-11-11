@@ -83,7 +83,11 @@ module Fontisan
       # Options the engine honours; anything else is served by Ruby. The
       # read-side operations check their own options and fall back inside.
       def supports_options?(operation, options, path = nil)
-        return byte_options?(operation, options, path) if ByteOps::BYTE_OPERATIONS.include?(operation)
+        if ByteOps::BYTE_OPERATIONS.include?(operation)
+          return false unless byte_options?(operation, options, path)
+
+          return operation != :instance || fixed_coordinates?(options[:coords])
+        end
 
         OPERATIONS.include?(operation)
       end
@@ -98,6 +102,18 @@ module Fontisan
       private
 
       attr_reader :client
+
+      # The instance request carries each coordinate as a signed 16.16 Fixed.
+      # A value that is not finite, does not fit, or is not an exact multiple
+      # of 1/65536 would be rounded or wrapped (1e9 became -13824.0), so the
+      # engine would build a different font than the Ruby and native tiers;
+      # those requests go to Ruby.
+      def fixed_coordinates?(coords)
+        coords.each_value.all? do |value|
+          scaled = Float(value) * FIXED_ONE
+          scaled.finite? && scaled.abs < 2**31 && scaled == scaled.round
+        end
+      end
 
       def probe
         require "fontisan/ffi/client"
@@ -125,8 +141,11 @@ module Fontisan
         bundled && File.file?(bundled) ? bundled : File.expand_path("ffi/#{file}", __dir__)
       end
 
+      # dfont, Type 1 and anything that is not a font (the native tier hands
+      # those to Ruby too, so auto never lands them on this tier).
       def ruby_only?(path)
-        RUBY_ONLY_FORMATS.include?(FontLoader.detect_format(path))
+        format = FontLoader.detect_format(path)
+        format.nil? || RUBY_ONLY_FORMATS.include?(format)
       rescue StandardError
         false
       end
@@ -134,6 +153,7 @@ module Fontisan
       # Writes the converted font to +output+; returns the ConvertCommand hash.
       def serve_convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
+        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
         stamp = timestamp ? unix_seconds(timestamp) : Time.now.to_i
         prefix = [ByteOps::TARGET_CODES.fetch(target), 0, stamp].pack("NNq>")
@@ -200,7 +220,7 @@ module Fontisan
       def raise_byte_failure(reply)
         match = ByteOps::FAILURE_MESSAGE.match(reply.message)
         if reply.status == CONVERT_FAILED && match
-          klass, message = byte_failure(match[1], match[2])
+          klass, message = public_failure(*byte_failure(match[1], match[2]))
           raise build_instance(klass, message)
         end
 
@@ -308,8 +328,11 @@ module Fontisan
 
       # Raise the reported error as its Ruby class, message and cause chain.
       def raise_reported(report)
-        raise_chain([report.slice("class", "message"),
-                     *Array(report["causes"])])
+        head = report.slice("class", "message")
+        klass, message = public_failure(exception_class(head["class"]), head["message"])
+        chain = [head, *Array(report["causes"])]
+        chain.unshift({ "class" => klass.name, "message" => message }) if klass == InvalidFontError && head["class"] != klass.name
+        raise_chain(chain)
       end
 
       def raise_chain(infos)

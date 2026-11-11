@@ -62,7 +62,7 @@ module Fontisan
             value = requested.transform_keys(&:to_s)[axis.tag]
             value = axis.default if value.nil?
             value = Float(value)
-            unless value.between?(axis.minimum, axis.maximum)
+            unless value.finite? && value.between?(axis.minimum, axis.maximum)
               raise InvalidCoordinatesError.new(
                 axis: axis.tag, value: value, range: [axis.minimum, axis.maximum],
               )

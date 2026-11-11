@@ -135,6 +135,7 @@ module Fontisan
   autoload :Woff2Collection, "fontisan/woff2_collection"
   autoload :Woff2Font, "fontisan/woff2_font"
   autoload :SfntDirectory, "fontisan/sfnt_directory"
+  autoload :OutputGuard, "fontisan/output_guard"
   autoload :WoffContainer, "fontisan/woff_container"
   autoload :WoffFont, "fontisan/woff_font"
 

@@ -157,6 +157,7 @@ module Fontisan
       # result hash, rebuilt from the engine's bytes and the input header.
       def convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
+        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
         bytes = native_convert(path, ByteOps::TARGET_CODES.fetch(target), timestamp ? unix_seconds(timestamp) : Time.now.to_i)
         finish_convert(path, target, File.path(output), bytes)

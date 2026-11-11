@@ -310,7 +310,7 @@ fn native_audit_dir_rows(ruby: &Ruby, dir: String, validate: bool) -> Result<RAr
 }
 
 /// Whether the engine reads the file itself: false for a file that is gone, a
-/// directory, dfont and Type 1 (the Ruby tier serves those).
+/// directory, dfont, Type 1 and anything that is not a font (the Ruby tier serves those).
 fn native_supports_file(ruby: &Ruby, path: String) -> Result<bool, Error> {
     finish(
         ruby,
@@ -323,10 +323,16 @@ fn native_supports_file(ruby: &Ruby, path: String) -> Result<bool, Error> {
             if file.take(256).read_to_end(&mut head).is_err() {
                 return Ok(false);
             }
-            Ok(!matches!(
-                sfnt::detect_format(&head),
-                Some(Format::Dfont | Format::Pfa | Format::Pfb)
-            ))
+            // Not a font at all (random bytes, a zero-filled or empty file): the
+            // Ruby tier raises the canonical InvalidFontError, and the engine never
+            // slurps a huge non-font into memory. A `ttcf` file whose directory lies
+            // past the 256-byte head is a font the engine reads itself.
+            let unknown = sfnt::detect_format(&head).is_none() && !head.starts_with(b"ttcf");
+            Ok(!unknown
+                && !matches!(
+                    sfnt::detect_format(&head),
+                    Some(Format::Dfont | Format::Pfa | Format::Pfb)
+                ))
         }),
     )
 }

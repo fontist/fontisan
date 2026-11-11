@@ -50,9 +50,23 @@ module Fontisan
                      is_fixed_pitch min_mem_type42 max_mem_type42 min_mem_type1
                      max_mem_type1].freeze
 
+    # Ruby errors a malformed font can provoke inside the parsers and builders.
+    # They are not part of any contract; {.malformed_font} turns them into
+    # Fontisan::InvalidFontError. A bare RuntimeError is deliberately absent:
+    # the loaders raise "Invalid <Type> file: ..." and the specs and goldens
+    # pin that class. EOFError is absent too: the corpus goldens (read, audit,
+    # scan of the truncated fonts) pin it as the reference behaviour.
+    PARSER_LEAKS = [NoMethodError, IndexError, RangeError, TypeError, ZeroDivisionError].freeze
+
     autoload :TableDigests, "fontisan/reference/table_digests"
 
     class << self
+      # The InvalidFontError text for a leaked parser error, shared with the
+      # engine tiers that mirror the Ruby classes the engine reports.
+      def malformed_message(klass, message)
+        "Malformed font data (#{klass}): #{message}"
+      end
+
       # Read the structure of every face in a font file.
       #
       # @param path [String]
@@ -61,18 +75,20 @@ module Fontisan
       # @return [Array<Hash>] one Hash per face (see docs for the schema)
       def read(path, mode: :metadata, lazy: true)
         path = path_arg(path)
-        sha = Digest::SHA256.file(path).hexdigest
-        format = FontLoader.detect_format(path)&.to_s
-        count = face_count(path)
-        faces = Array.new(count) do |index|
-          font = FontLoader.load(path, font_index: index, mode: mode, lazy: lazy)
-          begin
-            read_face(font, index, sha, format, mode, lazy)
-          ensure
-            font.close if font.respond_to?(:close)
+        malformed_font do
+          sha = Digest::SHA256.file(path).hexdigest
+          format = FontLoader.detect_format(path)&.to_s
+          count = face_count(path)
+          faces = Array.new(count) do |index|
+            font = FontLoader.load(path, font_index: index, mode: mode, lazy: lazy)
+            begin
+              read_face(font, index, sha, format, mode, lazy)
+            ensure
+              font.close if font.respond_to?(:close)
+            end
           end
+          normalize(faces)
         end
-        normalize(faces)
       end
 
       # Per-glyph outline hashes of one face (full mode).
@@ -85,12 +101,14 @@ module Fontisan
       # @return [Hash] `{"kind"=>"glyf"|"cff"|nil, "hashes"=>[hex, ...]}`
       def outline_hashes(path, index: 0)
         path = path_arg(path)
-        font = FontLoader.load(path, font_index: index, mode: :full,
-                                     lazy: true)
-        begin
-          normalize(outline_data(font))
-        ensure
-          font.close if font.respond_to?(:close)
+        malformed_font do
+          font = FontLoader.load(path, font_index: index, mode: :full,
+                                       lazy: true)
+          begin
+            normalize(outline_data(font))
+          ensure
+            font.close if font.respond_to?(:close)
+          end
         end
       end
 
@@ -102,9 +120,11 @@ module Fontisan
       # @return [Array<Hash>] one canonical report per face
       def audit(path, validate: false)
         path = path_arg(path)
-        result = Commands::AuditCommand.new(
-          path, validate: validate || false, include_codepoints: false
-        ).run
+        result = malformed_font do
+          Commands::AuditCommand.new(
+            path, validate: validate || false, include_codepoints: false
+          ).run
+        end
         normalize(Array(result).map { |report| audit_hash(report) })
       end
 
@@ -199,9 +219,11 @@ module Fontisan
       # @return [String] binary font bytes
       def instance(path, coords:, timestamp: nil)
         _ = timestamp
-        font = FontLoader.load(path_arg(path), mode: :full, lazy: false)
+        path = path_arg(path)
+        check_sfnt_directory(path)
+        font = malformed_font { FontLoader.load(path, mode: :full, lazy: false) }
         values = coords.to_h { |tag, value| [tag.to_s, Float(value)] }
-        Variable::Instancer.new(font).instance(values)
+        malformed_font { Variable::Instancer.new(font).instance(values) }
       end
 
       # Glyph ids kept by a subset request (fontist's `glyph_ids`).
@@ -213,9 +235,9 @@ module Fontisan
       #   <basename>"
       def glyph_ids(path, unicodes: nil, text: nil)
         path = path_arg(path)
-        font = FontLoader.load(path, mode: :full, lazy: false)
+        font = malformed_font { FontLoader.load(path, mode: :full, lazy: false) }
         codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
-        gids_for(font, codepoints, File.basename(path))
+        malformed_font { gids_for(font, codepoints, File.basename(path)) }
       end
 
       # Subset a font to the glyphs of the given characters.
@@ -227,11 +249,13 @@ module Fontisan
       def subset(path, unicodes: nil, text: nil, profile: "web", timestamp: nil)
         _ = timestamp
         path = path_arg(path)
-        font = FontLoader.load(path, mode: :full, lazy: false)
+        font = malformed_font { FontLoader.load(path, mode: :full, lazy: false) }
         codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
-        gids = gids_for(font, codepoints, File.basename(path))
         options = Subset::Options.new(profile: profile)
-        Subset::Builder.new(font, gids, options).build
+        malformed_font do
+          gids = gids_for(font, codepoints, File.basename(path))
+          Subset::Builder.new(font, gids, options).build
+        end
       end
 
       # Canonical JSON text of a read-type result: sorted keys, two-space
@@ -256,6 +280,26 @@ module Fontisan
       end
 
       private
+
+      # Run a parse or build step of a font that may be malformed. A Ruby
+      # internal error (see PARSER_LEAKS) becomes Fontisan::InvalidFontError, the
+      # class every tier raises for bad font data; the original is the cause.
+      def malformed_font
+        yield
+      rescue *PARSER_LEAKS => e
+        raise InvalidFontError, malformed_message(e.class, e.message)
+      end
+
+      # A plain sfnt whose table directory runs past the end of the file fails
+      # as convert does (the engine tiers' own check, fontist/fontisan#159),
+      # not with whatever the loader or the instancer would trip over.
+      def check_sfnt_directory(path)
+        return unless File.file?(path) && %i[ttf otf].include?(FontLoader.detect_format(path))
+
+        SfntDirectory.check!(File.binread(path))
+      rescue SfntDirectory::Malformed => e
+        raise Error, "Conversion failed: #{e.message}"
+      end
 
       def path_arg(path, must_exist: true)
         unless path.is_a?(String) || path.respond_to?(:to_path)

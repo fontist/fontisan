@@ -138,6 +138,27 @@ RSpec.describe Fontisan::Native do
       end
     end
 
+    it "hands a file that is not a font to the Ruby tier: same InvalidFontError, no whole-file read" do
+      Dir.mktmpdir do |dir|
+        junk = File.join(dir, "junk.ttf")
+        empty = File.join(dir, "empty.ttf")
+        File.binwrite(junk, Random.new(1).bytes(4096))
+        File.write(empty, "")
+        [junk, empty].each do |path|
+          expect(described_class.supports?(:instance, path)).to be(false), path
+          with_engine("native") do
+            expect { Fontisan::Reference.instance(path, coords: { "wght" => 400 }) }
+              .to raise_error(Fontisan::InvalidFontError)
+            expect(Fontisan::Engine.served_by(:instance)).to eq(:ruby)
+          end
+        end
+      end
+    end
+
+    it "still serves a real collection natively" do
+      expect(described_class.supports?(:read, ttc)).to be(true)
+    end
+
     it "routes dfont to :ruby in strict mode, for every operation and inside a mixed scan" do
       with_engine("native") do
         Fontisan::Reference.read(dfont)
