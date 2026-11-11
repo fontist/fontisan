@@ -2,14 +2,14 @@
   "audit": {
     "default": {
       "error": {
-        "class": "NoMethodError",
-        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+        "class": "Fontisan::InvalidFontError",
+        "message": "Malformed font data (NoMethodError): undefined method 'has_table?' for an instance of Fontisan::Type1Font"
       }
     },
     "validate": {
       "error": {
-        "class": "NoMethodError",
-        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+        "class": "Fontisan::InvalidFontError",
+        "message": "Malformed font data (NoMethodError): undefined method 'has_table?' for an instance of Fontisan::Type1Font"
       }
     }
   },
@@ -33,8 +33,8 @@
     },
     "metadata/lazy": {
       "error": {
-        "class": "NoMethodError",
-        "message": "undefined method 'has_table?' for an instance of Fontisan::Type1Font"
+        "class": "Fontisan::InvalidFontError",
+        "message": "Malformed font data (NoMethodError): undefined method 'has_table?' for an instance of Fontisan::Type1Font"
       }
     }
   },
