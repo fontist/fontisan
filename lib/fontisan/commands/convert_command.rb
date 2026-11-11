@@ -116,6 +116,7 @@ module Fontisan
       # @raise [Error] If conversion fails
       def run
         validate_options!
+        Array(@output_paths || @output_path).each { |out| OutputGuard.check!(font_path, out) }
 
         if collection_file?
           if multi_format?
@@ -130,7 +131,7 @@ module Fontisan
         else
           convert_single_font(@target_formats.first, @output_paths.first)
         end
-      rescue ArgumentError
+      rescue ArgumentError, OutputGuard::Refused
         # Let ArgumentError propagate for validation errors
         raise
       rescue StandardError => e

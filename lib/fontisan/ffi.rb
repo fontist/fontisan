@@ -150,6 +150,7 @@ module Fontisan
       # Writes the converted font to +output+; returns the ConvertCommand hash.
       def serve_convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
+        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
         stamp = timestamp ? unix_seconds(timestamp) : Time.now.to_i
         prefix = [ByteOps::TARGET_CODES.fetch(target), 0, stamp].pack("NNq>")
@@ -216,7 +217,7 @@ module Fontisan
       def raise_byte_failure(reply)
         match = ByteOps::FAILURE_MESSAGE.match(reply.message)
         if reply.status == CONVERT_FAILED && match
-          klass, message = byte_failure(match[1], match[2])
+          klass, message = public_failure(*byte_failure(match[1], match[2]))
           raise build_instance(klass, message)
         end
 
@@ -324,8 +325,11 @@ module Fontisan
 
       # Raise the reported error as its Ruby class, message and cause chain.
       def raise_reported(report)
-        raise_chain([report.slice("class", "message"),
-                     *Array(report["causes"])])
+        head = report.slice("class", "message")
+        klass, message = public_failure(exception_class(head["class"]), head["message"])
+        chain = [head, *Array(report["causes"])]
+        chain.unshift({ "class" => klass.name, "message" => message }) if klass == InvalidFontError && head["class"] != klass.name
+        raise_chain(chain)
       end
 
       def raise_chain(infos)

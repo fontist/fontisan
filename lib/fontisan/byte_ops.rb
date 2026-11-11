@@ -21,8 +21,18 @@ module Fontisan
     # "<ruby class>: <message>": how the engine reports a Ruby exception it
     # mirrors (the byte operations carry one class and one message, no chain).
     FAILURE_MESSAGE = /\A([A-Z]\w*(?:::\w+)*): (.*)\z/m
-    # The engine's text for a file that is no font; Ruby's is InvalidFontError.
-    UNRECOGNISED_FORMAT_MESSAGE = "Conversion failed: unrecognised font format"
+    # The engine's text for a file that is no font (convert adds a "Conversion
+    # failed: " prefix); Ruby's is InvalidFontError.
+    UNRECOGNISED_FORMAT_MESSAGE = "unrecognised font format"
+    # Prefix of a convert failure that wraps the engine's own message.
+    TRANSFORMATION_PREFIX = "Conversion failed: Transformation failed: "
+    # Engine messages for bad font data that Ruby raises as InvalidFontError:
+    # the WOFF/WOFF2 container decoders ("woff: ...", "woff2: ..."), and the
+    # same error as its debug text.
+    INVALID_FONT_MESSAGE = /\A(?:woff2?: |Error \{ class: InvalidFont, message: ")/
+    # The instancer's own error; convert keeps Fontisan::Error for it, as Ruby does.
+    TRUNCATED_TABLE_MESSAGE = "Static instancing: truncated or malformed table"
+    DEBUG_ERROR_MESSAGE = /\AError \{ class: InvalidFont, message: "(.*)" \}\z/m
 
     private
 
@@ -109,12 +119,30 @@ module Fontisan
       false
     end
 
+    # The output path of a convert, after the checks the Ruby tier makes before
+    # it converts: never the input file, and its directory exists.
+    def convert_output(path, output)
+      output = File.path(output)
+      OutputGuard.check!(path, output)
+      dir = File.dirname(output)
+      raise ArgumentError, "Output directory not found: #{dir}" unless File.directory?(dir)
+
+      output
+    end
+
     def finish_convert(path, target, output, bytes)
-      File.binwrite(output, bytes)
+      write_output(output, bytes)
       result = { success: true, input_path: path, output_path: output }
       result.merge!(convert_formats(path, target))
       result.merge(input_size: File.size(path), output_size: bytes.bytesize,
                    **convert_tail(path))
+    end
+
+    # Writes as the Ruby tier's convert does: an IO failure is a Fontisan::Error.
+    def write_output(output, bytes)
+      File.binwrite(output, bytes)
+    rescue SystemCallError => e
+      raise Fontisan::Error, "Conversion failed: Transformation failed: #{e.message}"
     end
 
     def convert_formats(path, target)
@@ -173,10 +201,22 @@ module Fontisan
     # (each cause is raised so that its own #cause is set).
     def raise_failure(details, byte_operation: false)
       class_name, message, causes = details
-      cause = nil
-      causes.reverse_each { |name, text| cause = build_exception(name, text, cause) }
       klass, message = byte_failure(class_name, message) if byte_operation
-      raise build_instance(klass || exception_class(class_name), message), cause: cause
+      klass ||= exception_class(class_name)
+      raised, text = public_failure(klass, message)
+      # The leaked Ruby error stays as the cause, as the Ruby tier's does.
+      causes = [[class_name, message], *causes] unless raised == klass
+      cause = nil
+      causes.reverse_each { |name, detail| cause = build_exception(name, detail, cause) }
+      raise build_instance(raised, text), cause: cause
+    end
+
+    # An engine error that mirrors a Ruby parser leak (EOFError, NoMethodError,
+    # ...) is raised as the Ruby tier raises it now: InvalidFontError.
+    def public_failure(klass, message)
+      return [klass, message] unless Reference::PARSER_LEAKS.any? { |leak| klass <= leak }
+
+      [InvalidFontError, Reference.malformed_message(klass, message)]
     end
 
     # The Ruby class and message of a failed byte operation, so that a tier
@@ -188,7 +228,10 @@ module Fontisan
         class_name = match[1]
         message = match[2]
       end
-      return [InvalidFontError, FontLoader::UNKNOWN_FORMAT_MESSAGE] if message == UNRECOGNISED_FORMAT_MESSAGE
+      bare = message.delete_prefix(TRANSFORMATION_PREFIX)
+      return [InvalidFontError, FontLoader::UNKNOWN_FORMAT_MESSAGE] if bare.delete_prefix("Conversion failed: ") == UNRECOGNISED_FORMAT_MESSAGE
+      return [InvalidFontError, message] if message == TRUNCATED_TABLE_MESSAGE
+      return [InvalidFontError, bare.sub(DEBUG_ERROR_MESSAGE, '\\1')] if class_name == "Fontisan::Error" && INVALID_FONT_MESSAGE.match?(bare)
 
       [exception_class(class_name), message]
     end
