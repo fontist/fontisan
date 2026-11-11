@@ -5,9 +5,10 @@
 #   ruby scripts/tier_smoke.rb EXPECTED_TIER [CORPUS_ROOT]
 #
 # Run it against an INSTALLED fontisan gem (never the checkout's lib/). It scans
-# every `ci`-tier corpus font through Fontisan::Engine under the default engine (FONTISAN_ENGINE unset = auto),
+# every `ci`-tier corpus font through Fontisan::Engine with FONTISAN_ENGINE=EXPECTED_TIER (strict off),
 # then checks that
-#   * the tier auto resolves to is EXPECTED_TIER (native, ffi or ruby);
+#   * auto resolves to the first tier of Engine::AUTO_ORDER this gem has (ruby until the
+#     phase-3 gates flip it, fontist/fontisan#160);
 #   * every row equals the committed scan golden (minus the served_by key);
 #   * served_by is EXPECTED_TIER, except for files the engine hands to Ruby
 #     (dfont, Type 1), which may say ruby; with EXPECTED_TIER=ruby nothing else.
@@ -18,7 +19,7 @@ expected = ARGV.fetch(0) { abort "usage: tier_smoke.rb native|ffi|ruby [corpus r
 root = File.expand_path(ARGV.fetch(1, File.join(__dir__, "..", "corpus")))
 abort "unknown tier #{expected.inspect}" unless %w[native ffi ruby].include?(expected)
 
-ENV.delete("FONTISAN_ENGINE") # the default (auto) is what is under test
+ENV["FONTISAN_ENGINE"] = expected # the bundled tier is what is under test
 ENV.delete("FONTISAN_ENGINE_STRICT")
 require "fontisan"
 Fontisan::Reference # autoloading it installs the engine gates
@@ -51,14 +52,20 @@ entries.each do |entry|
   end
 end
 
-resolved = Fontisan::Engine.resolve(:scan, File.join(root, "fonts", "fonttools-test-ttf", "TestTTF.ttf")).to_s
-problems << "auto resolves scan to #{resolved}, expected #{expected}" unless resolved == expected
+ttf = File.join(root, "fonts", "fonttools-test-ttf", "TestTTF.ttf")
+resolved = Fontisan::Engine.resolve(:scan, ttf).to_s
+problems << "#{expected} resolves scan to #{resolved}" unless resolved == expected
+ENV["FONTISAN_ENGINE"] = "auto"
+Fontisan::Engine.reset!
+auto_want = Fontisan::Engine::AUTO_ORDER.find { |t| t == :ruby || t.to_s == expected }.to_s
+auto = Fontisan::Engine.resolve(:scan, ttf).to_s
+problems << "auto resolves scan to #{auto}, expected #{auto_want}" unless auto == auto_want
 problems << "no #{expected} row served" if served[expected].zero?
 
 puts "fontisan #{Fontisan::VERSION} from #{lib_dir}"
 puts "ruby #{RUBY_VERSION} #{RUBY_PLATFORM}; fonts scanned: #{entries.size}; served_by: #{served.inspect}"
 if problems.empty?
-  puts "OK: auto resolved to #{resolved}; rows equal the goldens"
+  puts "OK: #{expected} served the corpus, auto resolved to #{auto}; rows equal the goldens"
 else
   warn problems
   exit 1
