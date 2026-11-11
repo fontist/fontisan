@@ -34,6 +34,20 @@ module Fontisan
     TRUNCATED_TABLE_MESSAGE = "Static instancing: truncated or malformed table"
     DEBUG_ERROR_MESSAGE = /\AError \{ class: InvalidFont, message: "(.*)" \}\z/m
 
+    # The engine's error kinds (fontisan-rs `ErrorKind`, `FONTISAN_KIND_*` of the
+    # C ABI), by number. Only the kinds that name one Ruby class are mapped: the
+    # others stand for several (InvalidFont: InvalidFontError and RuntimeError;
+    # MissingTable: MissingTableError and MissingVariationTableError; Truncated:
+    # EOFError and IOError; Io: every Errno), or for none (Other, Unsupported),
+    # and fall back to the reported class and message text.
+    KIND_CLASSES = {
+      2 => "Fontisan::InvalidAxisError",
+      3 => "Fontisan::InvalidCoordinatesError",
+      6 => "Fontisan::SubsettingError",
+      7 => "Fontisan::CorruptedTableError",
+      9 => "ArgumentError",
+    }.freeze
+
     private
 
     # Whether the engine honours +options+ for +operation+ (one of
@@ -200,8 +214,8 @@ module Fontisan
     # Raise the Ruby tier's exception: class, message and the cause chain
     # (each cause is raised so that its own #cause is set).
     def raise_failure(details, byte_operation: false)
-      class_name, message, causes = details
-      klass, message = byte_failure(class_name, message) if byte_operation
+      class_name, message, causes, kind = details
+      klass, message = byte_failure(class_name, message, kind) if byte_operation
       klass ||= exception_class(class_name)
       raised, text = public_failure(klass, message)
       # The leaked Ruby error stays as the cause, as the Ruby tier's does.
@@ -222,8 +236,13 @@ module Fontisan
     # The Ruby class and message of a failed byte operation, so that a tier
     # never changes what a caller can rescue or match: an engine error that
     # names the Ruby exception it mirrors ("RuntimeError: ...") is unwrapped,
-    # and the engine's unrecognised-format error becomes the loader's.
-    def byte_failure(class_name, message)
+    # and the engine's unrecognised-format error becomes the loader's. A +kind+
+    # that names one Ruby class decides it; message text is read only for the
+    # other kinds (Other and the ambiguous ones), and when no kind was reported.
+    def byte_failure(class_name, message, kind = nil)
+      kind_class = KIND_CLASSES[kind]
+      return [exception_class(kind_class), message] if kind_class
+
       if class_name == "Fontisan::Error" && (match = FAILURE_MESSAGE.match(message))
         class_name = match[1]
         message = match[2]

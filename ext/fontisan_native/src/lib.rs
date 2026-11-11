@@ -9,13 +9,14 @@
 //!   section touches Ruby: inputs are copied into owned Rust values first and
 //!   the result is plain Rust data until the GVL is back.
 //! * A failure is raised as `Fontisan::Native::Failure` carrying the engine's
-//!   `[class, message, [[cause class, cause message], ...]]`; the Ruby side
+//!   `[class, message, [[cause class, cause message], ...], error kind]`; the Ruby side
 //!   rebuilds the Ruby tier's exception class and cause chain from it. A Rust
 //!   panic is caught inside the released section and raised as
 //!   `Fontisan::Native::Panic`.
 use fontisan::audit;
 use fontisan::convert::{self, Target};
 use fontisan::json::Json;
+use fontisan::ErrorKind;
 use fontisan::read;
 use fontisan::scan::{self, RowStatus};
 use fontisan::sfnt::{self, Format, LoadingMode, Options};
@@ -36,6 +37,8 @@ enum Fail {
         class: String,
         message: String,
         causes: Vec<(String, String)>,
+        /// `ErrorKind` code (the C ABI's `FONTISAN_KIND_*`); the Ruby side maps by it.
+        kind: i32,
     },
     Panic(String),
 }
@@ -46,6 +49,7 @@ impl Fail {
             class: class.to_string(),
             message: message.into(),
             causes: Vec::new(),
+            kind: ErrorKind::from_class(class).code(),
         }
     }
 
@@ -75,10 +79,13 @@ impl Fail {
                 .collect(),
             _ => Vec::new(),
         };
+        let class = text("class");
+        let kind = ErrorKind::from_class(&class).code();
         Self::Engine {
-            class: text("class"),
+            class,
             message: text("message"),
             causes,
+            kind,
         }
     }
 }
@@ -150,6 +157,7 @@ fn raise(ruby: &Ruby, fail: Fail) -> Error {
                 class,
                 message,
                 causes,
+                kind,
             } => {
                 let klass: magnus::ExceptionClass = native.const_get("Failure")?;
                 let exc: Value = klass.funcall("new", (message.as_str(),))?;
@@ -160,10 +168,11 @@ fn raise(ruby: &Ruby, fail: Fail) -> Error {
                     pair.push(ruby.str_new(m))?;
                     causes_rb.push(pair)?;
                 }
-                let details = ruby.ary_new_capa(3);
+                let details = ruby.ary_new_capa(4);
                 details.push(ruby.str_new(&class))?;
                 details.push(ruby.str_new(&message))?;
                 details.push(causes_rb)?;
+                details.push(kind)?;
                 exc.funcall::<_, _, Value>("instance_variable_set", ("@details", details))?;
                 let exception = magnus::Exception::from_value(exc)
                     .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "bad failure"))?;

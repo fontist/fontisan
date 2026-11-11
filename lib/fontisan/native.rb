@@ -26,7 +26,7 @@ module Fontisan
     # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
     # not move on a repin, so this is what keeps a stale binary from serving old
     # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
-    ENGINE_REV = "daffb3f45b67517e924a3e5d0e113a2ecbde9959"
+    ENGINE_REV = "1ac873aca812bcc6e3f60775b2e6964743f0ea4a"
 
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points
@@ -35,7 +35,8 @@ module Fontisan
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset].freeze
 
     # Raised by the extension for an engine failure; `details` is
-    # `[class name, message, [[cause class, cause message], ...]]`.
+    # `[class name, message, [[cause class, cause message], ...], error kind]`;
+    # the kind is the engine's `ErrorKind` number (see {ByteOps::KIND_CLASSES}).
     class Failure < StandardError
       attr_reader :details
     end

@@ -218,13 +218,25 @@ module Fontisan
       end
 
       def raise_byte_failure(reply)
-        match = ByteOps::FAILURE_MESSAGE.match(reply.message)
-        if reply.status == CONVERT_FAILED && match
-          klass, message = public_failure(*byte_failure(match[1], match[2]))
-          raise build_instance(klass, message)
+        if reply.status == CONVERT_FAILED
+          class_name, message = reported_failure(reply)
+          if class_name
+            klass, message = public_failure(*byte_failure(class_name, message, reply.kind))
+            raise build_instance(klass, message)
+          end
         end
 
         raise Fontisan::Error, "fontisan ffi status #{reply.status}: #{reply.message}"
+      end
+
+      # The class name and message of a failed byte operation: the engine's
+      # "<class>: <message>" text, or the bare text under a kind that names its
+      # class (byte_failure then takes the class from the kind).
+      def reported_failure(reply)
+        match = ByteOps::FAILURE_MESSAGE.match(reply.message)
+        return [match[1], match[2]] if match
+
+        [Fontisan::Error.name, reply.message] if ByteOps::KIND_CLASSES.key?(reply.kind)
       end
 
       def serve_read(path, mode: :metadata, lazy: true)
