@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The default engine is now `FONTISAN_ENGINE=auto`: installs with a native tier
-  serve the path-based `Fontisan::Reference` operations from it (native, then
-  ffi), and installs without one fall back to Ruby with no toolchain needed.
-  Set `FONTISAN_ENGINE=ruby` to opt out. Engine: fontisan-rs at git rev
+- `FONTISAN_ENGINE=auto` (the default) resolves to the Ruby tier until the
+  phase-3 gates pass (fontisan#160); `FONTISAN_ENGINE=native` or `ffi` still
+  select the Rust tiers explicitly. The native-preferring order is kept as
+  `Engine::NATIVE_PREFERRED_ORDER` for the later flip. Engine: fontisan-rs at git rev
   `daffb3f45b67517e924a3e5d0e113a2ecbde9959` (crate version 0.0.0, not yet on
   crates.io), bundled as the magnus extension and the C-ABI shared library.
   Platform gems: `x86_64-linux`, `x86_64-linux-musl`, `arm64-darwin`,

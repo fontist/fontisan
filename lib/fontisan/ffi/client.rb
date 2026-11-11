@@ -17,7 +17,7 @@ module Fontisan
       UNSUPPORTED = 10
 
       # The result block of one call; its pointers die with {#close}.
-      Reply = Struct.new(:status, :payload, :message)
+      Reply = Struct.new(:status, :payload, :message, :kind)
 
       class Header < FFI::Struct
         layout :magic, :uint32, :abi_version, :uint32, :struct_size, :uint32,
@@ -35,7 +35,8 @@ module Fontisan
 
       class Result < FFI::Struct
         layout :header, Header, :status, :int32, :error, ErrorRow,
-               :payload, :pointer, :payload_len, :size_t
+               :payload, :pointer, :payload_len, :size_t,
+               :error_kind, :int32, :reserved, :int32
       end
 
       # Loads +path+ and binds its symbols.
@@ -106,7 +107,8 @@ module Fontisan
         result = Result.new(pointer)
         Reply.new(result[:status], bytes(result[:payload], result[:payload_len]),
                   bytes(result[:error][:message], result[:error][:message_len])
-                    .force_encoding(Encoding::UTF_8))
+                    .force_encoding(Encoding::UTF_8),
+                  result[:error_kind])
       ensure
         @binding.fontisan_result_free(pointer) unless pointer.null?
       end

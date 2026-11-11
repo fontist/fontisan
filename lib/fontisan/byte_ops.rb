@@ -32,7 +32,26 @@ module Fontisan
     INVALID_FONT_MESSAGE = /\A(?:woff2?: |Error \{ class: InvalidFont, message: ")/
     # The instancer's own error; convert keeps Fontisan::Error for it, as Ruby does.
     TRUNCATED_TABLE_MESSAGE = "Static instancing: truncated or malformed table"
-    DEBUG_ERROR_MESSAGE = /\AError \{ class: InvalidFont, message: "(.*)" \}\z/m
+    # The engine prints the error's Debug form: the message is a Rust string
+    # literal and a cause follows it (`, cause: None`).
+    DEBUG_ERROR_MESSAGE = /\AError \{ class: InvalidFont, message: "(.*?)"(?:, cause: .*)? \}\z/m
+    # The text InvalidAxisError builds from its axis and reason.
+    AXIS_MESSAGE = /\AInvalid variation axis '(.*?)': (.*)\z/m
+    RUST_ESCAPES = { '\\"' => '"', "\\\\" => "\\", "\\n" => "\n", "\\t" => "\t", "\\r" => "\r" }.freeze
+
+    # The engine's error kinds (fontisan-rs `ErrorKind`, `FONTISAN_KIND_*` of the
+    # C ABI), by number. Only the kinds that name one Ruby class are mapped: the
+    # others stand for several (InvalidFont: InvalidFontError and RuntimeError;
+    # MissingTable: MissingTableError and MissingVariationTableError; Truncated:
+    # EOFError and IOError; Io: every Errno), or for none (Other, Unsupported),
+    # and fall back to the reported class and message text.
+    KIND_CLASSES = {
+      2 => "Fontisan::InvalidAxisError",
+      3 => "Fontisan::InvalidCoordinatesError",
+      6 => "Fontisan::SubsettingError",
+      7 => "Fontisan::CorruptedTableError",
+      9 => "ArgumentError",
+    }.freeze
 
     private
 
@@ -120,9 +139,13 @@ module Fontisan
     end
 
     # The output path of a convert, after the checks the Ruby tier makes before
-    # it converts: never the input file, and its directory exists.
-    def convert_output(path, output)
+    # it converts: the name ConvertCommand gives a single font (an output with no
+    # extension gets ".<format>", a ".ttf" dot file keeps its name), never the
+    # input file, and its directory exists. A collection is written to the path
+    # as given.
+    def convert_output(path, output, target)
       output = File.path(output)
+      output = Commands::MultiFormatOutput.new(output, [target]).paths.first unless collection_file?(path)
       OutputGuard.check!(path, output)
       dir = File.dirname(output)
       raise ArgumentError, "Output directory not found: #{dir}" unless File.directory?(dir)
@@ -143,6 +166,14 @@ module Fontisan
       File.binwrite(output, bytes)
     rescue SystemCallError => e
       raise Fontisan::Error, "Conversion failed: Transformation failed: #{e.message}"
+    end
+
+    # An IO failure while extracting (unreadable input, output directory that
+    # cannot be made or written) is a Fontisan::Error, as UnpackCommand raises it.
+    def unpacking_io
+      yield
+    rescue SystemCallError => e
+      raise Fontisan::Error, "Unexpected error during unpacking: #{e.message}"
     end
 
     def convert_formats(path, target)
@@ -200,8 +231,8 @@ module Fontisan
     # Raise the Ruby tier's exception: class, message and the cause chain
     # (each cause is raised so that its own #cause is set).
     def raise_failure(details, byte_operation: false)
-      class_name, message, causes = details
-      klass, message = byte_failure(class_name, message) if byte_operation
+      class_name, message, causes, kind = details
+      klass, message = byte_failure(class_name, message, kind) if byte_operation
       klass ||= exception_class(class_name)
       raised, text = public_failure(klass, message)
       # The leaked Ruby error stays as the cause, as the Ruby tier's does.
@@ -222,8 +253,13 @@ module Fontisan
     # The Ruby class and message of a failed byte operation, so that a tier
     # never changes what a caller can rescue or match: an engine error that
     # names the Ruby exception it mirrors ("RuntimeError: ...") is unwrapped,
-    # and the engine's unrecognised-format error becomes the loader's.
-    def byte_failure(class_name, message)
+    # and the engine's unrecognised-format error becomes the loader's. A +kind+
+    # that names one Ruby class decides it; message text is read only for the
+    # other kinds (Other and the ambiguous ones), and when no kind was reported.
+    def byte_failure(class_name, message, kind = nil)
+      kind_class = KIND_CLASSES[kind]
+      return [exception_class(kind_class), message] if kind_class
+
       if class_name == "Fontisan::Error" && (match = FAILURE_MESSAGE.match(message))
         class_name = match[1]
         message = match[2]
@@ -231,21 +267,35 @@ module Fontisan
       bare = message.delete_prefix(TRANSFORMATION_PREFIX)
       return [InvalidFontError, FontLoader::UNKNOWN_FORMAT_MESSAGE] if bare.delete_prefix("Conversion failed: ") == UNRECOGNISED_FORMAT_MESSAGE
       return [InvalidFontError, message] if message == TRUNCATED_TABLE_MESSAGE
-      return [InvalidFontError, bare.sub(DEBUG_ERROR_MESSAGE, '\\1')] if class_name == "Fontisan::Error" && INVALID_FONT_MESSAGE.match?(bare)
+      return [InvalidFontError, unwrap_debug_message(bare)] if class_name == "Fontisan::Error" && INVALID_FONT_MESSAGE.match?(bare)
 
       [exception_class(class_name), message]
     end
 
-    # `klass.new(message)`, or the `message:` keyword form some Fontisan
-    # errors use (MissingVariationTableError); never a failed constructor.
+    # The message inside the engine's Debug text for an InvalidFont error, with
+    # the Rust string escapes undone; any other text is returned as it is.
+    def unwrap_debug_message(text)
+      match = DEBUG_ERROR_MESSAGE.match(text) or return text
+
+      match[1].gsub(/\\[\\"ntr]/) { |escape| RUST_ESCAPES.fetch(escape) }
+    end
+
+    # `klass.new(message)`, or the keyword form some Fontisan errors use
+    # (`message:` for MissingVariationTableError; `axis:` and `reason:` for
+    # InvalidAxisError, split out of its own text); never a failed constructor.
     def build_instance(klass, message)
       klass.new(message)
     rescue ArgumentError
-      begin
-        klass.new(message: message)
-      rescue ArgumentError
-        Fontisan::Error.new(message)
-      end
+      build_keyword_instance(klass, message)
+    end
+
+    def build_keyword_instance(klass, message)
+      axis = AXIS_MESSAGE.match(message) if klass <= InvalidAxisError
+      return klass.new(axis: axis[1], reason: axis[2]) if axis
+
+      klass.new(message: message)
+    rescue ArgumentError
+      Fontisan::Error.new(message)
     end
 
     def build_exception(name, text, cause)

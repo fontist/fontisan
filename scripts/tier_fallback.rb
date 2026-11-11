@@ -17,8 +17,8 @@
 #   ffi_abi_mismatch
 #   mixed                        dfont and Type 1 rows are served by ruby, the
 #                                rest by the forced tier
-#   auto_all, auto_no_native,    `auto` resolves native, then ffi with native
-#   auto_none                    removed, then ruby with both removed
+#   auto_all, auto_no_native,    `auto` resolves to the first Engine::AUTO_ORDER tier
+#   auto_none                    still present (ruby until the #160 gates flip it)
 #
 # A scenario about a tier the platform lacks is skipped. Run it against an
 # INSTALLED gem on the CI matrix (outside the checkout), or locally with
@@ -177,11 +177,12 @@ begin
       Fontisan::Engine.reset!
       # dfont and PFB must be ruby's. Ruby's detect_format does not recognise a
       # PFA (nil), so the tier may take it; its error row equals the golden either way.
+      # Anything detect_format cannot name (empty or garbage bytes) is Ruby's too.
       scan_corpus.call(lambda { |path|
         case File.extname(path).downcase
         when ".dfont", ".pfb" then ["ruby"]
         when ".pfa" then ["ruby", tier]
-        else [tier]
+        else Fontisan::FontLoader.detect_format(path).nil? ? ["ruby"] : [tier]
         end
       })
     end
@@ -203,9 +204,8 @@ begin
   when "auto_all", "auto_no_native", "auto_none"
     ENV["FONTISAN_ENGINE"] = "auto"
     Fontisan::Engine.reset!
-    want = { "auto_all" => tiers.first || "ruby",
-             "auto_no_native" => tiers.include?("ffi") ? "ffi" : "ruby",
-             "auto_none" => "ruby" }.fetch(scenario)
+    present = { "auto_all" => tiers, "auto_no_native" => tiers - ["native"], "auto_none" => [] }.fetch(scenario)
+    want = Fontisan::Engine::AUTO_ORDER.map(&:to_s).find { |t| t == "ruby" || present.include?(t) }
     problems << "auto resolved #{resolved.call}, expected #{want}" unless resolved.call == want
     served = scan_corpus.call(->(path) { [want, *("ruby" if HANDED_TO_RUBY.include?(File.extname(path).downcase))] })
     problems << "no #{want} row served" if served[want].zero?

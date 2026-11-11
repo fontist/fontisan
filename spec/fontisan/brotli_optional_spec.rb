@@ -58,8 +58,8 @@ RSpec.describe "brotli as an optional dependency" do
       expect(Fontisan::Engine.served_by(:read)).to eq(:ruby)
     end
 
-    it "routes a WOFF2 read to :ffi when that tier is available" do
-      engine("auto")
+    it "routes a WOFF2 read to :ffi when that tier is forced and available" do
+      engine("ffi")
       skip "cdylib not built (rake cdylib:build)" unless Fontisan::Ffi.available?
       allow(Fontisan::Native).to receive(:available?).and_return(false)
 

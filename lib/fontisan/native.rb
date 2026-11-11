@@ -26,7 +26,7 @@ module Fontisan
     # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
     # not move on a repin, so this is what keeps a stale binary from serving old
     # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
-    ENGINE_REV = "daffb3f45b67517e924a3e5d0e113a2ecbde9959"
+    ENGINE_REV = "f45057a12e15ba9f2c02526cd8ca0603c80edaf9"
 
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points
@@ -35,7 +35,8 @@ module Fontisan
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset].freeze
 
     # Raised by the extension for an engine failure; `details` is
-    # `[class name, message, [[cause class, cause message], ...]]`.
+    # `[class name, message, [[cause class, cause message], ...], error kind]`;
+    # the kind is the engine's `ErrorKind` number (see {ByteOps::KIND_CLASSES}).
     class Failure < StandardError
       attr_reader :details
     end
@@ -149,7 +150,7 @@ module Fontisan
       def read_options?(options)
         return false unless options.keys.all? { |key| %i[mode lazy].include?(key) }
 
-        %w[metadata full].include?(options.fetch(:mode, :metadata).to_s) &&
+        %i[metadata full].include?(options.fetch(:mode, :metadata)) &&
           [true, false].include?(options.fetch(:lazy, true))
       end
 
@@ -157,8 +158,8 @@ module Fontisan
       # result hash, rebuilt from the engine's bytes and the input header.
       def convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
-        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
+        output = convert_output(path, output, target)
         bytes = native_convert(path, ByteOps::TARGET_CODES.fetch(target), timestamp ? unix_seconds(timestamp) : Time.now.to_i)
         finish_convert(path, target, File.path(output), bytes)
       end
@@ -166,8 +167,10 @@ module Fontisan
       # Same file layout as UnpackCommand: <output_dir>/<basename>.
       def extract(path, index:, output_dir:)
         name, bytes = native_extract(File.path(path), index)
-        FileUtils.mkdir_p(output_dir)
-        File.join(output_dir, name).tap { |out| File.binwrite(out, bytes) }
+        unpacking_io do
+          FileUtils.mkdir_p(output_dir)
+          File.join(output_dir, name).tap { |out| File.binwrite(out, bytes) }
+        end
       end
 
       def instance(path, coords:, timestamp: nil)
@@ -185,7 +188,7 @@ module Fontisan
       end
 
       def read(path, mode: :metadata, lazy: true)
-        native_read(File.path(path), mode.to_s == "metadata", lazy)
+        native_read(File.path(path), mode == :metadata, lazy)
       end
 
       def audit(path, validate: false)
