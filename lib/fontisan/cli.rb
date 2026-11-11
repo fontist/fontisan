@@ -12,6 +12,12 @@ module Fontisan
   # @example Run the info command
   #   Fontisan::Cli.start(['info', 'font.ttf'])
   class Cli < Thor
+    # A Thor::Error (unknown command, missing --output) must fail the process:
+    # without this Thor exits 0 and prints a deprecation warning.
+    def self.exit_on_failure?
+      true
+    end
+
     class_option :format, type: :string, default: "text",
                           desc: "Output format (text, yaml, json)",
                           aliases: "-f"
