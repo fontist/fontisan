@@ -141,8 +141,11 @@ module Fontisan
         bundled && File.file?(bundled) ? bundled : File.expand_path("ffi/#{file}", __dir__)
       end
 
+      # dfont, Type 1 and anything that is not a font (the native tier hands
+      # those to Ruby too, so auto never lands them on this tier).
       def ruby_only?(path)
-        RUBY_ONLY_FORMATS.include?(FontLoader.detect_format(path))
+        format = FontLoader.detect_format(path)
+        format.nil? || RUBY_ONLY_FORMATS.include?(format)
       rescue StandardError
         false
       end

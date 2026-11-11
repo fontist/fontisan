@@ -149,9 +149,11 @@ RSpec.describe Fontisan::Ffi do
       fonts.each do |font|
         it "gives identical read, audit and scan results for #{File.basename(font)}" do
           name = File.basename(font)
-          # Ruby's own detection decides; matrix.pfa is not a Type 1 header, so both
-          # tiers report the same unknown-format error and the engine serves it.
-          served = Fontisan::FontLoader.detect_format(font).to_s.match?(/\A(dfont|pfa|pfb)\z/) ? :ruby : :ffi
+          # Ruby's own detection decides: dfont, Type 1 and anything it does not
+          # recognise as a font (matrix.pfa has no Type 1 header, the malformed
+          # fixtures none at all) are handed to the Ruby tier, as on native.
+          format = Fontisan::FontLoader.detect_format(font)
+          served = format.nil? || format.to_s.match?(/\A(dfont|pfa|pfb)\z/) ? :ruby : :ffi
           calls = {
             read: [%i[metadata full].product([true, false]).map do |mode, lazy|
               -> { Fontisan::Reference.read(font, mode: mode, lazy: lazy) }

@@ -44,7 +44,8 @@ entries.each do |entry|
   problems << "#{entry['id']}: rows differ from golden" unless JSON.parse(JSON.generate(actual)) == golden
 
   allowed = [expected]
-  allowed << "ruby" if expected != "ruby" && HANDED_TO_RUBY.include?(File.extname(path).downcase)
+  handed = HANDED_TO_RUBY.include?(File.extname(path).downcase) || Fontisan::FontLoader.detect_format(path).nil?
+  allowed << "ruby" if expected != "ruby" && handed
   rows.each do |row|
     problems << "#{entry['id']}: served_by #{row['served_by']}, expected #{allowed.join('|')}" unless allowed.include?(row["served_by"])
   end
