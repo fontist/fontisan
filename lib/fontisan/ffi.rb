@@ -153,8 +153,8 @@ module Fontisan
       # Writes the converted font to +output+; returns the ConvertCommand hash.
       def serve_convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
-        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
+        output = convert_output(path, output, target)
         stamp = timestamp ? unix_seconds(timestamp) : Time.now.to_i
         prefix = [ByteOps::TARGET_CODES.fetch(target), 0, stamp].pack("NNq>")
         bytes = byte_op(OP_CONVERT, prefix + File.binread(path))
@@ -163,11 +163,13 @@ module Fontisan
 
       # Same file layout as UnpackCommand: <output_dir>/<basename>.
       def serve_extract(path, index:, output_dir:)
-        payload = byte_op(OP_EXTRACT, [index, 0, 0, 0].pack("NNNN") + File.binread(File.path(path)))
+        payload = byte_op(OP_EXTRACT, [index, 0, 0, 0].pack("NNNN") + unpacking_io { File.binread(File.path(path)) })
         length = payload.unpack1("N")
         name = payload.byteslice(4, length).force_encoding(Encoding::UTF_8)
-        FileUtils.mkdir_p(output_dir)
-        File.join(output_dir, name).tap { |out| File.binwrite(out, payload.byteslice(4 + length..)) }
+        unpacking_io do
+          FileUtils.mkdir_p(output_dir)
+          File.join(output_dir, name).tap { |out| File.binwrite(out, payload.byteslice(4 + length..)) }
+        end
       end
 
       def serve_instance(path, coords:, timestamp: nil)
@@ -254,16 +256,23 @@ module Fontisan
         return ruby(:audit, path, validate: validate) unless [true, false, nil].include?(validate)
 
         path = reference_path(path)
-        input = [File.basename(path).bytesize].pack("N") + File.basename(path).b + File.binread(path)
+        input = [File.basename(path).bytesize].pack("N") + File.basename(path).b + load_font_bytes(path)
         reply = client.call(OP_AUDIT, input, validate ? FLAG_VALIDATE : 0)
         return ruby(:audit, path, validate: validate) if reply.status == Client::UNSUPPORTED
 
         rows(reply)
       end
 
+      # An unreadable file is a Fontisan::Error, as the Ruby loader raises it.
+      def load_font_bytes(path)
+        File.binread(path)
+      rescue SystemCallError => e
+        raise Fontisan::Error, "Failed to load font: #{e.message}"
+      end
+
       def serve_scan(paths)
         Array(paths).flat_map do |path|
-          reply = client.call(OP_SCAN, File.path(path))
+          reply = client.call(OP_SCAN, Reference.__send__(:path_arg, path, must_exist: false))
           result = reply.status == Client::OK ? decode(reply.payload) : nil
           result = nil if result&.any? { |row| row["status"] == "unsupported" }
           # "status" is the engine's routing marker; Reference rows have none.

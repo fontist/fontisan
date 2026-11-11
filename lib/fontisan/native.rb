@@ -150,7 +150,7 @@ module Fontisan
       def read_options?(options)
         return false unless options.keys.all? { |key| %i[mode lazy].include?(key) }
 
-        %w[metadata full].include?(options.fetch(:mode, :metadata).to_s) &&
+        %i[metadata full].include?(options.fetch(:mode, :metadata)) &&
           [true, false].include?(options.fetch(:lazy, true))
       end
 
@@ -158,8 +158,8 @@ module Fontisan
       # result hash, rebuilt from the engine's bytes and the input header.
       def convert(path, output:, timestamp: nil, **options)
         path = File.path(path)
-        output = convert_output(path, output)
         target = convert_target(options.fetch(:to))
+        output = convert_output(path, output, target)
         bytes = native_convert(path, ByteOps::TARGET_CODES.fetch(target), timestamp ? unix_seconds(timestamp) : Time.now.to_i)
         finish_convert(path, target, File.path(output), bytes)
       end
@@ -167,8 +167,10 @@ module Fontisan
       # Same file layout as UnpackCommand: <output_dir>/<basename>.
       def extract(path, index:, output_dir:)
         name, bytes = native_extract(File.path(path), index)
-        FileUtils.mkdir_p(output_dir)
-        File.join(output_dir, name).tap { |out| File.binwrite(out, bytes) }
+        unpacking_io do
+          FileUtils.mkdir_p(output_dir)
+          File.join(output_dir, name).tap { |out| File.binwrite(out, bytes) }
+        end
       end
 
       def instance(path, coords:, timestamp: nil)
@@ -186,7 +188,7 @@ module Fontisan
       end
 
       def read(path, mode: :metadata, lazy: true)
-        native_read(File.path(path), mode.to_s == "metadata", lazy)
+        native_read(File.path(path), mode == :metadata, lazy)
       end
 
       def audit(path, validate: false)
