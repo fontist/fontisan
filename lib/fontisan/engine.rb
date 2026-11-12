@@ -74,6 +74,7 @@ module Fontisan
 
     @mutex = Mutex.new
     @tiers = nil
+    @registered_tiers = {}.freeze
     @served = {}
     @counters = nil
     @availability = {}
@@ -180,7 +181,7 @@ module Fontisan
         record(:ruby, operation, nil)
       end
 
-      # Forget probes, counters, served state and registered tiers.
+      # Forget probes, counters, served state and temporary tier overrides.
       def reset!
         @mutex.synchronize do
           @served = {}
@@ -188,14 +189,26 @@ module Fontisan
           @availability = {}
           @tiers = @tiers.slice(:ruby) if @tiers
         end
-        Native.reset!
-        Ffi.reset!
+        @registered_tiers.each_value do |tier|
+          tier.reset! if tier.respond_to?(:reset!)
+        end
       end
 
-      # Register a tier object (tests, or the extension itself). A bad
+      # Register a provider independently of Reference's lazy installation.
+      # Providers survive reset!; reset! on a provider is optional.
+      def register_tier(name, mod)
+        validate_registration!(name, mod)
+        @mutex.synchronize do
+          @registered_tiers = @registered_tiers.merge(name.to_sym => mod).freeze
+          @availability.delete(name.to_sym)
+        end
+      end
+
+      # Override a tier object until reset! (tests, or the extension itself). A bad
       # registration raises here, at setup, never as a silent fallback later.
       def register(name, tier)
         validate_registration!(name, tier)
+        Fontisan::Reference unless @tiers
         @mutex.synchronize do
           @tiers = @tiers.merge(name.to_sym => tier).freeze
           @availability.delete(name.to_sym)
@@ -274,7 +287,7 @@ module Fontisan
       def tier_object(name)
         case name
         when :ruby then @tiers.fetch(:ruby)
-        else @tiers[name] || { native: Native, ffi: Ffi }.fetch(name)
+        else @tiers[name] || @registered_tiers[name]
         end
       end
 
@@ -352,5 +365,8 @@ module Fontisan
         Thread.current[ROW_RECORDER] = previous
       end
     end
+
+    register_tier(:native, Native)
+    register_tier(:ffi, Ffi)
   end
 end
