@@ -84,6 +84,24 @@ unset, empty, `0`, `false`, `no` and `off` leave it off; any other value raises
 an operation. See link:docs/guide/engines.md[Engines] for tiers, platforms and
 troubleshooting.
 
+=== Python face
+
+https://github.com/fontist/fontisan-python[fontisan-python] is the Python face
+of fontisan. It is a setuptools package that rides the same Rust cdylib the
+`ffi` tier loads, shipped as per-platform package data and bound with
+`ctypes`. It is not a second engine and adds no new FFI surface.
+
+It binds the batch audit and table-read operations. Anything the C ABI does not
+expose returns an explicit `unsupported` result rather than a guess.
+
+Its results are held to the same parity contract as the other faces: they are
+compared against the Ruby-tier goldens in `corpus/` (see
+link:https://github.com/fontist/fontisan/issues/166[fontist/fontisan#166]).
+
+NOTE: The package name on PyPI and the Python version floor are not settled,
+and nothing is published yet. Treat the package as unreleased until the
+maintainers say otherwise.
+
 == Installation
 
 Add this line to your application's Gemfile:
