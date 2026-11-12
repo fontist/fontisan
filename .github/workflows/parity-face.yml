@@ -1,0 +1,151 @@
+---
+name: Face corpus parity
+
+# Caller uploads its gem(s) first, then calls this workflow with, for example:
+#   gem-artifact: cross-gem-{0}
+#   tiers: '["ruby", "native", "ffi"]'
+#   platforms: '[{"os":"ubuntu-22.04","platform":"x86_64-linux"}]'
+# {0} in the artifact name is replaced with the platform field. A literal
+# artifact name works too. Face gems expose the shared `fontisan` Ruby API.
+# Dispatch builds fontisan itself and exercises the same installed-gem Ruby cell.
+on:
+  workflow_call:
+    inputs:
+      gem-artifact:
+        description: Artifact name or format string containing {0} for the platform
+        required: true
+        type: string
+      tiers:
+        description: JSON array of engine tiers
+        type: string
+        default: '["ruby"]'
+      platforms:
+        description: JSON array of objects with os and platform fields
+        type: string
+        default: '[{"os":"ubuntu-22.04","platform":"x86_64-linux"}]'
+      corpus-ref:
+        description: Ref in fontist/fontisan containing the shared corpus and specs
+        type: string
+        default: main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch-gem:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.gem-artifact == '' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - run: gem build fontisan.gemspec -o fontisan-source.gem
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-face-self-test
+          path: fontisan-source.gem
+
+  parity:
+    needs: dispatch-gem
+    if: ${{ !cancelled() && (needs.dispatch-gem.result == 'success' || needs.dispatch-gem.result == 'skipped') }}
+    name: ${{ matrix.platform.platform }} / ${{ matrix.tier }}
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        tier: ${{ fromJSON(inputs.tiers || '["ruby"]') }}
+        platform: ${{ fromJSON(inputs.platforms || '[{"os":"ubuntu-22.04","platform":"x86_64-linux"}]') }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      FONTISAN_ENGINE: ${{ matrix.tier }}
+      FONTISAN_ENGINE_STRICT: "1"
+      OTS_PYTHON: python
+    steps:
+      # Exclude lib/ and the checkout's Gemfile: every require must resolve to
+      # the installed face, including lazy loads from the corpus generators.
+      - uses: actions/checkout@v4
+        with:
+          repository: fontist/fontisan
+          ref: ${{ inputs.corpus-ref || github.sha }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /corpus/
+            /scripts/
+            /spec/corpus/
+            /rakelib/corpus.rake
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install parity tools
+        run: |
+          gem install --no-document rspec rake rubyzip ffi
+          python -m pip install opentype-sanitizer
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ format(inputs.gem-artifact || 'parity-face-self-test', matrix.platform.platform) }}
+          path: pkg/
+
+      - name: Install the face gem
+        run: |
+          shopt -s nullglob
+          gems=(pkg/*.gem)
+          if [ "${#gems[@]}" -ne 1 ]; then
+            echo 'The artifact must contain exactly one .gem file' >&2
+            exit 1
+          fi
+          gem install --no-document "${gems[@]}"
+          # shellcheck disable=SC2016
+          ruby -rfontisan -e 'abort "checkout code loaded" if $LOADED_FEATURES.any? { |f| f.start_with?(File.join(Dir.pwd, "lib") + "/") }'
+
+      - name: Cache pinned woff2_decompress
+        uses: actions/cache@v4
+        with:
+          path: corpus/fonts/.tools/woff2
+          key: woff2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-woff2.sh') }}
+
+      - name: Build pinned woff2_decompress
+        if: runner.os != 'Windows'
+        run: scripts/build-woff2.sh
+
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          location: ${{ runner.temp }}\msys2-woff2
+          msystem: MINGW64
+          path-type: inherit
+          install: git make mingw-w64-x86_64-gcc
+
+      - name: Build pinned woff2_decompress (MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: scripts/build-woff2.sh
+
+      - name: Point the corpus at woff2_decompress
+        run: |
+          exe="$PWD/corpus/fonts/.tools/woff2/bin/woff2_decompress"
+          if [ "$RUNNER_OS" = Windows ]; then
+            exe="$(cygpath -m "$exe")"
+            case "$exe" in *.exe) ;; *) exe="$exe.exe" ;; esac
+          fi
+          echo "WOFF2_DECOMPRESS=$exe" >> "$GITHUB_ENV"
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        run: ruby -S rake --rakelib "" -f rakelib/corpus.rake corpus:fetch
+
+      - name: Corpus specs under ${{ matrix.tier }}
+        run: >-
+          ruby -S rspec --options /dev/null --format progress
+          spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
+          spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
