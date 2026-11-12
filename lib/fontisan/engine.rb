@@ -38,6 +38,7 @@ module Fontisan
              instance glyph_ids subset].freeze
     REPLACEABLE_TIERS = %i[native ffi].freeze
     TIER_CONTRACT = %i[available? supports? call].freeze
+    FACE_ENTRY = "fontisan/ruby"
     ROW_RECORDER = :fontisan_engine_rows
     IN_OPERATION = :fontisan_engine_in_operation
 
@@ -207,6 +208,8 @@ module Fontisan
       # Override a tier object until reset! (tests, or the extension itself). A bad
       # registration raises here, at setup, never as a silent fallback later.
       def register(name, tier)
+        return register_tier(name, tier) if @loading_face
+
         validate_registration!(name, tier)
         Fontisan::Reference unless @tiers
         @mutex.synchronize do
@@ -301,9 +304,27 @@ module Fontisan
 
       # Any failure while probing is "not available"; never an exception.
       def probe(name)
+        load_face if REPLACEABLE_TIERS.include?(name) && !@tiers.key?(name)
         tier_object(name).available? || false
       rescue StandardError, ScriptError
         false
+      end
+
+      # The optional face registers its own providers through register. Keep
+      # those registrations across resets, just like the bundled providers.
+      def load_face
+        return if @face_loaded
+
+        begin
+          @loading_face = true
+          require FACE_ENTRY
+          @face_loaded = true
+        rescue LoadError
+          # Bundled providers remain usable until they move to the face gem.
+          nil
+        ensure
+          @loading_face = false
+        end
       end
 
       # A tier may also vet the call's keyword options (`supports_options?`).

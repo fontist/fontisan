@@ -3,6 +3,8 @@
 require "spec_helper"
 require "open3"
 require "rbconfig"
+require "tmpdir"
+require "fileutils"
 
 RSpec.describe Fontisan::Engine do
   let(:tier) do
@@ -132,12 +134,19 @@ RSpec.describe Fontisan::Engine do
   end
 
   describe "an unregistered tier" do
+    before do
+      allow(described_class).to receive(:require)
+        .with(described_class::FACE_ENTRY).and_raise(LoadError)
+    end
+
     %w[native ffi].each do |name|
       it "falls back to Ruby for #{name} without strict mode" do
         ENV["FONTISAN_ENGINE"] = name
         ENV["FONTISAN_ENGINE_STRICT"] = "0"
 
         expect(described_class.resolve(:read)).to eq(:ruby)
+        expect(described_class).to have_received(:require)
+          .with(described_class::FACE_ENTRY)
       end
 
       it "raises TierUnavailable for #{name} in strict mode" do
@@ -145,6 +154,111 @@ RSpec.describe Fontisan::Engine do
 
         expect { described_class.setup! }
           .to raise_error(described_class::TierUnavailable, /#{name}/)
+        expect(described_class).to have_received(:require)
+          .with(described_class::FACE_ENTRY)
+      end
+    end
+  end
+
+  describe "loading the optional face in a fresh process" do
+    let(:face_dir) { File.realpath(Dir.mktmpdir("fontisan-face")) }
+    let(:face_file) { File.join(face_dir, "#{described_class::FACE_ENTRY}.rb") }
+    let(:script) do
+      <<~RUBY
+        require "fontisan"
+        abort "face loaded eagerly" if $LOADED_FEATURES.include?(#{face_file.inspect})
+        #{operation}
+      RUBY
+    end
+    let(:result) do
+      Open3.capture3(
+        RbConfig.ruby, "-I#{face_dir}",
+        "-I#{File.expand_path('../../lib', __dir__)}", "-e", script
+      )
+    end
+
+    before do
+      FileUtils.mkdir_p(File.dirname(face_file))
+      File.write(face_file, <<~RUBY)
+        module Fontisan::Ruby
+          def self.available? = true
+          def self.supports?(*) = true
+          def self.call(*) = :face
+        end
+        Fontisan::Engine.register(:native, Fontisan::Ruby)
+        Fontisan::Engine.register(:ffi, Fontisan::Ruby)
+      RUBY
+    end
+
+    after { FileUtils.remove_entry(face_dir) }
+
+    %w[ruby auto].each do |selection|
+      context "when #{selection} is selected" do
+        let(:operation) do
+          <<~RUBY
+            ENV["FONTISAN_ENGINE"] = #{selection.inspect}
+            print Fontisan::Engine.resolve(:read)
+            abort "face loaded for Ruby" if $LOADED_FEATURES.include?(#{face_file.inspect})
+          RUBY
+        end
+
+        it "keeps the face unloaded" do
+          out, err, status = result
+
+          expect([status.success?, out]).to eq([true, "ruby"]), err
+        end
+      end
+    end
+
+    %w[native ffi].each do |selection|
+      context "when #{selection} is selected in strict mode" do
+        let(:operation) do
+          <<~RUBY
+            ENV["FONTISAN_ENGINE"] = #{selection.inspect}
+            ENV["FONTISAN_ENGINE_STRICT"] = "1"
+            Fontisan::Engine.setup!
+            abort "face was not loaded" unless $LOADED_FEATURES.include?(#{face_file.inspect})
+            print Fontisan::Reference.read("face.ttf")
+            Fontisan::Engine.reset!
+            print Fontisan::Reference.read("face.ttf")
+          RUBY
+        end
+
+        it "loads the face and retains its self-registered tiers across resets" do
+          out, err, status = result
+
+          expect([status.success?, out]).to eq([true, "faceface"]), err
+        end
+      end
+    end
+
+    context "without the face gem" do
+      before { File.delete(face_file) }
+
+      let(:operation) do
+        <<~RUBY
+          engine = Fontisan::Engine
+          # Model the Ruby-only install after the bundled tiers move out.
+          engine.instance_variable_set(:@registered_tiers, {}.freeze)
+          begin
+            print engine.resolve(:read)
+          rescue Fontisan::Engine::TierUnavailable
+            print "unavailable"
+          end
+        RUBY
+      end
+
+      it "falls back to Ruby when native is selected without strict mode" do
+        ENV["FONTISAN_ENGINE_STRICT"] = "0"
+        out, err, status = result
+
+        expect([status.success?, out]).to eq([true, "ruby"]), err
+      end
+
+      it "raises TierUnavailable when native is selected in strict mode" do
+        out, err, status = result
+
+        expect([status.success?, out]).to eq([true, "unavailable"]), err
       end
     end
   end
