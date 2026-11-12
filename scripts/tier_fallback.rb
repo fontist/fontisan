@@ -2,7 +2,7 @@
 
 # Tier fallback checks with strict mode OFF (fontist/fontisan#156 card 3a).
 #
-#   ruby scripts/tier_fallback.rb TIERS [CORPUS_ROOT [SCENARIO]]
+#   ruby scripts/tier_fallback.rb TIERS [CORPUS_ROOT [SCENARIO]] [--gem GEM_NAME]
 #
 # TIERS is the comma list of non-Ruby tiers this platform is expected to have
 # (native,ffi | ffi | none). Without SCENARIO it runs every scenario below, each
@@ -33,15 +33,23 @@ SCENARIOS = %w[no_native no_ffi native_missing_symbol native_abi_mismatch
                ffi_missing_symbol ffi_abi_mismatch mixed
                auto_all auto_no_native auto_none].freeze
 
-usage = "usage: tier_fallback.rb native,ffi|ffi|none [corpus root [scenario]]"
-tiers = ARGV.fetch(0) { abort usage }.split(",") - ["none"]
-root = File.expand_path(ARGV.fetch(1, File.join(__dir__, "..", "corpus")))
-scenario = ARGV[2]
+usage = "usage: tier_fallback.rb native,ffi|ffi|none [corpus root [scenario]] [--gem GEM_NAME]"
+arguments = ARGV.dup
+gem_option = arguments.index("--gem")
+gem_name = "fontisan"
+if gem_option
+  gem_name = arguments.fetch(gem_option + 1) { abort usage }
+  arguments.slice!(gem_option, 2)
+end
+tiers = arguments.fetch(0) { abort usage }.split(",") - ["none"]
+root = File.expand_path(arguments.fetch(1, File.join(__dir__, "..", "corpus")))
+scenario = arguments[2]
 abort "unknown tiers #{tiers.inspect}" unless (tiers - %w[native ffi]).empty?
 
 unless scenario
   results = SCENARIOS.to_h do |name|
-    [name, system(RbConfig.ruby, __FILE__, tiers.join(",").then { |t| t.empty? ? "none" : t }, root, name)]
+    [name, system(RbConfig.ruby, __FILE__, tiers.join(",").then { |t| t.empty? ? "none" : t }, root, name,
+                  "--gem", gem_name)]
   end
   failed = results.reject { |_, ok| ok }.keys
   puts failed.empty? ? "all #{SCENARIOS.size} fallback scenarios hold" : "FAILED: #{failed.join(', ')}"
@@ -74,6 +82,7 @@ end
 
 ENV["FONTISAN_ENGINE"] = "auto"
 ENV.delete("FONTISAN_ENGINE_STRICT")
+gem gem_name
 case scenario
 when "no_native", "auto_no_native", "auto_none" then Object.prepend(Sabotage::BlockNative)
 end
