@@ -89,7 +89,7 @@ jobs:
         shell: bash
         run: |
           docker run --rm -v "$PWD:/w:ro" ruby:3.4-alpine sh -ec '
-            apk add --no-cache git
+            apk add --no-cache build-base git
             gem install --no-document fontisan
             platform=$(ruby -e "require \"fontisan\"; puts Gem::Specification.find_by_name(\"fontisan\").platform")
             echo "auditing fontisan on musl ($platform)"
