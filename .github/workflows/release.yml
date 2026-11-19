@@ -271,9 +271,11 @@ jobs:
             "fontisan-${VERSION}-java.gem"
             "fontisan-${VERSION}-x64-mingw32.gem"
           )
+          # Hyphenated jq keys need the bracket-quote form: dot form
+          # parses as subtraction (.supported - ruby - platforms).
           while read -r platform; do
             expected+=("fontisan-${VERSION}-${platform}.gem")
-          done < <(jq -r '.supported-ruby-platforms[]' <<<"$FETCH_RESULT")
+          done < <(jq -r '.["supported-ruby-platforms"][]' <<<"$FETCH_RESULT")
           printf '%s\n' "${expected[@]}" > /tmp/expected.txt
           for gem in "${expected[@]}"; do
             [ -f "pkg/$gem" ] || { echo "::error::missing $gem"; exit 1; }
