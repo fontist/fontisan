@@ -99,8 +99,10 @@ jobs:
             SHA=$(git rev-parse HEAD)
             TAG="v$VERSION"
 
-            if git tag -l | grep -q "^${TAG}$"; then
-              echo "Tag $TAG already exists locally"
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null 2>&1; then
+              echo "Tag $TAG already exists on the remote"
+            elif git tag -l | grep -q "^${TAG}$"; then
+              echo "Tag $TAG exists locally but not on the remote"
             else
               echo "Creating tag $TAG..."
               git tag -a "$TAG" -m "Release $VERSION"
@@ -182,6 +184,7 @@ jobs:
             git tag -a "$TAG" -m "Release $VERSION" "$SHA"
             git push origin "$TAG"
             {
+              echo "version=$VERSION"
               echo "tag=$TAG"
               echo "sha=$SHA"
               echo "release=true"
@@ -195,7 +198,12 @@ jobs:
           # the tag needs pushing)
           if [ -z "${{ inputs.bump_type }}" ] || [ "${{ inputs.bump_type }}" = "skip" ]; then
             git push origin HEAD:${{ github.ref_name }} || true
-            git push origin ${{ steps.version.outputs.tag }}
+            # A re-release of an already-tagged version (resuming a
+            # publish that failed downstream) must not fail on the
+            # existing identical tag.
+            if ! git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" > /dev/null 2>&1; then
+              git push origin ${{ steps.version.outputs.tag }}
+            fi
           fi
 
   # Platform gems + per-platform smokes + java gem + JRuby smoke + musl
@@ -251,6 +259,11 @@ jobs:
       # + one gem per cross-compile platform. Anything else in pkg/ means
       # a stray artifact slipped in.
       - name: Verify the expected gem set
+        env:
+          # The fetch result is JSON with quotes and braces — inlining it
+          # via ${{ }} shatters the script's quoting, so it travels as an
+          # environment variable instead.
+          FETCH_RESULT: ${{ steps.fetch.outputs.result }}
         run: |
           VERSION="${{ needs.prepare-version.outputs.version }}"
           expected=(
@@ -260,7 +273,7 @@ jobs:
           )
           while read -r platform; do
             expected+=("fontisan-${VERSION}-${platform}.gem")
-          done < <(jq -r '.supported-ruby-platforms[]' <<<"${{ steps.fetch.outputs.result }}")
+          done < <(jq -r '.supported-ruby-platforms[]' <<<"$FETCH_RESULT")
           printf '%s\n' "${expected[@]}" > /tmp/expected.txt
           for gem in "${expected[@]}"; do
             [ -f "pkg/$gem" ] || { echo "::error::missing $gem"; exit 1; }
