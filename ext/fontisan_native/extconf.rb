@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
-# Builds the :native tier. Degrades cleanly: without a Rust toolchain (or the
-# rb_sys gem) it writes a no-op Makefile, the gem installs without the
-# extension, and Fontisan::Native.available? is false, so only the :ruby tier
-# serves. Set FONTISAN_NATIVE_REQUIRED=1 to turn that degradation into a failure.
+# Builds the :native tier. Degrades cleanly: without a working Rust toolchain
+# (both `cargo --version` and `rustc --version` must succeed) or the rb_sys gem,
+# or when rb_sys raises while configuring (a Cargo/Ruby target mismatch, a
+# cargo shim with no usable rustc), it writes a no-op Makefile, the gem installs
+# without the extension, and Fontisan::Native.available? is false, so only the
+# :ruby tier serves. Set FONTISAN_NATIVE_REQUIRED=1 to turn that degradation
+# into a failure.
 #
 # A failure at `make` time (a Cargo/Ruby target mismatch on Windows, a missing
 # linker, an old rustc) degrades the same way: rb_sys's Makefile is kept as
@@ -11,11 +14,12 @@
 # warning. Only POSIX-sh-compatible recipe syntax is used (`cmd || echo`), so it
 # works under GNU make on Linux/macOS and the RubyInstaller devkit (msys sh).
 require "mkmf"
+require "fileutils"
 
 RB_SYS_MAKEFILE = "Makefile.rb_sys"
 
 def cargo_present?
-  system("cargo", "--version", out: File::NULL, err: File::NULL)
+  %w[cargo rustc].all? { |tool| system(tool, "--version", out: File::NULL, err: File::NULL) }
 rescue SystemCallError
   false
 end
@@ -23,6 +27,8 @@ end
 def skip_native(reason)
   abort "fontisan: cannot build the native extension: #{reason}" if ENV["FONTISAN_NATIVE_REQUIRED"] == "1"
 
+  # rb_sys may have written (part of) its Makefile before raising.
+  FileUtils.rm_f(["Makefile", RB_SYS_MAKEFILE])
   warn "fontisan: skipping the native extension (#{reason}); the :ruby engine tier serves."
   File.write("Makefile", <<~MAKEFILE)
     all:
@@ -53,7 +59,9 @@ if cargo_present?
     wrap_rust_makefile
   rescue LoadError
     skip_native("the rb_sys gem is not installed")
+  rescue StandardError => e
+    skip_native("rb_sys could not configure the build: #{e.message}")
   end
 else
-  skip_native("cargo not found")
+  skip_native("cargo or rustc not found")
 end
