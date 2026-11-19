@@ -10,6 +10,14 @@ name: gem-build
 
 on:
   workflow_call:
+    # The release workflow calls this at the tagged/bumped SHA, not at
+    # its own event SHA. Empty on push/PR/dispatch runs, which check out
+    # github.sha as before.
+    inputs:
+      ref:
+        description: "Git ref to check out (release SHA); empty = github.sha"
+        required: false
+        type: string
   workflow_dispatch:
   pull_request:
     paths:
@@ -53,11 +61,21 @@ jobs:
           - platform: x64-mingw-ucrt
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
+
+      # parsanol-ruby#205: the cross-gem build runs plain `cargo rustc`,
+      # which re-resolves and rewrites the lock whenever the ext manifest's
+      # floor outpaces the committed lock. Fail early on the host instead of
+      # silently floating the shipped engine.
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Assert the workspace lock is consistent with the manifests
+        run: cargo metadata --locked --format-version 1 > /dev/null
 
       # Pinned to the exact release: the floating major tag moves its
       # rake-compiler-dock image.
@@ -91,6 +109,8 @@ jobs:
           - { platform: x64-mingw-ucrt, os: windows-2025 }
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -122,6 +142,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -168,6 +190,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -200,6 +224,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -232,6 +258,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -266,15 +294,17 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
 
-      - run: gem build fontisan.gemspec -o fontisan-source.gem
+      - run: gem build fontisan.gemspec
 
       - uses: actions/upload-artifact@v4
         with:
           name: cross-gem-any
-          path: fontisan-source.gem
+          path: fontisan-*.gem
           if-no-files-found: error
