@@ -18,10 +18,15 @@ require "fileutils"
 
 RB_SYS_MAKEFILE = "Makefile.rb_sys"
 
-def cargo_present?
-  %w[cargo rustc].all? { |tool| system(tool, "--version", out: File::NULL, err: File::NULL) }
+def tool_present?(tool)
+  system(tool, "--version", out: File::NULL, err: File::NULL)
 rescue SystemCallError
   false
+end
+
+# The first of cargo and rustc whose `--version` does not succeed, or nil.
+def missing_rust_tool
+  %w[cargo rustc].find { |tool| !tool_present?(tool) }
 end
 
 def skip_native(reason)
@@ -52,7 +57,9 @@ def wrap_rust_makefile
   File.write("Makefile", "#{targets.join}\n.PHONY: all install clean distclean\n")
 end
 
-if cargo_present?
+if (missing = missing_rust_tool)
+  skip_native("#{missing} not found")
+else
   begin
     require "rb_sys/mkmf"
     create_rust_makefile("fontisan/native/fontisan_native")
@@ -62,6 +69,4 @@ if cargo_present?
   rescue StandardError => e
     skip_native("rb_sys could not configure the build: #{e.message}")
   end
-else
-  skip_native("cargo or rustc not found")
 end

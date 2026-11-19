@@ -38,11 +38,12 @@ RSpec.describe "ext/fontisan_native/extconf.rb build fallback" do
                     *cmd, chdir: File.join(dir, "build"))
   end
 
-  # A succeeding `<name> --version` on PATH: a .bat on Windows, a sh script elsewhere.
-  def stub_tool(name)
-    return File.write(File.join(dir, "bin", "#{name}.bat"), "@exit /b 0\r\n") if Gem.win_platform?
+  # A `<name> --version` on PATH that exits with +code+: a .bat on Windows, a sh
+  # script elsewhere.
+  def stub_tool(name, code: 0)
+    return File.write(File.join(dir, "bin", "#{name}.bat"), "@exit /b #{code}\r\n") if Gem.win_platform?
 
-    File.write(File.join(dir, "bin", name), "#!/bin/sh\nexit 0\n")
+    File.write(File.join(dir, "bin", name), "#!/bin/sh\nexit #{code}\n")
     FileUtils.chmod(0o755, File.join(dir, "bin", name))
   end
 
@@ -93,6 +94,17 @@ RSpec.describe "ext/fontisan_native/extconf.rb build fallback" do
     out, status = run_in(dir, env, make_cmd)
     expect(status).not_to be_success
     expect(out).to include("cargo build failed")
+  end
+
+  context "when cargo works but rustc does not" do
+    before { stub_tool("rustc", code: 1) }
+
+    it "names rustc in the warning and writes the no-op Makefile" do
+      out, status = configure
+      expect(status).to be_success
+      expect(out).to include("skipping the native extension (rustc not found)")
+      expect(Dir.children(File.join(dir, "build"))).to eq(["Makefile"])
+    end
   end
 
   context "when rb_sys raises while configuring" do
