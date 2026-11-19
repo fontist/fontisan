@@ -97,7 +97,7 @@ jobs:
             # installs it by file: what is certified is the musl
             # artifact itself.
             gem fetch fontisan --platform=x86_64-linux-musl
-            gem install --no-document --local fontisan-*x86_64-linux-musl.gem
+            gem install --no-document fontisan-*x86_64-linux-musl.gem
             platform=$(ruby -e "require \"fontisan\"; puts Gem::Specification.find_by_name(\"fontisan\").platform")
             echo "auditing fontisan on musl ($platform)"
             case "$platform" in
