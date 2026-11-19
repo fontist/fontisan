@@ -31,7 +31,9 @@ Gem::Specification.new do |spec|
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|corpus)/|\.(?:git|travis|circleci)|appveyor)})
+      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|corpus)/|\.(?:git|travis|circleci)|appveyor)}) ||
+        # The lib-only x64-mingw32 stub builder is CI tooling (#173), not gem content.
+        f == "build_mingw32_stub.rb"
     end
   end
   spec.bindir = "exe"
