@@ -1,10 +1,14 @@
 ---
-# Platform gems for fontist/fontisan#156 card 2e.
+# Platform gems for fontist/fontisan#156 card 2e, on the parsanol-ruby
+# release protocol (#173).
 #
-# Each platform gem bundles a precompiled magnus extension per supported Ruby
-# minor (the :native tier, rb-sys cross-gem) and the cdylib for the platform
-# (the :ffi tier, vendored by `rake cdylib:vendor` from the cross_compiling hook
-# in rakelib/native.rake). The source gem builds nothing without cargo; the
+# The platform matrix is data: fetch-ci-data returns rubygems' supported
+# cross-compile platforms (minus legacy x64-mingw32, covered by the
+# build_mingw32_stub.rb stub job). Each platform gem bundles a precompiled
+# magnus extension per supported Ruby minor (the :native tier, rb-sys
+# cross-gem) and the cdylib for the platform (the :ffi tier, vendored by
+# `rake cdylib:vendor` from the cross_compiling hook in
+# rakelib/native.rake). The source gem builds nothing without cargo; the
 # `no-toolchain` job proves that on a runner with no Rust installed.
 name: gem-build
 
@@ -44,21 +48,41 @@ permissions:
   contents: read
 
 jobs:
+  # The platform matrix is data, not code (the parsanol-ruby shape):
+  # fetch-ci-data returns rubygems' supported cross-compile platforms
+  # (minus legacy x64-mingw32, which build_mingw32_stub.rb covers as a
+  # lib-only stub). The lock assert guards the plain `cargo rustc` the
+  # cross-gem build runs inside the dock (parsanol-ruby#205: a stale
+  # lock silently floats the shipped engine rev).
+  ci-data:
+    runs-on: ubuntu-22.04
+    outputs:
+      result: ${{ steps.fetch.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Assert the workspace lock is consistent with the manifests
+        run: cargo metadata --locked --format-version 1 > /dev/null
+
+      - id: fetch
+        uses: oxidize-rb/actions/fetch-ci-data@v1
+        with:
+          supported-ruby-platforms: |
+            exclude: [x64-mingw32]
+          stable-ruby-versions: |
+            only: [3.2, 3.3, 3.4, 4.0]
+
   native:
-    name: Build ${{ matrix.platform }} gem
+    name: Build ${{ matrix.ruby-platform }} gem
+    needs: ci-data
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: x86_64-linux
-          - platform: x86_64-linux-musl
-            # A musl cdylib / magnus extension cannot link a static C runtime.
-            # rakelib/native.rake sets this too; stated here so it is visible.
-            rustflags: "-C target-feature=-crt-static"
-          - platform: arm64-darwin
-          - platform: x86_64-darwin
-          - platform: x64-mingw-ucrt
+        ruby-platform: ${{ fromJSON(needs.ci-data.outputs.result).supported-ruby-platforms }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,27 +93,22 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
 
-      # parsanol-ruby#205: the cross-gem build runs plain `cargo rustc`,
-      # which re-resolves and rewrites the lock whenever the ext manifest's
-      # floor outpaces the committed lock. Fail early on the host instead of
-      # silently floating the shipped engine.
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Assert the workspace lock is consistent with the manifests
-        run: cargo metadata --locked --format-version 1 > /dev/null
-
+      # A musl cdylib / magnus extension cannot link a static C runtime.
+      # rakelib/native.rake sets the same flag from the target name;
+      # stated here so it is visible.
       # Pinned to the exact release: the floating major tag moves its
       # rake-compiler-dock image.
       - uses: oxidize-rb/actions/cross-gem@v1.5.0
         id: cross-gem
         env:
-          RUSTFLAGS: ${{ matrix.rustflags }}
+          RUSTFLAGS: ${{ contains(matrix.ruby-platform, 'musl') && '-C target-feature=-crt-static' || '' }}
         with:
-          platform: ${{ matrix.platform }}
+          platform: ${{ matrix.ruby-platform }}
           ruby-versions: "3.2,3.3,3.4,4.0"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cross-gem-${{ matrix.platform }}
+          name: cross-gem-${{ matrix.ruby-platform }}
           path: ${{ steps.cross-gem.outputs.gem-path }}
           if-no-files-found: error
 
@@ -104,9 +123,11 @@ jobs:
       matrix:
         include:
           - { platform: x86_64-linux, os: ubuntu-22.04 }
+          - { platform: aarch64-linux, os: ubuntu-22.04-arm }
           - { platform: arm64-darwin, os: macos-15 }
           - { platform: x86_64-darwin, os: macos-15-intel }
           - { platform: x64-mingw-ucrt, os: windows-2025 }
+          - { platform: aarch64-mingw-ucrt, os: windows-11-arm }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -307,4 +328,29 @@ jobs:
         with:
           name: cross-gem-any
           path: fontisan-*.gem
+          if-no-files-found: error
+
+  # Validation mirror of release.yml's stub job: the lib-only
+  # x64-mingw32 gem must build and install the pure-Ruby engine.
+  stub-x64-mingw32:
+    name: Build stub gem (x64-mingw32)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Build lib-only platform stub
+        run: |
+          ruby build_mingw32_stub.rb
+          ls -l fontisan-*-x64-mingw32.gem
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cross-gem-x64-mingw32
+          path: fontisan-*-x64-mingw32.gem
           if-no-files-found: error

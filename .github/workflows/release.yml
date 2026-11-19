@@ -215,8 +215,6 @@ jobs:
     needs: [prepare-version, build]
     if: needs.prepare-version.outputs.release == 'true'
     runs-on: ubuntu-22.04
-    env:
-      HAS_RUBYGEMS_API_KEY: ${{ secrets.FONTIST_CI_RUBYGEMS_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -225,6 +223,15 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
+
+      # Recompute the platform set the build matrix used (same
+      # fetch-ci-data inputs), so the verify below asserts the shipped
+      # set exactly instead of a hand-maintained list.
+      - id: fetch
+        uses: oxidize-rb/actions/fetch-ci-data@v1
+        with:
+          supported-ruby-platforms: |
+            exclude: [x64-mingw32]
 
       - name: Download the built gems
         uses: actions/download-artifact@v4
@@ -239,20 +246,20 @@ jobs:
           name: java-gem
           path: pkg/
 
-      # The release ships exactly these seven gems: source + five platform
-      # + java. Anything else in pkg/ means a stray artifact slipped in.
+      # The release ships exactly: source + java + the x64-mingw32 stub
+      # + one gem per cross-compile platform. Anything else in pkg/ means
+      # a stray artifact slipped in.
       - name: Verify the expected gem set
         run: |
           VERSION="${{ needs.prepare-version.outputs.version }}"
           expected=(
             "fontisan-${VERSION}.gem"
-            "fontisan-${VERSION}-x86_64-linux.gem"
-            "fontisan-${VERSION}-x86_64-linux-musl.gem"
-            "fontisan-${VERSION}-arm64-darwin.gem"
-            "fontisan-${VERSION}-x86_64-darwin.gem"
-            "fontisan-${VERSION}-x64-mingw-ucrt.gem"
             "fontisan-${VERSION}-java.gem"
+            "fontisan-${VERSION}-x64-mingw32.gem"
           )
+          while read -r platform; do
+            expected+=("fontisan-${VERSION}-${platform}.gem")
+          done < <(jq -r '.supported-ruby-platforms[]' <<<"${{ steps.fetch.outputs.result }}")
           printf '%s\n' "${expected[@]}" > /tmp/expected.txt
           for gem in "${expected[@]}"; do
             [ -f "pkg/$gem" ] || { echo "::error::missing $gem"; exit 1; }
@@ -266,17 +273,10 @@ jobs:
           done
           exit "$unexpected"
 
-      # API key while it exists (the credential today's releases use);
-      # trusted publishing otherwise — the parsanol-ruby default, which
-      # needs fontisan registered as a trusted publisher on rubygems.org.
-      - name: Configure RubyGems credentials (API key)
-        if: env.HAS_RUBYGEMS_API_KEY == 'true'
-        uses: rubygems/configure-rubygems-credentials@v2.1.0
-        with:
-          api-token: ${{ secrets.FONTIST_CI_RUBYGEMS_API_KEY }}
-
-      - name: Configure RubyGems credentials (trusted publishing)
-        if: env.HAS_RUBYGEMS_API_KEY == 'false'
+      # Trusted publishing: fontisan is registered on rubygems.org for
+      # fontist/fontisan + release.yml. The OIDC exchange needs the
+      # id-token: write this workflow grants.
+      - name: Configure RubyGems credentials
         uses: rubygems/configure-rubygems-credentials@v2.1.0
 
       - name: Push gems

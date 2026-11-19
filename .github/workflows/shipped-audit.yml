@@ -33,9 +33,11 @@ jobs:
       matrix:
         include:
           - { platform: x86_64-linux, os: ubuntu-22.04 }
+          - { platform: aarch64-linux, os: ubuntu-22.04-arm }
           - { platform: arm64-darwin, os: macos-15 }
           - { platform: x86_64-darwin, os: macos-15-intel }
           - { platform: x64-mingw-ucrt, os: windows-2025 }
+          - { platform: aarch64-mingw-ucrt, os: windows-11-arm }
     steps:
       - uses: actions/checkout@v4
 
