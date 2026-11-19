@@ -90,12 +90,16 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/w:ro" ruby:3.4-alpine sh -ec '
             apk add --no-cache build-base git
-            gem install --no-document fontisan
+            # ruby:3.4-alpine resolves the gnu gem on musl — its rubygems
+            # does not flag this image as musl — so the platform is forced:
+            # the cell certifies that the published musl artifact installs
+            # and serves on musl, not the container resolution preference.
+            gem install --no-document --platform x86_64-linux-musl fontisan
             platform=$(ruby -e "require \"fontisan\"; puts Gem::Specification.find_by_name(\"fontisan\").platform")
             echo "auditing fontisan on musl ($platform)"
             case "$platform" in
               *musl*) ;;
-              *) echo "::error::rubygems resolved $platform on musl"; exit 1;;
+              *) echo "::error::the musl gem did not install (got $platform)"; exit 1;;
             esac
             cd /tmp
             ruby /w/scripts/tier_smoke.rb native /w/corpus
