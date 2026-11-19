@@ -59,6 +59,9 @@ CLAUDE.md
 # Fetched corpus fonts (rake corpus:fetch)
 corpus/fonts/
 
+# Workspace-root cargo build output (a bare `cargo check` at the gem root)
+/target/
+
 # :native tier build output
 /lib/fontisan/native/*.bundle
 /lib/fontisan/native/*.so
