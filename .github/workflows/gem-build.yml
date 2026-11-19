@@ -70,8 +70,13 @@ jobs:
       - id: fetch
         uses: oxidize-rb/actions/fetch-ci-data@v1
         with:
+          # x64-mingw32: covered by the build_mingw32_stub.rb stub job.
+          # aarch64-mingw-ucrt: nokogiri (a hard dependency) ships no
+          # aarch64-mingw-ucrt gem and its libxml2 source build fails on
+          # windows-arm, so the gem could not install there end-to-end;
+          # restore this platform when nokogiri ships it.
           supported-ruby-platforms: |
-            exclude: [x64-mingw32]
+            exclude: [x64-mingw32, aarch64-mingw-ucrt]
           stable-ruby-versions: |
             only: [3.2, 3.3, 3.4, 4.0]
 
@@ -127,7 +132,6 @@ jobs:
           - { platform: arm64-darwin, os: macos-15 }
           - { platform: x86_64-darwin, os: macos-15-intel }
           - { platform: x64-mingw-ucrt, os: windows-2025 }
-          - { platform: aarch64-mingw-ucrt, os: windows-11-arm }
     steps:
       - uses: actions/checkout@v4
         with:

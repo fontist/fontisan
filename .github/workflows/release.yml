@@ -225,13 +225,14 @@ jobs:
           ruby-version: "3.4"
 
       # Recompute the platform set the build matrix used (same
-      # fetch-ci-data inputs), so the verify below asserts the shipped
-      # set exactly instead of a hand-maintained list.
+      # fetch-ci-data inputs, same exclusions — see gem-build.yml), so
+      # the verify below asserts the shipped set exactly instead of a
+      # hand-maintained list.
       - id: fetch
         uses: oxidize-rb/actions/fetch-ci-data@v1
         with:
           supported-ruby-platforms: |
-            exclude: [x64-mingw32]
+            exclude: [x64-mingw32, aarch64-mingw-ucrt]
 
       - name: Download the built gems
         uses: actions/download-artifact@v4
