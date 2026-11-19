@@ -1,0 +1,129 @@
+# Shipped artifact audit, the parsanol-ruby way: replay the ci corpus
+# through the gem PUBLISHED on rubygems — not the repo. Repo CI tests the
+# checkout; this tests the registry, where a release desync (partial
+# platform publish, source gem resolving where the platform gem should,
+# stale upload) would otherwise be invisible — the parsanol-ruby#223
+# class. The #173 invariant per platform: `gem install fontisan` picks a
+# precompiled gem (source platform would leave the native tier empty and
+# scripts/tier_smoke.rb red), and the native tier serves the corpus.
+#
+# Runs after each successful release run — no remembering to dispatch.
+name: shipped-audit
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shipped-audit
+  cancel-in-progress: false
+
+jobs:
+  gem:
+    name: Audit gem on ${{ matrix.platform }}
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: x86_64-linux, os: ubuntu-22.04 }
+          - { platform: aarch64-linux, os: ubuntu-22.04-arm }
+          - { platform: arm64-darwin, os: macos-15 }
+          - { platform: x86_64-darwin, os: macos-15-intel }
+          - { platform: x64-mingw-ucrt, os: windows-2025 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      # From rubygems, no --platform pin: resolution must land on the
+      # precompiled gem for this runner all by itself.
+      - name: Install the published gem
+        shell: bash
+        run: gem install --no-document fontisan
+
+      - name: Assert a precompiled gem was selected
+        shell: bash
+        run: |
+          platform=$(ruby -e 'require "fontisan"; puts Gem::Specification.find_by_name("fontisan").platform')
+          version=$(ruby -e 'require "fontisan"; puts Fontisan::VERSION')
+          echo "auditing fontisan $version ($platform) installed from rubygems"
+          if [ "$platform" = "ruby" ]; then
+            echo "::error::rubygems resolved the source gem; the platform gem is missing or unruly"
+            exit 1
+          fi
+
+      # Outside the checkout, so the installed gem is the one loaded.
+      - name: Corpus through the installed gem
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" native "$GITHUB_WORKSPACE/corpus"
+
+  # No musl runner: audit in the Alpine container, the way gem-build's
+  # smoke-musl does — but installing from rubygems.
+  gem-musl:
+    name: Audit gem on x86_64-linux-musl
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      - name: Install the published gem and run the corpus (Alpine)
+        shell: bash
+        run: |
+          docker run --rm -v "$PWD:/w:ro" ruby:3.4-alpine sh -ec '
+            apk add --no-cache git
+            gem install --no-document fontisan
+            platform=$(ruby -e "require \"fontisan\"; puts Gem::Specification.find_by_name(\"fontisan\").platform")
+            echo "auditing fontisan on musl ($platform)"
+            case "$platform" in
+              *musl*) ;;
+              *) echo "::error::rubygems resolved $platform on musl"; exit 1;;
+            esac
+            cd /tmp
+            ruby /w/scripts/tier_smoke.rb native /w/corpus
+          '
+
+  # The java gem: JRuby must resolve it from rubygems (not the source gem)
+  # and the ffi tier must serve.
+  gem-java:
+    name: Audit java gem on JRuby
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+
+      - name: Fetch ci-tier corpus (sha256 verified)
+        shell: bash
+        run: ruby -rrake -e 'load "rakelib/corpus.rake"; Corpus.fetch("ci")'
+
+      - name: Install the published java gem
+        run: |
+          gem install --no-document fontisan
+          if gem list -i brotli >/dev/null; then echo "brotli is installed"; exit 1; fi
+
+      - name: Corpus through the installed gem
+        run: |
+          cd "$RUNNER_TEMP"
+          ruby "$GITHUB_WORKSPACE/scripts/tier_smoke.rb" ffi "$GITHUB_WORKSPACE/corpus"
