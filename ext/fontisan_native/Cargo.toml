@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 # `fontisan = "=<version>"` once published. The rev must be a commit on
 # fontist/fontisan-rs; keep it equal to the rev in ext/fontisan_cdylib/Cargo.toml.
 fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "f45057a12e15ba9f2c02526cd8ca0603c80edaf9" }
-magnus = "=0.8.4"
+magnus = "=0.9.4"
 rb-sys = { version = "=0.9.130", default-features = false }
 
 [lints.rust]
