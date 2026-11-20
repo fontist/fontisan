@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "nokogiri"
+require "moxml"
 
 module Fontisan
   module Export
@@ -40,21 +40,35 @@ module Fontisan
       def generate(options = {})
         table_list = options[:tables] || :all
 
-        builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
-          xml.ttFont(
-            "sfntVersion" => format_sfnt_version(to_int(@font.header.sfnt_version)),
-            "ttLibVersion" => "4.0",
-          ) do
-            generate_glyph_order(xml)
+        # The ttFont body lambda is created here (method context) so
+        # its self stays this generator: moxml's #build block is
+        # instance_eval'd against the builder, which would turn bare
+        # helper calls into tag names. The zero-indent context keeps
+        # the builder markup flat so the pretty reparse in
+        # format_output owns all indentation (reindenting
+        # already-indented mixed content glues sibling tags together).
+        context = Moxml.new { |config| config.default_indent = 0 }
+        builder = Moxml::Builder.new(context)
+        sfnt_version = format_sfnt_version(to_int(@font.header.sfnt_version))
+        root_body = -> {
+          generate_glyph_order(builder)
 
-            tables_to_generate = select_tables(table_list)
-            tables_to_generate.each do |tag|
-              generate_table(xml, tag)
-            end
+          tables_to_generate = select_tables(table_list)
+          tables_to_generate.each do |tag|
+            generate_table(builder, tag)
           end
+        }
+        builder.build do
+          declaration(version: "1.0", encoding: "UTF-8")
+          create_tag("ttFont",
+                     { "sfntVersion" => sfnt_version,
+                       "ttLibVersion" => "4.0" },
+                     block: root_body)
         end
 
-        format_output(builder.to_xml)
+        # expand_empty: false keeps the Nokogiri shape (empty elements
+        # self-close, e.g. <GlyphID id="0" name=".notdef"/>).
+        format_output(builder.doc.to_xml(expand_empty: false))
       end
 
       private
@@ -69,7 +83,7 @@ module Fontisan
 
       # Generate GlyphOrder section (required first)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @return [void]
       def generate_glyph_order(xml)
         xml.GlyphOrder do
@@ -83,7 +97,7 @@ module Fontisan
 
       # Generate individual table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       public
 
       # Per-tag emitter dispatch table. Adding a new table's TTX
@@ -138,7 +152,7 @@ module Fontisan
 
       # Generate head table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Head] Head table
       # @return [void]
       def generate_head_table(xml, table)
@@ -167,7 +181,7 @@ module Fontisan
 
       # Generate hhea table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Hhea] Hhea table
       # @return [void]
       def generate_hhea_table(xml, table)
@@ -194,7 +208,7 @@ module Fontisan
 
       # Generate maxp table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Maxp] Maxp table
       # @return [void]
       def generate_maxp_table(xml, table)
@@ -224,7 +238,7 @@ module Fontisan
 
       # Generate post table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Post] Post table
       # @return [void]
       def generate_post_table(xml, table)
@@ -243,7 +257,7 @@ module Fontisan
 
       # Generate name table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Name] Name table
       # @return [void]
       def generate_name_table(xml, table)
@@ -263,7 +277,7 @@ module Fontisan
 
       # Generate OS/2 table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Os2] OS/2 table
       # @return [void]
       def generate_os2_table(xml, table)
@@ -274,10 +288,10 @@ module Fontisan
 
       # Helper to add element with value attribute
       #
-      # @param parent [Nokogiri::XML::Element] Parent element
+      # @param parent [Moxml::Element] Parent element
       # @param name [String] Element name
       # @param value [Object] Value
-      # @param doc [Nokogiri::XML::Document] Document
+      # @param doc [Moxml::Document] Document
       # @return [void]
       def add_element_with_value(parent, name, value, doc)
         elem = doc.create_element(name)
@@ -287,7 +301,7 @@ module Fontisan
 
       # Generate binary table as hexdata
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param tag [String] Table tag
       # @param table [Object] Table object
       # @return [void]
@@ -302,7 +316,7 @@ module Fontisan
 
       # Generate binary table from raw data
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param tag [String] Table tag
       # @param data [String] Raw binary data
       # @return [void]
@@ -318,7 +332,7 @@ module Fontisan
 
       # Generate cmap table XML (simplified for now)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Object] Cmap table
       # @return [void]
       def generate_cmap_table(xml, table)
@@ -327,7 +341,7 @@ module Fontisan
 
       # Generate loca table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Object] Loca table
       # @return [void]
       def generate_loca_table(xml, _table)
@@ -338,7 +352,7 @@ module Fontisan
 
       # Generate glyf table XML (simplified for now)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Object] Glyf table
       # @return [void]
       def generate_glyf_table(xml, table)
@@ -347,7 +361,7 @@ module Fontisan
 
       # Generate CFF table XML (simplified for now)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Object] CFF table
       # @return [void]
       def generate_cff_table(xml, table)
@@ -356,7 +370,7 @@ module Fontisan
 
       # Generate hmtx table XML (simplified for now)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Object] Hmtx table
       # @return [void]
       def generate_hmtx_table(xml, table)
@@ -365,7 +379,7 @@ module Fontisan
 
       # Generate fvar table XML
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param table [Tables::Fvar] Fvar table
       # @return [void]
       def generate_fvar_table(xml, table)
@@ -376,10 +390,12 @@ module Fontisan
           table.axes.each do |axis|
             xml.Axis do
               xml.AxisTag axis.axis_tag
-              xml.MinValue to_int(axis.min_value) / 65536.0
-              xml.DefaultValue to_int(axis.default_value) / 65536.0
-              xml.MaxValue to_int(axis.max_value) / 65536.0
-              xml.AxisNameID to_int(axis.axis_name_id)
+              # moxml builder text content must be a String (Nokogiri
+              # stringified any value); .to_s keeps the same bytes.
+              xml.MinValue (to_int(axis.min_value) / 65536.0).to_s
+              xml.DefaultValue (to_int(axis.default_value) / 65536.0).to_s
+              xml.MaxValue (to_int(axis.max_value) / 65536.0).to_s
+              xml.AxisNameID to_int(axis.axis_name_id).to_s
             end
           end
         end
@@ -387,7 +403,7 @@ module Fontisan
 
       # Generate variation table XML (gvar, cvar, HVAR, etc.)
       #
-      # @param xml [Nokogiri::XML::Builder] XML builder
+      # @param xml [Moxml::Builder] XML builder
       # @param tag [String] Table tag
       # @param table [Object] Variation table
       # @return [void]
@@ -514,8 +530,10 @@ module Fontisan
       # @return [String] Formatted XML
       def format_output(xml)
         if @pretty
-          doc = Nokogiri::XML(xml)
-          doc.to_xml(indent: @indent)
+          doc = Moxml.parse(xml)
+          # expand_empty: false keeps the Nokogiri shape (empty
+          # elements self-close).
+          doc.to_xml(indent: @indent, expand_empty: false)
         else
           # Remove extra whitespace for compact format
           xml.gsub(/>\s+</, "><").gsub(/\n\s*/, "")

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "nokogiri"
+require "moxml"
 
 module Fontisan
   module SvgToGlyf
@@ -13,7 +13,7 @@ module Fontisan
 
       # @param xml [String] raw SVG XML
       def self.from_xml(xml)
-        new(Nokogiri::XML(xml))
+        new(Moxml.parse(xml))
       end
 
       # @param path [String] file path to an .svg file
@@ -21,7 +21,7 @@ module Fontisan
         from_xml(File.read(path))
       end
 
-      # @param doc [Nokogiri::XML::Document]
+      # @param doc [Moxml::Document]
       def initialize(doc)
         @doc = doc
         @source = doc

@@ -35,9 +35,11 @@ require "stringio"
 require "tmpdir"
 require "lutaml/model"
 
-# Configure lutaml-model to use Nokogiri adapter for XML serialization
+# Configure lutaml-model to use the leptris engine via moxml: a
+# pure-C99 XML engine consumed through precompiled FFI gems on every
+# supported platform, so no nokogiri native build is needed.
 Lutaml::Model::Config.configure do |config|
-  config.xml_adapter_type = :nokogiri
+  config.xml_adapter_type = :leptris
 end
 
 module Fontisan

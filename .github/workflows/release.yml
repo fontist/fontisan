@@ -240,7 +240,7 @@ jobs:
         uses: oxidize-rb/actions/fetch-ci-data@v1
         with:
           supported-ruby-platforms: |
-            exclude: [x64-mingw32, aarch64-mingw-ucrt]
+            exclude: [x64-mingw32]
 
       - name: Download the built gems
         uses: actions/download-artifact@v4

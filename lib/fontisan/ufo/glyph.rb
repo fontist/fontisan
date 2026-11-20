@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "nokogiri"
+require "moxml"
 
 module Fontisan
   module Ufo
@@ -110,27 +110,39 @@ module Fontisan
       # @param xml [String] the .glif XML body
       # @return [Glyph] parsed glyph
       def self.from_glif(xml)
-        doc = Nokogiri::XML(xml)
+        doc = Moxml.parse(xml)
         root = doc.root
         new(name: root["name"]).tap { |g| g.read_from(root) }
       end
 
       # Render this glyph back to .glif XML.
+      #
+      # The glyph body block is created here (method context) so its
+      # self stays this glyph: moxml's #build block is instance_eval'd
+      # against the builder, which would turn bare helper calls into
+      # tag names.
       # @return [String] XML text
       def to_glif
-        builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
-          xml.glyph(name: @name, format: "2") do
-            emit_advance(xml)
-            emit_unicodes(xml)
-            emit_outline(xml)
-            emit_lib(xml)
-            emit_note(xml)
-          end
+        builder = Moxml::Builder.new(Moxml.new)
+        body = -> {
+          emit_advance(builder)
+          emit_unicodes(builder)
+          emit_outline(builder)
+          emit_lib(builder)
+          emit_note(builder)
+        }
+        name = @name
+        builder.build do
+          declaration(version: "1.0", encoding: "UTF-8")
+          create_tag("glyph", { "name" => name, "format" => "2" },
+                     block: body)
         end
-        builder.to_xml
+        # expand_empty: false keeps the Nokogiri shape (empty elements
+        # self-close, e.g. <advance width="0"/>).
+        builder.doc.to_xml(expand_empty: false)
       end
 
-      # Populate this glyph from a <glyph> Nokogiri node.
+      # Populate this glyph from a <glyph> Moxml node.
       def read_from(root)
         read_advance(root)
         read_unicodes(root)
@@ -325,7 +337,7 @@ module Fontisan
         @note = note_node.text if note_node
       end
 
-      # Helper: read a <dict> Nokogiri node into a Hash. Reuses the
+      # Helper: read a <dict> Moxml node into a Hash. Reuses the
       # same key/value pair logic as Plist.parse but operates on the
       # inlined lib plist.
       def read_dict_to_hash(dict_node)
@@ -422,11 +434,11 @@ module Fontisan
 
       def emit_value(xml, v)
         case v
-        when String then xml.string(v)
-        when Integer then xml.integer(v)
-        when Float then xml.real(v)
-        when true then xml.__send__(true)
-        when false then xml.__send__(false)
+        when String then v.empty? ? xml.string_ : xml.string(v)
+        when Integer then xml.integer(v.to_s)
+        when Float then xml.real(v.to_s)
+        when true then xml.true_
+        when false then xml.false_
         when Array then xml.array { v.each { |i| emit_value(xml, i) } }
         when Hash then emit_dict(xml, v)
         else xml.string(v.to_s)

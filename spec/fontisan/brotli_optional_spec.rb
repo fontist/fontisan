@@ -100,7 +100,7 @@ RSpec.describe "brotli as an optional dependency" do
       expect(spec.platform.to_s).to eq("java")
       names = spec.runtime_dependencies.map(&:name)
       expect(names).not_to include("brotli", "rb_sys")
-      expect(names).to include("ffi", "bindata", "nokogiri")
+      expect(names).to include("ffi", "bindata", "moxml", "leptris")
       expect(spec.extensions).to be_empty
       expect(spec.files.grep(%r{\Aext/})).to be_empty
     end
