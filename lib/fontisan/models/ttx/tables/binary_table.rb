@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "lutaml/model"
+require "moxml"
 
 module Fontisan
   module Models
@@ -17,24 +18,28 @@ module Fontisan
           # Custom serialization since we need dynamic root element
           # based on table tag
           def to_xml(options = {})
-            builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
-              xml.public_send(tag.to_sym) do
-                xml.hexdata do
-                  xml.text("\n    #{format_hexdata(hexdata)}\n  ")
-                end
-              end
-            end
+            builder = Moxml::Builder.new(Moxml.new)
+            table_tag = tag
+            body = -> {
+              builder.create_tag(table_tag, block: -> {
+                builder.create_tag(
+                  "hexdata",
+                  text_content: "\n    #{format_hexdata(hexdata)}\n  ",
+                )
+              })
+            }
+            builder.build(&body)
 
             if options[:pretty]
               builder.doc.root.to_xml(indent: options.fetch(:indent, 2))
             else
-              builder.to_xml
+              builder.doc.to_xml(expand_empty: false)
             end
           end
 
           # Parse from XML
           def self.from_xml(xml_string, tag)
-            doc = Nokogiri::XML(xml_string)
+            doc = Moxml.parse(xml_string)
             table_elem = doc.at_xpath("//#{tag}")
             return nil unless table_elem
 

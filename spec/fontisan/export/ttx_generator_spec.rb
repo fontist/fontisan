@@ -15,8 +15,8 @@ RSpec.describe Fontisan::Export::TtxGenerator do
       expect(ttx_xml).to include("</ttFont>")
 
       # Validate XML structure
-      doc = Nokogiri::XML(ttx_xml)
-      expect(doc.errors).to be_empty
+      doc = Moxml.parse(ttx_xml)
+      expect(doc.parse_errors).to be_empty
     end
 
     it "includes GlyphOrder" do
@@ -152,7 +152,7 @@ RSpec.describe Fontisan::Export::TtxGenerator do
 
     it "includes correct glyph count" do
       ttx_xml = generator.generate
-      doc = Nokogiri::XML(ttx_xml)
+      doc = Moxml.parse(ttx_xml)
       glyph_count = doc.xpath("//GlyphID").count
 
       maxp = font.table("maxp")

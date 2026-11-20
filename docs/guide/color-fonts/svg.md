@@ -44,22 +44,22 @@ end
 ### Parse SVG Content
 
 ```ruby
-require 'nokogiri'
+require 'moxml'
 
 svg = font.tables['SVG']
 doc = svg.documents[42]  # SVG for glyph 42
 
-parsed = Nokogiri::XML(doc)
+parsed = Moxml.parse(doc)
 
 # Find elements
-paths = parsed.css('path')
+paths = parsed.root.css('path')
 puts "Paths: #{paths.length}"
 
-rects = parsed.css('rect')
+rects = parsed.root.css('rect')
 puts "Rectangles: #{rects.length}"
 
 # Find gradients
-gradients = parsed.css('linearGradient', 'radialGradient')
+gradients = parsed.root.css('linearGradient, radialGradient')
 puts "Gradients: #{gradients.length}"
 ```
 

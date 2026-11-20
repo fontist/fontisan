@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "nokogiri"
+require "moxml"
 
 module Fontisan
   module Export
@@ -19,7 +19,7 @@ module Fontisan
       # @param ttx_xml [String] TTX XML content
       # @return [Hash] Parsed font data structure
       def parse(ttx_xml)
-        doc = Nokogiri::XML(ttx_xml)
+        doc = Moxml.parse(ttx_xml)
         ttfont = doc.at_xpath("/ttFont")
         raise "No ttFont root element found" unless ttfont
 
@@ -51,7 +51,7 @@ module Fontisan
 
       # Parse GlyphOrder section
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @return [Array<Hash>] Array of glyph entries
       def parse_glyph_order(ttfont)
         glyph_order = ttfont.at_xpath("GlyphOrder")
@@ -67,7 +67,7 @@ module Fontisan
 
       # Parse all tables
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @return [Hash] Hash of table data by tag
       def parse_tables(ttfont)
         tables = {}
@@ -88,7 +88,7 @@ module Fontisan
 
       # Parse head table
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_head_table(ttfont, tables)
@@ -118,7 +118,7 @@ module Fontisan
 
       # Parse hhea table
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_hhea_table(ttfont, tables)
@@ -144,7 +144,7 @@ module Fontisan
 
       # Parse maxp table
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_maxp_table(ttfont, tables)
@@ -169,7 +169,7 @@ module Fontisan
 
       # Parse name table
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_name_table(ttfont, tables)
@@ -191,7 +191,7 @@ module Fontisan
 
       # Parse OS/2 table (stub)
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_os2_table(ttfont, tables)
@@ -204,7 +204,7 @@ module Fontisan
 
       # Parse post table (stub)
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_post_table(ttfont, tables)
@@ -222,7 +222,7 @@ module Fontisan
 
       # Parse binary tables (fallback)
       #
-      # @param ttfont [Nokogiri::XML::Element] Root element
+      # @param ttfont [Moxml::Element] Root element
       # @param tables [Hash] Tables hash
       # @return [void]
       def parse_binary_tables(ttfont, tables)
