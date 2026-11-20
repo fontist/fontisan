@@ -35,11 +35,25 @@ require "stringio"
 require "tmpdir"
 require "lutaml/model"
 
-# Configure lutaml-model to use the leptris engine via moxml: a
-# pure-C99 XML engine consumed through precompiled FFI gems on every
-# supported platform, so no nokogiri native build is needed.
+# The XML engine behind lutaml-model, chosen by what actually loads on
+# this machine: leptris (pure-C99, precompiled everywhere) when its
+# library loads, then nokogiri if present, then REXML (stdlib). The
+# probe is load-bearing: leptris's precompiled linux builds need
+# glibc >= 2.34, and forcing the adapter on an older glibc would crash
+# every boot — e.g. inside the rake-compiler-dock cross builds.
+xml_adapter = begin
+  require "leptris"
+  :leptris
+rescue LoadError
+  begin
+    require "nokogiri"
+    :nokogiri
+  rescue LoadError
+    :rexml
+  end
+end
 Lutaml::Model::Config.configure do |config|
-  config.xml_adapter_type = :leptris
+  config.xml_adapter_type = xml_adapter
 end
 
 module Fontisan
