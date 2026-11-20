@@ -192,21 +192,34 @@ RSpec.describe Fontisan::Engine do
 
     after { FileUtils.remove_entry(face_dir) }
 
-    %w[ruby auto].each do |selection|
-      context "when #{selection} is selected" do
-        let(:operation) do
-          <<~RUBY
-            ENV["FONTISAN_ENGINE"] = #{selection.inspect}
-            print Fontisan::Engine.resolve(:read)
-            abort "face loaded for Ruby" if $LOADED_FEATURES.include?(#{face_file.inspect})
-          RUBY
-        end
+    context "when ruby is selected" do
+      let(:operation) do
+        <<~RUBY
+          ENV["FONTISAN_ENGINE"] = "ruby"
+          print Fontisan::Engine.resolve(:read)
+          abort "face loaded for Ruby" if $LOADED_FEATURES.include?(#{face_file.inspect})
+        RUBY
+      end
 
-        it "keeps the face unloaded" do
-          out, err, status = result
+      it "keeps the face unloaded" do
+        out, err, status = result
 
-          expect([status.success?, out]).to eq([true, "ruby"]), err
-        end
+        expect([status.success?, out]).to eq([true, "ruby"]), err
+      end
+    end
+
+    context "when auto is selected (phase-3 flip, #160)" do
+      let(:operation) do
+        <<~RUBY
+          ENV["FONTISAN_ENGINE"] = "auto"
+          print Fontisan::Engine.resolve(:read)
+        RUBY
+      end
+
+      it "loads the face and serves through its native tier" do
+        out, err, status = result
+
+        expect([status.success?, out]).to eq([true, "native"]), err
       end
     end
 

@@ -7,8 +7,8 @@
 # Run it against an INSTALLED fontisan gem (never the checkout's lib/). It scans
 # every `ci`-tier corpus font through Fontisan::Engine with FONTISAN_ENGINE=EXPECTED_TIER (strict off),
 # then checks that
-#   * auto resolves to the first tier of Engine::AUTO_ORDER this gem has (ruby until the
-#     phase-3 gates flip it, fontist/fontisan#160);
+#   * auto resolves to the first tier of Engine::AUTO_ORDER this gem has (the
+#     phase-3 order native, ffi, ruby; #160),
 #   * every row equals the committed scan golden (minus the served_by key);
 #   * served_by is EXPECTED_TIER, except for files the engine hands to Ruby
 #     (dfont, Type 1), which may say ruby; with EXPECTED_TIER=ruby nothing else.

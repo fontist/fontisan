@@ -109,16 +109,16 @@ RSpec.describe Fontisan::Engine do
       expect(described_class.served_by(:read)).to eq(:ruby)
     end
 
-    it "stays on ruby with an available native tier and nothing configured" do
+    it "serves native under auto with an available native tier and nothing configured (#160 flip)" do
       described_class.register(:native, fake_class.new)
       Fontisan::Reference.read(ttf)
-      expect(described_class.served_by(:read)).to eq(:ruby)
+      expect(described_class.served_by(:read)).to eq(:native)
     end
 
-    it "stays on ruby with only ffi available and nothing configured" do
+    it "serves ffi under auto with only ffi available" do
       described_class.register(:ffi, fake_class.new)
       Fontisan::Reference.read(ttf)
-      expect(described_class.served_by(:read)).to eq(:ruby)
+      expect(described_class.served_by(:read)).to eq(:ffi)
     end
 
     it "stays on ruby when FONTISAN_ENGINE=ruby, even with native available" do
@@ -222,13 +222,13 @@ RSpec.describe Fontisan::Engine do
         expect(native.calls.map(&:first)).to match_array(op_calls.keys)
       end
 
-      it "serves every operation from ruby under auto even with native present (strict=#{strict})" do
+      it "serves every operation from native under auto when native is present (strict=#{strict})" do
         configure("auto", strict: strict)
         op_calls.each do |operation, call|
           call.call
-          expect(described_class.served_by(operation)).to eq(:ruby), "operation #{operation}"
+          expect(described_class.served_by(operation)).to eq(:native), "operation #{operation}"
         end
-        expect(native.calls).to be_empty
+        expect(native.calls.map(&:first)).to match_array(op_calls.keys)
       end
     end
 
@@ -308,22 +308,33 @@ RSpec.describe Fontisan::Engine do
   end
 
   describe "auto order" do
-    it "resolves to ruby until the phase-3 gates pass, whatever tiers are available" do
+    it "prefers native over ruby under auto (phase-3 flip, #160), strict or not" do
+      [false, true].each do |strict|
+        configure("auto", strict: strict)
+        described_class.register(:native, fake_class.new)
+        Fontisan::Reference.read(ttf)
+        expect(described_class.served_by(:read)).to eq(:native)
+      end
+    end
+
+    it "prefers ffi over ruby when only ffi is present" do
       configure("auto")
       described_class.register(:ffi, fake_class.new)
       Fontisan::Reference.read(ttf)
-      expect(described_class.served_by(:read)).to eq(:ruby)
+      expect(described_class.served_by(:read)).to eq(:ffi)
+    end
 
-      described_class.register(:native, fake_class.new)
+    it "keeps ruby as the floor when neither Rust tier is present" do
+      configure("auto")
       Fontisan::Reference.read(ttf)
       expect(described_class.served_by(:read)).to eq(:ruby)
     end
 
-    it "keeps the post-gate order native, then ffi, then ruby" do
-      expect(described_class::NATIVE_PREFERRED_ORDER).to eq(%i[native ffi ruby])
+    it "keeps the phase-3 order native, then ffi, then ruby" do
+      expect(described_class::AUTO_ORDER).to eq(%i[native ffi ruby])
     end
 
-    it "still lets a forced tier win over auto's ruby default" do
+    it "still lets a forced tier win over auto's native preference" do
       described_class.register(:ffi, fake_class.new)
       described_class.register(:native, fake_class.new)
       configure("ffi")
