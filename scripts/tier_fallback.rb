@@ -216,7 +216,14 @@ begin
     present = { "auto_all" => tiers, "auto_no_native" => tiers - ["native"], "auto_none" => [] }.fetch(scenario)
     want = Fontisan::Engine::AUTO_ORDER.map(&:to_s).find { |t| t == "ruby" || present.include?(t) }
     problems << "auto resolved #{resolved.call}, expected #{want}" unless resolved.call == want
-    served = scan_corpus.call(->(path) { [want, *("ruby" if HANDED_TO_RUBY.include?(File.extname(path).downcase))] })
+    # The allowed set per row mirrors scripts/tier_smoke.rb: handed extensions
+    # AND detect_format-nil files (the malformed corpus) always serve via Ruby,
+    # whatever tier auto picks — post-flip `want` can be native/ffi, which
+    # previously masked these rows.
+    served = scan_corpus.call(lambda { |path|
+      handed = HANDED_TO_RUBY.include?(File.extname(path).downcase) || Fontisan::FontLoader.detect_format(path).nil?
+      [want, *("ruby" if handed)]
+    })
     problems << "no #{want} row served" if served[want].zero?
   end
 rescue StandardError => e # NameError included: a fallback must never raise it
