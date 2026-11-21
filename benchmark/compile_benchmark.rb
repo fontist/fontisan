@@ -30,7 +30,10 @@ module FontisanBench
                                                    x: 100, y: 0, type: "line",
                                                  ),
                                                  Fontisan::Ufo::Point.new(
-                                                   x: 100, y: 100, type: "offcurve",
+                                                   x: 95, y: 40, type: "offcurve",
+                                                 ),
+                                                 Fontisan::Ufo::Point.new(
+                                                   x: 80, y: 90, type: "offcurve",
                                                  ),
                                                  Fontisan::Ufo::Point.new(
                                                    x: 50, y: 150, type: "curve",
@@ -41,38 +44,46 @@ module FontisanBench
     font
   end
 
-  def measure(label)
+  def rss_mb
+    # VmHWM is the true high-water mark on Linux; ps gives current RSS on
+    # macOS (close enough for one short compile, labelled RSS not peak).
+    if RUBY_PLATFORM.include?("linux")
+      File.read("/proc/self/status")[/VmHWM:\s+(\d+)/, 1].to_f / 1024
+    else
+      `ps -o rss= -p #{Process.pid}`.to_f / 1024
+    end
+  end
+
+  def measure(label, glyph_count: nil)
+    GC.start
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     yield
     elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
-    puts format("%-40<label>s %8.<elapsed>.2f ms", label: label,
-                                                   elapsed: elapsed * 1000)
+    throughput = if glyph_count && elapsed.positive?
+                   "#{(glyph_count / elapsed).round(0)} glyphs/s"
+                 else
+                   ""
+                 end
+    puts "#{label.ljust(40)} #{format('%10.2f ms', elapsed * 1000)}  " \
+         "#{format('%8.1f MB rss', rss_mb)}  #{throughput}"
     elapsed
   end
 end
 
 if __FILE__ == $PROGRAM_NAME
-  ufo = FontisanBench.build_synthetic_font(1000)
-
-  Dir.mktmpdir do |dir|
-    FontisanBench.measure("TTF compile (1000 glyphs)") do
-      Fontisan::Ufo::Compile::TtfCompiler.new(ufo).compile(output_path: "#{dir}/a.ttf")
-    end
-    FontisanBench.measure("OTF compile (1000 glyphs)") do
-      Fontisan::Ufo::Compile::OtfCompiler.new(ufo).compile(output_path: "#{dir}/a.otf")
-    end
-    FontisanBench.measure("CFF2 OTF compile (1000 glyphs)") do
-      Fontisan::Ufo::Compile::Otf2Compiler.new(ufo).compile(output_path: "#{dir}/a-cff2.otf")
-    end
-  end
-
-  Dir.mktmpdir do |dir|
-    ufo_big = FontisanBench.build_synthetic_font(10_000)
-    FontisanBench.measure("TTF compile (10k glyphs)") do
-      Fontisan::Ufo::Compile::TtfCompiler.new(ufo_big).compile(output_path: "#{dir}/a.ttf")
-    end
-    FontisanBench.measure("CFF2 OTF compile (10k glyphs)") do
-      Fontisan::Ufo::Compile::Otf2Compiler.new(ufo_big).compile(output_path: "#{dir}/a-cff2.otf")
+  sizes = ARGV.include?("--large") ? [1000, 10_000, 65_000] : [1000, 10_000]
+  sizes.each do |count|
+    ufo = FontisanBench.build_synthetic_font(count)
+    Dir.mktmpdir do |dir|
+      FontisanBench.measure("TTF compile (#{count} glyphs)", glyph_count: count) do
+        Fontisan::Ufo::Compile::TtfCompiler.new(ufo).compile(output_path: "#{dir}/a.ttf")
+      end
+      FontisanBench.measure("OTF compile (#{count} glyphs)", glyph_count: count) do
+        Fontisan::Ufo::Compile::OtfCompiler.new(ufo).compile(output_path: "#{dir}/a.otf")
+      end
+      FontisanBench.measure("CFF2 OTF compile (#{count} glyphs)", glyph_count: count) do
+        Fontisan::Ufo::Compile::Otf2Compiler.new(ufo).compile(output_path: "#{dir}/a-cff2.otf")
+      end
     end
   end
 end

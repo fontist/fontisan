@@ -54,3 +54,37 @@ Native factor (ruby time / native time) from the `perf-gate.yml` `tiers` jobs, r
 
 All six rows now come from CI. arm64-darwin has no committed baseline yet, so it is checked against the 1.00x floor only. The lowest published native factor on a gated operation is 5.51x (scan_dir, arm64-darwin).
 
+
+## Compile pipeline (TODO.remaining/20)
+
+- Ruby: 4.0.7 (arm64-darwin23); local macOS arm64, single runs (runner
+  noise +-20%; rerun the scripts rather than comparing one line)
+- Scripts: `benchmark/compile_benchmark.rb` (also `--large` for 65k),
+  `benchmark/collection_benchmark.rb`, `benchmark/fonttools_compare.rb`
+
+fontisan in-memory compiler (synthetic 1-contour glyphs, 1 UPM):
+
+| op | 1k glyphs | 10k glyphs |
+|---|---|---|
+| TTF compile | ~30-40 ms (25-31k glyphs/s) | ~190 ms (~50k glyphs/s) |
+| OTF compile | ~25-30 ms (34-40k glyphs/s) | ~178 ms (~56k glyphs/s) |
+| CFF2 OTF compile | ~24 ms (41k glyphs/s) | ~183 ms (~55k glyphs/s) |
+
+Collection assembly (dedup pack, after compiling N x 1000-glyph faces):
+4 faces ~17 ms (output 74% smaller than the raw faces), 8 faces ~10 ms
+(86% smaller).
+
+fontisan vs ufo2ft (fontTools), same on-disk synthetic UFO, full
+read+compile pipeline, 1000 glyphs, single runs:
+
+| op | fontisan | ufo2ft | fontisan output vs ufo2ft |
+|---|---|---|---|
+| TTF | ~0.7-1.3 s | ~0.7-1.0 s | 32,752 B vs 40,532 B (smaller) |
+| OTF | ~1.2-2.9 s | ~0.7-1.1 s | 23,752 B vs 13,616 B (larger) |
+
+The gap sits almost entirely in the UFO reader: compiling the SAME font
+from memory costs ~30 ms, so ~95% of fontisan's disk-path time is .glif
+parsing (~1.2 ms/glyph). The TODO's ">2x slower than fontTools triggers
+optimization" threshold is brushed by the OTF row on some runs; if it
+holds under median-of-N measurement, the hot path to optimize is
+Ufo::Reader, not the compilers.
