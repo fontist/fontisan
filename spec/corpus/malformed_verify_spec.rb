@@ -22,17 +22,7 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
 
   # The first few leaf paths that differ, so a CI failure names what changed.
   def leaf_diffs(want, got)
-    flat = lambda do |node, path = "", out = {}|
-      case node
-      when Hash then node.each { |k, v| flat.call(v, "#{path}/#{k}", out) }
-      else out[path] = node
-      end
-      out
-    end
-    a = flat.call(want)
-    b = flat.call(got)
-    (a.keys | b.keys).reject { |k| a[k] == b[k] }.first(4)
-      .map { |k| "#{k}: #{a[k].inspect} -> #{b[k].inspect}" }.join("; ")
+    described_class.leaf_diffs(want, got)
   end
 
   it "covers all seventeen malformed kinds" do
@@ -81,7 +71,10 @@ RSpec.describe MalformedGoldens do # rubocop:disable RSpec/SpecFilePathFormat
       File.write(target, JSON.pretty_generate(data))
       allow(described_class).to receive(:golden_path) { |e| File.join(dir, "#{e['id']}.json") }
       problems = described_class.verify
-      expect(problems).to eq(["malformed-truncated-half: golden differs from current behaviour"])
+      expect(problems).to eq [
+        "malformed-truncated-half: golden differs from current behaviour " \
+        "(/combos/full/lazy=true/ops/name/outcome: \"ok\" -> \"error\")",
+      ]
     end
   end
 

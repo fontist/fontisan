@@ -218,6 +218,21 @@ module MalformedGoldens
     end
   end
 
+  # First few leaf paths that differ, so a failure names what changed.
+  def leaf_diffs(want, got)
+    flat = lambda do |node, path = "", out = {}|
+      case node
+      when Hash then node.each { |k, v| flat.call(v, "#{path}/#{k}", out) }
+      else out[path] = node
+      end
+      out
+    end
+    a = flat.call(want)
+    b = flat.call(got)
+    (a.keys | b.keys).reject { |k| a[k] == b[k] }.first(4)
+      .map { |k| "#{k}: #{a[k].inspect} -> #{b[k].inspect}" }.join("; ")
+  end
+
   # @return [Array<String>] problems; empty when the committed goldens match
   def verify(dir: DERIVED_DIR)
     problems = []
@@ -228,8 +243,12 @@ module MalformedGoldens
         next
       end
       actual = render(e, dir: dir)
-      same = File.read(gp) == actual || matches?(JSON.parse(File.read(gp)), JSON.parse(actual))
-      problems << "#{e['id']}: golden differs from current behaviour" unless same
+      golden = File.read(gp)
+      same = golden == actual || matches?(JSON.parse(golden), JSON.parse(actual))
+      unless same
+        detail = leaf_diffs(JSON.parse(golden), JSON.parse(actual))
+        problems << "#{e['id']}: golden differs from current behaviour (#{detail})"
+      end
     end
     extra = Dir[File.join(GOLDEN_DIR, "*.json")].map { |f| File.basename(f, ".json") } - entries.map { |e| e["id"] }
     problems.concat(extra.map { |x| "#{x}: golden has no manifest entry" })
