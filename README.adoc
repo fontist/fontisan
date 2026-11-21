@@ -60,10 +60,9 @@ operations from three tiers: `native` (a precompiled Rust extension), `ffi` (the
 bundled Rust shared library, loaded through the `ffi` gem) and `ruby` (the pure
 Ruby implementation, always present).
 
-The default is `auto`, which currently serves everything from `ruby`: the Rust
-tiers are used only when selected with `FONTISAN_ENGINE=native` or `ffi`, until
-the native tier's release gates pass (see fontist/fontisan#160). After that,
-`auto` will pick the first available tier in the order `native`, `ffi`, `ruby`.
+The default is `auto`: the first available tier in the order `native`, `ffi`,
+`ruby` (the phase-3 gates passed; see fontist/fontisan#160). Platforms without
+the bundled extension keep the `ruby` tier as the floor.
 
 [cols="1,3"]
 |===
