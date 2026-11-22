@@ -68,12 +68,25 @@ Fontisan::Engine.served_by(:audit)   # => :native
 
 ## What stays on Ruby
 
-These always run on the Ruby tier, whichever engine is selected, and strict mode does not raise for them:
+The full capability matrix (a 2026-11 audit of the engine tier, `lib/fontisan/native.rb` / `lib/fontisan/ffi.rb` option gates). Everything not marked "Ruby only" serves from the selected tier, byte-identical to the Ruby tier (the `parity` workflow proves this per platform):
+
+| Operation | native / ffi serve | Ruby only |
+|---|---|---|
+| `read` (metadata/full, lazy) | every format the engine reads | dfont, Type 1 (PFB/PFA), SVG fonts |
+| `audit`, `audit_dir` (+ `validate`) | engine-readable files and directories | entries the engine cannot read |
+| `scan` | engine-readable files | non-font files |
+| `convert` to ttf/otf/woff/woff2; collections to ttc/otc/woff2 | engine-readable inputs | to svg; Type 1 conversions; an `.otc` input (the engine assumes `.ttc` bytes); a single font to a collection format |
+| `extract` (collection member) | collections | |
+| `instance` (TTF variable font) | single fonts | |
+| `subset` (web/pdf/minimal) | engine-readable single fonts | |
+| `glyph_ids` | | always (the engine computes glyph ids internally for `subset`, but not as a standalone operation) |
+| `outline_hashes` | | always |
+
+Also always on Ruby, whichever engine is selected — strict mode does not raise for any of these:
 
 - The object-based API: `Fontisan::Subset::Builder.new(font, ...)` and `Fontisan::Variable::Instancer`. Only the path-based `Reference.subset` and `Reference.instance` can use another tier.
-- Apple dfont files.
-- CLI commands other than `convert`, `unpack` and `subset`, and the non-plain `convert` cases listed above.
-- Type 1 fonts (PFB/PFA).
+- A FIFO, device or socket as an input path (the engine's released read would block uninterruptibly; Ruby's read is interruptible).
+- CLI commands other than `convert`, `unpack`, `subset` and `instance`, and the non-plain convert cases listed above (several targets, instance coordinates, conversion options, hinting, a font index).
 
 ## Platforms
 
