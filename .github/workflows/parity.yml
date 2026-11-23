@@ -117,24 +117,17 @@ jobs:
         if: runner.os != 'Windows'
         run: scripts/build-woff2.sh
 
-      # setup-ruby already unpacked its own MSYS2 to $RUNNER_TEMP\msys64; setup-msys2 refuses to
-      # install over it, so this one lives in its own directory.
-      - uses: msys2/setup-msys2@v2
+      # The RubyInstaller devkit already ships make and the MINGW gcc; the
+      # standalone msys2/setup-msys2 broke on 2026-11-23 (its pacman cannot
+      # refresh the keyring: "keyring is not writable") and would keep the
+      # windows cells blocked on an upstream incident. The devkit bash loads
+      # the ucrt64 toolchain through its own profile.
+      - name: Build pinned woff2_decompress (RubyInstaller devkit)
         if: runner.os == 'Windows'
-        with:
-          location: ${{ runner.temp }}\msys2-woff2
-          msystem: MINGW64
-          path-type: inherit
-          # update: true runs pacman -Syuu first, refreshing the keyring before
-          # the sync: with update: false a stale sync database fails PGP
-          # verification against the current mirrors (the 2026-11 breakage).
-          update: true
-          install: git make mingw-w64-x86_64-gcc
-
-      - name: Build pinned woff2_decompress (MSYS2)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: scripts/build-woff2.sh
+        shell: bash
+        run: |
+          devkit="${RI_DEVKIT//\\//}"
+          "$devkit/usr/bin/bash" -lc 'cd "$(cygpath -u "$GITHUB_WORKSPACE")" && scripts/build-woff2.sh'
 
       # The generator would otherwise run the .sh itself, which Windows Ruby cannot.
       - name: Point the corpus at woff2_decompress
