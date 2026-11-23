@@ -3,7 +3,7 @@
 #
 # Cells: {linux-glibc, linux-musl, macos-arm64, macos-x64, windows} x {ruby, native, ffi}
 # = 15, plus a JRuby :ffi cell on linux-glibc, plus the strict-OFF fallback job on every
-# platform. Every cell runs the four corpus specs with FONTISAN_ENGINE=<tier> (strict
+# platform. Every cell runs the five corpus specs with FONTISAN_ENGINE=<tier> (strict
 # for native and ffi, so a silent fall back to Ruby fails):
 #
 #   verify_spec           read goldens
@@ -12,6 +12,8 @@
 #                         failure point), including the fuzz-found inputs; a crash or an
 #                         unbounded run kills the cell
 #   convert_verify_spec   convert goldens, asserts served_by, runs OTS on every output
+#   glyph_ids_parity_spec glyph_ids equals the Ruby tier's outcome (value or error class
+#                         and message) on every ci-tier font, asserts served_by (#192 gap 1)
 #
 # The platform gems come from gem-build.yml (same run, workflow_call). For the cells the
 # native extension and cdylib are copied out of the gem into the checkout's lib/, so the
@@ -115,20 +117,17 @@ jobs:
         if: runner.os != 'Windows'
         run: scripts/build-woff2.sh
 
-      # setup-ruby already unpacked its own MSYS2 to $RUNNER_TEMP\msys64; setup-msys2 refuses to
-      # install over it, so this one lives in its own directory.
-      - uses: msys2/setup-msys2@v2
+      # The RubyInstaller devkit already ships make and the MINGW gcc; the
+      # standalone msys2/setup-msys2 broke on 2026-11-23 (its pacman cannot
+      # refresh the keyring: "keyring is not writable") and would keep the
+      # windows cells blocked on an upstream incident. The devkit bash loads
+      # the ucrt64 toolchain through its own profile.
+      - name: Build pinned woff2_decompress (RubyInstaller devkit)
         if: runner.os == 'Windows'
-        with:
-          location: ${{ runner.temp }}\msys2-woff2
-          msystem: MINGW64
-          path-type: inherit
-          install: git make mingw-w64-x86_64-gcc
-
-      - name: Build pinned woff2_decompress (MSYS2)
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: scripts/build-woff2.sh
+        shell: bash
+        run: |
+          devkit="${RI_DEVKIT//\\//}"
+          "$devkit/usr/bin/bash" -lc 'cd "$(cygpath -u "$GITHUB_WORKSPACE")" && scripts/build-woff2.sh'
 
       # The generator would otherwise run the .sh itself, which Windows Ruby cannot.
       - name: Point the corpus at woff2_decompress
@@ -151,6 +150,7 @@ jobs:
           bundle exec rspec --options /dev/null --format progress
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+          spec/corpus/glyph_ids_parity_spec.rb
 
   # linux-musl: Alpine, with the C toolchain the brotli and woff2 builds need (not Rust).
   cell-musl:
@@ -193,7 +193,8 @@ jobs:
               bundle exec rake corpus:fetch
               bundle exec rspec --options /dev/null --format progress \
                 spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb \
-                spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+                spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb \
+                spec/corpus/glyph_ids_parity_spec.rb
             '
 
   # JRuby on linux-glibc: the java gem has the cdylib of every platform and no brotli, so
@@ -251,14 +252,24 @@ jobs:
           mkdir -p lib/fontisan/ffi
           cp -R "$RUNNER_TEMP"/unpacked/fontisan-*/lib/fontisan/ffi/. lib/fontisan/ffi/
           ruby -v
+      # Print what the specs will actually load: a stale or mismatched gem
+      # here shows up as glyph_ids silently falling back to Ruby.
+      - name: Probe the ffi tier the specs will load
+        run: >-
+          ruby -rfontisan -e 'puts Gem.loaded_specs.fetch("fontisan").full_gem_path;
+          p Fontisan::Ffi.available?;
+          p Fontisan::Ffi::OPERATIONS;
+          p Fontisan::Ffi.supports?(:glyph_ids, "corpus/fonts/fonttools-test-woff2/TestWOFF2.woff2")'
 
       - name: Corpus specs under JRuby ffi
         env:
+          FONTISAN_ENGINE: ffi
           WOFF2_DECOMPRESS: ${{ github.workspace }}/corpus/fonts/.tools/woff2/bin/woff2_decompress
         run: >-
           ruby -S rspec --options /dev/null --format progress
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+          spec/corpus/glyph_ids_parity_spec.rb
 
   # Strict OFF, installed gem, outside the checkout (scripts/tier_fallback.rb).
   fallback:
