@@ -107,6 +107,11 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
     ENV["FONTISAN_ENGINE_STRICT"] = "1"
     entries.each do |entry|
       path = ScanGoldens.font_path(entry)
+      # woff2 entries' tier expectations live in example 1's corner (the
+      # brotli-less gate fires inside resolve itself — expected_tier's
+      # auto branch would raise here, not report).
+      next if File.binread(path, 4) == "wOF2"
+
       want_tier = expected_tier(path, forced)
       next if want_tier == :ruby
 
