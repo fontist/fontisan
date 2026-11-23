@@ -159,6 +159,33 @@ RSpec.describe Fontisan::Native do
       expect(described_class.supports?(:read, ttc)).to be(true)
     end
 
+    it "serves glyph_ids natively with the Ruby tier's output" do
+      expected = ruby_result { Fontisan::Reference.glyph_ids(ttf, text: "AB.") }
+      with_engine("native") do
+        expect(Fontisan::Reference.glyph_ids(ttf, text: "AB.")).to eq(expected)
+        expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(:native)
+        expect(Fontisan::Reference.glyph_ids(ttf, unicodes: [65, 66, 46])).to eq(expected)
+        expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(:native)
+      end
+    end
+
+    it "raises glyph_ids' none-of-the-characters error natively, like the Ruby tier" do
+      with_engine("native") do
+        expect { Fontisan::Reference.glyph_ids(ttf, text: "\u{1F680}") }
+          .to raise_error(Fontisan::Error, /None of the requested characters/)
+        expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(:native)
+      end
+      expect { Fontisan::Reference.glyph_ids(ttf, text: "\u{1F680}") }
+        .to raise_error(Fontisan::Error, /None of the requested characters/)
+    end
+
+    it "declines glyph_ids' non-plain options to the Ruby tier" do
+      expect(described_class.supports_options?(:glyph_ids, { unicodes: [65], text: "A" }, ttf)).to be(true)
+      expect(described_class.supports_options?(:glyph_ids, { profile: "web" }, ttf)).to be(false)
+      expect(described_class.supports_options?(:glyph_ids, { unicodes: [-1] }, ttf)).to be(false)
+      expect(described_class.supports_options?(:glyph_ids, {}, ttc)).to be(false)
+    end
+
     it "routes dfont to :ruby in strict mode, for every operation and inside a mixed scan" do
       with_engine("native") do
         Fontisan::Reference.read(dfont)
