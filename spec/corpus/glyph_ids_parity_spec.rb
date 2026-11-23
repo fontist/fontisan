@@ -75,10 +75,17 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
         end
         served = Fontisan::Engine.served_by(:glyph_ids)
         head = File.binread(path, 8).to_s
-        expect(served).to eq(want_tier),
-                          "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
-                          "(#{forced}; format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
-                          "head #{head.unpack1('A8').inspect})"
+        # On the brotli-less java gem a WOFF2 glyph_ids cannot reach any tier:
+        # resolve raises Woff2Unavailable at setup and serves nothing (nil).
+        # The outcome assertion above still proves the java gem matches the
+        # Ruby tier. Everywhere else the routing must be exact (#192).
+        java_woff2 = forced == "ffi" && !brotli? && File.binread(path, 4) == "wOF2"
+        unless java_woff2
+          expect(served).to eq(want_tier),
+                            "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
+                            "(#{forced}; format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
+                            "head #{head.unpack1('A8').inspect})"
+        end
       end
     end
   end
