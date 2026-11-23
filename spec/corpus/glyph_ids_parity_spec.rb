@@ -68,15 +68,21 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
       with_tier("ruby") { expected = outcome(path) }
       with_tier(forced) do
         got = outcome(path)
-        # On a brotli-less platform (the java gem on JRuby) a WOFF2
-        # glyph_ids raises Woff2Unavailable at setup under ANY tier — the
-        # facade's documented gate — and served_by stays nil. Both tiers
-        # raise the identical error, so the outcome assertion below already
-        # proves parity; the served_by expectation applies to brotli-ful
-        # platforms only (#192 tracks the JRuby env/engine routing notes).
+        # On a brotli-less platform (the java gem on JRuby) the Ruby tier
+        # cannot read a WOFF2 at all — the baseline raises Woff2Unavailable
+        # and served_by stays nil. The ENGINE tier decodes WOFF2 natively,
+        # so under an engine tier the call SUCCEEDS: assert the success
+        # instead of equality with a baseline that cannot exist. Under
+        # forced ruby on such a platform, the gate raises exactly as the
+        # baseline did (#192 tracks the JRuby env delivery notes).
         java_woff2 = !brotli? && File.binread(path, 4) == "wOF2"
-        expect(got).to eq(expected),
-                       "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
+        if java_woff2 && forced != "ruby"
+          expect(got).to eq(:ok),
+                         "#{entry['id']} the engine tier should decode the WOFF2: #{got.inspect}"
+        else
+          expect(got).to eq(expected),
+                         "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
+        end
         unless java_woff2
           served = Fontisan::Engine.served_by(:glyph_ids).to_s
           head = File.binread(path, 8).to_s
