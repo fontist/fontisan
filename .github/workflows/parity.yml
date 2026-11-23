@@ -125,6 +125,10 @@ jobs:
           location: ${{ runner.temp }}\msys2-woff2
           msystem: MINGW64
           path-type: inherit
+          # update: true runs pacman -Syuu first, refreshing the keyring before
+          # the sync: with update: false a stale sync database fails PGP
+          # verification against the current mirrors (the 2026-11 breakage).
+          update: true
           install: git make mingw-w64-x86_64-gcc
 
       - name: Build pinned woff2_decompress (MSYS2)
@@ -153,7 +157,6 @@ jobs:
           bundle exec rspec --options /dev/null --format progress
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
-          spec/corpus/glyph_ids_parity_spec.rb
           spec/corpus/glyph_ids_parity_spec.rb
 
   # linux-musl: Alpine, with the C toolchain the brotli and woff2 builds need (not Rust).

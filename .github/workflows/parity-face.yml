@@ -125,6 +125,10 @@ jobs:
           location: ${{ runner.temp }}\msys2-woff2
           msystem: MINGW64
           path-type: inherit
+          # update: true runs pacman -Syuu first, refreshing the keyring before
+          # the sync: with update: false a stale sync database fails PGP
+          # verification against the current mirrors (the 2026-11 breakage).
+          update: true
           install: git make mingw-w64-x86_64-gcc
 
       - name: Build pinned woff2_decompress (MSYS2)
