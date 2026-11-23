@@ -252,6 +252,14 @@ jobs:
           mkdir -p lib/fontisan/ffi
           cp -R "$RUNNER_TEMP"/unpacked/fontisan-*/lib/fontisan/ffi/. lib/fontisan/ffi/
           ruby -v
+      # Print what the specs will actually load: a stale or mismatched gem
+      # here shows up as glyph_ids silently falling back to Ruby.
+      - name: Probe the ffi tier the specs will load
+        run: >-
+          ruby -rfontisan -e 'puts Gem.loaded_specs.fetch("fontisan").full_gem_path;
+          p Fontisan::Ffi.available?;
+          p Fontisan::Ffi::OPERATIONS;
+          p Fontisan::Ffi.supports?(:glyph_ids, "corpus/fonts/fonttools-test-woff2/TestWOFF2.woff2")'
 
       - name: Corpus specs under JRuby ffi
         env:
