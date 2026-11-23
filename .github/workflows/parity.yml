@@ -259,6 +259,7 @@ jobs:
 
       - name: Corpus specs under JRuby ffi
         env:
+          FONTISAN_ENGINE: ffi
           WOFF2_DECOMPRESS: ${{ github.workspace }}/corpus/fonts/.tools/woff2/bin/woff2_decompress
         run: >-
           ruby -S rspec --options /dev/null --format progress
