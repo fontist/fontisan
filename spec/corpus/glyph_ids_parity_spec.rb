@@ -49,9 +49,14 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
       with_tier("ruby") { expected = outcome(path) }
       with_tier(forced) do
         got = outcome(path)
-        expect(got).to eq(expected), "#{entry['id']} differs under #{forced}"
-        expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(want_tier),
-                                                          "#{entry['id']} served_by"
+        expect(got).to eq(expected),
+                       "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
+        served = Fontisan::Engine.served_by(:glyph_ids)
+        head = File.binread(path, 8).to_s
+        expect(served).to eq(want_tier),
+                          "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
+                          "(#{forced}; format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
+                          "head #{head.unpack1('A8').inspect})"
       end
     end
   end
