@@ -68,20 +68,20 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
       with_tier("ruby") { expected = outcome(path) }
       with_tier(forced) do
         got = outcome(path)
+        head = File.binread(path, 8).to_s
         # On a brotli-less platform (the java gem on JRuby) the Ruby tier
-        # cannot read a WOFF2 at all — the baseline raises Woff2Unavailable
-        # and served_by stays nil. The ENGINE tier decodes WOFF2 natively,
-        # so under an engine tier the call SUCCEEDS: assert the success
-        # instead of equality with a baseline that cannot exist. Under
-        # forced ruby on such a platform, the gate raises exactly as the
-        # baseline did (#192 tracks the JRuby env delivery notes).
-        java_woff2 = !brotli? && File.binread(path, 4) == "wOF2"
-        if java_woff2 && forced != "ruby"
-          # Valid woff2: the engine decodes and succeeds. Corrupt woff2: the
-          # engine raises its canonical malformed surface (InvalidFontError,
-          # truncation, ...) — the same classes the brotli-ful goldens carry.
-          # The one wrong answer is the tier gate itself (Woff2Unavailable):
-          # that would mean the engine tier never engaged.
+        # cannot read ANY woff2 — the gate (Woff2Unavailable) fires before
+        # anything is served. The split:
+        #   single woff2 + engine tier: the engine decodes natively —
+        #     success (:ok) or its canonical malformed surface; the one
+        #     wrong answer is the gate itself (the tier never engaged).
+        #   woff2 COLLECTION or forced ruby: glyph_ids is ruby-tier for
+        #     collections everywhere and ruby cannot read woff2 here, so
+        #     the gate under every tier — outcome equals the baseline and
+        #     served_by stays nil (#192 tracks the env delivery notes).
+        java_woff2 = !brotli? && head.start_with?("wOF2")
+        collection = head.start_with?("wOF2ttcf")
+        if java_woff2 && forced != "ruby" && !collection
           expect(got == :ok || (got.is_a?(String) && !got.include?("Woff2Unavailable")))
             .to be(true),
                 "#{entry['id']} the engine tier must engage the WOFF2 itself: #{got.inspect}"
@@ -89,9 +89,9 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
           expect(got).to eq(expected),
                          "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
         end
-        unless java_woff2
+        skip_wanted = java_woff2 && (collection || forced == "ruby")
+        unless skip_wanted
           served = Fontisan::Engine.served_by(:glyph_ids).to_s
-          head = File.binread(path, 8).to_s
           expect(served).to eq(want_tier),
                             "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
                             "(#{forced}; env now #{ENV['FONTISAN_ENGINE'].inspect}; " \
