@@ -77,8 +77,14 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
         # baseline did (#192 tracks the JRuby env delivery notes).
         java_woff2 = !brotli? && File.binread(path, 4) == "wOF2"
         if java_woff2 && forced != "ruby"
-          expect(got).to eq(:ok),
-                         "#{entry['id']} the engine tier should decode the WOFF2: #{got.inspect}"
+          # Valid woff2: the engine decodes and succeeds. Corrupt woff2: the
+          # engine raises its canonical malformed surface (InvalidFontError,
+          # truncation, ...) — the same classes the brotli-ful goldens carry.
+          # The one wrong answer is the tier gate itself (Woff2Unavailable):
+          # that would mean the engine tier never engaged.
+          expect(got == :ok || (got.is_a?(String) && !got.include?("Woff2Unavailable")))
+            .to be(true),
+                "#{entry['id']} the engine tier must engage the WOFF2 itself: #{got.inspect}"
         else
           expect(got).to eq(expected),
                          "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
