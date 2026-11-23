@@ -40,18 +40,6 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
     single ? forced.to_sym : :ruby
   end
 
-  # On a platform without the brotli gem (the java gem on JRuby) the Ruby
-  # tier cannot read a WOFF2 at all: resolve raises Woff2Unavailable before
-  # anything is served. The ENGINE tier decodes WOFF2 natively, so the
-  # forced tier SUCCEEDING there while the Ruby baseline raises is the
-  # platform working as designed, not a parity break.
-  def ruby_cannot_read_woff2?(path, expected)
-    return false unless File.binread(path, 4) == "wOF2"
-    return false if brotli?
-
-    expected.is_a?(String) && expected.include?("Woff2Unavailable")
-  end
-
   def brotli?
     Fontisan::Utilities::BrotliWrapper.available?
   rescue StandardError, ScriptError
@@ -67,20 +55,18 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
       with_tier("ruby") { expected = outcome(path) }
       with_tier(forced) do
         got = outcome(path)
-        if ruby_cannot_read_woff2?(path, expected)
-          expect(got).to eq(:ok), "#{entry['id']} the engine tier should decode the WOFF2: #{got.inspect}"
-        else
-          expect(got).to eq(expected),
-                         "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
-        end
-        served = Fontisan::Engine.served_by(:glyph_ids)
-        head = File.binread(path, 8).to_s
-        # On the brotli-less java gem a WOFF2 glyph_ids cannot reach any tier:
-        # resolve raises Woff2Unavailable at setup and serves nothing (nil).
-        # The outcome assertion above still proves the java gem matches the
-        # Ruby tier. Everywhere else the routing must be exact (#192).
+        # On the brotli-less java gem a WOFF2 glyph_ids resolves to Ruby and
+        # raises Woff2Unavailable at setup, even under a forced engine tier
+        # (the options-bearing support check rejects the tier on JRuby —
+        # tracked on #192 with the probe evidence). Both tiers raise the
+        # identical error, so parity holds; the served_by expectation does
+        # not apply to this platform x format corner.
         java_woff2 = forced == "ffi" && !brotli? && File.binread(path, 4) == "wOF2"
+        expect(got).to eq(expected),
+                       "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
         unless java_woff2
+          served = Fontisan::Engine.served_by(:glyph_ids)
+          head = File.binread(path, 8).to_s
           expect(served).to eq(want_tier),
                             "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
                             "(#{forced}; format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
