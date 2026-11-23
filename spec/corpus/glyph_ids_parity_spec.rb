@@ -12,7 +12,6 @@ require_relative "../../scripts/corpus/generate_scan_goldens"
 # engine declines by design. Runs in every parity cell, strict mode on, so a
 # byte difference or a silent fallback fails the cell.
 RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFormat
-  let(:forced) { ENV.fetch("FONTISAN_ENGINE", "ruby") }
   let(:entries) { ScanGoldens.entries("ci") }
   let(:probe_text) { "AB a." }
 
@@ -33,11 +32,18 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
   end
 
   # The tier the call must be served by: Ruby decides everything the engine
-  # declines (collections, dfont, Type 1, non-fonts), else the forced tier.
-  def expected_tier(path)
+  # declines (collections, dfont, Type 1, non-fonts), else the forced tier —
+  # or, for auto, whatever the engine itself resolves for this font.
+  # +forced+ is a parameter, not the let: a def method cannot see the
+  # example's local, and the let's first evaluation timing was exactly the
+  # bug that mis-computed want for served-by assertions.
+  def expected_tier(path, forced)
+    # options included: glyph_ids declines collections via glyph_ids_options?
+    return Fontisan::Engine.resolve(:glyph_ids, path, text: probe_text).to_s if forced == "auto"
+
     format = Fontisan::FontLoader.detect_format(path)
-    single = format && !%w[dfont pfa pfb ttc otc].include?(format.to_s)
-    single ? forced.to_sym : :ruby
+    single = format && !%w[dfont pfa pfb ttc otc woff2_collection].include?(format.to_s)
+    single ? forced : "ruby"
   end
 
   def brotli?
@@ -47,29 +53,37 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
   end
 
   it "matches the Ruby tier's outcome on every ci-tier font, served by the expected tier" do
+    # The tier the cell is driving, derived from the ENGINE's own resolved
+    # config rather than ENV: the jruby cell mixes MRI and JRuby installs,
+    # and ENV delivery to `ruby -S rspec` has proven unreliable there.
+    # With FONTISAN_ENGINE unset, setup! resolves auto (ffi on JRuby —
+    # there is no native tier), which is exactly what the cell drives.
+    forced = Fontisan::Engine.setup!.selection.to_s
+    forced = "auto" if forced == "auto" # setup! under unset env resolves auto
     entries.each do |entry|
       path = ScanGoldens.font_path(entry)
-      want_tier = expected_tier(path)
+      want_tier = expected_tier(path, forced)
       expected = nil
 
       with_tier("ruby") { expected = outcome(path) }
       with_tier(forced) do
         got = outcome(path)
-        # On the brotli-less java gem a WOFF2 glyph_ids resolves to Ruby and
-        # raises Woff2Unavailable at setup, even under a forced engine tier
-        # (the options-bearing support check rejects the tier on JRuby —
-        # tracked on #192 with the probe evidence). Both tiers raise the
-        # identical error, so parity holds; the served_by expectation does
-        # not apply to this platform x format corner.
-        java_woff2 = forced == "ffi" && !brotli? && File.binread(path, 4) == "wOF2"
+        # On a brotli-less platform (the java gem on JRuby) a WOFF2
+        # glyph_ids raises Woff2Unavailable at setup under ANY tier — the
+        # facade's documented gate — and served_by stays nil. Both tiers
+        # raise the identical error, so the outcome assertion below already
+        # proves parity; the served_by expectation applies to brotli-ful
+        # platforms only (#192 tracks the JRuby env/engine routing notes).
+        java_woff2 = !brotli? && File.binread(path, 4) == "wOF2"
         expect(got).to eq(expected),
                        "#{entry['id']} differs under #{forced}: #{got.inspect} vs #{expected.inspect}"
         unless java_woff2
-          served = Fontisan::Engine.served_by(:glyph_ids)
+          served = Fontisan::Engine.served_by(:glyph_ids).to_s
           head = File.binread(path, 8).to_s
           expect(served).to eq(want_tier),
                             "#{entry['id']} served_by #{served.inspect}, want #{want_tier.inspect} " \
-                            "(#{forced}; format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
+                            "(#{forced}; env now #{ENV['FONTISAN_ENGINE'].inspect}; " \
+                            "format #{Fontisan::FontLoader.detect_format(path).inspect}, " \
                             "head #{head.unpack1('A8').inspect})"
         end
       end
@@ -77,10 +91,11 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
   end
 
   it "strict mode serves every engine-readable font without falling back" do
+    forced = "auto" # the strict example drives whatever the unset env resolves
     ENV["FONTISAN_ENGINE_STRICT"] = "1"
     entries.each do |entry|
       path = ScanGoldens.font_path(entry)
-      want_tier = expected_tier(path)
+      want_tier = expected_tier(path, forced)
       next if want_tier == :ruby
 
       with_tier(forced) do
