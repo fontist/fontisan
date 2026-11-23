@@ -14,8 +14,9 @@ module Fontisan
   # routing rules as {Fontisan::Native} through {Fontisan::ByteOps}); every
   # other operation, and dfont / Type 1 files, are the Ruby tier's.
   #
-  # The C ABI has no glyph-id operation: a subset's glyph ids come from the
-  # Ruby facade's `glyph_ids` (a pure cmap read, run on the Ruby tier).
+  # The C ABI has no glyph-id operation: this tier's `glyph_ids` — and a
+  # subset's glyph ids — come from the Ruby facade's `glyph_ids` (the native
+  # tier serves the operation directly; giving the ABI the op is #192).
   #
   # The `ffi` gem and the shared library are loaded lazily, on the first probe.
   # A missing gem, missing or unloadable library, missing symbol or ABI

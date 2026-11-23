@@ -67,27 +67,34 @@ if __FILE__ == $PROGRAM_NAME
   exit 0 unless FontisanBench.python_has_ufo2ft?
 
   count = ARGV.include?("--large") ? 10_000 : 1000
+  rounds = ARGV.include?("--single") ? 1 : 5
   ufo = FontisanBench.build_synthetic_font(count)
   Dir.mktmpdir do |dir|
     ufo_dir = FontisanBench.write_ufo(ufo, File.join(dir, "Bench.ufo"))
-    puts format("%d glyphs, same on-disk UFO for both compilers", count)
+    puts "#{count} glyphs, same on-disk UFO, median of #{rounds} rounds"
     [
       ["TTF", "compileTTF", Fontisan::Ufo::Compile::TtfCompiler, "a.ttf"],
       ["OTF", "compileOTF", Fontisan::Ufo::Compile::OtfCompiler, "a.otf"],
     ].each do |name, entry, compiler, out_name|
       fontisan_out = File.join(dir, "fontisan-#{out_name}")
-      t = FontisanBench.measure("fontisan #{name} compile (#{count} glyphs)",
-                                glyph_count: count) do
-        compiler.new(Fontisan::Ufo::Font.open(ufo_dir)).compile(output_path: fontisan_out)
+      ufo2ft_out = File.join(dir, "ufo2ft-#{out_name}")
+      fontisan_times = []
+      ufo2ft_times = []
+      rounds.times do
+        fontisan_times << FontisanBench.measure(
+          "fontisan #{name} compile round", glyph_count: count
+        ) do
+          compiler.new(Fontisan::Ufo::Font.open(ufo_dir)).compile(output_path: fontisan_out)
+        end
+        ufo2ft_times << FontisanBench.python_compile(entry, ufo_dir, ufo2ft_out)
       end
-      t2 = FontisanBench.measure("ufo2ft  #{name} compile (#{count} glyphs)",
-                                 glyph_count: count) do
-        FontisanBench.python_compile(entry, ufo_dir, File.join(dir, "ufo2ft-#{out_name}"))
-      end
-      ours = File.size(fontisan_out)
-      theirs = File.size(File.join(dir, "ufo2ft-#{out_name}"))
+      t = fontisan_times.sort[rounds / 2]
+      t2 = ufo2ft_times.sort[rounds / 2]
       factor = t2.positive? ? format("%5.2fx", t2 / t) : "n/a"
-      puts "#{"#{name} output size".ljust(40)} #{ours} B vs #{theirs} B  " \
+      throughput = t.positive? ? "#{(count / t).round(0)} glyphs/s" : ""
+      puts "#{"#{name} median: fontisan".ljust(40)} #{format('%8.2f ms', t * 1000)}  #{throughput}"
+      puts "#{"#{name} median: ufo2ft ".ljust(40)} #{format('%8.2f ms', t2 * 1000)}  " \
+           "output #{File.size(fontisan_out)} B vs #{File.size(ufo2ft_out)} B  " \
            "ufo2ft/fontisan time #{factor}"
     end
   end

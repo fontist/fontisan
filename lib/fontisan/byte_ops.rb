@@ -131,6 +131,18 @@ module Fontisan
       Array(options[:unicodes]).all? { |cp| cp.is_a?(Integer) && cp.between?(0, MAX_CODEPOINT) }
     end
 
+    # Same input contract as `subset` minus the profile: codepoints and/or
+    # text on a single engine-readable font.
+    def glyph_ids_options?(options, path)
+      return false unless options.keys.all? { |key| %i[unicodes text].include?(key) }
+      return false if path.nil? || collection_file?(path)
+
+      text = options[:text]
+      return false unless text.nil? || text.is_a?(String)
+
+      Array(options[:unicodes]).all? { |cp| cp.is_a?(Integer) && cp.between?(0, MAX_CODEPOINT) }
+    end
+
     def numeric?(value)
       Float(value)
       true

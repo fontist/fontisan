@@ -32,7 +32,8 @@ module Fontisan
     # path-based only (card 2f): the object-based entry points
     # (`Subset::Builder.new(font, ...)`, `Variable::Instancer.new(font)`) are
     # not Reference operations, so they never reach a gate and stay on Ruby.
-    OPERATIONS = %i[read audit audit_dir scan convert extract instance subset].freeze
+    OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
+                    glyph_ids].freeze
 
     # Raised by the extension for an engine failure; `details` is
     # `[class name, message, [[cause class, cause message], ...], error kind]`;
@@ -85,6 +86,7 @@ module Fontisan
         case operation
         when :read then read_options?(options)
         when *ByteOps::BYTE_OPERATIONS then byte_options?(operation, options, path)
+        when :glyph_ids then glyph_ids_options?(options, path)
         when :audit, :audit_dir then options.keys.all?(:validate) && [true, false, nil].include?(options[:validate])
         when :scan then options.empty?
         else false
@@ -101,6 +103,7 @@ module Fontisan
         when :extract then extract(*, **)
         when :instance then instance(*, **)
         when :subset then subset(*, **)
+        when :glyph_ids then glyph_ids(*, **)
         else raise Fontisan::Error, "native tier cannot serve #{operation}"
         end
       rescue Failure => e
@@ -185,6 +188,13 @@ module Fontisan
         codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
         gids = native_glyph_ids(path, codepoints, File.basename(path))
         native_subset(path, gids, profile.to_s)
+      end
+
+      # Sorted, unique glyph ids, the same lookup the subset path uses.
+      def glyph_ids(path, unicodes: nil, text: nil)
+        path = File.path(path)
+        codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
+        native_glyph_ids(path, codepoints, File.basename(path))
       end
 
       def read(path, mode: :metadata, lazy: true)
