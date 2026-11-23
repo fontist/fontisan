@@ -79,7 +79,7 @@ The full capability matrix (a 2026-11 audit of the engine tier, `lib/fontisan/na
 | `extract` (collection member) | collections | |
 | `instance` (TTF variable font) | single fonts | |
 | `subset` (web/pdf/minimal) | engine-readable single fonts | |
-| `glyph_ids` | single fonts on the `native` tier | the `ffi` tier (the C ABI has no glyph-id op yet, #192) |
+| `glyph_ids` | single fonts on both tiers | |
 | `outline_hashes` | | always |
 
 Also always on Ruby, whichever engine is selected — strict mode does not raise for any of these:

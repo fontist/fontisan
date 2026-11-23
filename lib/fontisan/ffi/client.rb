@@ -4,12 +4,12 @@ require "ffi"
 
 module Fontisan
   module Ffi
-    # One loaded copy of the cdylib: the C structs of fontisan.h (ABI 1) and
+    # One loaded copy of the cdylib: the C structs of fontisan.h (ABI 2) and
     # the three exported functions. Only this file requires the optional `ffi`
     # gem, and only {Fontisan::Ffi} requires this file.
     class Client
       MAGIC = 0x4E415346 # "FSAN"
-      ABI_VERSION = 1
+      ABI_VERSION = 2
 
       OK = 0
       INVALID_ARG = 7
