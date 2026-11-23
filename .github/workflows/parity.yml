@@ -3,7 +3,7 @@
 #
 # Cells: {linux-glibc, linux-musl, macos-arm64, macos-x64, windows} x {ruby, native, ffi}
 # = 15, plus a JRuby :ffi cell on linux-glibc, plus the strict-OFF fallback job on every
-# platform. Every cell runs the four corpus specs with FONTISAN_ENGINE=<tier> (strict
+# platform. Every cell runs the five corpus specs with FONTISAN_ENGINE=<tier> (strict
 # for native and ffi, so a silent fall back to Ruby fails):
 #
 #   verify_spec           read goldens
@@ -12,6 +12,8 @@
 #                         failure point), including the fuzz-found inputs; a crash or an
 #                         unbounded run kills the cell
 #   convert_verify_spec   convert goldens, asserts served_by, runs OTS on every output
+#   glyph_ids_parity_spec glyph_ids equals the Ruby tier's outcome (value or error class
+#                         and message) on every ci-tier font, asserts served_by (#192 gap 1)
 #
 # The platform gems come from gem-build.yml (same run, workflow_call). For the cells the
 # native extension and cdylib are copied out of the gem into the checkout's lib/, so the
@@ -151,6 +153,8 @@ jobs:
           bundle exec rspec --options /dev/null --format progress
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+          spec/corpus/glyph_ids_parity_spec.rb
+          spec/corpus/glyph_ids_parity_spec.rb
 
   # linux-musl: Alpine, with the C toolchain the brotli and woff2 builds need (not Rust).
   cell-musl:
@@ -193,7 +197,8 @@ jobs:
               bundle exec rake corpus:fetch
               bundle exec rspec --options /dev/null --format progress \
                 spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb \
-                spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+                spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb \
+                spec/corpus/glyph_ids_parity_spec.rb
             '
 
   # JRuby on linux-glibc: the java gem has the cdylib of every platform and no brotli, so
@@ -259,6 +264,7 @@ jobs:
           ruby -S rspec --options /dev/null --format progress
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
+          spec/corpus/glyph_ids_parity_spec.rb
 
   # Strict OFF, installed gem, outside the checkout (scripts/tier_fallback.rb).
   fallback:
