@@ -7,16 +7,18 @@ require "rbconfig"
 require "fontisan/ffi_platform"
 
 module Fontisan
-  # The `:ffi` engine tier: the Rust engine's C ABI (fontisan.h, version 1)
+  # The `:ffi` engine tier: the Rust engine's C ABI (fontisan.h, version 2)
   # loaded through the optional `ffi` gem. It serves the read-side
   # {Fontisan::Reference} operations (read, audit, audit_dir, scan) and the
   # byte operations (convert, extract, instance, subset: card 2f-ffi, the same
   # routing rules as {Fontisan::Native} through {Fontisan::ByteOps}); every
   # other operation, and dfont / Type 1 files, are the Ruby tier's.
   #
-  # The C ABI has no glyph-id operation: this tier's `glyph_ids` — and a
-  # subset's glyph ids — come from the Ruby facade's `glyph_ids` (the native
-  # tier serves the operation directly; giving the ABI the op is #192).
+  # `glyph_ids` is the one operation the tiers split on: the native tier
+  # serves it through magnus, this tier through the ABI's OP_GLYPH_IDS
+  # (#192 gap 1). A subset's glyph ids still come from the Ruby facade's
+  # `glyph_ids` — the engine reads WOFF2 natively, so only a WOFF2 source
+  # on a platform without the `brotli` gem takes the decode detour.
   #
   # The `ffi` gem and the shared library are loaded lazily, on the first probe.
   # A missing gem, missing or unloadable library, missing symbol or ABI
@@ -33,7 +35,8 @@ module Fontisan
     class AbiMismatch < Fontisan::Error; end
 
     LIBRARY = "fontisan_cdylib"
-    OPERATIONS = %i[read audit audit_dir scan convert extract instance subset].freeze
+    OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
+                    glyph_ids].freeze
     RUBY_ONLY_FORMATS = %i[dfont pfa pfb].freeze
 
     OP_CONVERT = 1
@@ -44,6 +47,7 @@ module Fontisan
     OP_AUDIT = 9
     OP_SCAN = 10
     OP_AUDIT_DIR = 11
+    OP_GLYPH_IDS = 12
     FLAG_METADATA = 1
     FLAG_LAZY = 2
     FLAG_VALIDATE = 1
@@ -89,6 +93,7 @@ module Fontisan
 
           return operation != :instance || fixed_coordinates?(options[:coords])
         end
+        return glyph_ids_options?(options, path) if operation == :glyph_ids
 
         OPERATIONS.include?(operation)
       end
@@ -185,6 +190,19 @@ module Fontisan
         gids = subset_glyph_ids(path, unicodes, text)
         head = [SUBSET_PROFILE_CODES.fetch(profile.to_s), gids.size, 0, 0].pack("NNNN")
         byte_op(OP_SUBSET, head + gids.pack("N*") + File.binread(path))
+      end
+
+      # The standalone glyph-id lookup (ABI 2, OP_GLYPH_IDS): the engine reads
+      # the cmap, so a WOFF2 source needs no `brotli` here, unlike subset's
+      # own gid computation which still goes through the Ruby facade.
+      def serve_glyph_ids(path, unicodes: nil, text: nil)
+        path = File.path(path)
+        codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
+        name = File.basename(path)
+        input = [name.bytesize].pack("N") + name.b +
+          [codepoints.size].pack("N") + codepoints.pack("N*") +
+          File.binread(path)
+        byte_op(OP_GLYPH_IDS, input).unpack("N*")
       end
 
       # Glyph ids of a subset request. A WOFF2 source on a platform without the

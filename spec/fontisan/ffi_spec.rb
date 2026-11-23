@@ -206,6 +206,27 @@ RSpec.describe Fontisan::Ffi do
       expect(Fontisan::Engine.served_by(:outline_hashes)).to eq(:ruby)
     end
 
+    it "serves glyph_ids through the ABI with the Ruby tier's output" do
+      ttf = fonts.find { |f| f.end_with?("TestTTF.ttf") }
+      tier("ruby")
+      expected = outcome { Fontisan::Reference.glyph_ids(ttf, text: "AB.") }
+      tier("ffi")
+      expect(outcome { Fontisan::Reference.glyph_ids(ttf, text: "AB.") }).to eq(expected)
+      expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(:ffi)
+      expect(described_class.supports_options?(:glyph_ids, { profile: "web" }, ttf)).to be(false)
+    end
+
+    it "raises glyph_ids' none-of-the-characters error through the ABI, like Ruby" do
+      ttf = fonts.find { |f| f.end_with?("TestTTF.ttf") }
+      tier("ruby")
+      expect { Fontisan::Reference.glyph_ids(ttf, text: "\u{1F680}") }
+        .to raise_error(Fontisan::Error, /None of the requested characters/)
+      tier("ffi")
+      expect { Fontisan::Reference.glyph_ids(ttf, text: "\u{1F680}") }
+        .to raise_error(Fontisan::Error, /None of the requested characters/)
+      expect(Fontisan::Engine.served_by(:glyph_ids)).to eq(:ffi)
+    end
+
     it "decodes batch rows once into plain Ruby objects" do
       tier("ffi")
       rows = Fontisan::Reference.read(fonts.find { |f| f.end_with?("TestTTC.ttc") })
