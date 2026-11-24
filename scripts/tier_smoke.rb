@@ -11,7 +11,8 @@
 #     phase-3 order native, ffi, ruby; #160),
 #   * every row equals the committed scan golden (minus the served_by key);
 #   * served_by is EXPECTED_TIER, except for files the engine hands to Ruby
-#     (dfont, Type 1), which may say ruby; with EXPECTED_TIER=ruby nothing else.
+#     (Type 1; dfont is served natively since #192 gap 5), which may say ruby;
+#     with EXPECTED_TIER=ruby nothing else.
 # Exit status 0 only when all hold.
 require "json"
 
@@ -27,7 +28,7 @@ Fontisan::Reference # autoloading it installs the engine gates
 lib_dir = Gem.loaded_specs.fetch("fontisan").full_gem_path
 abort "smoke must run an installed gem, loaded #{lib_dir}" unless File.basename(File.dirname(lib_dir)) == "gems"
 
-HANDED_TO_RUBY = %w[.dfont .pfa .pfb].freeze
+HANDED_TO_RUBY = %w[.pfa .pfb].freeze # dfont is served since #192 gap 5
 
 manifest = JSON.parse(File.read(File.join(root, "manifest.json"))).fetch("fonts")
 entries = manifest.select { |f| f["tier"] == "ci" }.sort_by { |f| f["id"] }
