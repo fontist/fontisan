@@ -26,7 +26,7 @@ module Fontisan
     # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
     # not move on a repin, so this is what keeps a stale binary from serving old
     # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
-    ENGINE_REV = "332587c770c193f7fc0e870dc4f5a1ef74a1d9ca"
+    ENGINE_REV = "33d5a4e68935c9d3ca56557eb10b655ad2ec8214"
 
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points

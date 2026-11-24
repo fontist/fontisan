@@ -15,4 +15,4 @@ crate-type = ["cdylib"]
 [dependencies]
 # TEMPORARY (decision D3: the crate is not on crates.io yet). Replace with
 # `fontisan = { version = "=<release>", features = ["ffi"] }` once published.
-fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "332587c770c193f7fc0e870dc4f5a1ef74a1d9ca", features = ["ffi"] }
+fontisan = { git = "https://github.com/fontist/fontisan-rs", rev = "33d5a4e68935c9d3ca56557eb10b655ad2ec8214", features = ["ffi"] }
