@@ -9,7 +9,7 @@ module Fontisan
     # gem, and only {Fontisan::Ffi} requires this file.
     class Client
       MAGIC = 0x4E415346 # "FSAN"
-      ABI_VERSION = 2
+      ABI_VERSION = 3
 
       OK = 0
       INVALID_ARG = 7

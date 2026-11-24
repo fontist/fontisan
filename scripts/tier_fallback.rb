@@ -15,7 +15,7 @@
 #   native_abi_mismatch,         another ABI: the tier probes unavailable, nothing
 #   ffi_missing_symbol,          raises (no NameError) and ruby serves golden rows
 #   ffi_abi_mismatch
-#   mixed                        dfont and Type 1 rows are served by ruby, the
+#   mixed                        Type 1 rows are served by ruby, the
 #                                rest by the forced tier
 #   auto_all, auto_no_native,    `auto` resolves to the first Engine::AUTO_ORDER tier
 #   auto_none                    still present (ruby until the #160 gates flip it)
@@ -117,7 +117,7 @@ end
 
 # --- checks ---------------------------------------------------------------
 
-HANDED_TO_RUBY = %w[.dfont .pfa .pfb].freeze
+HANDED_TO_RUBY = %w[.pfa .pfb].freeze # dfont is served since #192 gap 5
 manifest = JSON.parse(File.read(File.join(root, "manifest.json"))).fetch("fonts")
 entries = manifest.select { |f| f["tier"] == "ci" }.sort_by { |f| f["id"] }
 problems = []
@@ -184,18 +184,20 @@ begin
     tiers.each do |tier|
       ENV["FONTISAN_ENGINE"] = tier
       Fontisan::Engine.reset!
-      # dfont and PFB must be ruby's. Ruby's detect_format does not recognise a
-      # PFA (nil), so the tier may take it; its error row equals the golden either way.
-      # Anything detect_format cannot name (empty or garbage bytes) is Ruby's too.
+      # PFB must be ruby's; dfont is served since #192 gap 5. Ruby's
+      # detect_format does not recognise a PFA (nil), so the tier may take it;
+      # its error row equals the golden either way. Anything detect_format
+      # cannot name (empty or garbage bytes) is Ruby's too.
       scan_corpus.call(lambda { |path|
         case File.extname(path).downcase
-        when ".dfont", ".pfb" then ["ruby"]
+        when ".pfb" then ["ruby"]
         when ".pfa" then ["ruby", tier]
         else Fontisan::FontLoader.detect_format(path).nil? ? ["ruby"] : [tier]
         end
       })
     end
-    # dfont and Type 1 in one audit_dir: ruby serves those entries, the tier the rest.
+    # Type 1 in one audit_dir with a dfont: ruby serves the PFB entry, the
+    # tier the rest (dfont included, #192 gap 5).
     Dir.mktmpdir("fontisan-mixed") do |dir|
       %w[fonttools-test-ttf fonttools-test-dfont fonttools-test-t1-pfb].each do |id|
         entry = entries.find { |e| e["id"] == id }
@@ -205,7 +207,7 @@ begin
         ENV["FONTISAN_ENGINE"] = tier
         Fontisan::Engine.reset!
         by_file = Fontisan::Engine.audit_dir(dir).to_h { |e| [e["path"], e["served_by"]] }
-        want = { "TestTTF.ttf" => tier, "TestDFONT.dfont" => "ruby", "TestT1-Regular.pfb" => "ruby" }
+        want = { "TestTTF.ttf" => tier, "TestDFONT.dfont" => tier, "TestT1-Regular.pfb" => "ruby" }
         problems << "#{tier} audit_dir served #{by_file.inspect}, expected #{want.inspect}" unless by_file == want
       end
     end

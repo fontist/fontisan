@@ -149,11 +149,12 @@ RSpec.describe Fontisan::Ffi do
       fonts.each do |font|
         it "gives identical read, audit and scan results for #{File.basename(font)}" do
           name = File.basename(font)
-          # Ruby's own detection decides: dfont, Type 1 and anything it does not
-          # recognise as a font (matrix.pfa has no Type 1 header, the malformed
-          # fixtures none at all) are handed to the Ruby tier, as on native.
+          # Ruby's own detection decides: Type 1 and anything it does not
+          # recognise as a font (matrix.pfa has no Type 1 header, the
+          # malformed fixtures none at all) are handed to the Ruby tier, as
+          # on native. dfont is served since #192 gap 5.
           format = Fontisan::FontLoader.detect_format(font)
-          served = format.nil? || format.to_s.match?(/\A(dfont|pfa|pfb)\z/) ? :ruby : :ffi
+          served = format.nil? || format.to_s.match?(/\A(pfa|pfb)\z/) ? :ruby : :ffi
           calls = {
             read: [%i[metadata full].product([true, false]).map do |mode, lazy|
               -> { Fontisan::Reference.read(font, mode: mode, lazy: lazy) }
@@ -181,10 +182,11 @@ RSpec.describe Fontisan::Ffi do
       expected = outcome { Fontisan::Reference.audit_dir(dir, validate: true) }
       tier("ffi")
       expect(outcome { Fontisan::Reference.audit_dir(dir, validate: true) }).to eq(expected)
+      # dfont is served since #192 gap 5; the PFB stays handed back (gap 4).
       tagged = Fontisan::Engine.audit_dir(dir, validate: true).to_h { |e| [e["path"], e["served_by"]] }
       expect(tagged.select { |_, t| t == "ruby" }.keys.map { |p| File.extname(p) }.uniq.sort)
-        .to eq(%w[.dfont .pfb])
-      expect(tagged.reject { |p, _| %w[.dfont .pfb].include?(File.extname(p)) }.values.uniq).to eq(["ffi"])
+        .to eq(%w[.pfb])
+      expect(tagged.reject { |p, _| File.extname(p) == ".pfb" }.values.uniq).to eq(["ffi"])
     ensure
       FileUtils.rm_rf(dir)
     end

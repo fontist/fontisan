@@ -36,8 +36,9 @@ module Fontisan
 
     LIBRARY = "fontisan_cdylib"
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
-                    glyph_ids].freeze
-    RUBY_ONLY_FORMATS = %i[dfont pfa pfb].freeze
+                    glyph_ids outline_hashes].freeze
+    # dfont is served since #192 gap 5; Type 1 stays Ruby until gap 4.
+    RUBY_ONLY_FORMATS = %i[pfa pfb].freeze
 
     OP_CONVERT = 1
     OP_EXTRACT = 2
@@ -48,6 +49,7 @@ module Fontisan
     OP_SCAN = 10
     OP_AUDIT_DIR = 11
     OP_GLYPH_IDS = 12
+    OP_OUTLINE_HASHES = 4
     FLAG_METADATA = 1
     FLAG_LAZY = 2
     FLAG_VALIDATE = 1
@@ -94,6 +96,7 @@ module Fontisan
           return operation != :instance || fixed_coordinates?(options[:coords])
         end
         return glyph_ids_options?(options, path) if operation == :glyph_ids
+        return outline_hashes_options?(options, path) if operation == :outline_hashes
 
         OPERATIONS.include?(operation)
       end
@@ -162,14 +165,15 @@ module Fontisan
         target = convert_target(options.fetch(:to))
         output = convert_output(path, output, target)
         stamp = timestamp ? unix_seconds(timestamp) : Time.now.to_i
-        prefix = [ByteOps::TARGET_CODES.fetch(target), 0, stamp].pack("NNq>")
+        prefix = [ByteOps::TARGET_CODES.fetch(target), source_hint(path), stamp].pack("NNq>")
         bytes = byte_op(OP_CONVERT, prefix + File.binread(path))
         finish_convert(path, target, File.path(output), bytes)
       end
 
       # Same file layout as UnpackCommand: <output_dir>/<basename>.
       def serve_extract(path, index:, output_dir:)
-        payload = byte_op(OP_EXTRACT, [index, 0, 0, 0].pack("NNNN") + unpacking_io { File.binread(File.path(path)) })
+        payload = byte_op(OP_EXTRACT, [index, source_hint(path), 0, 0].pack("NNNN") +
+          unpacking_io { File.binread(File.path(path)) })
         length = payload.unpack1("N")
         name = payload.byteslice(4, length).force_encoding(Encoding::UTF_8)
         unpacking_io do
@@ -203,6 +207,15 @@ module Fontisan
           [codepoints.size].pack("N") + codepoints.pack("N*") +
           File.binread(path)
         byte_op(OP_GLYPH_IDS, input).unpack("N*")
+      end
+
+      # The facade's outline_hashes (ABI 3, OP_OUTLINE_HASHES): the engine's
+      # canonical JSON row with string keys (#192 gap 2).
+      def serve_outline_hashes(path, index: 0)
+        require "json"
+        path = File.path(path)
+        input = [index, 0, 0, 0].pack("NNNN") + File.binread(path)
+        JSON.parse(byte_op(OP_OUTLINE_HASHES, input))
       end
 
       # Glyph ids of a subset request. A WOFF2 source on a platform without the
