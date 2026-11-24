@@ -21,10 +21,10 @@ fonts = File.expand_path("../../fontisan-rs/.corpus/fontisan/corpus/fonts", __di
 
 # 1. Platform gem shape: the native extension + the bundled cdylib ship.
 has_native = spec.files.any? { |f| f.include?("fontisan_native") } ||
-             File.exist?(File.join(spec.full_gem_path, "lib/fontisan/native"))
+  File.exist?(File.join(spec.full_gem_path, "lib/fontisan/native"))
 failures << "no native extension in the gem" unless has_native
 ffi_libs = Dir[File.join(spec.full_gem_path, "lib/fontisan/ffi/**/*.dylib")] +
-           Dir[File.join(spec.full_gem_path, "lib/fontisan/ffi/**/*.so")]
+  Dir[File.join(spec.full_gem_path, "lib/fontisan/ffi/**/*.so")]
 failures << "no bundled cdylib in the gem" if ffi_libs.empty?
 
 # 2. The flip: with FONTISAN_ENGINE unset, glyph_ids + outline_hashes serve
@@ -45,7 +45,7 @@ end
 ENV["FONTISAN_ENGINE"] = "native"
 Fontisan::Engine.reset!
 oh = Fontisan::Reference.outline_hashes(File.join(fonts, "NotoSans-Regular.ttf"))
-failures << "outline_hashes kind #{oh["kind"].inspect}" unless oh["kind"] == "glyf"
+failures << "outline_hashes kind #{oh['kind'].inspect}" unless oh["kind"] == "glyf"
 begin
   gid = Fontisan::Reference.glyph_ids(File.join(fonts, "TestTTC.ttc"), text: "AB")
   failures << "collection glyph_ids not an Array: #{gid.inspect[0, 40]}" unless gid.is_a?(Array)
@@ -54,11 +54,11 @@ rescue Fontisan::Error
   # served the collection, and its no-match error equals Ruby's.
 end
 d = Fontisan::Reference.read(File.join(fonts, "TestDFONT.dfont"))
-failures << "dfont read format #{d[0]["format"].inspect}" unless d[0]["format"] == "dfont"
+failures << "dfont read format #{d[0]['format'].inspect}" unless d[0]["format"] == "dfont"
 
 Dir.mktmpdir do |dir|
   r = Fontisan::Reference.convert(File.join(fonts, "TestTTF.ttf"), to: :svg,
-                                                             output: File.join(dir, "o.svg"))
+                                                                   output: File.join(dir, "o.svg"))
   failures << "convert svg failed" unless r[:success]
   svg = File.binread(File.join(dir, "o.svg"))
   failures << "svg missing glyphs" unless svg.include?("<glyph ") && svg.start_with?("<?xml")
