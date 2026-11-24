@@ -72,15 +72,17 @@ The full capability matrix (a 2026-11 audit of the engine tier, `lib/fontisan/na
 
 | Operation | native / ffi serve | Ruby only |
 |---|---|---|
-| `read` (metadata/full, lazy) | every format the engine reads | dfont, Type 1 (PFB/PFA), SVG fonts |
+| `read` (metadata/full, lazy) | every format the engine reads, dfont included | Type 1 (PFB/PFA) |
 | `audit`, `audit_dir` (+ `validate`) | engine-readable files and directories | entries the engine cannot read |
 | `scan` | engine-readable files | non-font files |
-| `convert` to ttf/otf/woff/woff2; collections to ttc/otc/woff2 | engine-readable inputs | to svg; Type 1 conversions; an `.otc` input (the engine assumes `.ttc` bytes); a single font to a collection format |
+| `convert` to ttf/otf/woff/woff2/svg; collections to ttc/otc/woff2 | engine-readable inputs; an `.otc` input carries the caller's source hint (#192 gap 7) | Type 1 conversions; a single font to a collection format |
 | `extract` (collection member) | collections | |
 | `instance` (TTF variable font) | single fonts | |
-| `subset` (web/pdf/minimal) | engine-readable single fonts | |
-| `glyph_ids` | single fonts on both tiers | |
-| `outline_hashes` | | always |
+| `subset` (web/pdf/minimal) | engine-readable single fonts and collections | |
+| `glyph_ids` | single fonts, dfonts and collections on both tiers | Type 1 |
+| `outline_hashes` | single fonts, dfonts and collections on both tiers | Type 1 |
+
+An SVG font as a *source* is not a format fontisan reads at all (there is no `from: svg` conversion), so it is not a tier question.
 
 Also always on Ruby, whichever engine is selected — strict mode does not raise for any of these:
 

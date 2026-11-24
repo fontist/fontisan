@@ -79,14 +79,16 @@ RSpec.describe "native byte ops" do
           end
         end
 
-        it "keeps an .otc collection input on Ruby (the engine cannot take the extension hint)" do
+        it "serves an .otc collection input through the engine (the source hint rides the op)" do
           Dir.mktmpdir do |dir|
             otc = File.join(dir, "in.otc")
             FileUtils.cp(ttc, otc)
             tier do
-              result = Fontisan::Reference.convert(otc, to: :ttc, output: File.join(dir, "o.ttc"))
-              expect(Fontisan::Engine.served_by(:convert)).to eq(:ruby)
+              result = Fontisan::Reference.convert(otc, to: :otc, output: File.join(dir, "o.otc"))
+              expect(Fontisan::Engine.served_by(:convert)).to eq(tier_name.to_sym)
               expect(result[:source_format]).to eq(:otc)
+              # A same-type conversion copies the input, like Ruby's.
+              expect(File.binread(File.join(dir, "o.otc"))).to eq(File.binread(otc))
             end
           end
         end

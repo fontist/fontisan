@@ -12,6 +12,12 @@ RSpec.describe Fontisan::Native do
   let(:woff) { File.join(fixtures, "TestWOFF.woff") }
   let(:ttc) { File.join(fixtures, "TestTTC.ttc") }
   let(:dfont) { File.join(fixtures, "TestDFONT.dfont") }
+  # Type 1 stays with Ruby (gap 4): the handed-back file in the audit_dir
+  # tests. The PFB's 0x8001 magic is detected natively, so the engine hands
+  # it back; the corpus's PFA carries a %!FontType1 header neither tier
+  # detects, and errors identically on both.
+  let(:pfb) { File.join(corpus, "fonttools-test-t1-pfb", "TestT1-Regular.pfb") }
+  let(:corpus) { ENV.fetch("FONTISAN_TEST_CORPUS", "corpus/fonts") }
 
   def with_engine(selection, strict: true)
     saved = ENV.to_h.slice("FONTISAN_ENGINE", "FONTISAN_ENGINE_STRICT")
@@ -183,17 +189,20 @@ RSpec.describe Fontisan::Native do
       expect(described_class.supports_options?(:glyph_ids, { unicodes: [65], text: "A" }, ttf)).to be(true)
       expect(described_class.supports_options?(:glyph_ids, { profile: "web" }, ttf)).to be(false)
       expect(described_class.supports_options?(:glyph_ids, { unicodes: [-1] }, ttf)).to be(false)
-      expect(described_class.supports_options?(:glyph_ids, {}, ttc)).to be(false)
+      # Collections are served since #192 gap 5 (face 0); the format gate
+      # (supports?, not the options check) keeps Type 1 on Ruby.
+      expect(described_class.supports_options?(:glyph_ids, {}, ttc)).to be(true)
+      expect(described_class.supports?(:glyph_ids, pfb)).to be(false)
     end
 
-    it "routes dfont to :ruby in strict mode, for every operation and inside a mixed scan" do
+    it "serves dfont natively in strict mode, for every operation and inside a mixed scan" do
       with_engine("native") do
         Fontisan::Reference.read(dfont)
         Fontisan::Reference.audit(dfont)
-        expect(Fontisan::Engine.counters).to eq(ruby: { read: 1, audit: 1 })
+        expect(Fontisan::Engine.counters).to eq(native: { read: 1, audit: 1 })
         rows = Fontisan::Engine.scan([ttf, dfont, woff])
         expect(rows.to_h { |r| [File.basename(r["path"]), r["served_by"]] })
-          .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "ruby", "TestWOFF.woff" => "native")
+          .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "native", "TestWOFF.woff" => "native")
       end
     end
 
@@ -203,15 +212,16 @@ RSpec.describe Fontisan::Native do
         with_engine("native") do
           entries = Fontisan::Engine.audit_dir(dir)
           expect(entries.to_h { |e| [e["path"], e["served_by"]] })
-            .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "ruby", "TestWOFF.woff" => "native")
+            .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "native", "TestWOFF.woff" => "native")
           expect(entries.map { |e| e.except("served_by") }).to eq(ruby_result { Fontisan::Reference.audit_dir(dir) })
         end
       end
     end
 
     it "tags a file handed back to Ruby as :ruby when the engine reports native separators (Windows)" do
+      skip "corpus pfb not fetched" unless File.file?(pfb)
       Dir.mktmpdir("winsep") do |dir|
-        FileUtils.cp([ttf, dfont], dir)
+        FileUtils.cp([ttf, pfb], dir)
         stub_const("File::ALT_SEPARATOR", "\\")
         with_engine("native") do
           original = described_class.method(:native_audit_dir_rows)
@@ -220,7 +230,7 @@ RSpec.describe Fontisan::Native do
           end
           entries = Fontisan::Engine.audit_dir(dir)
           expect(entries.to_h { |e| [e["path"], e["served_by"]] })
-            .to eq("TestTTF.ttf" => "native", "TestDFONT.dfont" => "ruby")
+            .to eq("TestTTF.ttf" => "native", "TestT1-Regular.pfb" => "ruby")
         end
       end
     end
@@ -284,8 +294,8 @@ RSpec.describe Fontisan::Native do
     end
 
     it "exposes convert, extract, instance and subset as byte operations" do
-      expect(described_class.native_convert(ttf, 3, 0)).to start_with("wOF2")
-      name, data = described_class.native_extract(ttc, 0)
+      expect(described_class.native_convert(ttf, 3, 1, 0)).to start_with("wOF2")
+      name, data = described_class.native_extract(ttc, 0, 1)
       expect([name, data.bytesize]).to match([a_string_ending_with(".ttf"), be > 0])
       expect(described_class.native_subset(ttf, [0, 1], "web")).to be_a(String)
     end

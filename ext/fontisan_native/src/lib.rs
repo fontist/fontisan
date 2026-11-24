@@ -29,7 +29,7 @@ use std::path::Path;
 
 /// Bumped on any change to the functions below. `lib/fontisan/native.rb` refuses a
 /// mismatch (then the tier is simply unavailable).
-const ABI_VERSION: u32 = 1;
+const ABI_VERSION: u32 = 2;
 
 /// What the engine reported, before it becomes a Ruby exception.
 enum Fail {
@@ -340,7 +340,7 @@ fn native_supports_file(ruby: &Ruby, path: String) -> Result<bool, Error> {
             Ok(!unknown
                 && !matches!(
                     sfnt::detect_format(&head),
-                    Some(Format::Dfont | Format::Pfa | Format::Pfb)
+                    Some(Format::Pfa | Format::Pfb)
                 ))
         }),
     )
@@ -352,26 +352,34 @@ fn convert_failed(e: &convert::ConvertError) -> Fail {
     Fail::simple(e.class, e.message.clone())
 }
 
-fn native_convert(ruby: &Ruby, path: String, target: u32, timestamp: i64) -> Result<Value, Error> {
+fn native_convert(
+    ruby: &Ruby,
+    path: String,
+    target: u32,
+    source: u32,
+    timestamp: i64,
+) -> Result<Value, Error> {
     let bytes = finish(
         ruby,
         nogvl(move || {
             let target = Target::from_code(target)
                 .ok_or_else(|| Fail::simple("ArgumentError", format!("unknown target {target}")))?;
             let input = read_file(&path)?;
-            convert::convert(&input, target, timestamp).map_err(|e| convert_failed(&e))
+            convert::convert(&input, target, convert::SourceType::from_hint(source), timestamp)
+                .map_err(|e| convert_failed(&e))
         }),
     )?;
     Ok(bytes_value(ruby, &bytes))
 }
 
 /// `[basename, bytes]` of one collection member.
-fn native_extract(ruby: &Ruby, path: String, index: usize) -> Result<RArray, Error> {
+fn native_extract(ruby: &Ruby, path: String, index: usize, source: u32) -> Result<RArray, Error> {
     let (name, data) = finish(
         ruby,
         nogvl(move || {
             let input = read_file(&path)?;
-            let x = convert::extract(&input, index).map_err(|e| convert_failed(&e))?;
+            let x = convert::extract(&input, index, convert::SourceType::from_hint(source))
+                .map_err(|e| convert_failed(&e))?;
             Ok((x.basename, x.data))
         }),
     )?;
@@ -415,6 +423,19 @@ fn native_subset(ruby: &Ruby, path: String, gids: Vec<u32>, profile: String) -> 
 
 /// Glyph ids kept for `codepoints` (the facade's `gids_for`); `name` is the
 /// file's basename, used in the "None of the requested characters" error.
+/// The facade's `outline_hashes` JSON (`{"kind","hashes"}`), #192 gap 2.
+fn native_outline_hashes(ruby: &Ruby, path: String, index: usize) -> Result<String, Error> {
+    finish(
+        ruby,
+        nogvl(move || {
+            let input = read_file(&path)?;
+            crate::sfnt::outline_hashes(&input, index)
+                .map(|row| row.render())
+                .map_err(|e| Fail::simple(e.class, e.message.clone()))
+        }),
+    )
+}
+
 fn native_glyph_ids(ruby: &Ruby, path: String, codepoints: Vec<u32>, name: String) -> Result<Vec<u32>, Error> {
     finish(
         ruby,
@@ -467,11 +488,12 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     native.define_singleton_method("native_scan", function!(native_scan, 1))?;
     native.define_singleton_method("native_audit_dir_rows", function!(native_audit_dir_rows, 2))?;
     native.define_singleton_method("native_supports_file", function!(native_supports_file, 1))?;
-    native.define_singleton_method("native_convert", function!(native_convert, 3))?;
-    native.define_singleton_method("native_extract", function!(native_extract, 2))?;
+    native.define_singleton_method("native_convert", function!(native_convert, 4))?;
+    native.define_singleton_method("native_extract", function!(native_extract, 3))?;
     native.define_singleton_method("native_instance", function!(native_instance, 2))?;
     native.define_singleton_method("native_subset", function!(native_subset, 3))?;
     native.define_singleton_method("native_glyph_ids", function!(native_glyph_ids, 3))?;
+    native.define_singleton_method("native_outline_hashes", function!(native_outline_hashes, 2))?;
     native.define_singleton_method("native_selftest_panic", function!(native_selftest_panic, 0))?;
     native.define_singleton_method("native_selftest_block", function!(native_selftest_block, 1))?;
     Ok(())

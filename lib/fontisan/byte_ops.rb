@@ -7,9 +7,13 @@ module Fontisan
   # classes; the methods are private to the tier.
   module ByteOps
     # Convert target codes of the engine (extension and C ABI alike).
-    TARGET_CODES = { ttf: 0, otf: 1, woff: 2, woff2: 3, ttc: 4, otc: 5 }.freeze
-    SINGLE_TARGETS = %i[ttf otf woff woff2].freeze
+    TARGET_CODES = { ttf: 0, otf: 1, woff: 2, woff2: 3, ttc: 4, otc: 5,
+                     svg: 6 }.freeze
+    SINGLE_TARGETS = %i[ttf otf woff woff2 svg].freeze
     COLLECTION_TARGETS = %i[ttc otc woff2].freeze
+    # The caller's `.ttc`/`.otc` extension decision for a `ttcf` input
+    # (#192 gap 7): the engine's bytes carry no path.
+    SOURCE_HINT_CODES = { ttc: 1, otc: 2 }.freeze
     CONVERT_OPTIONS = %i[to output timestamp quiet].freeze
     SUBSET_PROFILES = %w[web pdf minimal].freeze
     MAX_CODEPOINT = 0x10FFFF
@@ -75,12 +79,16 @@ module Fontisan
       false
     end
 
-    # `.otc` decision (card 2f): Ruby picks a collection's source type from
-    # the input path's extension (`.otc` vs anything else), and the engine
-    # only sees bytes and assumes `.ttc`. No hint is passed: `.otc`
-    # inputs stay on the Ruby tier.
+    # `.otc` decision (card 2f, served since #192 gap 7): Ruby picks a
+    # collection's source type from the input path's extension (`.otc` vs
+    # anything else); the hint rides the op prefix.
     def otc_hint?(path)
       File.extname(path).casecmp?(".otc")
+    end
+
+    # The wire value of the source hint for +path+.
+    def source_hint(path)
+      otc_hint?(path) ? SOURCE_HINT_CODES.fetch(:otc) : SOURCE_HINT_CODES.fetch(:ttc)
     end
 
     # Single target `to:` (no multi-format), a format pair the engine
@@ -92,7 +100,6 @@ module Fontisan
 
       target = convert_target(options[:to]) or return false
       return false unless path.is_a?(String)
-      return false if otc_hint?(path)
 
       (collection_file?(path) ? COLLECTION_TARGETS : SINGLE_TARGETS).include?(target)
     end
@@ -115,14 +122,14 @@ module Fontisan
 
     def instance_options?(options, path)
       return false unless options.keys.all? { |key| %i[coords timestamp].include?(key) }
-      return false unless options[:coords].is_a?(Hash) && !path.nil? && !collection_file?(path)
+      return false unless options[:coords].is_a?(Hash) && !path.nil?
 
       options[:coords].all? { |tag, value| tag.to_s.bytesize == 4 && numeric?(value) }
     end
 
     def subset_options?(options, path)
       return false unless options.keys.all? { |key| %i[unicodes text profile timestamp].include?(key) }
-      return false if path.nil? || collection_file?(path)
+      return false if path.nil?
       return false unless SUBSET_PROFILES.include?(options.fetch(:profile, "web"))
 
       text = options[:text]
@@ -131,11 +138,24 @@ module Fontisan
       Array(options[:unicodes]).all? { |cp| cp.is_a?(Integer) && cp.between?(0, MAX_CODEPOINT) }
     end
 
-    # Same input contract as `subset` minus the profile: codepoints and/or
-    # text on a single engine-readable font.
+    # One Integer face index on an engine-readable single font or
+    # collection; Type 1 files stay with the Ruby tier.
+    def outline_hashes_options?(options, path)
+      return false unless options.keys.sort == %i[index]
+      return false unless options[:index].is_a?(Integer) && options[:index].between?(0, MAX_FONT_INDEX)
+      return false unless path.is_a?(String)
+
+      format = FontLoader.detect_format(path)
+      !format.nil? && !%i[pfa pfb].include?(format)
+    rescue StandardError
+      false
+    end
+
+    # Codepoints and/or text on any engine-readable input; collections
+    # included (the engine runs face 0, as Ruby's loader does).
     def glyph_ids_options?(options, path)
       return false unless options.keys.all? { |key| %i[unicodes text].include?(key) }
-      return false if path.nil? || collection_file?(path)
+      return false if path.nil?
 
       text = options[:text]
       return false unless text.nil? || text.is_a?(String)
@@ -191,7 +211,13 @@ module Fontisan
     def convert_formats(path, target)
       return { source_format: single_format(path), target_format: target } unless collection_file?(path)
 
-      source = File.binread(path, 4) == "wOF2" ? :woff2_collection : :ttc
+      source = if File.binread(path, 4) == "wOF2"
+                 :woff2_collection
+               else
+                 # Ruby's detect_collection_type: the extension decides
+                 # `.otc` vs `.ttc` (gap 7's decision, now reported too).
+                 otc_hint?(path) ? :otc : :ttc
+               end
       { source_format: source, target_format: target == :woff2 ? :woff2_collection : target }
     end
 

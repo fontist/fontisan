@@ -20,20 +20,20 @@ module Fontisan
     # Cross-compiled platform gems ship one build per Ruby minor, in a
     # directory named for it (rake-compiler's fat-binary layout).
     VERSIONED_EXTENSION = "fontisan/native/#{RUBY_VERSION[/\A\d+\.\d+/]}/fontisan_native".freeze
-    ABI_VERSION = 1
+    ABI_VERSION = 2
 
     # The fontisan-rs commit both binaries must be built from: the `rev` of the
     # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
     # not move on a repin, so this is what keeps a stale binary from serving old
     # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
-    ENGINE_REV = "291dfc35a290a3153bd08f366115feaf8ebeada8"
+    ENGINE_REV = "332587c770c193f7fc0e870dc4f5a1ef74a1d9ca"
 
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points
     # (`Subset::Builder.new(font, ...)`, `Variable::Instancer.new(font)`) are
     # not Reference operations, so they never reach a gate and stay on Ruby.
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
-                    glyph_ids].freeze
+                    glyph_ids outline_hashes].freeze
 
     # Raised by the extension for an engine failure; `details` is
     # `[class name, message, [[cause class, cause message], ...], error kind]`;
@@ -87,6 +87,7 @@ module Fontisan
         when :read then read_options?(options)
         when *ByteOps::BYTE_OPERATIONS then byte_options?(operation, options, path)
         when :glyph_ids then glyph_ids_options?(options, path)
+        when :outline_hashes then outline_hashes_options?(options, path)
         when :audit, :audit_dir then options.keys.all?(:validate) && [true, false, nil].include?(options[:validate])
         when :scan then options.empty?
         else false
@@ -104,6 +105,7 @@ module Fontisan
         when :instance then instance(*, **)
         when :subset then subset(*, **)
         when :glyph_ids then glyph_ids(*, **)
+        when :outline_hashes then outline_hashes(*, **)
         else raise Fontisan::Error, "native tier cannot serve #{operation}"
         end
       rescue Failure => e
@@ -163,13 +165,14 @@ module Fontisan
         path = File.path(path)
         target = convert_target(options.fetch(:to))
         output = convert_output(path, output, target)
-        bytes = native_convert(path, ByteOps::TARGET_CODES.fetch(target), timestamp ? unix_seconds(timestamp) : Time.now.to_i)
+        bytes = native_convert(path, ByteOps::TARGET_CODES.fetch(target), source_hint(path),
+                               timestamp ? unix_seconds(timestamp) : Time.now.to_i)
         finish_convert(path, target, File.path(output), bytes)
       end
 
       # Same file layout as UnpackCommand: <output_dir>/<basename>.
       def extract(path, index:, output_dir:)
-        name, bytes = native_extract(File.path(path), index)
+        name, bytes = native_extract(File.path(path), index, source_hint(path))
         unpacking_io do
           FileUtils.mkdir_p(output_dir)
           File.join(output_dir, name).tap { |out| File.binwrite(out, bytes) }
@@ -195,6 +198,14 @@ module Fontisan
         path = File.path(path)
         codepoints = Array(unicodes).map(&:to_i) + text.to_s.codepoints
         native_glyph_ids(path, codepoints, File.basename(path))
+      end
+
+      # The facade's outline_hashes row, rendered by the engine as canonical
+      # JSON with string keys (#192 gap 2).
+      def outline_hashes(path, index: 0)
+        require "json"
+        path = File.path(path)
+        JSON.parse(native_outline_hashes(path, index))
       end
 
       def read(path, mode: :metadata, lazy: true)

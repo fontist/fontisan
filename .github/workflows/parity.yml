@@ -13,6 +13,8 @@
 #                         unbounded run kills the cell
 #   convert_verify_spec   convert goldens, asserts served_by, runs OTS on every output
 #   glyph_ids_parity_spec glyph_ids equals the Ruby tier's outcome (value or error class
+#   outline_hashes_parity_spec ditto for outline_hashes (the same engine reads, sans the
+#     glyph_ids collection split: the engine decodes every WOFF2 and reads dfonts)
 #                         and message) on every ci-tier font, asserts served_by (#192 gap 1)
 #
 # The platform gems come from gem-build.yml (same run, workflow_call). For the cells the
@@ -151,6 +153,7 @@ jobs:
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
           spec/corpus/glyph_ids_parity_spec.rb
+          spec/corpus/outline_hashes_parity_spec.rb
 
   # linux-musl: Alpine, with the C toolchain the brotli and woff2 builds need (not Rust).
   cell-musl:
@@ -194,7 +197,8 @@ jobs:
               bundle exec rspec --options /dev/null --format progress \
                 spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb \
                 spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb \
-                spec/corpus/glyph_ids_parity_spec.rb
+                spec/corpus/glyph_ids_parity_spec.rb \
+                spec/corpus/outline_hashes_parity_spec.rb
             '
 
   # JRuby on linux-glibc: the java gem has the cdylib of every platform and no brotli, so
@@ -270,6 +274,7 @@ jobs:
           spec/corpus/verify_spec.rb spec/corpus/scan_goldens_spec.rb
           spec/corpus/malformed_verify_spec.rb spec/corpus/convert_verify_spec.rb
           spec/corpus/glyph_ids_parity_spec.rb
+          spec/corpus/outline_hashes_parity_spec.rb
 
   # Strict OFF, installed gem, outside the checkout (scripts/tier_fallback.rb).
   fallback:
