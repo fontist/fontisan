@@ -24,18 +24,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "error": {
-        "class": "Fontisan::Error",
-        "message": "Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet)"
-      },
-      "outcome": "error",
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "instance:0": {
       "class": "exact",
       "error": {

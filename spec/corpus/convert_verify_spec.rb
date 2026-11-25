@@ -129,7 +129,7 @@ RSpec.describe ConvertGoldens do
         orig.call(*args, **kw).tap { File.open(kw.fetch(:output), "ab") { |f| f.write("\x00") } }
       end
       problems = described_class.verify(tiers, only: [id])
-      expect(problems.join).to include("#{id}.json", "format:otf", "format:woff", "format:woff2")
+      expect(problems.join).to include("#{id}.json", "format:otf", "format:woff")
     end
 
     it "fails verify when a golden byte changes" do

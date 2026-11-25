@@ -112,7 +112,14 @@ module ConvertGoldens
       faces.each_index { |i| cases["extract:#{i}"] = { op: :extract, index: i } }
       return cases
     end
-    SINGLE_TARGETS.each { |to| cases["format:#{to}"] = { op: :format, to: to } unless to == format }
+    # See the woff2 note below: the encode's bytes are implementation-specific.
+    SINGLE_TARGETS.each { |to| cases["format:#{to}"] = { op: :format, to: to } unless to == format || to == "woff2" }
+    # No format:woff2 case: the Ruby and engine WOFF2 encoders produce
+    # different streams on real fonts (they agree on some, diverge on
+    # others), so no single committed byte-set is reproducible across
+    # environments - a brotli-less JRuby can only ever produce the engine's
+    # bytes, a forced-ruby cell only the gem's. The engine's WOFF2 encode is
+    # byte-pinned in fontisan-rs's own test suite.
     # The reverse Type 1 conversion is pinned for sfnt sources of reasonable
     # size: woff/woff2 sources have no type1 matrix pair (and a brotli-less
     # JRuby could not even read the woff2), and CJK-scale fonts (10k+ glyphs)

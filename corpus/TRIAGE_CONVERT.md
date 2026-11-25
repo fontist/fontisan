@@ -63,12 +63,11 @@ Reason: subset leaves GSUB/GPOS referencing glyph ids beyond the subset glyph co
 - OTS exception: `source-sans-3-regular-otf/subset:text-latin`
 - OTS exception: `source-sans-3-regular-otf/subset:unicodes-sample`
 
-## Variations: Required fvar table is missing (191)
+## Variations: Required fvar table is missing (187)
 
 Reason: static output drops fvar/gvar but GDEF/GPOS keep ItemVariationStore references (measured: instance and VF->static convert outputs).
 
 - OTS exception: `mona-sans-vf-all-axes/format:woff`
-- OTS exception: `mona-sans-vf-all-axes/format:woff2`
 - OTS exception: `mona-sans-vf-all-axes/instance:0`
 - OTS exception: `mona-sans-vf-all-axes/instance:1`
 - OTS exception: `mona-sans-vf-all-axes/instance:10`
@@ -230,7 +229,6 @@ Reason: static output drops fvar/gvar but GDEF/GPOS keep ItemVariationStore refe
 - OTS exception: `mona-sans-vf-all-axes/instance:98`
 - OTS exception: `mona-sans-vf-all-axes/instance:99`
 - OTS exception: `noto-sans-vf-wdth-wght/format:woff`
-- OTS exception: `noto-sans-vf-wdth-wght/format:woff2`
 - OTS exception: `noto-sans-vf-wdth-wght/instance:0`
 - OTS exception: `noto-sans-vf-wdth-wght/instance:1`
 - OTS exception: `noto-sans-vf-wdth-wght/instance:2`
@@ -241,7 +239,6 @@ Reason: static output drops fvar/gvar but GDEF/GPOS keep ItemVariationStore refe
 - OTS exception: `noto-sans-vf-wdth-wght/instance:7`
 - OTS exception: `noto-sans-vf-wdth-wght/instance:8`
 - OTS exception: `source-sans-3-vf-italic-ttf/format:woff`
-- OTS exception: `source-sans-3-vf-italic-ttf/format:woff2`
 - OTS exception: `source-sans-3-vf-italic-ttf/instance:0`
 - OTS exception: `source-sans-3-vf-italic-ttf/instance:1`
 - OTS exception: `source-sans-3-vf-italic-ttf/instance:2`
@@ -250,7 +247,6 @@ Reason: static output drops fvar/gvar but GDEF/GPOS keep ItemVariationStore refe
 - OTS exception: `source-sans-3-vf-italic-ttf/instance:5`
 - OTS exception: `source-sans-3-vf-italic-ttf/instance:6`
 - OTS exception: `source-sans-3-vf-upright-ttf/format:woff`
-- OTS exception: `source-sans-3-vf-upright-ttf/format:woff2`
 - OTS exception: `source-sans-3-vf-upright-ttf/instance:0`
 - OTS exception: `source-sans-3-vf-upright-ttf/instance:1`
 - OTS exception: `source-sans-3-vf-upright-ttf/instance:2`
@@ -266,12 +262,6 @@ Reason: extracted member keeps a cmap invalid for OTS (TestTTCv2).
 - OTS exception: `fonttools-test-ttc-v2/extract:0`
 - OTS exception: `fonttools-test-ttc-v2/extract:1`
 
-## cmap: missing required table (1)
-
-Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes the quirk through and OTS rejects it.
-
-- OTS exception: `quirk-empty-cmap-table/format:woff2`
-
 ## cmap: zero-length table (1)
 
 Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes the quirk through and OTS rejects it.
@@ -284,21 +274,14 @@ Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes 
 
 - OTS exception: `noto-sans-jp-subset-regular-otf/format:ttf`
 
-## head: Unsupported majorVersion: N (5)
+## head: Unsupported majorVersion: N (4)
 
 Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes the quirk through and OTS rejects it.
 
 - OTS exception: `quirk-head-version-2/format:otf`
 - OTS exception: `quirk-head-version-2/format:woff`
-- OTS exception: `quirk-head-version-2/format:woff2`
 - OTS exception: `quirk-head-version-2/subset:text-latin`
 - OTS exception: `quirk-head-version-2/subset:unicodes-sample`
-
-## name: missing required table (1)
-
-Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes the quirk through and OTS rejects it.
-
-- OTS exception: `quirk-empty-name-table/format:woff2`
 
 ## name: zero-length table (3)
 
@@ -375,11 +358,10 @@ Ruby raises on these inputs today; the golden keeps class and masked message.
 
 - Reference error: `quirk-empty-name-table/format:otf`
 
-## Fontisan::Error: Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet) (3)
+## Fontisan::Error: Conversion failed: Transformation failed: Static instancing needs TrueType outlines with gvar (CFF2 variable fonts are not supported yet) (2)
 
 - Reference error: `source-sans-3-vf-upright-cff2/format:ttf`
 - Reference error: `source-sans-3-vf-upright-cff2/format:woff`
-- Reference error: `source-sans-3-vf-upright-cff2/format:woff2`
 
 ## Fontisan::Error: None of the requested characters exist in quirk-empty-cmap-table.ttf (2)
 

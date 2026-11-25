@@ -54,42 +54,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
-          "GDEF": "0221b371aec9fbcb1f7c72cd275ea91e279a2bdd743ad29dd2384e32efb3b722",
-          "GPOS": "677fcb25ff0aae46ce843308865303863b11727010664cce6419ebcd49b40864",
-          "GSUB": "05fe3208ff4d6dd5415e58f6bae6d92e3ca7d1ffb61cf2f59de3b780d85b7267",
-          "OS/2": "03f681dcc73b22d444c144df01a9bcbc98ac8ec664cc2a9f5a3545c417032fd0",
-          "cmap": "28181dedd3cc882b12eb48a308365a68e095ce8c980ffafc77b4ada8ed3d5031",
-          "glyf": "48984ffed4c6126b390d5061603c86282e8612440cac46656f60e82ef074652d",
-          "head": "ca70aacc178a080e8dd7f735f7c22bcf6a3cf9236fc30968843540e4545da979",
-          "hhea": "e39334f5d76fc11f7d82f6642dfe8e7cbced7df0c339c7d01f55bb029c64eb03",
-          "hmtx": "e100a947e993d61633f9e753fe036777c5a36a55d1053ee323d457e0ee9eca2e",
-          "loca": "cb746e259864def4158b5db02ea68cd60de287d406a5d3262ef4f6311b49c557",
-          "maxp": "1de1dbd26515b90804dc95cd92596a1d8abe2213586596427a15c83c3a605e2d",
-          "name": "286bcd7bc55a1824da7b19196560c90e39ef4d5ee290d683e2fa459785836f59",
-          "post": "781f10b0f72ed85d0e29fad5c6f1ef38b7626870e686df8d5eeb4c9ce6631fd6"
-        }
-      ],
-      "known_reference_bug": "Variations: Required fvar table is missing",
-      "ots": {
-        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
-        "verdict": "fail"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "4366704800968e54c3d338d50bc848b9f6f05045ae2bf2dd4f1acb3428feb7b5",
-        "size": 104348
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "instance:0": {
       "class": "exact",
       "known_reference_bug": "Variations: Required fvar table is missing",

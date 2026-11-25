@@ -70,40 +70,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "OS/2": "9704dfb890843c9073e28118c0d6fe3f537f3592901552941090f50733fb790a",
-          "cmap": "52f3ee7b2e75ae49ba5fdef43bf4a57e57c1cc1058e4f5a8ee8d6b9c10986a3e",
-          "cvt ": "96a296d224f285c67bee93c30f8a309157f0daa35dc5b87e410b78630a09cfc7",
-          "fpgm": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
-          "gasp": "bd0e02199835b71310e24be376f37e674364d5385eeaa8ee878930f6308a338c",
-          "glyf": "cf965fc5eefe53becf241a9d7a68997d1db1f2ecfa06ef53b5771236c58ede95",
-          "head": "bdca969e74d9fee0ae87ec67ed5ba8189ce1635b1b0866f9cdb7f4451f97280c",
-          "hhea": "c6b19285d3a3d5162c1dfce1020efefad37ca2138afd4d6f3c94560d3c5a5a31",
-          "hmtx": "b8bfd9e384fd6536181c659a434db3e833712dba98bc002b9f6e69ea6ed9b474",
-          "loca": "99088b3fecf1ee7eb4fb367513c5d21587871c3510ade681ecf8997ed3e96263",
-          "maxp": "e741022a7effa946ea25d436d688fcd2079cba29b938575dc64c5447174156b6",
-          "name": "f4f5fc599adbf58b8f76af187f70ae644e3578812221fa8d27a4c59d37b809c5",
-          "post": "fff88b251254974f710fd94c1b8b26ebc3a6157d87f89c975009920535b0f79a",
-          "prep": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
-        }
-      ],
-      "ots": {
-        "verdict": "pass"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "63c2fea8a94d26721c47994cad8c9bf991712968270fbe49803c619125c347f0",
-        "size": 568
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "subset:text-latin": {
       "class": "exact",
       "known_reference_bug": "post: Bad number of glyphs: N",
