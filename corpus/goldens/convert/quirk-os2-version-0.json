@@ -62,8 +62,8 @@
       "outcome": "ok",
       "output": {
         "format": "woff",
-        "sha256": "253994d8b0dee59e24a860756a21d2103fadbf7f4e0725ae399a4d59fa27064a",
-        "size": 1408
+        "sha256": "522ffe8eb08e1e1fecf6742e000b798a58231834eeb46311509f47839e274393",
+        "size": 1400
       },
       "params": {
         "op": "format",

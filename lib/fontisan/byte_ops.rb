@@ -101,6 +101,12 @@ module Fontisan
       target = convert_target(options[:to]) or return false
       return false unless path.is_a?(String)
 
+      # WOFF encode stays with Ruby: the engine's DEFLATE is a pure-Rust
+      # implementation whose streams differ from the Ruby tier's libz, so
+      # serving it would break the byte-identical outcomes contract (the
+      # WOFF2 encode matches - brotli is standardized).
+      return false if target == :woff
+
       (collection_file?(path) ? COLLECTION_TARGETS : SINGLE_TARGETS).include?(target)
     end
 
