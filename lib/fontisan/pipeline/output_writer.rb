@@ -62,6 +62,8 @@ module Fontisan
           write_woff2(tables)
         when :svg
           write_svg(tables)
+        when :type1
+          write_type1(tables)
         else
           raise ArgumentError, "Unsupported output format: #{@format}"
         end
@@ -81,6 +83,20 @@ module Fontisan
         end
 
         File.write(@output_path, svg_xml)
+      end
+
+      # Write Type 1 format
+      #
+      # @param result [Hash] Result with the :pfb bytes
+      # @return [Integer] Number of bytes written
+      def write_type1(result)
+        data = result[:pfb] || result["pfb"]
+        unless data
+          raise ArgumentError,
+                "Type 1 result must contain the :pfb bytes"
+        end
+
+        File.binwrite(@output_path, data)
       end
 
       # Write SFNT format (TTF or OTF)

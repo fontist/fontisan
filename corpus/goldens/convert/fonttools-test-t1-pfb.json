@@ -1,0 +1,42 @@
+{
+  "cases": {
+    "format:otf": {
+      "class": "exact",
+      "known_reference_bug": "CFF : Failed validating CharStrings INDEX",
+      "ots": {
+        "detail": "member 0: ERROR: CFF : Failed validating CharStrings INDEX | ERROR: CFF : Failed to parse table",
+        "verdict": "fail"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "otf",
+        "sha256": "f90ad7d15996f252a8eb06a0da87404805598afaba959dee64f39c3d30ebda8c",
+        "size": 1092
+      },
+      "params": {
+        "op": "format",
+        "to": "otf"
+      }
+    },
+    "format:ttf": {
+      "class": "exact",
+      "ots": {
+        "verdict": "pass"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "ttf",
+        "sha256": "70518cdfa2dcd6114cf8a80af75c70ca8cc85415158e79286f16d7b305d2a680",
+        "size": 1084
+      },
+      "params": {
+        "op": "format",
+        "to": "ttf"
+      }
+    }
+  },
+  "font": "fonttools-test-t1-pfb",
+  "source_format": "pfb",
+  "source_sha256": "ccc479c812b34808de53db44c4dc080461d006e5a51e87a8b0662a57aa802410",
+  "timestamp": 1735689600
+}

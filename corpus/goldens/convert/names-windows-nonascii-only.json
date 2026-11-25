@@ -18,6 +18,23 @@
         "to": "otf"
       }
     },
+    "format:type1": {
+      "class": "exact",
+      "ots": {
+        "detail": "OTS does not read raw Type 1",
+        "verdict": "skip"
+      },
+      "outcome": "ok",
+      "output": {
+        "format": "pfb",
+        "sha256": "cbd7758dc6334fe8c4756a8e4658a15469b4e3f77974abced56f2c9f8335f238",
+        "size": 1767
+      },
+      "params": {
+        "op": "format",
+        "to": "type1"
+      }
+    },
     "format:woff": {
       "class": "decoded-exact",
       "decoded_tables": [
@@ -45,8 +62,8 @@
       "outcome": "ok",
       "output": {
         "format": "woff",
-        "sha256": "d5ec17d02639e58caf45bad821da3891f886bed44fc75be0132fc9a0b64fa06b",
-        "size": 1064
+        "sha256": "98bcee2483573e3fa95335d412d6ad917f3f878dee4f228e5f25499534181605",
+        "size": 1072
       },
       "params": {
         "op": "format",

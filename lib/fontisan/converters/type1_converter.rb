@@ -43,6 +43,10 @@ module Fontisan
       include ConversionStrategy
       include CffTableBuilder
 
+      # The fixed head created/modified date for Type 1 conversions
+      # (2020-01-01T00:00:00Z, Unix seconds) — conversions are reproducible.
+      FIXED_HEAD_TIMESTAMP = 1_577_836_800
+
       # Initialize a new Type1Converter
       #
       # @param options [Hash] Converter options
@@ -299,10 +303,56 @@ module Fontisan
         # Build cmap table
         tables["cmap"] = build_cmap_table(font)
 
+        # Build hmtx (advance width and lsb per glyph, from the converted
+        # CharStrings' hsbw) — hhea declares numberOfHMetrics, so a font
+        # without hmtx fails sanitisation.
+        tables["hmtx"] = build_hmtx_table(cff_charstrings)
+
         # Add CFF table
         tables["CFF "] = cff_data
 
         tables
+      end
+
+      # Per-glyph (advanceWidth, lsb) rows decoded from the hsbw at the head
+      # of each converted CharString, in the CharStrings INDEX order.
+      def build_hmtx_table(charstrings)
+        data = (+"").b
+        charstrings.each_value do |charstring|
+          width = hsbw_of(charstring)[1] || 0
+          data << [[width, 0].max].pack("n")
+          data << [0].pack("s>")
+        end
+        data
+      end
+
+      # Decode the leading numbers of a Type 1 CharString (the hsbw's lsb and
+      # width), using the Type 1 variable-length integer encoding.
+      def hsbw_of(bytes)
+        numbers = []
+        i = 0
+        while i < bytes.length && numbers.size < 2
+          v = bytes.getbyte(i)
+          case v
+          when 32..246
+            numbers << v - 139
+            i += 1
+          when 247..250
+            numbers << (((v - 247) << 8) + bytes.getbyte(i + 1) + 108)
+            i += 2
+          when 251..254
+            numbers << (-((v - 251) << 8) - bytes.getbyte(i + 1) - 108)
+            i += 2
+          when 255
+            raw = bytes.byteslice(i + 1, 4).unpack1("N")
+            signed = raw >= 0x80000000 ? raw - (1 << 32) : raw
+            numbers << (signed / 65_536.0).round
+            i += 5
+          else
+            i += 1
+          end
+        end
+        numbers
       end
 
       # Convert OpenType/CFF font to Type 1
@@ -325,23 +375,38 @@ module Fontisan
         # Get Private DICT for context
         private_dict = cff_table.private_dict(0)
 
-        # Create CFF to Type 1 converter
+        # Create CFF to Type 1 converter, rescaling coordinates to 1000 upm
+        upm = font.table(Constants::HEAD_TAG)&.units_per_em.to_i
+        scale = upm.positive? ? Rational(1000, upm) : Rational(1)
         converter = Type1::CffToType1Converter.new(
-          nominal_width: private_dict&.nominal_width || 0,
-          default_width: private_dict&.default_width || 0,
+          nominal_width: ((private_dict&.nominal_width_x || 0) * scale).round,
+          default_width: ((private_dict&.default_width_x || 0) * scale).round,
+          scale: scale,
         )
 
         # Convert each CFF CharString to Type 1 format
         type1_charstrings = {}
         glyph_count = charstrings_index.count
 
+        # Hoisted: the charset parses on every call, so a per-glyph lookup
+        # would re-parse it once per glyph.
+        charset = cff_table.charset(0)
+        post_table = font.table("post")
+
         glyph_count.times do |glyph_index|
           # Get raw CFF CharString data
           cff_charstring = charstrings_index[glyph_index]
           next unless cff_charstring
 
-          # Get glyph name
-          glyph_name = font.glyph_name(glyph_index) || "glyph#{glyph_index}"
+          # Get glyph name from the CFF charset (fall back to gid order); a
+          # name the earlier glyphs already claimed (sub-setted CFFs carry
+          # dangling charset SIDs that all resolve to .notdef) falls back to
+          # the gid name so every glyph keeps its own CharString.
+          glyph_name = charset&.glyph_name(glyph_index) ||
+            post_table&.glyph_name_for(glyph_index) ||
+            "glyph#{glyph_index}"
+          glyph_name = "glyph#{glyph_index}" if glyph_index.positive? &&
+            (glyph_name == ".notdef" || type1_charstrings.key?(glyph_name))
 
           # Convert CFF CharString to Type 1 format
           private_dict_hash = build_private_dict_hash(private_dict)
@@ -365,44 +430,24 @@ module Fontisan
         otf_tables = convert_type1_to_otf(font, options)
 
         # Then use OutlineConverter to convert OTF to TTF
-        # Create a temporary OTF font object
-        temp_otf = OpenTypeFont.new
-        otf_tables.each do |tag, data|
-          temp_otf.tables[tag] = data
-        end
+        temp_otf = OpenTypeFont.from_tables(otf_tables)
 
         # Use OutlineConverter for OTF → TTF
-        outline_converter = OutlineConverter.new(
-          optimize_cff: @optimize_cff,
-          preserve_hints: @preserve_hints,
-          target_format: :ttf,
-        )
-
+        outline_converter = OutlineConverter.new
         outline_converter.convert(temp_otf, target_format: :ttf)
       end
 
-      # Convert TrueType font to Type 1 (via OTF)
+      # Convert TrueType font to Type 1
+      #
+      # Direct conversion: every glyf glyph becomes a Type 1 CharString
+      # (quadratic curves become cubics), assembled into the canonical PFB
+      # by {Type1::PFBGenerator}.
       #
       # @param font [TrueTypeFont] Source TrueType font
-      # @return [Hash<String, String>] Type 1 font data as PFB
-      def convert_ttf_to_type1(font)
-        # First use OutlineConverter to convert TTF to OTF
-        outline_converter = OutlineConverter.new(
-          optimize_cff: @optimize_cff,
-          preserve_hints: @preserve_hints,
-          target_format: :otf,
-        )
-
-        otf_tables = outline_converter.convert(font, target_format: :otf)
-
-        # Create a temporary OTF font object
-        temp_otf = OpenTypeFont.new
-        otf_tables.each do |tag, data|
-          temp_otf.tables[tag] = data
-        end
-
-        # Then convert OTF to Type 1
-        convert_otf_to_type1(temp_otf)
+      # @param options [Hash] Conversion options
+      # @return [Hash] PFB output with the :pfb key
+      def convert_ttf_to_type1(font, _options = {})
+        { pfb: Type1::PFBGenerator.generate(font) }
       end
 
       # Build CFF font dictionary from Type 1 font
@@ -489,8 +534,8 @@ module Fontisan
         return {} unless private_dict
 
         {
-          nominal_width: private_dict.nominal_width,
-          default_width: private_dict.default_width,
+          nominal_width: private_dict.nominal_width_x,
+          default_width: private_dict.default_width_x,
           blue_values: private_dict.blue_values || [],
           other_blues: private_dict.other_blues || [],
           family_blues: private_dict.family_blues || [],
@@ -502,32 +547,95 @@ module Fontisan
           std_vw: private_dict.std_vw || 0,
           stem_snap_h: private_dict.stem_snap_h || [],
           stem_snap_v: private_dict.stem_snap_v || [],
-          force_bold: private_dict.force_bold || false,
+          force_bold: private_dict.force_bold? || false,
           language_group: private_dict.language_group || 0,
           expansion_factor: private_dict.expansion_factor || 0.06,
           initial_random_seed: private_dict.initial_random_seed || 0,
         }
       end
 
-      # Build Type 1 font data
+      # Build the Type 1 PFB from the converted CharStrings: clear-text font
+      # dictionary from the source's tables, Private dictionary from the CFF
+      # private dict, and the per-glyph CharStrings assembled by
+      # {Type1::PFBWriter} (deterministically encrypted).
       #
       # @param font [OpenTypeFont] Source OpenType font
-      # @param charstrings [Hash] Type 1 CharStrings
-      # @param cff_table [Tables::Cff] CFF table for metadata
-      # @return [Hash] Type 1 font data with :pfb key
-      def build_type1_data(_font, _charstrings, _cff_table)
-        # Build PFB format
-        # This is a placeholder implementation
-        # Full implementation requires:
-        # 1. Build Font Dictionary
-        # 2. Build Private Dictionary
-        # 3. Build CharStrings
-        # 4. Encrypt with eexec
-        # 5. Format as PFB chunks
+      # @param charstrings [Hash<String, String>] glyph name => plain Type 1
+      #   CharString bytes
+      # @param cff_table [Tables::Cff] CFF table for the private dict
+      # @return [Hash] PFB output with the :pfb key
+      def build_type1_data(font, charstrings, cff_table)
+        Type1::PFBWriter.new(
+          psname: psname_of(font),
+          version: version_of(font),
+          fontinfo: fontinfo_of(font),
+          bbox: bbox_of(font),
+          private_entries: private_entries_from(cff_table),
+          charstrings: charstrings,
+        ).then { |writer| { pfb: writer.write } }
+      end
 
-        pfb_data = String.new(encoding: Encoding::ASCII_8BIT)
+      def psname_of(font)
+        font.post_script_name || "Untitled"
+      end
 
-        { pfb: pfb_data }
+      def version_of(font)
+        name_table = font.table(Constants::NAME_TAG)
+        return "1.0" unless name_table
+
+        name_table.english_name(Tables::Name::VERSION) || "1.0"
+      end
+
+      def fontinfo_of(font)
+        info = { version: version_of(font) }
+        name_table = font.table(Constants::NAME_TAG)
+        if name_table
+          full = name_table.english_name(Tables::Name::FULL_NAME)
+          family = name_table.english_name(Tables::Name::FAMILY)
+          info[:FullName] = full || psname_of(font)
+          info[:FamilyName] = family || psname_of(font)
+          copyright = name_table.english_name(Tables::Name::COPYRIGHT)
+          info[:Copyright] = copyright if copyright
+        end
+        post = font.table(Constants::POST_TAG)
+        info[:ItalicAngle] = post&.italic_angle.to_f
+        info[:isFixedPitch] = (post&.is_fixed_pitch || 0) != 0
+        os2 = font.table(Constants::OS2_TAG)
+        info[:Weight] = if os2.respond_to?(:weight_class) && os2.weight_class
+                          PFBGenerator.const_get(:WEIGHT_NAMES)[(os2.weight_class / 100).clamp(1, 9)] || "Regular"
+                        else
+                          "Regular"
+                        end
+        info
+      end
+
+      # The source's FontBBox in the same units as the CharStrings (scaled to
+      # 1000 upm when the conversion rescaled).
+      def bbox_of(font)
+        head = font.table(Constants::HEAD_TAG)
+        return [0, 0, 0, 0] unless head
+
+        upm = head.units_per_em.to_i
+        scale = upm.positive? ? 1000.0 / upm : 1.0
+        [head.x_min || 0, head.y_min || 0, head.x_max || 1000, head.y_max || 1000]
+          .map { |v| (v * scale).round }
+      end
+
+      # The Private dictionary entries carried over from the CFF.
+      def private_entries_from(cff_table)
+        entries = {
+          "BlueValues" => [0, 0],
+          "password" => 5839,
+          "MinFeature" => "{16 16}",
+        }
+        private_dict = cff_table.private_dict(0)
+        if private_dict
+          entries["BlueValues"] = private_dict.blue_values if private_dict.blue_values
+          entries["StdHW"] = private_dict.std_hw if private_dict.std_hw
+          entries["StdVW"] = private_dict.std_vw if private_dict.std_vw
+          entries["ForceBold"] = private_dict.force_bold? if private_dict.respond_to?(:force_bold?)
+        end
+        entries
       end
 
       # Build head table from Type 1 font
@@ -569,11 +677,11 @@ module Fontisan
         # Units Per Em (uint16) - Type 1 standard is 1000
         data << [1000].pack("n")
 
-        # Created (LONGDATETIME) - use current time
-        data << [Tables::Head.now_longdatetime].pack("Q>")
-
-        # Modified (LONGDATETIME) - use current time
-        data << [Tables::Head.now_longdatetime].pack("Q>")
+        # Created/Modified (LONGDATETIME) - fixed date: a Type 1 source has no
+        # head table to carry dates from, and conversions are reproducible,
+        # so the output never varies run to run (2020-01-01T00:00:00Z).
+        data << [FIXED_HEAD_TIMESTAMP].pack("Q>")
+        data << [FIXED_HEAD_TIMESTAMP].pack("Q>")
 
         # Bounding box (int16 each)
         data << [font_bbox[0]].pack("s>") # x_min
@@ -627,7 +735,9 @@ module Fontisan
         data << [ascent].pack("s>")
 
         # Descent (int16) - Distance from baseline to lowest descender (negative)
-        # Use BlueValues[0] or [1] if available, otherwise font_bbox[1]
+        # Use BlueValues[0] or [1] if available, otherwise font_bbox[1]; a
+        # font without descenders still gets a negative descent (the -200
+        # no-descender convention), which the production profile requires.
         descent = if blue_values.length >= 2
                     blue_values[0] # Bottom zone bottom (negative)
                   elsif blue_values.length >= 1
@@ -635,6 +745,7 @@ module Fontisan
                   else
                     font_bbox[1] # y_min (should be negative)
                   end
+        descent = [descent, -1].min
         data << [descent].pack("s>")
 
         # Line Gap (int16) - Additional space between lines
@@ -928,12 +1039,15 @@ module Fontisan
                         end
         data << [typo_ascender].pack("s>")
 
-        # sTypoDescender (int16) - Use BlueValues or font bbox (negative)
+        # sTypoDescender (int16) - Use BlueValues or font bbox (negative);
+        # a font without descenders gets the -200 no-descender convention,
+        # which the production profile requires.
         typo_descender = if blue_values.length >= 2
                            blue_values[0]
                          else
                            font_bbox[1]
                          end
+        typo_descender = [typo_descender, -1].min
         data << [typo_descender].pack("s>")
 
         # sTypoLineGap (int16)

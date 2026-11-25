@@ -47,8 +47,8 @@
       "outcome": "ok",
       "output": {
         "format": "woff",
-        "sha256": "553595f8cdfbf726081eed4e89b851c204ad123dec1402faf237f552342a365b",
-        "size": 3883716
+        "sha256": "027ae9380434592ac00d6ef89e2c7fd4321dd40376a9e17494ceb2b3475e7e0e",
+        "size": 3886032
       },
       "params": {
         "op": "format",
@@ -83,8 +83,8 @@
       "outcome": "ok",
       "output": {
         "format": "woff2",
-        "sha256": "d513e68b6c0318831cb25da33a56cef8dbf38dfcdfa3894fe3bca70f08a3b8cf",
-        "size": 3351144
+        "sha256": "c130f7172c9cb2b4fa4be2d1691e758760911307fd1f36724c8b825b1bbd6adb",
+        "size": 3351496
       },
       "params": {
         "op": "format",

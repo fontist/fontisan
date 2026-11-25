@@ -60,13 +60,24 @@ module Fontisan
       # Escape code for two-byte operators
       ESCAPE_BYTE = 12
 
+      # Operators whose operands feed the coordinate walk: an operator of
+      # these without operands (malformed CharStrings occur in the wild) is
+      # skipped rather than crashing the conversion.
+      COORDINATE_OPS = %i[rmoveto hmoveto vmoveto rlineto hlineto vlineto
+                          rrcurveto hhcurveto hvcurveto vhcurveto rcurveline
+                          rlinecurve hstem vstem hstemhm vstemhm].freeze
+
       # Initialize a new CffToType1Converter
       #
       # @param nominal_width [Integer] Nominal width from CFF Private dict (default: 0)
       # @param default_width [Integer] Default width from CFF Private dict (default: 0)
-      def initialize(nominal_width: 0, default_width: 0)
+      # @param scale [Float] Multiplier applied to every coordinate operand,
+      #   for UPM rescaling (1000/upm; 1.0 keeps coordinates as they are)
+      def initialize(nominal_width: 0, default_width: 0, scale: 1.0)
         @nominal_width = nominal_width
         @default_width = default_width
+        @scale = scale
+        @rescale = (scale - 1.0).abs > 1e-9
       end
 
       # Convert CFF CharString to Type 1 CharString
@@ -85,12 +96,21 @@ module Fontisan
         parser = Tables::Cff::CharStringParser.new(cff_charstring,
                                                    stem_count: private_dict[:stem_count].to_i)
         operations = parser.parse
+        apply_scale!(operations) if @rescale
 
         # Extract width from operations (CFF spec: odd stack before first move = width)
         width = extract_width(operations)
 
         # Convert operations to Type 1 format
         convert_operations(operations, width)
+      end
+
+      # Multiply every coordinate operand by the scale factor, rounding to
+      # whole font units (Type 1 coordinates are integers at 1000 upm).
+      def apply_scale!(operations)
+        operations.each do |op|
+          op[:operands] = op[:operands]&.map { |val| (val * @scale).round }
+        end
       end
 
       # Extract width from CFF operations
@@ -169,6 +189,8 @@ module Fontisan
         end
 
         operations.each do |op|
+          next if COORDINATE_OPS.include?(op[:name]) && Array(op[:operands]).empty?
+
           case op[:name]
           when :hstem, :vstem, :hstemhm, :vstemhm
             # Hint operators - preserve
@@ -220,6 +242,8 @@ module Fontisan
           when :rlineto
             # rlineto dx dy
             dx, dy = op[:operands]
+            next if dy.nil?
+
             x += dx
             y += dy
             result << encode_number(dx)
@@ -243,6 +267,8 @@ module Fontisan
           when :rrcurveto
             # rrcurveto dx1 dy1 dx2 dy2 dx3 dy3
             dx1, dy1, dx2, dy2, dx3, dy3 = op[:operands]
+            next if dy3.nil?
+
             x += dx1 + dx2 + dx3
             y += dy1 + dy2 + dy3
             [dx1, dy1, dx2, dy2, dx3, dy3].each do |val|
@@ -250,12 +276,7 @@ module Fontisan
             end
             result << 8 # rrcurveto
             first_move = false
-          when :hhcurveto, :hvcurveto, :vhcurveto
-            # Flexible curve operators
-            op[:operands].each { |val| result << encode_number(val) }
-            result << CFF_TO_TYPE1[op[:name]]
-            first_move = false
-          when :rcurveline, :rlinecurve
+          when :hhcurveto, :hvcurveto, :vhcurveto, :rcurveline, :rlinecurve
             # Flexible curve operators
             op[:operands].each { |val| result << encode_number(val) }
             result << CFF_TO_TYPE1[op[:name]]
@@ -264,15 +285,9 @@ module Fontisan
             # Control operators
             result << CFF_TO_TYPE1[op[:name]]
             first_move = false
-          when :hintmask, :cntrmask
-            # Hint mask operators - Type 1 doesn't support these
-            # Skip them
-            first_move = false
-          when :shortint
-            # Short integer push - handled by operand encoding
-            first_move = false
           else
-            # Unknown operator - skip
+            # Hint masks (Type 1 has no equivalent), short integer pushes
+            # (operand encoding handled them) and unknown operators - skip
             first_move = false
           end
         end
@@ -294,6 +309,9 @@ module Fontisan
       # @param num [Integer] Number to encode
       # @return [String] Encoded bytes
       def encode_number(num)
+        # The parser yields 16.16 fixed values as floats; Type 1 units here
+        # are whole font units, so round rather than crash on `>>`.
+        num = num.round unless num.is_a?(Integer)
         if num >= -107 && num <= 107
           [num + 139].pack("C")
         else

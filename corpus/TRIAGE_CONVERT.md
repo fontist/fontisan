@@ -25,6 +25,12 @@ Reason: TTF->OTF conversion writes a CFF table with an invalid Name INDEX.
 - OTS exception: `source-sans-3-vf-italic-ttf/format:otf`
 - OTS exception: `source-sans-3-vf-upright-ttf/format:otf`
 
+## CFF : Failed validating CharStrings INDEX (1)
+
+Reason: unclassified.
+
+- OTS exception: `fonttools-test-t1-pfb/format:otf`
+
 ## GDEF: zero-length table (2)
 
 Reason: input is a deliberate quirk font (corpus/derive/quirks.rb); Ruby passes the quirk through and OTS rejects it.

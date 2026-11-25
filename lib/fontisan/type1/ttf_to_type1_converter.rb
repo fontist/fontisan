@@ -64,9 +64,15 @@ module Fontisan
 
         loca_table = @font.table(Constants::LOCA_TAG)
         head_table = @font.table(Constants::HEAD_TAG)
-
         maxp = @font.table(Constants::MAXP_TAG)
         num_glyphs = maxp&.num_glyphs || 0
+
+        # The loca table only parses once it knows its index format and the
+        # glyph count; hmtx needs the hhea metric count (see GlyphAccessor).
+        loca_table&.parse_with_context(head_table.index_to_loc_format, num_glyphs)
+        @font.table(Constants::HMTX_TAG)&.parse_with_context(
+          @font.table(Constants::HHEA_TAG)&.number_of_h_metrics || 0, num_glyphs
+        )
 
         num_glyphs.times do |gid|
           @charstrings[gid] =

@@ -32,6 +32,8 @@ module Fontisan
     module Decryptor
       # Default lenIV value (number of random bytes at start of encrypted CharString)
       DEFAULT_LEN_IV = 4
+      # The fixed byte repeated for the lenIV prefix ({DEFAULT_LEN_IV} times).
+      LEN_IV_BYTE = "\x00"
 
       # eexec encryption key
       EEXEC_KEY = 55665
@@ -106,7 +108,7 @@ module Fontisan
       # Encrypt data using CharString cipher
       #
       # @param data [String] Plain CharString data
-      # @param len_iv [Integer] Number of random bytes to prepend
+      # @param len_iv [Integer] Number of bytes to prepend
       # @return [String] Encrypted CharString data
       def self.charstring_encrypt(data, len_iv: DEFAULT_LEN_IV)
         return "" if data.nil? || data.empty?
@@ -114,11 +116,9 @@ module Fontisan
         # Ensure binary encoding before concatenation
         data = data.b
 
-        # Prepend lenIV random bytes
-        if len_iv.positive?
-          random_bytes = Array.new(len_iv) { rand(256) }.pack("C*")
-          data = random_bytes + data
-        end
+        # Prepend lenIV bytes. They are conventionally random and every
+        # decryptor skips them; a fixed byte keeps conversions reproducible.
+        data = (LEN_IV_BYTE * len_iv) + data if len_iv.positive?
 
         encrypt(data, CHARSTRING_KEY)
       end

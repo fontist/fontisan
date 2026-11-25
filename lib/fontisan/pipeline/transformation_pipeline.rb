@@ -80,6 +80,11 @@ module Fontisan
         font = load_font(detection)
         log "Loaded: #{font.class.name}"
 
+        # A Type 1 source has no table phase: the conversion strategy
+        # consumes the font object itself (the parsed dictionaries and
+        # CharStrings), so go straight from load to strategy to write.
+        return transform_type1_source(font, detection) if font.is_a?(Type1Font)
+
         # Phase 3: Resolve variation
         tables = resolve_variation(font, detection)
         log "Resolved variation using #{@variation_strategy} strategy"
@@ -106,6 +111,27 @@ module Fontisan
       end
 
       # Methods below were private; made public for testability (TODO 30)
+
+      # Convert a Type 1 source: run the conversion strategy on the loaded
+      # font, then write (no variation resolution, no table copying).
+      #
+      # @param font [Type1Font] Loaded source
+      # @param detection [Hash] Detection results
+      # @return [Hash] Transformation result with :success, :output_path, :details
+      def transform_type1_source(font, detection)
+        @variation_strategy = :preserve
+        tables = Converters::FormatConverter.new.convert(font, target_format, @options)
+        write_output(tables, detection)
+        validate_output if @options[:validate] && !same_format_conversion? && !export_only_format?
+
+        {
+          success: true,
+          output_path: @output_path,
+          details: build_details(detection),
+        }
+      rescue StandardError => e
+        handle_error(e)
+      end
 
       # Detect input format and capabilities
       #
@@ -215,8 +241,8 @@ module Fontisan
         # No conversion needed for same format
         return tables if source_format == target
 
-        # Use FormatConverter for outline conversion
-        if needs_outline_conversion?(tables, target) || target == :svg
+        # Use FormatConverter for outline conversion and Type 1 targets
+        if needs_outline_conversion?(tables, target) || target == :svg || target == :type1
           converter = Converters::FormatConverter.new
           # Create temporary font object from tables
           font = build_font_from_tables(tables, source_format)
@@ -284,6 +310,7 @@ module Fontisan
         when ".otf" then :otf
         when ".woff" then :woff
         when ".woff2" then :woff2
+        when ".pfb", ".pfa", ".t1" then :type1
         else
           raise ArgumentError,
                 "Cannot determine target format from extension: #{ext}"
@@ -400,7 +427,7 @@ module Fontisan
       #
       # @return [Boolean] True if format is export-only
       def export_only_format?
-        %i[svg woff woff2].include?(target_format)
+        %i[svg woff woff2 type1].include?(target_format)
       end
     end
   end

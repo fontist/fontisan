@@ -87,10 +87,20 @@ end
     failures << "#{tier} #{operation} served_by #{served}" unless served == tier
   end
 
-  got = outcome(tier, :convert, FONT, to: :ttf, output: "/tmp/t1-v-#{tier}.ttf")
-  ok = got.start_with?("Fontisan::Error") &&
-    got.include?("undefined method 'table_data' for an instance of Fontisan::Type1Font")
-  failures << "#{tier} convert: #{got[0, 110]}" unless ok
+  # convert keeps Type 1 with Ruby, which now converts it for real: the
+  # corpus PFB converts to a loadable TTF (sfnt magic 00 01 00 00).
+  require "tmpdir"
+  ENV["FONTISAN_ENGINE"] = tier
+  Fontisan::Engine.reset!
+  converted = Dir.mktmpdir("t1-conv") do |dir|
+    out = File.join(dir, "out.ttf")
+    Fontisan::Reference.convert(FONT, to: :ttf, output: out)
+    File.binread(out)
+  end
+  served = Fontisan::Engine.served_by(:convert).to_s
+  failures << "#{tier} convert served_by #{served}" unless served == "ruby"
+  failures << "#{tier} convert produced #{converted.bytesize} bytes, head #{converted[0, 4].inspect}" unless
+    converted[0, 4] == "\x00\x01\x00\x00"
 
   # scan keeps its Ruby rows (the goldens record Ruby's); audit_dir serves
   # the walk through the tier and hands the Type 1 row back to Ruby.
