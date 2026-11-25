@@ -75,7 +75,7 @@ The full capability matrix (a 2026-11 audit of the engine tier, `lib/fontisan/na
 | `read` (metadata/full, lazy) | every format the engine reads, dfont included; a Type 1 file serves the facade's own measured surface — the loader parses the PFB segments, then the read raises the `Type1Font` `NoMethodError` (#192 gap 4) | |
 | `audit`, `audit_dir` (+ `validate`) | engine-readable files and directories; a Type 1 file serves the same surface, and an `audit_dir` walk serves through the tier with its Type 1 rows handed back to Ruby (each tagged `served_by: "ruby"`) | |
 | `scan` | engine-readable files | Type 1 and non-font files |
-| `convert` to ttf/otf/woff/woff2/svg; collections to ttc/otc/woff2; to `type1` (PFB) | engine-readable inputs; an `.otc` input carries the caller's source hint (#192 gap 7). Type 1 conversions stay with Ruby, which converts all four directions (the measured read surfaces of #192 gap 4 remain for read/audit) | a single font to a collection format |
+| `convert` to ttf/otf/svg; collections to ttc/otc; to `type1` (PFB) | engine-readable inputs; an `.otc` input carries the caller's source hint (#192 gap 7). Type 1 conversions stay with Ruby, which converts all four directions (the measured read surfaces of #192 gap 4 remain for read/audit) | WOFF and WOFF2 encodes (the engine's pure-Rust DEFLATE/Brotli streams differ from the Ruby tier's libz/brotli-gem bytes) and a single font to a collection format |
 | `extract` (collection member) | collections | |
 | `instance` (TTF variable font) | single fonts | |
 | `subset` (web/pdf/minimal) | engine-readable single fonts and collections | |
