@@ -44,15 +44,6 @@ RSpec.describe "CLI through the engine tiers" do
     $stdout = saved
   end
 
-  # Decoded tables of a font, read by the Ruby tier whatever produced it. The
-  # compressed file's own hash is the one thing that may differ (zlib/brotli
-  # build), so it is the only field dropped.
-  def decoded(path)
-    with_engine("ruby", strict: false) do
-      Fontisan::Reference.read(path, mode: :full).map { |face| face.except("file_sha256") }
-    end
-  end
-
   def tree(dir)
     Dir.children(dir).sort.to_h { |name| [name, File.binread(File.join(dir, name))] }
   end
@@ -68,7 +59,7 @@ RSpec.describe "CLI through the engine tiers" do
         with_engine(selection, &)
       end
 
-      %w[ttf otf woff woff2].each do |target|
+      %w[ttf otf].each do |target|
         it "serves `convert --to #{target}` and writes what Ruby writes" do
           Dir.mktmpdir do |dir|
             n = File.join(dir, "n.#{target}")
@@ -80,11 +71,7 @@ RSpec.describe "CLI through the engine tiers" do
             end
             with_engine("ruby", strict: false) { cli("convert", ttf, "--to", target, "--output", r, "--quiet") }
 
-            if %w[woff woff2].include?(target)
-              expect(decoded(n)).to eq(decoded(r))
-            else
-              expect(File.binread(n)).to eq(File.binread(r))
-            end
+            expect(File.binread(n)).to eq(File.binread(r))
             expect(printed).to include("Conversion complete!", "Output: #{n}")
           end
         end

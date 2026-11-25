@@ -113,10 +113,14 @@ module ConvertGoldens
       return cases
     end
     SINGLE_TARGETS.each { |to| cases["format:#{to}"] = { op: :format, to: to } unless to == format }
-    # The reverse Type 1 conversion is pinned for fonts of reasonable size;
-    # CJK-scale fonts (10k+ glyphs) would make every regeneration of the
-    # suite disproportionately expensive for the same byte-pinning value.
-    cases["format:type1"] = { op: :format, to: "type1" } unless type1_too_large?(path)
+    # The reverse Type 1 conversion is pinned for sfnt sources of reasonable
+    # size: woff/woff2 sources have no type1 matrix pair (and a brotli-less
+    # JRuby could not even read the woff2), and CJK-scale fonts (10k+ glyphs)
+    # would make every regeneration of the suite disproportionately expensive
+    # for the same byte-pinning value.
+    if %w[ttf otf].include?(format) && !type1_too_large?(path)
+      cases["format:type1"] = { op: :format, to: "type1" }
+    end
     instance_coords(faces.first).each_with_index do |coords, i|
       cases["instance:#{i}"] = { op: :instance, coords: coords }
     end

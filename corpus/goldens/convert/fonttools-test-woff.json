@@ -32,23 +32,6 @@
         "to": "ttf"
       }
     },
-    "format:type1": {
-      "class": "exact",
-      "ots": {
-        "detail": "OTS does not read raw Type 1",
-        "verdict": "skip"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "pfb",
-        "sha256": "42d957603b39c66b296c9f74a929aa74471883ff85ae7c86455ea3d319a150c0",
-        "size": 1666
-      },
-      "params": {
-        "op": "format",
-        "to": "type1"
-      }
-    },
     "format:woff2": {
       "class": "decoded-exact",
       "decoded_tables": [

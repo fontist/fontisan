@@ -97,8 +97,8 @@
       "outcome": "ok",
       "output": {
         "format": "woff2",
-        "sha256": "aa25a5fb6f5413082928787f4b636e015784842710937b9c34280109a77ee464",
-        "size": 338912
+        "sha256": "6d201eff2d4287a1d1da9a1e6c7344d797ed8072118bce357960d916b66688fe",
+        "size": 337988
       },
       "params": {
         "op": "format",
