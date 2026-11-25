@@ -58,6 +58,11 @@ module Fontisan
         ).write
       end
 
+      WEIGHT_NAMES = {
+        1 => "Thin", 2 => "ExtraLight", 3 => "Light", 4 => "Regular",
+        5 => "Medium", 6 => "SemiBold", 7 => "Bold", 8 => "ExtraBold", 9 => "Black"
+      }.freeze
+
       private
 
       def psname
@@ -108,11 +113,6 @@ module Fontisan
 
         WEIGHT_NAMES[(os2.weight_class / 100).clamp(1, 9)] || "Regular"
       end
-
-      WEIGHT_NAMES = {
-        1 => "Thin", 2 => "ExtraLight", 3 => "Light", 4 => "Regular",
-        5 => "Medium", 6 => "SemiBold", 7 => "Bold", 8 => "ExtraBold", 9 => "Black"
-      }.freeze
 
       def italic_angle
         post_table&.italic_angle.to_f
