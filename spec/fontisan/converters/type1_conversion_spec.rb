@@ -14,6 +14,11 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     File.expand_path("../../../corpus/fonts/#{id}/#{name}", __dir__)
   end
 
+  # The main rake workflow runs without the corpus; the parity suites skip.
+  def corpus_pfb
+    corpus_font_id("fonttools-test-t1-pfb", "TestT1-Regular.pfb")
+  end
+
   def convert_and_write(path, target, dir)
     out = File.join(dir, "out#{target == :type1 ? '.pfb' : ".#{target}"}")
     Fontisan::Reference.convert(path, to: target, output: out)
@@ -21,8 +26,9 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   end
 
   it "converts the corpus PFB to a loadable OTF" do
+    skip "corpus not fetched" unless File.file?(corpus_pfb)
     Dir.mktmpdir do |dir|
-      out = convert_and_write(corpus_font_id("fonttools-test-t1-pfb", "TestT1-Regular.pfb"), :otf, dir)
+      out = convert_and_write(corpus_pfb, :otf, dir)
       font = Fontisan::FontLoader.load(out, mode: :full)
       expect(font).to be_a(Fontisan::OpenTypeFont)
       expect(font.table("maxp").num_glyphs).to eq(6)
@@ -31,8 +37,9 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   end
 
   it "converts the corpus PFB to a loadable TTF" do
+    skip "corpus not fetched" unless File.file?(corpus_pfb)
     Dir.mktmpdir do |dir|
-      out = convert_and_write(corpus_font_id("fonttools-test-t1-pfb", "TestT1-Regular.pfb"), :ttf, dir)
+      out = convert_and_write(corpus_pfb, :ttf, dir)
       font = Fontisan::FontLoader.load(out, mode: :full)
       expect(font).to be_a(Fontisan::TrueTypeFont)
       expect(font.table("maxp").num_glyphs).to eq(6)
