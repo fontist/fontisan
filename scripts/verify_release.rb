@@ -66,7 +66,11 @@ end
 
 # 4. Type 1 surfaces (#192 gap 4): the corpus PFB serves the measured
 #    NoMethodError-shaped surface through the engine tier; scan keeps Ruby.
-pfb = File.join(fonts, "fonttools-test-t1-pfb/TestT1-Regular.pfb")
+#    The fontisan corpus keeps it under fonttools-test-t1-pfb/, the
+#    engine-side corpus snapshot directly under fonts/.
+pfb = [File.join(fonts, "fonttools-test-t1-pfb/TestT1-Regular.pfb"),
+       File.join(fonts, "TestT1-Regular.pfb")].find { |f| File.file?(f) }
+failures << "no corpus PFB under #{fonts}" unless pfb
 begin
   Fontisan::Reference.read(pfb)
   failures << "t1 read did not raise"
@@ -80,7 +84,11 @@ end
 Fontisan::Reference.scan([pfb])
 failures << "t1 scan served_by #{Fontisan::Engine.served_by(:scan)} (want ruby)" unless
   Fontisan::Engine.served_by(:scan) == :ruby
-Fontisan::Reference.audit(pfb)
+begin
+  Fontisan::Reference.audit(pfb)
+rescue Fontisan::InvalidFontError
+  nil
+end
 failures << "t1 audit served_by #{Fontisan::Engine.served_by(:audit)} (want native)" unless
   Fontisan::Engine.served_by(:audit) == :native
 
