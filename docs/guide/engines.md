@@ -72,15 +72,15 @@ The full capability matrix (a 2026-11 audit of the engine tier, `lib/fontisan/na
 
 | Operation | native / ffi serve | Ruby only |
 |---|---|---|
-| `read` (metadata/full, lazy) | every format the engine reads, dfont included | Type 1 (PFB/PFA) |
-| `audit`, `audit_dir` (+ `validate`) | engine-readable files and directories | entries the engine cannot read |
-| `scan` | engine-readable files | non-font files |
-| `convert` to ttf/otf/woff/woff2/svg; collections to ttc/otc/woff2 | engine-readable inputs; an `.otc` input carries the caller's source hint (#192 gap 7) | Type 1 conversions; a single font to a collection format |
+| `read` (metadata/full, lazy) | every format the engine reads, dfont included; a Type 1 file serves the facade's own measured surface — the loader parses the PFB segments, then the read raises the `Type1Font` `NoMethodError` (#192 gap 4) | |
+| `audit`, `audit_dir` (+ `validate`) | engine-readable files and directories; a Type 1 file serves the same surface, and an `audit_dir` walk serves through the tier with its Type 1 rows handed back to Ruby (each tagged `served_by: "ruby"`) | |
+| `scan` | engine-readable files | Type 1 and non-font files |
+| `convert` to ttf/otf/woff/woff2/svg; collections to ttc/otc/woff2 | engine-readable inputs; an `.otc` input carries the caller's source hint (#192 gap 7); a Type 1 input serves the facade's conversion error | a single font to a collection format |
 | `extract` (collection member) | collections | |
 | `instance` (TTF variable font) | single fonts | |
 | `subset` (web/pdf/minimal) | engine-readable single fonts and collections | |
-| `glyph_ids` | single fonts, dfonts and collections on both tiers | Type 1 |
-| `outline_hashes` | single fonts, dfonts and collections on both tiers | Type 1 |
+| `glyph_ids` | single fonts, dfonts and collections on both tiers; Type 1 serves the facade's `table` surface (#192 gap 4) | |
+| `outline_hashes` | single fonts, dfonts and collections on both tiers; Type 1 serves the facade's `has_table?` surface (#192 gap 4) | |
 
 An SVG font as a *source* is not a format fontisan reads at all (there is no `from: svg` conversion), so it is not a tier question.
 
@@ -88,6 +88,7 @@ Also always on Ruby, whichever engine is selected — strict mode does not raise
 
 - The object-based API: `Fontisan::Subset::Builder.new(font, ...)` and `Fontisan::Variable::Instancer`. Only the path-based `Reference.subset` and `Reference.instance` can use another tier.
 - A FIFO, device or socket as an input path (the engine's released read would block uninterruptibly; Ruby's read is interruptible).
+- A file the format detector cannot name: every operation keeps it with Ruby.
 - CLI commands other than `convert`, `unpack`, `subset` and `instance`, and the non-plain convert cases listed above (several targets, instance coordinates, conversion options, hinting, a font index).
 
 ## Platforms

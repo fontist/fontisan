@@ -37,7 +37,8 @@ module Fontisan
     LIBRARY = "fontisan_cdylib"
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
                     glyph_ids outline_hashes].freeze
-    # dfont is served since #192 gap 5; Type 1 stays Ruby until gap 4.
+    # Type 1 is served through the op surfaces (#192 gap 4) — but scan keeps
+    # Type 1 rows with Ruby, whose rows the scan goldens record byte for byte.
     RUBY_ONLY_FORMATS = %i[pfa pfb].freeze
 
     OP_CONVERT = 1
@@ -79,11 +80,22 @@ module Fontisan
       def supports?(operation, path = nil)
         return false unless available? && OPERATIONS.include?(operation)
 
+        # A file the detector cannot name stays with Ruby on every operation
+        # (the regular-file check comes first: detection reads bytes, and
+        # reading a FIFO would block). scan keeps Type 1 with Ruby — its rows
+        # are what the scan goldens record byte for byte; audit_dir serves the
+        # walk and hands the Type 1 rows back (ruby_entry); the other
+        # operations serve the Type 1 surface (#192 gap 4).
+        if path.is_a?(String)
+          return false if File.file?(path) && undetectable?(path)
+
+          return false if operation == :scan && File.file?(path) && type1_file?(path)
+        end
+
         case operation
-        when *ByteOps::BYTE_OPERATIONS then path.is_a?(String) && File.file?(path) && !ruby_only?(path)
+        when *ByteOps::BYTE_OPERATIONS then path.is_a?(String) && File.file?(path)
         when :audit_dir then path.nil? || File.directory?(path)
-        when :scan then path.nil? || File.file?(path) && !ruby_only?(path)
-        else path.nil? || File.file?(path) && !ruby_only?(path)
+        else path.nil? || File.file?(path)
         end
       end
 
@@ -150,11 +162,11 @@ module Fontisan
         bundled && File.file?(bundled) ? bundled : File.expand_path("ffi/#{file}", __dir__)
       end
 
-      # dfont, Type 1 and anything that is not a font (the native tier hands
-      # those to Ruby too, so auto never lands them on this tier).
-      def ruby_only?(path)
+      # Type 1 (a detected PFB segment file or PFA header): scan hands those
+      # to Ruby; the op surfaces serve through here.
+      def type1_file?(path)
         format = FontLoader.detect_format(path)
-        format.nil? || RUBY_ONLY_FORMATS.include?(format)
+        !format.nil? && RUBY_ONLY_FORMATS.include?(format)
       rescue StandardError
         false
       end
@@ -385,6 +397,9 @@ module Fontisan
         klass, message = public_failure(exception_class(head["class"]), head["message"])
         chain = [head, *Array(report["causes"])]
         chain.unshift({ "class" => klass.name, "message" => message }) if klass == InvalidFontError && head["class"] != klass.name
+        chain = with_wrapper_cause(klass, chain.first["message"],
+                                   chain.map { |info| [info["class"], info["message"]] })
+          .map { |(name, detail)| { "class" => name, "message" => detail } }
         raise_chain(chain)
       end
 

@@ -149,12 +149,20 @@ RSpec.describe Fontisan::Ffi do
       fonts.each do |font|
         it "gives identical read, audit and scan results for #{File.basename(font)}" do
           name = File.basename(font)
-          # Ruby's own detection decides: Type 1 and anything it does not
-          # recognise as a font (matrix.pfa has no Type 1 header, the
-          # malformed fixtures none at all) are handed to the Ruby tier, as
-          # on native. dfont is served since #192 gap 5.
+          # Ruby's own detection decides: anything it does not recognise as
+          # a font (matrix.pfa has no Type 1 header, the malformed fixtures
+          # none at all) is handed to the Ruby tier. dfont is served since
+          # #192 gap 5; Type 1 read/audit serve the surface since gap 4 —
+          # but scan keeps Type 1 rows with Ruby.
           format = Fontisan::FontLoader.detect_format(font)
-          served = format.nil? || format.to_s.match?(/\A(pfa|pfb)\z/) ? :ruby : :ffi
+          type1 = !format.nil? && format.to_s.match?(/\A(pfa|pfb)\z/)
+          served = lambda { |operation|
+            if format.nil? || (type1 && operation == :scan)
+              :ruby
+            else
+              :ffi
+            end
+          }
           calls = {
             read: [%i[metadata full].product([true, false]).map do |mode, lazy|
               -> { Fontisan::Reference.read(font, mode: mode, lazy: lazy) }
@@ -168,7 +176,7 @@ RSpec.describe Fontisan::Ffi do
               expected = outcome(&call)
               tier("ffi")
               expect(comparable(outcome(&call), name)).to eq(comparable(expected, name)), "#{operation} on #{name}"
-              expect(Fontisan::Engine.served_by(operation)).to eq(served), "#{operation} on #{name}"
+              expect(Fontisan::Engine.served_by(operation)).to eq(served.call(operation)), "#{operation} on #{name}"
             end
           end
         end
@@ -182,7 +190,8 @@ RSpec.describe Fontisan::Ffi do
       expected = outcome { Fontisan::Reference.audit_dir(dir, validate: true) }
       tier("ffi")
       expect(outcome { Fontisan::Reference.audit_dir(dir, validate: true) }).to eq(expected)
-      # dfont is served since #192 gap 5; the PFB stays handed back (gap 4).
+      # dfont is served since #192 gap 5; the PFB row is handed back to Ruby
+      # (gap 4), while every other fixture audits through the tier.
       tagged = Fontisan::Engine.audit_dir(dir, validate: true).to_h { |e| [e["path"], e["served_by"]] }
       expect(tagged.select { |_, t| t == "ruby" }.keys.map { |p| File.extname(p) }.uniq.sort)
         .to eq(%w[.pfb])

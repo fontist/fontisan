@@ -138,15 +138,32 @@ module Fontisan
       Array(options[:unicodes]).all? { |cp| cp.is_a?(Integer) && cp.between?(0, MAX_CODEPOINT) }
     end
 
-    # One Integer face index on an engine-readable single font or
-    # collection; Type 1 files stay with the Ruby tier.
+    # One Integer face index on any detected input; Type 1 included (its
+    # surface serves through the engine, #192 gap 4).
     def outline_hashes_options?(options, path)
       return false unless options.keys.sort == %i[index]
       return false unless options[:index].is_a?(Integer) && options[:index].between?(0, MAX_FONT_INDEX)
       return false unless path.is_a?(String)
 
+      !FontLoader.detect_format(path).nil?
+    rescue StandardError
+      false
+    end
+
+    # A file the shared detector cannot name: the byte operations keep it
+    # with Ruby — detector parity is the serving contract, and the engine
+    # tier's own supports check declines unknown bytes (native) just the same.
+    def undetectable?(path)
+      FontLoader.detect_format(path).nil?
+    rescue StandardError
+      true
+    end
+
+    # A detected PFB segment file or PFA header (#192 gap 4): scan keeps
+    # these with Ruby; the op surfaces serve through the tiers.
+    def type1_file?(path)
       format = FontLoader.detect_format(path)
-      !format.nil? && !%i[pfa pfb].include?(format)
+      !format.nil? && %i[pfa pfb].include?(format)
     rescue StandardError
       false
     end
@@ -156,6 +173,7 @@ module Fontisan
     def glyph_ids_options?(options, path)
       return false unless options.keys.all? { |key| %i[unicodes text].include?(key) }
       return false if path.nil?
+      return false if undetectable?(path)
 
       text = options[:text]
       return false unless text.nil? || text.is_a?(String)
@@ -275,9 +293,28 @@ module Fontisan
       raised, text = public_failure(klass, message)
       # The leaked Ruby error stays as the cause, as the Ruby tier's does.
       causes = [[class_name, message], *causes] unless raised == klass
+      causes = with_wrapper_cause(raised, text, causes)
       cause = nil
       causes.reverse_each { |name, detail| cause = build_exception(name, detail, cause) }
       raise build_instance(raised, text), cause: cause
+    end
+
+    # Ruby raises the malformed-font wrapper ({Reference.malformed_font})
+    # inside the leaked parser error's rescue, so the live exception chains
+    # that leak as its cause. The engine's wrapper message carries the same
+    # pair, so the tiers rebuild the cause from it whenever the engine's own
+    # cause list does not already end in it.
+    def with_wrapper_cause(klass, message, causes)
+      return causes unless klass == InvalidFontError
+
+      match = /\AMalformed font data \(([^)]+)\): (.+)\z/m.match(message) or return causes
+      leak = Object.const_get(match[1])
+      return causes unless Reference::PARSER_LEAKS.any? { |l| leak <= l }
+
+      pair = [leak.name, match[2]]
+      causes.last == pair ? causes : [*causes, pair]
+    rescue NameError
+      causes
     end
 
     # An engine error that mirrors a Ruby parser leak (EOFError, NoMethodError,

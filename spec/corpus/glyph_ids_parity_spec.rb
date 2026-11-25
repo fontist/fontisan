@@ -52,10 +52,10 @@ RSpec.describe "glyph_ids tier parity" do # rubocop:disable RSpec/SpecFilePathFo
       end
     else
       format = Fontisan::FontLoader.detect_format(path)
-      # Only Type 1 and unknown formats stay with Ruby: the engine serves
-      # collections (face 0, #192 gap 5 follow-up) and dfonts (gap 5) too.
-      single = format && !%w[pfa pfb].include?(format.to_s)
-      single ? forced : "ruby"
+      # Undetectable files (detect nil) stay with Ruby; everything detected
+      # — collections, dfonts and Type 1 (#192 gaps 5/4) — serves through
+      # the engine.
+      format.nil? ? "ruby" : forced
     end
   end
 
