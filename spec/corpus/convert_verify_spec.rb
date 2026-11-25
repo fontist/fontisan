@@ -113,7 +113,9 @@ RSpec.describe ConvertGoldens do
         Fontisan::Engine.reset!
         expect(described_class.verify(tiers)).to be_empty
         counters = Fontisan::Engine.counters
-        expect(counters.keys).to eq([tier])
+        # The WOFF encode keeps Ruby (its pure-Rust DEFLATE differs from
+        # libz), so the counters may carry a ruby entry alongside the tier.
+        expect(counters.keys - [:ruby]).to eq([tier])
         expect(counters.fetch(tier).keys).to include(:convert, :extract, :instance, :subset)
       end
     end
