@@ -101,12 +101,19 @@ module Fontisan
       target = convert_target(options[:to]) or return false
       return false unless path.is_a?(String)
 
-      # WOFF encode stays with Ruby: the engine's pure-Rust DEFLATE produces
-      # different streams than the Ruby tier's libz, so serving it would
-      # break the byte-identical outcomes contract. The WOFF2 encode serves
-      # from the engine: the implementations agree on static fonts, and a
-      # brotli-less JRuby has no Ruby-side encoder at all.
-      return false if target == :woff
+      # WOFF encode stays with Ruby for sfnt sources: the engine's pure-Rust
+      # DEFLATE produces different streams than the Ruby tier's libz. A WOFF
+      # or WOFF2 source keeps the engine - its decode is the brotli-dependent
+      # detour (a brotli-less JRuby has no Ruby-side decode or encode, and
+      # the engine's bytes for these conversions are identical everywhere).
+      if target == :woff
+        source = begin
+          FontLoader.detect_format(path)
+        rescue StandardError
+          nil
+        end
+        return %i[woff woff2].include?(source)
+      end
 
       (collection_file?(path) ? COLLECTION_TARGETS : SINGLE_TARGETS).include?(target)
     end
