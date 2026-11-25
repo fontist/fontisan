@@ -337,11 +337,7 @@ fn native_supports_file(ruby: &Ruby, path: String) -> Result<bool, Error> {
             // slurps a huge non-font into memory. A `ttcf` file whose directory lies
             // past the 256-byte head is a font the engine reads itself.
             let unknown = sfnt::detect_format(&head).is_none() && !head.starts_with(b"ttcf");
-            Ok(!unknown
-                && !matches!(
-                    sfnt::detect_format(&head),
-                    Some(Format::Pfa | Format::Pfb)
-                ))
+            Ok(!unknown)
         }),
     )
 }

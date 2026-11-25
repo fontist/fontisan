@@ -192,7 +192,8 @@ RSpec.describe Fontisan::Native do
       # Collections are served since #192 gap 5 (face 0); the format gate
       # (supports?, not the options check) keeps Type 1 on Ruby.
       expect(described_class.supports_options?(:glyph_ids, {}, ttc)).to be(true)
-      expect(described_class.supports?(:glyph_ids, pfb)).to be(false)
+      # Type 1's glyph_ids surface serves since #192 gap 4.
+      expect(described_class.supports?(:glyph_ids, pfb)).to be(true)
     end
 
     it "serves dfont natively in strict mode, for every operation and inside a mixed scan" do

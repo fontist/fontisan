@@ -26,7 +26,7 @@ module Fontisan
     # engine pin in ext/*/Cargo.toml, which each build embeds. ABI_VERSION does
     # not move on a repin, so this is what keeps a stale binary from serving old
     # behaviour. A repin seds it with the Cargo files (repin-push162.sh).
-    ENGINE_REV = "8de6ac6bc838d2bf796a032c76cee78fe32ec671"
+    ENGINE_REV = "eedd92987b6d08a62b3451a7c03757d0340ebc79"
 
     # Operations served natively. Convert, extract, instance and subset are
     # path-based only (card 2f): the object-based entry points
@@ -63,19 +63,36 @@ module Fontisan
       end
 
       # @return [Boolean] whether the extension serves +operation+ for +path+.
-      #   dfont and Type 1 files, missing files and non-directories (for
-      #   audit_dir) stay with the Ruby tier.
+      #   Type 1 stays with the Ruby tier for scan and audit_dir (its rows are
+      #   what the scan goldens record; #192 gap 4); missing files and
+      #   non-directories (for audit_dir) stay with the Ruby tier too.
       def supports?(operation, path = nil)
         return false unless available? && OPERATIONS.include?(operation)
         return false unless path.is_a?(String)
+
+        # The regular-file check comes first: detection reads bytes, and
+        # reading a FIFO would block. scan keeps Type 1 with Ruby (its rows
+        # are what the scan goldens record); audit_dir serves the walk and
+        # hands the Type 1 rows back (audit_with_ruby). Undetectable bytes
+        # decline through native_supports_file.
+        regular = File.file?(path)
+        return false if operation == :scan && regular && path_is_type1?(path)
 
         case operation
         when :audit_dir then File.directory?(path)
         # A FIFO, device or socket is never handed to the extension: it would
         # block in the engine's read with the GVL released, where no signal or
         # Timeout can interrupt it. Ruby's read is interruptible.
-        else File.file?(path) && native_supports_file(path)
+        else regular && native_supports_file(path)
         end
+      end
+
+      # A detected PFB segment file or PFA header.
+      def path_is_type1?(path)
+        format = FontLoader.detect_format(path)
+        !format.nil? && %i[pfa pfb].include?(format)
+      rescue StandardError
+        false
       end
 
       # Options the extension honours; anything else is served by Ruby.
@@ -221,8 +238,8 @@ module Fontisan
       end
 
       # Same entries as Reference.audit_dir. A file the engine leaves to Ruby
-      # (dfont, Type 1) is audited through the gate, so it is served and
-      # recorded as :ruby.
+      # (Type 1) is handed back: audited on the Ruby tier and recorded as
+      # :ruby.
       def audit_dir(dir, validate: false)
         dir = File.path(dir)
         native_audit_dir_rows(dir, validate ? true : false).filter_map do |row|
@@ -246,10 +263,17 @@ module Fontisan
         end
       end
 
+      # A file the engine does not read (Type 1): the Ruby tier audits it.
       def audit_with_ruby(file, rel, validate)
-        { "faces" => Fontisan::Reference.audit(file, validate: validate), "path" => rel }
+        seen_by(file, :ruby)
+        { "faces" => Engine.ruby_call(:audit, file, validate: validate), "path" => rel }
       rescue StandardError => e
         { "error" => { "class" => e.class.name, "message" => e.message }, "path" => rel }
+      end
+
+      def seen_by(file, tier)
+        recorder = Thread.current[Engine::ROW_RECORDER]
+        recorder[file] = tier if recorder
       end
     end
   end

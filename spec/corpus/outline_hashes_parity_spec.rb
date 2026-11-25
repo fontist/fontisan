@@ -44,7 +44,7 @@ RSpec.describe "outline_hashes tier parity" do # rubocop:disable RSpec/SpecFileP
       end
     else
       format = Fontisan::FontLoader.detect_format(path)
-      single = format && !%w[pfa pfb].include?(format.to_s)
+      single = !format.nil?
       single ? forced : "ruby"
     end
   end
