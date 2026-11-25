@@ -71,12 +71,13 @@ module Fontisan
         return false unless path.is_a?(String)
 
         # The regular-file check comes first: detection reads bytes, and
-        # reading a FIFO would block. scan keeps Type 1 with Ruby (its rows
-        # are what the scan goldens record); audit_dir serves the walk and
-        # hands the Type 1 rows back (audit_with_ruby). Undetectable bytes
-        # decline through native_supports_file.
+        # reading a FIFO would block. scan and convert keep Type 1 with Ruby
+        # (the scan goldens record Ruby's rows; Ruby's converters produce the
+        # Type 1 conversions). audit_dir serves the walk and hands the Type 1
+        # rows back (audit_with_ruby). Undetectable bytes decline through
+        # native_supports_file.
         regular = File.file?(path)
-        return false if operation == :scan && regular && path_is_type1?(path)
+        return false if %i[scan convert].include?(operation) && regular && path_is_type1?(path)
 
         case operation
         when :audit_dir then File.directory?(path)

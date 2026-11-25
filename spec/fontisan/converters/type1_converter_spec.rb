@@ -166,8 +166,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
   describe "#build_private_dict_hash" do
     let(:mock_private_dict) do
       dict = Fontisan::SpecHelpers::FakePrivateDict.new
-      allow(dict).to receive_messages(nominal_width: 0, default_width: 500,
-                                      blue_values: [-10, 0, 470, 480], other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [50], std_vw: [60], stem_snap_h: [], stem_snap_v: [], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
+      allow(dict).to receive_messages(nominal_width_x: 0, default_width_x: 500,
+                                      blue_values: [-10, 0, 470, 480], other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [50], std_vw: [60], stem_snap_h: [], stem_snap_v: [], force_bold?: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
@@ -195,8 +195,8 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     it "uses defaults for missing values" do
       dict = Fontisan::SpecHelpers::FakePrivateDict.new
-      allow(dict).to receive_messages(nominal_width: nil, default_width: nil,
-                                      blue_values: nil, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
+      allow(dict).to receive_messages(nominal_width_x: nil, default_width_x: nil,
+                                      blue_values: nil, other_blues: nil, family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold?: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
       result = converter.build_private_dict_hash(dict)
 
@@ -225,16 +225,20 @@ RSpec.describe Fontisan::Converters::Type1Converter do
 
     let(:mock_private_dict) do
       dict = Fontisan::SpecHelpers::FakePrivateDict.new
-      allow(dict).to receive_messages(nominal_width: 0, default_width: 500,
-                                      blue_values: [], other_blues: [], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [], std_vw: [], stem_snap_h: [], stem_snap_v: [], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
+      allow(dict).to receive_messages(nominal_width_x: 0, default_width_x: 500,
+                                      blue_values: [], other_blues: [], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: [], std_vw: [], stem_snap_h: [], stem_snap_v: [], force_bold?: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
     let(:mock_open_type_font) do
       font = Fontisan::SpecHelpers::FakeFont.new({})
       allow(font).to receive(:table).with("CFF ").and_return(mock_cff_table)
-      allow(font).to receive(:glyph_name).with(0).and_return("glyph1")
-      allow(font).to receive(:glyph_name).with(1).and_return("glyph2")
+      allow(font).to receive(:table).with("head").and_return(nil)
+      allow(font).to receive(:table).with("name").and_return(nil)
+      allow(font).to receive(:table).with("post").and_return(nil)
+      allow(font).to receive(:table).with("OS/2").and_return(nil)
+      allow(font).to receive(:post_script_name).and_return("Test")
+      allow(mock_cff_table).to receive(:charset).with(0).and_return(nil)
       font
     end
 
@@ -906,7 +910,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     let(:mock_private_dict) do
       dict = Fontisan::SpecHelpers::FakePrivateDict.new
       allow(dict).to receive_messages(blue_values: [-20, 0, 750, 770],
-                                      other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: 50, std_vw: 60, stem_snap_h: [50, 51], stem_snap_v: [60, 61], force_bold: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
+                                      other_blues: [-250, -240], family_blues: [], family_other_blues: [], blue_scale: 0.039625, blue_shift: 7, blue_fuzz: 1, std_hw: 50, std_vw: 60, stem_snap_h: [50, 51], stem_snap_v: [60, 61], force_bold?: false, language_group: 0, expansion_factor: 0.06, initial_random_seed: 0)
       dict
     end
 
@@ -936,7 +940,7 @@ RSpec.describe Fontisan::Converters::Type1Converter do
     it "uses defaults when values are missing" do
       dict = Fontisan::SpecHelpers::FakePrivateDict.new
       allow(dict).to receive_messages(blue_values: nil, other_blues: nil,
-                                      family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
+                                      family_blues: nil, family_other_blues: nil, blue_scale: nil, blue_shift: nil, blue_fuzz: nil, std_hw: nil, std_vw: nil, stem_snap_h: nil, stem_snap_v: nil, force_bold?: nil, language_group: nil, expansion_factor: nil, initial_random_seed: nil)
 
       font = Fontisan::SpecHelpers::FakeType1Font.new
       allow(font).to receive(:private_dict).and_return(dict)

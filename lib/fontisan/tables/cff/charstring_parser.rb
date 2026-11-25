@@ -86,6 +86,7 @@ module Fontisan
 
         # Operators that require hint mask bytes
         HINTMASK_OPERATORS = %i[hintmask cntrmask].freeze
+        STEM_OPERATORS = %i[hstem vstem hstemhm vstemhm].freeze
 
         # @return [String] Binary CharString data
         attr_reader :data
@@ -117,6 +118,13 @@ module Fontisan
             if operator_byte?(byte)
               # Operator byte - read operator and create operation
               operator = read_operator(io, byte)
+
+              # Count stems as they arrive: the hint mask length depends on
+              # the number of stems SEEN SO FAR (the CFF spec's running
+              # count), not on the Private DICT.
+              if STEM_OPERATORS.include?(operator)
+                @stem_count += operand_stack.length / 2
+              end
 
               # Read hint mask data if needed
               hint_data = nil

@@ -38,6 +38,7 @@ module Fontisan
     autoload :PFAParser, "fontisan/type1/pfa_parser"
     autoload :PFBGenerator, "fontisan/type1/pfb_generator"
     autoload :PFBParser, "fontisan/type1/pfb_parser"
+    autoload :PFBWriter, "fontisan/type1/pfb_writer"
     autoload :PFMGenerator, "fontisan/type1/pfm_generator"
     autoload :PFMParser, "fontisan/type1/pfm_parser"
     autoload :PrivateDict, "fontisan/type1/private_dict"

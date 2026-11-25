@@ -70,27 +70,29 @@ conversions:
     to: otf
     strategy: type1_converter
     description: "Convert Type 1 to OpenType/CFF format"
-    status: foundation
+    status: implemented
     notes: >
       Type 1 to OpenType conversion using CharStringConverter. Converts Type 1
-      CharStrings to CFF format and builds CFF table with proper DICT structures.
-      seac composites are expanded. Some hinting may not be preserved.
+      CharStrings to CFF format and builds the CFF table (header, Name/Top
+      DICT/String/GlobalSubr/CharStrings INDEXes, Private DICT) with a
+      fixed-point offset layout. seac composites are expanded. Some hinting
+      may not be preserved.
 
   - from: otf
     to: type1
     strategy: type1_converter
     description: "Convert OpenType/CFF to Type 1 format"
-    status: foundation
+    status: implemented
     notes: >
-      OpenType to Type 1 conversion. Reverse conversion from CFF CharStrings to
-      Type 1 format. Builds PFB output with eexec encryption. Some modern
-      OpenType features may be lost in conversion.
+      OpenType to Type 1 conversion. CFF CharStrings convert to Type 1
+      (coordinates rescaled to 1000 upm); PFBWriter assembles the canonical
+      three-segment PFB with deterministic eexec/CharString encryption.
 
   - from: type1
     to: ttf
     strategy: type1_converter
     description: "Convert Type 1 to TrueType format"
-    status: foundation
+    status: implemented
     notes: >
       Two-step conversion: Type 1 → OTF → TTF. First converts to OpenType/CFF,
       then to TrueType with cubic-to-quadratic curve approximation. Hinting may
@@ -100,11 +102,11 @@ conversions:
     to: type1
     strategy: type1_converter
     description: "Convert TrueType to Type 1 format"
-    status: foundation
+    status: implemented
     notes: >
-      Two-step conversion: TTF → OTF → Type 1. First converts to OpenType/CFF
-      with quadratic-to-cubic curve conversion, then to Type 1. Significant
-      approximation artifacts may occur due to curve conversions.
+      Direct conversion: every glyf glyph becomes a Type 1 CharString
+      (quadratic curves become cubics via TTFToType1Converter), assembled into
+      the canonical PFB by PFBGenerator with deterministic encryption.
 
   # Phase 2 conversions (Milestone 2.1) - WOFF2
   - from: ttf

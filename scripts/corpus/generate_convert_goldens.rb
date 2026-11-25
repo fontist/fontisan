@@ -39,11 +39,11 @@ module ConvertGoldens
     "\x00\x01\x00\x00".b => "ttf", "true" => "ttf", "OTTO" => "otf",
     "wOFF" => "woff", "wOF2" => "woff2", "ttcf" => "ttc"
   }.freeze
-  # Not convert subjects: malformed inputs are card 0e's, dfont/Type 1 are
-  # routing-only rows.
+  # Not convert subjects: malformed inputs are card 0e's.
   EXCLUDED_ID = /\Amalformed-/
   OUTPUT_EXT = { "ttf" => "ttf", "otf" => "otf", "woff" => "woff", "woff2" => "woff2",
-                 "ttc" => "ttc", "otc" => "otc" }.freeze
+                 "ttc" => "ttc", "otc" => "otc", "type1" => "pfb" }.freeze
+  TYPE1_FORMATS = %w[pfb pfa].freeze
 
   class ToolMissing < StandardError; end
 
@@ -62,7 +62,11 @@ module ConvertGoldens
   end
 
   def sniff(path)
-    MAGICS[File.binread(path, 4)]
+    head = File.binread(path, 4)
+    return "pfb" if head.byteslice(0, 2) == "\x80\x01".b || head.byteslice(0, 2) == "\x80\x02".b
+    return "pfa" if head.lstrip.start_with?("%!PS-AdobeFont", "%!FontType1")
+
+    MAGICS[head]
   end
 
   # Fonts that are convert subjects, with their detected input format.
@@ -94,6 +98,13 @@ module ConvertGoldens
 
   # => { "format:ttf" => {op: :format, to: "ttf"}, ... } in a fixed order
   def cases_for(path, format)
+    # A Type 1 source converts to the two sfnt outline formats; it has no
+    # faces/cmap to sample and no collection handling.
+    if TYPE1_FORMATS.include?(format)
+      return { "format:otf" => { op: :format, to: "otf" },
+               "format:ttf" => { op: :format, to: "ttf" } }
+    end
+
     faces = read_faces(path)
     cases = {}
     if format == "ttc" || faces.size > 1 || collection?(path)
@@ -102,6 +113,10 @@ module ConvertGoldens
       return cases
     end
     SINGLE_TARGETS.each { |to| cases["format:#{to}"] = { op: :format, to: to } unless to == format }
+    # The reverse Type 1 conversion is pinned for fonts of reasonable size;
+    # CJK-scale fonts (10k+ glyphs) would make every regeneration of the
+    # suite disproportionately expensive for the same byte-pinning value.
+    cases["format:type1"] = { op: :format, to: "type1" } unless type1_too_large?(path)
     instance_coords(faces.first).each_with_index do |coords, i|
       cases["instance:#{i}"] = { op: :instance, coords: coords }
     end
@@ -112,6 +127,17 @@ module ConvertGoldens
 
   def collection?(path)
     File.binread(path, 4) == "ttcf" || (File.binread(path, 4) == "wOF2" && woff2_flavor(path) == "ttcf")
+  end
+
+  # Fonts above this glyph count skip the format:type1 golden case.
+  TYPE1_CASE_MAX_GLYPHS = 2000
+
+  def type1_too_large?(path)
+    font = Fontisan::FontLoader.load(path, mode: :metadata)
+    maxp = font.table("maxp")
+    maxp&.num_glyphs.to_i > TYPE1_CASE_MAX_GLYPHS
+  rescue StandardError, ScriptError
+    true
   end
 
   def woff2_flavor(path)
@@ -221,8 +247,11 @@ module ConvertGoldens
   end
 
   # Collections are sanitised member by member; WOFF2 collections are first
-  # decoded by the pinned woff2_decompress.
+  # decoded by the pinned woff2_decompress. Raw Type 1 output is not an OTS
+  # input at all — the verdict records the skip.
   def ots_verdict(path, format, tmp)
+    return { "verdict" => "skip", "detail" => "OTS does not read raw Type 1" } if TYPE1_FORMATS.include?(format)
+
     target = path
     if format == "woff2" && woff2_flavor(path) == "ttcf"
       target = File.join(tmp, "ots-decoded.ttf")

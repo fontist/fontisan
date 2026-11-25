@@ -37,8 +37,9 @@ module Fontisan
     LIBRARY = "fontisan_cdylib"
     OPERATIONS = %i[read audit audit_dir scan convert extract instance subset
                     glyph_ids outline_hashes].freeze
-    # Type 1 is served through the op surfaces (#192 gap 4) — but scan keeps
-    # Type 1 rows with Ruby, whose rows the scan goldens record byte for byte.
+    # Type 1 is served through the op surfaces (#192 gap 4) — but scan and
+    # convert keep Type 1 with Ruby (the goldens record Ruby's rows; Ruby's
+    # converters produce the Type 1 conversions).
     RUBY_ONLY_FORMATS = %i[pfa pfb].freeze
 
     OP_CONVERT = 1
@@ -82,14 +83,14 @@ module Fontisan
 
         # A file the detector cannot name stays with Ruby on every operation
         # (the regular-file check comes first: detection reads bytes, and
-        # reading a FIFO would block). scan keeps Type 1 with Ruby — its rows
-        # are what the scan goldens record byte for byte; audit_dir serves the
-        # walk and hands the Type 1 rows back (ruby_entry); the other
-        # operations serve the Type 1 surface (#192 gap 4).
+        # reading a FIFO would block). scan and convert keep Type 1 with
+        # Ruby — the scan goldens record Ruby's rows, and Ruby's converters
+        # produce the Type 1 conversions; the read-side ops serve the
+        # measured surfaces (#192 gap 4).
         if path.is_a?(String)
           return false if File.file?(path) && undetectable?(path)
 
-          return false if operation == :scan && File.file?(path) && type1_file?(path)
+          return false if %i[scan convert].include?(operation) && File.file?(path) && type1_file?(path)
         end
 
         case operation

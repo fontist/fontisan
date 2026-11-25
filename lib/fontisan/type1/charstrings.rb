@@ -220,7 +220,8 @@ module Fontisan
         text.scan(/\/([^\s]+)\s+(\d+)\s+-\|(.*?)\|-/m) do |match|
           glyph_name = match[0]
           _index = match[1].to_i
-          encrypted_data = match[2]
+          # The entry pads the binary with spaces; they are format, not data.
+          encrypted_data = match[2].strip
 
           @charstrings[glyph_name] = encrypted_data
         end

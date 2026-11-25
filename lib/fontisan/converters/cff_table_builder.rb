@@ -115,52 +115,32 @@ module Fontisan
         charstrings_index_data,
         private_dict_size
       )
-        # Initial pass
-        top_dict_index_start = header_size + name_index_data.bytesize
-        string_index_start = top_dict_index_start + 100 # Approximate
-        global_subr_index_start = string_index_start + string_index_data.bytesize
-        charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
+        # Everything after the Top DICT INDEX sits at a position that depends
+        # only on the INDEX's own size, and its size depends on the offsets it
+        # encodes (operand widths). Iterate to the fixed point: the loop exits
+        # when the INDEX built from the offsets is exactly the size used to
+        # compute them, so the assembly below is byte-exact.
+        base = header_size + name_index_data.bytesize +
+          string_index_data.bytesize + global_subr_index_data.bytesize
+        top_size = 0
+        top_dict_index_data = nil
+        charstrings_offset = 0
+        private_dict_offset = 0
 
-        # Build Top DICT
-        top_dict_hash = {
-          charset: 0,
-          encoding: 0,
-          charstrings: charstrings_offset,
-        }
-        top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
-        top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
+        8.times do
+          charstrings_offset = base + top_size
+          private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
+          top_dict_data = Tables::Cff::DictBuilder.build(
+            charset: 0,
+            encoding: 0,
+            charstrings: charstrings_offset,
+            private: [private_dict_size, private_dict_offset],
+          )
+          top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
+          break if top_dict_index_data.bytesize == top_size
 
-        # Recalculate with actual Top DICT size
-        string_index_start = top_dict_index_start + top_dict_index_data.bytesize
-        global_subr_index_start = string_index_start + string_index_data.bytesize
-        charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
-        private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
-
-        # Update Top DICT with Private DICT info
-        top_dict_hash = {
-          charset: 0,
-          encoding: 0,
-          charstrings: charstrings_offset,
-          private: [private_dict_size, private_dict_offset],
-        }
-        top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
-        top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
-
-        # Final recalculation
-        string_index_start = top_dict_index_start + top_dict_index_data.bytesize
-        global_subr_index_start = string_index_start + string_index_data.bytesize
-        charstrings_offset = global_subr_index_start + global_subr_index_data.bytesize
-        private_dict_offset = charstrings_offset + charstrings_index_data.bytesize
-
-        # Final Top DICT
-        top_dict_hash = {
-          charset: 0,
-          encoding: 0,
-          charstrings: charstrings_offset,
-          private: [private_dict_size, private_dict_offset],
-        }
-        top_dict_data = Tables::Cff::DictBuilder.build(top_dict_hash)
-        top_dict_index_data = Tables::Cff::IndexBuilder.build([top_dict_data])
+          top_size = top_dict_index_data.bytesize
+        end
 
         [top_dict_index_data, charstrings_offset, private_dict_offset]
       end

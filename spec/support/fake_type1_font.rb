@@ -22,14 +22,16 @@ module Fontisan
     end
 
     # FakePrivateDict with all CFF hint fields.
-    FakePrivateDict = Struct.new(:nominal_width, :default_width,
+    FakePrivateDict = Struct.new(:nominal_width_x, :default_width_x,
                                  :blue_values, :other_blues,
                                  :family_blues, :family_other_blues,
                                  :blue_scale, :blue_shift, :blue_fuzz,
                                  :std_hw, :std_vw, :stem_snap_h, :stem_snap_v,
                                  :force_bold, :language_group,
                                  :expansion_factor, :initial_random_seed,
-                                 keyword_init: true)
+                                 keyword_init: true) do
+      def force_bold? = force_bold
+    end
 
     # FakeFontDictionary for Type 1 font dictionary.
     FakeFontDictionary = Struct.new(:raw_data) do
