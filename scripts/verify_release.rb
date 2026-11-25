@@ -64,6 +64,26 @@ Dir.mktmpdir do |dir|
   failures << "svg missing glyphs" unless svg.include?("<glyph ") && svg.start_with?("<?xml")
 end
 
+# 4. Type 1 surfaces (#192 gap 4): the corpus PFB serves the measured
+#    NoMethodError-shaped surface through the engine tier; scan keeps Ruby.
+pfb = File.join(fonts, "fonttools-test-t1-pfb/TestT1-Regular.pfb")
+begin
+  Fontisan::Reference.read(pfb)
+  failures << "t1 read did not raise"
+rescue Fontisan::InvalidFontError => e
+  failures << "t1 read surface: #{e.message[0, 80]}" unless
+    e.message.include?("undefined method 'has_table?' for an instance of Fontisan::Type1Font")
+  unless e.cause.is_a?(NoMethodError)
+    failures << "t1 read cause #{e.cause.class}"
+  end
+end
+Fontisan::Reference.scan([pfb])
+failures << "t1 scan served_by #{Fontisan::Engine.served_by(:scan)} (want ruby)" unless
+  Fontisan::Engine.served_by(:scan) == :ruby
+Fontisan::Reference.audit(pfb)
+failures << "t1 audit served_by #{Fontisan::Engine.served_by(:audit)} (want native)" unless
+  Fontisan::Engine.served_by(:audit) == :native
+
 if failures.empty?
   puts "RELEASE CONTENT ASSERTIONS PASS (#{version})"
 else
