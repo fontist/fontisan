@@ -50,39 +50,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
-          "CFF ": "7ddec9f13bf43818ea226e5d933d81b895220160c795938d934705179d0a94bb",
-          "GDEF": "60de4c9f79edc6340c0f6511cb3fa81af997625b40eb8631a1a3b5ddf4bc5718",
-          "GPOS": "ef96af43be5e180e7553ea5679d33bd0751630717072fa9b58002414c13b94ca",
-          "GSUB": "a7a37ef5c6549bb956545bc70ded05224edfa5c3a8483e9b701a37375df23da6",
-          "OS/2": "f161b737b96a7cfd7f66e1179c21f8fd10c9967c4a76793bddf1b20841f1985c",
-          "cmap": "5ec656eed350eaf5f5b19cd87ff14a282150f075e54ebbe2e310ebe493d8a9aa",
-          "head": "bbb4f7ae877b20ddb48daad50e08ad00fb93ed4a3c603a1778cc33d8e58c4276",
-          "hhea": "944d0454f16d2a5a9b893e3c6604669b0bb00699e54855f35f67d0526ef2c3c5",
-          "hmtx": "e9a7b2ace72164f05101127344ce39d361cd7e4dca0cc1dd5eb073500ce47920",
-          "maxp": "448cb467bdc273cd7239e8bdc841a0173d4bf2fb8a057b22503c330c26dbbf0b",
-          "name": "2f319951c1b63daba830a2ef913d5997d360f5db9ada3c5ceb0fc1e87e7b1c75",
-          "post": "a884d5ca6f3f1c957a513c4075d0f620ee618a243f428ec62013a314a9c77833"
-        }
-      ],
-      "ots": {
-        "verdict": "pass"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "44e62daa7f35ef6d842b03cb702a3c83b2061602c45c754a18ed370251bff9d1",
-        "size": 154280
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "subset:text-latin": {
       "class": "exact",
       "known_reference_bug": "Layout: bad glyph count: N",

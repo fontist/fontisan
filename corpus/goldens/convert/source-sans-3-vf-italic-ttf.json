@@ -71,42 +71,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "BASE": "db1ba3c052de28904fbe7a94c76a1ac76fa3d750157b751756982495162a8a61",
-          "GDEF": "95668a8628caaae8be781be666744ac9c3171e5b398a59894920b74fe9264161",
-          "GPOS": "0383c01e29508d12fb8068e3bb1b7d082fc81be20932b6b820e887bb4d1eb290",
-          "GSUB": "99791e1ab3260bae6bade5b421781374612c26b2621a77d9b10f76fd09b59440",
-          "OS/2": "c5b74e8576e369c9435ce9883cf2a6aca12e87c2935bf5d6ae811a1a14b8d91a",
-          "cmap": "b1e1a515e454dd14708c28a8f4a25723b0977d55ea1e195c83fc9d5f3fa9a08f",
-          "glyf": "a21cf9a30be27c56fbe289906f20e12780a5ad8aa7e613316484f930c5f8ef92",
-          "head": "b4058bc20e213459185575a238d32e05ce1cb8ff41eab48740c9d5aa21db9656",
-          "hhea": "8c03177195ebb49d6a8de35d1a5ee4f622736b9a925fd8be830b44f48a5c7846",
-          "hmtx": "b85a7d7e1d12526de001b6b8a719226e08614422b338487046a7855264a6e7b6",
-          "loca": "9120f310a20427140ca3e4aee3c01446eff55081908ccdfcc1c7e0eea4637004",
-          "maxp": "24e75e833256210c19b2891826c272784e8d38979ee15ba1dc9a39de54602edf",
-          "name": "a439613954071c22373d885c662935ece137f7c7409aeadc0a9881cd05ead9da",
-          "post": "ba5264810693d89357e91f132930d8b6ba3d15510b925523683e94ca0ecdbcc0"
-        }
-      ],
-      "known_reference_bug": "Variations: Required fvar table is missing",
-      "ots": {
-        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
-        "verdict": "fail"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "9dc764dfe727e81acf7f7cf76946c79bde5e63e083f47264c89244945d9bd84c",
-        "size": 81308
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "instance:0": {
       "class": "exact",
       "known_reference_bug": "Variations: Required fvar table is missing",

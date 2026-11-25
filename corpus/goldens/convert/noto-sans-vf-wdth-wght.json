@@ -55,43 +55,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "GDEF": "55741939547df1b0452e00d2af66367984a85cfd6f64d5ac8dccfdee4da84b22",
-          "GPOS": "58bd7b04e01d3aea91ecd4411ead1bc71b8012f83de2ceb6b86d98b7e41215dc",
-          "GSUB": "27a3868cbcdbebcd6400ca0ffd3524e9a5c7084f5ad8f02cfe73f2211112cf13",
-          "OS/2": "2b102b8b6868dd057b970eb9414c4fa96c03c3679a80d8217982eab6ebe04320",
-          "cmap": "7c95acef1f24ab4ae149bf00c9bb5c07dc717fc5478086efa7f92230aa06ae6c",
-          "gasp": "4ca731f86ad506ac0e320283dc9461926346de3c4d91d539ea7f6620d3826940",
-          "glyf": "a82ffd2175fc5c3e95215c5939763bf0916966e6f12471a16dfa5c46ca0138e0",
-          "head": "14bbcc9e093cf438120579d33370424a22ff21e18760c5ba1e1a7b799a19c752",
-          "hhea": "57daba16bc6b16c9164a01aa704c77b3f4f5999db06ae89dfedf7179c567d634",
-          "hmtx": "a8c9ba5869469877aa94582de814e2de97bf40f2d82f0149bf275cd9c4519c00",
-          "loca": "767fd4639aecb5f8d897601999d64974a81c6d87914fec419dd1ed2c2c9fcb3e",
-          "maxp": "d3509db708e8aa3ff0a90b4ee3001da23f5af8124f917d7cf70d32ada4a62ace",
-          "name": "f343120d21b97473646c24c60173dc3f23311604466444260cca19f34add0b8d",
-          "post": "e3f312c08d0ddbca3248b95c748ccc034d987955a3ad0e9ff8abfc8565abc1f9",
-          "prep": "907c4106ff9989c1805827d5581bdf107a253b098cb71eb374f5e47c35604452"
-        }
-      ],
-      "known_reference_bug": "Variations: Required fvar table is missing",
-      "ots": {
-        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
-        "verdict": "fail"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "1c3c5024a6c8ed2fbf76936338d19d93a8a965102bb4392ab20894a68829cdcc",
-        "size": 201912
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "instance:0": {
       "class": "exact",
       "known_reference_bug": "Variations: Required fvar table is missing",

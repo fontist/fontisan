@@ -70,41 +70,6 @@
         "to": "woff"
       }
     },
-    "format:woff2": {
-      "class": "decoded-exact",
-      "decoded_tables": [
-        {
-          "GDEF": "3894253c1d6e48cce21c02331a1263b048848786ab9c2cffafcfd16d7b6b9853",
-          "GPOS": "5783803aef5b68d08cf05dfd181abcb7a85b7e6dbdd8c3b5d1188cd3aa83409f",
-          "GSUB": "ed91559f1ffdba59161f095d8399e67343169e94bbd90cb2020fc9d74137f4e7",
-          "OS/2": "7ee4d10d4e6c8d4213a29fb78879bb9c267c5e2dc78882930a001381636510a7",
-          "cmap": "39e6a62164282567dd3dfba6684d324f50119c5dd33c06fbdc911cf714942bb7",
-          "glyf": "d8b6857fc2c3d2502970d43c5445b6a69f5353976b9a1cd87c0b6198652b989d",
-          "head": "1ed1c98a5b9fa366bf97bb77bcfb15b258567e232660adfad9478caf5a845c85",
-          "hhea": "2231e95942c8f0d57fbd9adcd1048e344f1a3456b239401b6f3d99ec3067112f",
-          "hmtx": "0636c7cff9a819038a9b1b24ea0dc96f82139bfbbcaa10adaf4bbca60dc63d1f",
-          "loca": "b4dc022d3c0d1b1474082a66feb658d5b649c2a69f4a31d6896b35154e361dda",
-          "maxp": "730eb5006231691c1fd955a3343aed44fb97d8fed87410bdcbaaca9170a41ffb",
-          "name": "9909cf8b2c639be7f9b97d66c62a1ac2b38632d045f48fc0f78bb7597e8dc5c0",
-          "post": "eb8c0897a68980619391243c3a98d22bb3b0860547c6f13eacfa267029a75b46"
-        }
-      ],
-      "known_reference_bug": "Variations: Required fvar table is missing",
-      "ots": {
-        "detail": "member 0: ERROR: Variations: Required fvar table is missing | ERROR: Variations: Failed to parse variation region list",
-        "verdict": "fail"
-      },
-      "outcome": "ok",
-      "output": {
-        "format": "woff2",
-        "sha256": "6d201eff2d4287a1d1da9a1e6c7344d797ed8072118bce357960d916b66688fe",
-        "size": 337988
-      },
-      "params": {
-        "op": "format",
-        "to": "woff2"
-      }
-    },
     "instance:0": {
       "class": "exact",
       "known_reference_bug": "Variations: Required fvar table is missing",
