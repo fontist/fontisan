@@ -101,7 +101,7 @@ RSpec.describe Fontisan::Converters::CollectionConverter do
     it "raises MissingTableError naming the outline tables when a member has neither glyf nor CFF" do
       member = double("member", has_table?: false)
 
-      expect { converter.send(:detect_font_format, member) }
+      expect { converter.detect_font_format(member) }
         .to raise_error(Fontisan::MissingTableError, "Font has neither glyf nor CFF table")
     end
   end

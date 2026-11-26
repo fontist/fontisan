@@ -188,7 +188,7 @@ RSpec.describe Fontisan::Engine do
       it "reads FONTISAN_ENGINE_STRICT=#{value} as on" do
         configure("native")
         ENV["FONTISAN_ENGINE_STRICT"] = value
-        expect(described_class.send(:config_from_env).strict).to be(true)
+        expect(described_class.config_from_env.strict).to be(true)
       end
     end
 
@@ -196,7 +196,7 @@ RSpec.describe Fontisan::Engine do
       it "reads FONTISAN_ENGINE_STRICT=#{value.inspect} as off" do
         configure("native")
         ENV["FONTISAN_ENGINE_STRICT"] = value
-        expect(described_class.send(:config_from_env).strict).to be(false)
+        expect(described_class.config_from_env.strict).to be(false)
       end
     end
 

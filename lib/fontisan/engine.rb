@@ -216,6 +216,20 @@ module Fontisan
         end
       end
 
+      # Current configuration from the environment; raises for a bad value.
+      # Public: the strict-mode contract is load-bearing and tested directly.
+      def config_from_env
+        selection = ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase
+        selection = "auto" if selection.empty?
+        unless SELECTIONS.include?(selection)
+          raise ConfigError,
+                "FONTISAN_ENGINE=#{selection.inspect} is not one of " \
+                "#{SELECTIONS.join(', ')}"
+        end
+
+        Config.new(selection.to_sym, strict_from_env)
+      end
+
       private
 
       def validate_registration!(name, tier)
@@ -230,18 +244,6 @@ module Fontisan
 
         raise ConfigError,
               "tier #{name} does not implement #{missing.join(', ')}"
-      end
-
-      def config_from_env
-        selection = ENV.fetch("FONTISAN_ENGINE", "auto").strip.downcase
-        selection = "auto" if selection.empty?
-        unless SELECTIONS.include?(selection)
-          raise ConfigError,
-                "FONTISAN_ENGINE=#{selection.inspect} is not one of " \
-                "#{SELECTIONS.join(', ')}"
-        end
-
-        Config.new(selection.to_sym, strict_from_env)
       end
 
       # 1/true/yes/on is strict; unset, empty and 0/false/no/off is not. Any

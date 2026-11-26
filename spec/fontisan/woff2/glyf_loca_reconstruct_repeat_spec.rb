@@ -9,7 +9,7 @@ require "open3"
 RSpec.describe Fontisan::Woff2::GlyfLocaReconstruct do
   describe "flag run-length encoding" do
     subject(:encoded) do
-      described_class.allocate.send(:encode_flags_rle, flags).bytes
+      described_class.allocate.encode_flags_rle(flags).bytes
     end
 
     context "with three identical flags" do

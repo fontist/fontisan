@@ -53,13 +53,13 @@ RSpec.describe "Type 1 Font Conversion Integration" do
 
       it "builds all required SFNT tables" do
         tables = {
-          "head" => converter.send(:build_head_table, mock_type1_font),
-          "hhea" => converter.send(:build_hhea_table, mock_type1_font),
-          "maxp" => converter.send(:build_maxp_table, mock_type1_font),
-          "name" => converter.send(:build_name_table, mock_type1_font),
-          "OS/2" => converter.send(:build_os2_table, mock_type1_font),
-          "post" => converter.send(:build_post_table, mock_type1_font),
-          "cmap" => converter.send(:build_cmap_table, mock_type1_font),
+          "head" => converter.build_head_table(mock_type1_font),
+          "hhea" => converter.build_hhea_table(mock_type1_font),
+          "maxp" => converter.build_maxp_table(mock_type1_font),
+          "name" => converter.build_name_table(mock_type1_font),
+          "OS/2" => converter.build_os2_table(mock_type1_font),
+          "post" => converter.build_post_table(mock_type1_font),
+          "cmap" => converter.build_cmap_table(mock_type1_font),
         }
 
         # Note: CFF table is built by OutlineConverter, not by individual table builders
@@ -68,7 +68,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid head table" do
-        head_data = converter.send(:build_head_table, mock_type1_font)
+        head_data = converter.build_head_table(mock_type1_font)
 
         expect(head_data).to be_a(String)
         expect(head_data.bytesize).to be >= 54
@@ -83,7 +83,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid hhea table" do
-        hhea_data = converter.send(:build_hhea_table, mock_type1_font)
+        hhea_data = converter.build_hhea_table(mock_type1_font)
 
         expect(hhea_data).to be_a(String)
         expect(hhea_data.bytesize).to be >= 36
@@ -94,7 +94,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid maxp table" do
-        maxp_data = converter.send(:build_maxp_table, mock_type1_font)
+        maxp_data = converter.build_maxp_table(mock_type1_font)
 
         expect(maxp_data).to be_a(String)
         expect(maxp_data.bytesize).to eq(6)
@@ -105,7 +105,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid name table" do
-        name_data = converter.send(:build_name_table, mock_type1_font)
+        name_data = converter.build_name_table(mock_type1_font)
 
         expect(name_data).to be_a(String)
         expect(name_data.bytesize).to be >= 6
@@ -116,7 +116,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid OS/2 table" do
-        os2_data = converter.send(:build_os2_table, mock_type1_font)
+        os2_data = converter.build_os2_table(mock_type1_font)
 
         expect(os2_data).to be_a(String)
         expect(os2_data.bytesize).to be >= 78
@@ -127,7 +127,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid post table" do
-        post_data = converter.send(:build_post_table, mock_type1_font)
+        post_data = converter.build_post_table(mock_type1_font)
 
         expect(post_data).to be_a(String)
         expect(post_data.bytesize).to eq(32)
@@ -138,7 +138,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "produces valid cmap table" do
-        cmap_data = converter.send(:build_cmap_table, mock_type1_font)
+        cmap_data = converter.build_cmap_table(mock_type1_font)
 
         expect(cmap_data).to be_a(String)
         expect(cmap_data.bytesize).to be >= 12
@@ -186,7 +186,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "builds CFF font dictionary" do
-        font_dict = converter.send(:build_cff_font_dict, mock_type1_font)
+        font_dict = converter.build_cff_font_dict(mock_type1_font)
 
         expect(font_dict[:version]).to eq("001.000")
         expect(font_dict[:full_name]).to eq("TestFont")
@@ -196,7 +196,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       end
 
       it "builds CFF private dictionary" do
-        private_dict = converter.send(:build_cff_private_dict, mock_type1_font)
+        private_dict = converter.build_cff_private_dict(mock_type1_font)
 
         expect(private_dict[:blue_values]).to eq([-20, 0, 750, 770])
         expect(private_dict[:blue_scale]).to eq(0.039625)
@@ -217,25 +217,25 @@ RSpec.describe "Type 1 Font Conversion Integration" do
 
       it "handles missing font dictionary gracefully" do
         expect do
-          converter.send(:build_head_table, mock_font)
+          converter.build_head_table(mock_font)
         end.not_to raise_error
         expect do
-          converter.send(:build_hhea_table, mock_font)
+          converter.build_hhea_table(mock_font)
         end.not_to raise_error
         expect do
-          converter.send(:build_name_table, mock_font)
+          converter.build_name_table(mock_font)
         end.not_to raise_error
       end
 
       it "handles missing charstrings gracefully" do
         expect do
-          converter.send(:build_maxp_table, mock_font)
+          converter.build_maxp_table(mock_font)
         end.not_to raise_error
         expect do
-          converter.send(:build_hhea_table, mock_font)
+          converter.build_hhea_table(mock_font)
         end.not_to raise_error
         expect do
-          converter.send(:build_cmap_table, mock_font)
+          converter.build_cmap_table(mock_font)
         end.not_to raise_error
       end
     end
@@ -274,7 +274,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
           allow(font_info).to receive(:weight).and_return(weight_name)
           allow(mock_font_dict).to receive(:font_info).and_return(font_info)
 
-          os2_data = converter.send(:build_os2_table, mock_type1_font)
+          os2_data = converter.build_os2_table(mock_type1_font)
           weight_class = os2_data[4..5].unpack1("n")
 
           expect(weight_class).to eq(expected_class),
@@ -302,7 +302,7 @@ RSpec.describe "Type 1 Font Conversion Integration" do
       it "detects Type 1 format correctly" do
         format_converter = Fontisan::Converters::FormatConverter.new
 
-        detected = format_converter.send(:detect_format, mock_type1_font)
+        detected = format_converter.detect_format(mock_type1_font)
         expect(detected).to eq(:type1)
       end
     end

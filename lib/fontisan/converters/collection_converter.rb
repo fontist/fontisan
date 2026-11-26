@@ -515,6 +515,10 @@ conversions)
 
         options[:options] if options.is_a?(Hash)
       end
+
+      # Format detection drives member conversion policy and is tested
+      # directly (TODO 30).
+      public :detect_font_format
     end
   end
 end
