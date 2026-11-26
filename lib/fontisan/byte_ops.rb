@@ -115,11 +115,6 @@ module Fontisan
         return %i[woff woff2].include?(source)
       end
 
-      # A variable source keeps the type1 conversion with Ruby: the goldens
-      # pin the pipeline's instanced bytes, and the engine's instancing walk
-      # is not byte-identical to the pipeline's for type1 output yet.
-      return false if target == :type1 && variable_font?(path)
-
       (collection_file?(path) ? COLLECTION_TARGETS : SINGLE_TARGETS).include?(target)
     end
 
