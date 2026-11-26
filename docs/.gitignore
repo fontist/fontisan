@@ -15,3 +15,7 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Astro build output and cache
+dist/
+.astro/

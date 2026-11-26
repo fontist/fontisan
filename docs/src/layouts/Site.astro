@@ -1,0 +1,320 @@
+---
+import "../styles/site.css";
+import { SIDEBAR } from "../data/sidebar";
+
+const { pathname } = Astro.url;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const path = pathname.replace(import.meta.env.BASE_URL, "/").replace(/^\//, "").replace(/\/$/, "");
+
+const sidebarKey = Object.keys(SIDEBAR).find((k) => path.startsWith(k.replace(/^\//, "").replace(/\/$/, "")));
+const sidebar = sidebarKey ? SIDEBAR[sidebarKey] : [];
+
+// Header search index over section pages.
+import { getCollection } from "astro:content";
+const [guideEntries, cliEntries, apiEntries] = await Promise.all([
+  getCollection("guide"),
+  getCollection("cli"),
+  getCollection("api"),
+]);
+const titleOf = (e) => e.data?.title ?? e.body?.match(/^# (.+)$/m)?.[1] ?? e.id;
+const searchEntries = [
+  ...guideEntries.map((e) => ({ title: titleOf(e), url: `/guide/${e.id === "index" ? "" : e.id}`, section: "Guide" })),
+  ...cliEntries.map((e) => ({ title: titleOf(e), url: `/cli/${e.id === "index" ? "" : e.id}`, section: "CLI" })),
+  ...apiEntries.map((e) => ({ title: titleOf(e), url: `/api/${e.id === "index" ? "" : e.id}`, section: "API" })),
+];
+const isHome = path === "";
+---
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{Astro.props.title ?? "Fontisan"}</title>
+    <meta name="description" content={Astro.props.description ?? "The most comprehensive font processing library for Ruby — 100% Pure Ruby."} />
+    <meta property="og:title" content={Astro.props.title ?? "Fontisan"} />
+    <meta property="og:description" content={Astro.props.description ?? "100% Pure Ruby font processing."} />
+    <meta property="og:image" content={`${base}/og-image.png`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,opsz,wght@0,7..72,200..800;1,7..72,200..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="icon" type="image/png" sizes="96x96" href={`${base}/favicon-96x96.png`} />
+    <link rel="shortcut icon" href={`${base}/favicon.ico`} />
+    <link rel="apple-touch-icon" sizes="180x180" href={`${base}/apple-touch-icon.png`} />
+    <script is:inline>
+      const saved = localStorage.getItem("fontisan-theme");
+      if (saved === "dark" || (saved === null && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
+  </head>
+  <body>
+    {
+      !isHome && (
+        <header class="site-header">
+          <div class="site-header-inner">
+            <a href={`${base}/`} class="site-logo">
+              <img src={`${base}/logo-full.svg`} alt="Fontisan" />
+            </a>
+            <nav class="site-nav">
+              <a href="https://www.fontist.org">← Fontist.org</a>
+              <a href={`${base}/guide/`} class:list={{ active: path.startsWith("guide") }}>Guide</a>
+              <a href={`${base}/cli/`} class:list={{ active: path.startsWith("cli") }}>CLI</a>
+              <a href={`${base}/api/`} class:list={{ active: path.startsWith("api") }}>API</a>
+              <a href="https://www.fontist.org/fontist/">Fontist</a>
+              <a href="https://www.fontist.org/formulas/">Formulas</a>
+            </nav>
+            <div class="header-search" id="header-search">
+              <input
+                type="search"
+                id="header-search-input"
+                placeholder="Search docs…"
+                autocomplete="off"
+                data-entries={JSON.stringify(searchEntries)}
+                data-base={base}
+              />
+              <div class="header-search-results" id="header-search-results" hidden />
+            </div>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+              <span class="theme-toggle-sun">☀</span>
+              <span class="theme-toggle-moon">☾</span>
+            </button>
+          </div>
+        </header>
+      )
+    }
+    <main class:list={["site-main", { "with-sidebar": sidebar.length > 0 }]}>
+      {
+        sidebar.length > 0 && (
+          <aside class="site-sidebar">
+            {sidebar.map((group) => (
+              <div class="sidebar-group">
+                <div class="sidebar-heading">{group.text}</div>
+                <ul>
+                  {group.items?.map((item) => (
+                    <li>
+                      <a
+                        href={`${base}${item.link}`}
+                        class:list={{ active: path === item.link.replace(/^\//, "").replace(/\/$/, "") }}
+                      >
+                        {item.text}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </aside>
+        )
+      }
+      <div class="site-content">
+        <slot />
+      </div>
+    </main>
+    {
+      !isHome && (
+        <footer class="site-footer">
+          <p>
+            Fontisan is a <a href="https://www.ribose.com/">Ribose</a> project ·
+            Copyright © 2026 Ribose Group Inc. All rights reserved.
+          </p>
+        </footer>
+      )
+    }
+    <script is:inline>
+      document.getElementById("theme-toggle")?.addEventListener("click", () => {
+        const dark = document.documentElement.classList.toggle("dark");
+        localStorage.setItem("fontisan-theme", dark ? "dark" : "light");
+      });
+
+      (() => {
+        const wrap = document.getElementById("header-search");
+        if (!wrap) return;
+        const input = document.getElementById("header-search-input");
+        const box = document.getElementById("header-search-results");
+        const entries = JSON.parse(input.dataset.entries);
+        const base = input.dataset.base;
+
+        function render(list) {
+          box.innerHTML = list
+            .map(
+              (e) =>
+                `<a href="${base}${e.url}"><span class="hs-section">${e.section}</span> ${e.title}</a>`,
+            )
+            .join("");
+          box.hidden = list.length === 0;
+        }
+
+        input.addEventListener("input", () => {
+          const q = input.value.trim().toLowerCase();
+          if (!q) return (box.hidden = true);
+          render(entries.filter((e) => e.title.toLowerCase().includes(q)).slice(0, 8));
+        });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            box.hidden = true;
+            input.blur();
+          }
+        });
+        document.addEventListener("click", (e) => {
+          if (!wrap.contains(e.target)) box.hidden = true;
+        });
+      })();
+    </script>
+    <style>
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--vp-c-bg);
+        border-bottom: 1px solid var(--spec-rule);
+      }
+      .site-header-inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+      .site-logo img {
+        height: 34px;
+        display: block;
+      }
+      .site-nav {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex: 1;
+        font-size: 0.9rem;
+      }
+      .site-nav a {
+        color: var(--vp-c-text-2);
+        text-decoration: none;
+        padding: 0.25rem 0;
+      }
+      .site-nav a:hover,
+      .site-nav a.active {
+        color: var(--vp-c-brand-1);
+      }
+      .theme-toggle {
+        border: 1px solid var(--spec-rule);
+        background: var(--vp-c-bg-soft);
+        border-radius: 8px;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+        color: var(--vp-c-text-2);
+      }
+      html:not(.dark) .theme-toggle-moon {
+        display: none;
+      }
+      html.dark .theme-toggle-sun {
+        display: none;
+      }
+      .site-main {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        display: flex;
+        gap: 2rem;
+      }
+      .site-main.with-sidebar .site-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .site-sidebar {
+        width: 250px;
+        flex-shrink: 0;
+        font-size: 0.875rem;
+      }
+      .sidebar-group {
+        margin-bottom: 1.25rem;
+      }
+      .sidebar-heading {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--vp-c-text-1);
+        margin-bottom: 0.4rem;
+      }
+      .sidebar-group ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .sidebar-group li a {
+        display: block;
+        padding: 0.22rem 0 0.22rem 0.75rem;
+        color: var(--vp-c-text-2);
+        text-decoration: none;
+        border-left: 2px solid transparent;
+      }
+      .sidebar-group li a:hover {
+        color: var(--vp-c-brand-1);
+      }
+      .sidebar-group li a.active {
+        color: var(--vp-c-brand-1);
+        border-left-color: var(--vp-c-brand-1);
+      }
+      .site-footer {
+        border-top: 1px solid var(--spec-rule);
+        background: var(--vp-c-bg-soft);
+        text-align: center;
+        padding: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--vp-c-text-2);
+      }
+      .site-footer a {
+        color: var(--vp-c-brand-1);
+      }
+      .header-search {
+        position: relative;
+      }
+      .header-search input {
+        width: 220px;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        border: 1px solid var(--spec-rule);
+        border-radius: 8px;
+        background: var(--vp-c-bg-soft);
+        color: var(--vp-c-text-1);
+      }
+      .header-search-results {
+        position: absolute;
+        top: calc(100% + 0.4rem);
+        right: 0;
+        width: 320px;
+        background: var(--vp-c-bg);
+        border: 1px solid var(--spec-rule);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+        overflow: hidden;
+        z-index: 60;
+      }
+      .header-search-results a {
+        display: block;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.85rem;
+        color: var(--vp-c-text-1);
+        text-decoration: none;
+        border-bottom: 1px solid var(--spec-rule);
+      }
+      .header-search-results a:last-child {
+        border-bottom: none;
+      }
+      .header-search-results a:hover {
+        background: var(--vp-c-bg-soft);
+      }
+      .hs-section {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--vp-c-text-3);
+        margin-right: 0.4rem;
+      }
+    </style>
+  </body>
+</html>

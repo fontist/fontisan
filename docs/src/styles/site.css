@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* Fontisan docs site — Astro 7 + Tailwind 4.
+   Palette ported from the specimen design system in the VitePress theme.
+   The --vp-c-* variables stay as aliases so ported CSS applies unchanged. */
+:root {
+  --fontist-rose: #bf4e6a;
+  --fontist-rose-light: #d4718a;
+  --fontist-dark: #4d4b54;
+  --fontist-gray: #676565;
+  --fontist-cream: #e1dfd2;
+  --fontist-beige: #bebbac;
+  --fontist-pale: #dddac8;
+
+  --spec-paper: #f1ece1;
+  --spec-paper-deep: #e7e0d1;
+  --spec-ink: #1c1a18;
+  --spec-ink-soft: #4a4744;
+  --spec-mute: #75716c;
+  --spec-rose: #b8475f;
+  --spec-rose-soft: #d4718a;
+  --spec-rule: rgba(28, 26, 24, 0.16);
+  --spec-rule-strong: rgba(28, 26, 24, 0.5);
+  --spec-term-bg: #1c1a18;
+  --spec-term-ink: #ecdfd0;
+
+  --vp-c-brand-1: var(--spec-rose);
+  --vp-c-brand-2: #a3435a;
+  --vp-c-brand-3: var(--spec-ink);
+  --vp-c-brand-soft: rgba(184, 71, 95, 0.12);
+  --vp-c-text-1: var(--spec-ink);
+  --vp-c-text-2: var(--spec-ink-soft);
+  --vp-c-text-3: var(--spec-mute);
+  --vp-c-bg: var(--spec-paper);
+  --vp-c-bg-soft: var(--spec-paper-deep);
+  --vp-c-divider: var(--spec-rule);
+  --vp-font-family-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --spec-font-display: "Spectral", Georgia, serif;
+  --spec-font-body: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+html.dark {
+  --spec-paper: #211e1c;
+  --spec-paper-deep: #2a2623;
+  --spec-ink: #ecdfd0;
+  --spec-ink-soft: #c9bda9;
+  --spec-mute: #8f887e;
+  --spec-rose: #d4718a;
+  --spec-rule: rgba(236, 223, 208, 0.16);
+  --spec-term-bg: #0d0c0c;
+  --vp-c-bg: var(--spec-paper);
+  --vp-c-bg-soft: var(--spec-paper-deep);
+}
+
+@theme {
+  --color-rose: var(--fontist-rose);
+  --color-rose-light: var(--fontist-rose-light);
+  --color-paper: var(--spec-paper);
+  --color-paper-deep: var(--spec-paper-deep);
+  --color-ink: var(--spec-ink);
+  --color-ink-soft: var(--spec-ink-soft);
+  --color-mute: var(--spec-mute);
+  --font-display: "Spectral", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+body {
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  font-family: var(--spec-font-body);
+}
+
+/* Markdown content (prose) */
+.prose h1 { font-family: var(--spec-font-display); font-size: 2.1rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 1rem; color: var(--vp-c-text-1); }
+.prose h2 { font-family: var(--spec-font-display); font-size: 1.5rem; font-weight: 600; margin: 2rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--spec-rule); color: var(--vp-c-text-1); }
+.prose h3 { font-family: var(--spec-font-display); font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--vp-c-text-1); }
+.prose p, .prose li { line-height: 1.7; color: var(--vp-c-text-1); }
+.prose a { color: var(--spec-rose); }
+.prose a:hover { color: #a3435a; }
+.prose code { font-family: var(--vp-font-family-mono); font-size: 0.875em; background: var(--vp-c-bg-soft); padding: 0.15em 0.4em; border-radius: 6px; }
+.prose pre { background: var(--spec-term-bg); color: var(--spec-term-ink); padding: 1rem 1.25rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0; }
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
+.prose th, .prose td { border: 1px solid var(--spec-rule); padding: 0.5rem 0.75rem; text-align: left; }
+.prose th { background: var(--vp-c-bg-soft); }
+.prose blockquote { border-left: 3px solid var(--spec-rose); padding-left: 1rem; color: var(--vp-c-text-2); margin: 1rem 0; }
+.prose img { max-width: 100%; }
+.prose hr { border-color: var(--spec-rule); margin: 2rem 0; }
