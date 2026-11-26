@@ -102,31 +102,31 @@ RSpec.describe "Type 1 Performance Benchmarks" do
       times = {}
 
       times[:head] = Benchmark.realtime do
-        converter.send(:build_head_table, mock_font)
+        converter.build_head_table(mock_font)
       end
 
       times[:hhea] = Benchmark.realtime do
-        converter.send(:build_hhea_table, mock_font)
+        converter.build_hhea_table(mock_font)
       end
 
       times[:maxp] = Benchmark.realtime do
-        converter.send(:build_maxp_table, mock_font)
+        converter.build_maxp_table(mock_font)
       end
 
       times[:name] = Benchmark.realtime do
-        converter.send(:build_name_table, mock_font)
+        converter.build_name_table(mock_font)
       end
 
       times[:os2] = Benchmark.realtime do
-        converter.send(:build_os2_table, mock_font)
+        converter.build_os2_table(mock_font)
       end
 
       times[:post] = Benchmark.realtime do
-        converter.send(:build_post_table, mock_font)
+        converter.build_post_table(mock_font)
       end
 
       times[:cmap] = Benchmark.realtime do
-        converter.send(:build_cmap_table, mock_font)
+        converter.build_cmap_table(mock_font)
       end
 
       # Each table should build in < 0.1 seconds

@@ -396,6 +396,10 @@ module Fontisan
           offsets.pack("N*")
         end
       end
+
+      # RLE flag encoding is a pure transformation with boundary cases
+      # exercised directly (TODO 30).
+      public :encode_flags_rle
     end
   end
 end

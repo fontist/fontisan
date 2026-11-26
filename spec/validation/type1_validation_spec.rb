@@ -48,13 +48,13 @@ RSpec.describe "Type 1 Font Validation" do
 
       # Build SFNT header
       tables = {
-        "head" => converter.send(:build_head_table, mock_font),
-        "hhea" => converter.send(:build_hhea_table, mock_font),
-        "maxp" => converter.send(:build_maxp_table, mock_font),
-        "name" => converter.send(:build_name_table, mock_font),
-        "OS/2" => converter.send(:build_os2_table, mock_font),
-        "post" => converter.send(:build_post_table, mock_font),
-        "cmap" => converter.send(:build_cmap_table, mock_font),
+        "head" => converter.build_head_table(mock_font),
+        "hhea" => converter.build_hhea_table(mock_font),
+        "maxp" => converter.build_maxp_table(mock_font),
+        "name" => converter.build_name_table(mock_font),
+        "OS/2" => converter.build_os2_table(mock_font),
+        "post" => converter.build_post_table(mock_font),
+        "cmap" => converter.build_cmap_table(mock_font),
       }
 
       # Build SFNT header
@@ -112,7 +112,7 @@ RSpec.describe "Type 1 Font Validation" do
                                            private_dict: private_dict, charstrings: charstrings, font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      head_data = converter.send(:build_head_table, mock_font)
+      head_data = converter.build_head_table(mock_font)
 
       # Validate head table structure
       expect(head_data.bytesize).to be >= 54,
@@ -163,7 +163,7 @@ RSpec.describe "Type 1 Font Validation" do
       allow(mock_font).to receive(:charstrings).and_return(charstrings)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      maxp_data = converter.send(:build_maxp_table, mock_font)
+      maxp_data = converter.build_maxp_table(mock_font)
 
       # Validate maxp table structure for CFF (version 0.5)
       expect(maxp_data.bytesize).to eq(6),
@@ -192,7 +192,7 @@ RSpec.describe "Type 1 Font Validation" do
                                            font_name: "TestFont", version: "001.000")
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      name_data = converter.send(:build_name_table, mock_font)
+      name_data = converter.build_name_table(mock_font)
 
       # Validate name table structure
       expect(name_data.bytesize).to be >= 6,
@@ -232,7 +232,7 @@ RSpec.describe "Type 1 Font Validation" do
       allow(mock_font).to receive(:font_dictionary).and_return(font_dict)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      post_data = converter.send(:build_post_table, mock_font)
+      post_data = converter.build_post_table(mock_font)
 
       # Validate post table structure for version 3.0
       expect(post_data.bytesize).to eq(32),
@@ -284,7 +284,7 @@ RSpec.describe "Type 1 Font Validation" do
       allow(mock_font).to receive(:charstrings).and_return(charstrings)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      cmap_data = converter.send(:build_cmap_table, mock_font)
+      cmap_data = converter.build_cmap_table(mock_font)
 
       # Validate cmap table structure
       expect(cmap_data.bytesize).to be >= 12,
@@ -333,7 +333,7 @@ RSpec.describe "Type 1 Font Validation" do
                                            private_dict: private_dict)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      os2_data = converter.send(:build_os2_table, mock_font)
+      os2_data = converter.build_os2_table(mock_font)
 
       # Validate OS/2 table structure
       expect(os2_data.bytesize).to be >= 78,
@@ -378,7 +378,7 @@ RSpec.describe "Type 1 Font Validation" do
                                            private_dict: private_dict, charstrings: charstrings)
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
-      hhea_data = converter.send(:build_hhea_table, mock_font)
+      hhea_data = converter.build_hhea_table(mock_font)
 
       # Validate hhea table structure
       expect(hhea_data.bytesize).to be >= 36,
@@ -430,8 +430,8 @@ RSpec.describe "Type 1 Font Validation" do
       allow(mock_font).to receive(:is_a?).with(Fontisan::Type1Font).and_return(true)
 
       # Build CFF font and private dictionaries
-      cff_font_dict = converter.send(:build_cff_font_dict, mock_font)
-      cff_private_dict = converter.send(:build_cff_private_dict, mock_font)
+      cff_font_dict = converter.build_cff_font_dict(mock_font)
+      cff_private_dict = converter.build_cff_private_dict(mock_font)
 
       # Validate CFF font dictionary
       expect(cff_font_dict).to be_a(Hash), "CFF font dict should be a Hash"
