@@ -8,8 +8,8 @@ module Fontisan
   module ByteOps
     # Convert target codes of the engine (extension and C ABI alike).
     TARGET_CODES = { ttf: 0, otf: 1, woff: 2, woff2: 3, ttc: 4, otc: 5,
-                     svg: 6 }.freeze
-    SINGLE_TARGETS = %i[ttf otf woff woff2 svg].freeze
+                     svg: 6, type1: 7 }.freeze
+    SINGLE_TARGETS = %i[ttf otf woff woff2 svg type1].freeze
     COLLECTION_TARGETS = %i[ttc otc woff2].freeze
     # The caller's `.ttc`/`.otc` extension decision for a `ttcf` input
     # (#192 gap 7): the engine's bytes carry no path.
@@ -114,6 +114,11 @@ module Fontisan
         end
         return %i[woff woff2].include?(source)
       end
+
+      # A variable source keeps the type1 conversion with Ruby: the goldens
+      # pin the pipeline's instanced bytes, and the engine's instancing walk
+      # is not byte-identical to the pipeline's for type1 output yet.
+      return false if target == :type1 && variable_font?(path)
 
       (collection_file?(path) ? COLLECTION_TARGETS : SINGLE_TARGETS).include?(target)
     end
