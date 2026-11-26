@@ -1,15 +1,22 @@
 {
   "scripts": {
-    "dev": "vitepress dev",
-    "build": "vitepress build && node scripts/post-build.mjs",
-    "preview": "vitepress preview",
+    "dev": "astro dev",
+    "build": "astro build && node scripts/sitemap-base.mjs",
+    "preview": "astro preview",
+    "postbuild": "node scripts/sitemap-base.mjs",
     "format": "prettier -w ."
   },
   "type": "module",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "^7.4.13",
+    "marked": "^17.0.4",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.8"
+  },
   "devDependencies": {
     "@types/node": "^25.4.0",
     "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "vitepress": "^1.6.4"
+    "typescript": "^5.9.3"
   }
 }

@@ -1,0 +1,12 @@
+---
+import Site from "../../layouts/Site.astro";
+import { getCollection, render } from "astro:content";
+
+const entry = (await getCollection("cli")).find((e) => e.id === "index");
+const { Content } = await render(entry);
+---
+<Site title={entry.data?.title ?? "cli"} description={entry.data?.description}>
+  <article class="prose doc-page">
+    <Content />
+  </article>
+</Site>
